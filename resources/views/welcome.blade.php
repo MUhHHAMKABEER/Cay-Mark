@@ -470,3 +470,50 @@
         </div>
     </section>
 @endsection
+
+
+{{-- <div class="circle"></div>
+<style>
+    .circle{
+        --circle-size: 40px;
+        position: fixed;
+        height: var(--circle-size);
+        width: var(--circle-size);
+        border-radius: 100%;
+        border: 4px solid black;
+        top:calc(var(--circle-size) / 2 * -1);
+        left:calc(var(--circle-size) / 2 * -1);
+        pointer-events: none;
+    }
+</style>
+
+<script>
+    const circleElement = document.querySelector('.circle');
+
+    const mouse = {
+        x: 0,
+        y: 0
+    }
+    const circle = {
+        x:0,
+        y:0,
+    }
+
+    window.addEventListener('mousemove', (e) => {
+        mouse.x = e.x;
+        mouse.y = e.y;
+    });
+
+    const speed = 0.17;
+
+    const tick = () => {
+        circle.x += (mouse.x -circle.x) * speed;
+        circle.y += (mouse.y - circle.y) *speed;
+
+        circleElement.style.transform = `translate(${circle.x}px,${circle.y}px)`;
+
+        window.requestAnimationFrame(tick);
+    }
+
+    tick();
+</script> --}}

@@ -1,22 +1,32 @@
 <?php
 
 
+use App\Models\Listing;
+use App\Models\Package;
+use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\chatController;
 use App\Http\Controllers\AboutController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\BuyerController;
-use App\Http\Controllers\AuctionController;
+
+
+use App\Http\Controllers\MessageController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\Buyer\BidController;
-
+use App\Http\Controllers\WatchlistController;
+use App\Http\Controllers\Buyer\EscrowController;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\Buyer\AuctionController;
+use App\Http\Controllers\Buyer\SupportController;
+use App\Http\Controllers\Buyer\PurchaseController;
 use App\Http\Controllers\Seller\ListingController;
 use App\Http\Controllers\Buyer\MarketplaceController;
-use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Buyer\BuyerMessageController;
+use App\Http\Controllers\Buyer\NotificationController;
+use App\Http\Controllers\Auth\RegisteredUserController;
 
 
 
@@ -75,7 +85,7 @@ Route::middleware(['auth',
 // 'is_buyer'
 ])->prefix('buyer')->group(function () {
     Route::get('/marketplace', [MarketplaceController::class, 'index'])->name('buyer.marketplace');
-    Route::get('/auctions', [App\Http\Controllers\Buyer\AuctionController::class, 'index'])->name('buyer.auctions');
+    Route::get('/auctions', [AuctionController::class, 'index'])->name('buyer.auctions');
     Route::get('/bids', [App\Http\Controllers\Buyer\BidController::class, 'index'])->name('buyer.bids');
     Route::get('/watchlist', [App\Http\Controllers\Buyer\WatchlistController::class, 'index'])->name('buyer.watchlist');
     Route::get('/purchases', [App\Http\Controllers\Buyer\PurchaseController::class, 'index'])->name('buyer.purchases');

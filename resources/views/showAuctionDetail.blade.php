@@ -1,731 +1,618 @@
 @extends('layouts.welcome')
 
 @section('content')
-    <!DOCTYPE html>
-    <html lang="en">
 
-    <head>
-        <meta charset="utf-8" />
-        <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-        <title>
-            {{ ($auctionListing->year ?? '') . ' ' . ($auctionListing->make ?? '') . ' ' . ($auctionListing->model ?? '') }}
-            FOR SALE IN {{ strtoupper($auctionListing->location ?? ($auctionListing->city ?? '')) }}</title>
-        <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
-        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
-        <script>
-            tailwind.config = {
-                darkMode: "class",
-                theme: {
-                    extend: {
-                        colors: {
-                            primary: {
-                                DEFAULT: "#4F46E5", // A vibrant blue
-                                light: "#6366F1",
-                                dark: "#4338CA"
-                            },
-                            "background-light": "#F9FAFB",
-                            "background-dark": "#111827",
-                            "card-light": "#FFFFFF",
-                            "card-dark": "#1F2937",
-                            "text-light": "#1F2937",
-                            "text-dark": "#F9FAFB",
-                            "muted-light": "#6B7280",
-                            "muted-dark": "#9CA3AF",
-                            "border-light": "#E5E7EB",
-                            "border-dark": "#374151",
-                            "success-light": "#D1FAE5",
-                            "success-dark": "#064E3B",
-                            "success-text-light": "#065F46",
-                            "success-text-dark": "#A7F3D0",
-                            "info-light": "#DBEAFE",
-                            "info-dark": "#1E3A8A",
-                            "info-text-light": "#1E40AF",
-                            "info-text-dark": "#BFDBFE",
-                            "danger-light": "#FEE2E2",
-                            "danger-dark": "#991B1B",
-                            "danger-text-light": "#B91C1C",
-                            "danger-text-dark": "#FCA5A5",
-                        },
-                        fontFamily: {
-                            sans: ['Inter', 'sans-serif'],
-                        },
-                        borderRadius: {
-                            DEFAULT: "0.5rem",
-                        },
-                    },
-                },
-            };
-        </script>
-        <style>
-            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-            body {
-                font-family: 'Inter', sans-serif;
-            }
-        </style>
-    </head>
-
-    <body class="bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark">
-        @php
-
-
-            // helper values with fallbacks
-            $lotNumber = $auctionListing->lot_number ?? ($auctionListing->lot ?? $auctionListing->id);
-            $vin = $auctionListing->vin ?? ($auctionListing->vehicle_vin ?? '—');
-            $titleCode = $auctionListing->title_code ?? ($auctionListing->title ?? '—');
-            $odometer = $auctionListing->odometer ?? ($auctionListing->mileage ?? null);
-            $primaryDamage = $auctionListing->primary_damage ?? ($auctionListing->damage ?? '—');
-            $estRetail =
-                $auctionListing->est_retail_value ??
-                ($auctionListing->estimated_value ?? ($auctionListing->price ?? null));
-            $bodyStyle = $auctionListing->body_style ?? ($auctionListing->body ?? '—');
-            $vehicleType = $auctionListing->vehicle_type ?? ($auctionListing->type ?? '—');
-            $color = $auctionListing->color ?? '—';
-            $engine = $auctionListing->engine ?? ($auctionListing->engine_size ?? '—');
-            $cylinders = $auctionListing->cylinders ?? ($auctionListing->cyl ?? '—');
-            $transmission = $auctionListing->transmission ?? '—';
-            $drive = $auctionListing->drive ?? ($auctionListing->drive_type ?? '—');
-            $fuel = $auctionListing->fuel ?? '—';
-            $auctionHighlights = $auctionListing->auction_highlights ?? ($auctionListing->highlights ?? '—');
-            $keys = $auctionListing->keys ?? (($auctionListing->has_keys ? 'Yes' : 'No') ?? '—');
-            $specialNote =
-                $auctionListing->special_note ?? ($auctionListing->notes ?? 'There are no notes for this Lot');
-            $currentBid = $auctionListing->current_bid ?? ($auctionListing->highest_bid ?? 0);
-            $recommendedBidText = $auctionListing->recommended_bid ?? null;
-            $resultCount = $auctionListing->back_to_results_count ?? ($auctionListing->results_count ?? '—');
-        @endphp
-
-        <div class="container mx-auto p-4 lg:p-8">
-            <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-                <h1 class="text-2xl font-bold text-text-light dark:text-text-dark mb-4 sm:mb-0">
-                    {{ $auctionListing->year ?? '' }} {{ $auctionListing->make ?? '' }}
-                    {{ $auctionListing->model ?? '' }} FOR SALE IN
-                    {{ strtoupper($auctionListing->location ?? ($auctionListing->city ?? '')) }}
-                </h1>
-                <div style="display:flex; align-items:center; justify-content:space-between; font-size:14px; margin-top:16px; border-top:1px solid #e5e7eb; padding-top:12px;">
-
-    <!-- Left section -->
-    <div style="display:flex; align-items:center; gap:16px;">
-        <a href="#"
-           style="display:flex; align-items:center; color:#2563eb; font-weight:500; text-decoration:none; transition:color 0.2s;"
-           onmouseover="this.style.color='#1e40af'" onmouseout="this.style.color='#2563eb'">
-            <span class="material-icons" style="font-size:16px; margin-right:4px;">add</span>
-            Add to watchlist
-        </a>
-    </div>
-
-    <!-- Center section -->
-    <div style="display:flex; align-items:center; gap:16px;">
-        <a href="#"
-           style="display:flex; align-items:center; color:#2563eb; font-weight:500; text-decoration:none; transition:color 0.2s;"
-           onmouseover="this.style.color='#1e40af'" onmouseout="this.style.color='#2563eb'">
-            <span class="material-icons" style="font-size:16px; margin-right:4px;">chevron_left</span>
-            Prev
-        </a>
-
-        <a href="#"
-           style="text-align:center; color:#2563eb; font-weight:500; text-decoration:none; transition:color 0.2s;"
-           onmouseover="this.style.color='#1e40af'" onmouseout="this.style.color='#2563eb'">
-            <span style="display:block; font-size:12px; color:#6b7280;">Back to results</span>
-            <span style="display:block; font-size:14px; font-weight:600;">{{ $resultCount }}</span>
-        </a>
-
-        <a href="#"
-           style="display:flex; align-items:center; color:#2563eb; font-weight:500; text-decoration:none; transition:color 0.2s;"
-           onmouseover="this.style.color='#1e40af'" onmouseout="this.style.color='#2563eb'">
-            Next
-            <span class="material-icons" style="font-size:16px; margin-left:4px;">chevron_right</span>
-        </a>
-    </div>
-</div>
-
-            </header>
-            <main class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="lg:col-span-2">
-    <div class="relative rounded-lg overflow-hidden mb-2">
-        {{-- main image --}}
-        <img id="mainImage"
-             alt="{{ $auctionListing->make ?? '' }} {{ $auctionListing->model ?? '' }} main image"
-             class="w-full h-auto"
-             src="{{ $mainImage }}" />
-
-        {{-- zoom badge (click opens lightbox) --}}
-        <div id="zoomBtn"
-             class="absolute top-4 left-4 bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm flex items-center cursor-pointer">
-            <span class="material-icons text-base mr-1">zoom_out_map</span> Click image to zoom
-        </div>
-
-        <div
-            class="absolute top-4 right-4 bg-white dark:bg-card-dark px-3 py-1 rounded-full text-sm flex items-center text-primary-DEFAULT cursor-pointer shadow">
-            <span class="material-icons text-base mr-1">add</span> Add to watchlist
-        </div>
-        <div class="absolute bottom-4 left-4 flex items-center space-x-2">
-            <div class="bg-black bg-opacity-75 text-white px-3 py-1 rounded-full text-xs font-semibold">HD
-            </div>
-        </div>
-        <div
-            class="absolute bottom-4 right-4 bg-white dark:bg-card-dark px-3 py-1 rounded-full text-sm flex items-center cursor-pointer shadow">
-            <span class="material-icons text-base mr-1">fullscreen</span>
-            <span class="material-icons text-base mr-1">photo_camera</span>
-            See all {{ $images->count() ?: 0 }} photos
-        </div>
-    </div>
-
-    @php
-        // keep your existing normalization (unchanged)
-        $images = $auctionListing->images ?? ($auctionListing->listing_images ?? collect());
-        if (is_array($images)) {
-            $images = collect($images);
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>{{ $vehicle->year ?? '' }} {{ $vehicle->make ?? '' }} {{ $vehicle->model ?? '' }} for Sale in {{ strtoupper($vehicle->location ?? ($vehicle->city ?? '')) }}</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+    <style>
+        .material-icons {
+            vertical-align: middle;
+            font-size: 18px;
+        }
+        .container{
+           max-width : 1580px;
+        }
+        .slider-container {
+            position: relative;
+            overflow: hidden;
+            background: #f6f6f6;
+        }
+        /* default: hide all slider images; only .active will be shown */
+        .slider-image {
+            display: none;
+            width: 100%;
+            height: auto;
+            transition: opacity 0.4s ease;
+            object-fit: contain;
+            cursor: zoom-in;
+        }
+        .slider-image.active {
+            display: block;
+            opacity: 1;
         }
 
-        $images = $images
-            ->map(function ($img) {
-                if (is_object($img)) {
-                    $path = $img->url ?? ($img->path ?? ($img->image ?? null));
-                } elseif (is_array($img)) {
-                    $path = $img['url'] ?? ($img['path'] ?? ($img['image'] ?? null));
-                } else {
-                    $path = $img;
-                }
-
-                if (!$path) {
-                    return null;
-                }
-
-                if (is_string($path) && \Illuminate\Support\Str::startsWith($path, ['http://', 'https://'])) {
-                    return $path;
-                }
-
-                return asset('uploads/listings/' . ltrim($path, '/'));
-            })
-            ->filter()
-            ->values();
-
-        // ensure mainImage variable still available (if not already set earlier)
-        $mainImage = $mainImage ?? ($images->first() ?? ($auctionListing->main_image_url ?? ($auctionListing->image ?? asset('images/placeholder.png'))));
-    @endphp
-
-    <div class="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-7 gap-2">
-        @if ($images->count())
-            @foreach ($images as $imgUrl)
-                <img
-                    src="{{ $imgUrl }}"
-                    data-src="{{ $imgUrl }}"
-                    alt="Thumbnail of {{ $auctionListing->make ?? '' }} {{ $auctionListing->model ?? '' }}"
-                    class="thumb-img rounded-md cursor-pointer {{ $loop->first ? 'border-2 border-primary-DEFAULT' : '' }}" />
-            @endforeach
-        @else
-            {{-- fallback single thumbnail --}}
-            <img alt="Thumbnail fallback" class="rounded-md cursor-pointer border-2 border-primary-DEFAULT"
-                 src="{{ $mainImage }}" />
-        @endif
-
-        <a class="bg-primary-DEFAULT text-white rounded-md flex flex-col items-center justify-center text-center p-2"
-            href="#">
-            <span class="material-icons">person_add</span>
-            <span class="text-xs font-medium">Join Now</span>
-        </a>
-    </div>
-</div>
-
-{{-- Lightbox modal (hidden by default) --}}
-<div id="imageModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-4">
-    <button id="modalClose" class="absolute top-4 right-4 z-50 rounded-full bg-white p-2 shadow">
-        <span class="material-icons">close</span>
-    </button>
-
-    <button id="modalPrev" class="absolute left-4 md:left-8 z-50 rounded-full bg-white p-2 shadow">
-        <span class="material-icons">chevron_left</span>
-    </button>
-
-    <button id="modalNext" class="absolute right-4 md:right-8 z-50 rounded-full bg-white p-2 shadow">
-        <span class="material-icons">chevron_right</span>
-    </button>
-
-    <img id="modalImage" src="{{ $mainImage }}" alt="Zoomed image" class="max-h-[90vh] max-w-full rounded-md shadow-lg" />
-</div>
-
-{{-- Inline script: thumbnail swap + lightbox navigation --}}
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    // gather gallery array from Blade-provided images (strings)
-    let gallery = @json($images->all() ?? []);
-    const mainImage = document.getElementById('mainImage');
-    const zoomBtn = document.getElementById('zoomBtn');
-    const thumbs = Array.from(document.querySelectorAll('.thumb-img'));
-    const modal = document.getElementById('imageModal');
-    const modalImage = document.getElementById('modalImage');
-    const modalClose = document.getElementById('modalClose');
-    const modalPrev = document.getElementById('modalPrev');
-    const modalNext = document.getElementById('modalNext');
-
-    // if gallery empty but mainImage defined, seed gallery so lightbox still works
-    if (!gallery.length && mainImage && mainImage.src) {
-        gallery = [mainImage.src];
-    }
-
-    // helper to find current index in gallery for a src
-    function findIndexBySrc(src) {
-        return gallery.findIndex(g => g === src);
-    }
-
-    // thumbnail click swaps main image
-    thumbs.forEach(thumb => {
-        thumb.addEventListener('click', function () {
-            const src = this.dataset.src || this.src;
-            if (!src) return;
-
-            // update main image
-            if (mainImage) {
-                mainImage.src = src;
-            }
-
-            // update active border
-            thumbs.forEach(t => t.classList.remove('border-2', 'border-primary-DEFAULT'));
-            this.classList.add('border-2', 'border-primary-DEFAULT');
-        });
-    });
-
-    // open modal (from zoom badge or main image click)
-    function openModalWith(src) {
-        if (!src) return;
-        modalImage.src = src;
-        modal.classList.remove('hidden');
-        modal.setAttribute('aria-hidden', 'false');
-        // mark current index
-        modal.currentIndex = findIndexBySrc(src);
-        if (modal.currentIndex === -1) modal.currentIndex = 0;
-    }
-
-    if (zoomBtn) zoomBtn.addEventListener('click', () => openModalWith(mainImage.src));
-    if (mainImage) mainImage.addEventListener('click', () => openModalWith(mainImage.src));
-
-    // close modal
-    function closeModal() {
-        modal.classList.add('hidden');
-        modal.setAttribute('aria-hidden', 'true');
-    }
-    modalClose.addEventListener('click', closeModal);
-    modal.addEventListener('click', function (e) {
-        // close if clicking backdrop (not image)
-        if (e.target === modal) closeModal();
-    });
-
-    // prev / next handlers
-    function showAtIndex(i) {
-        if (!gallery.length) return;
-        if (i < 0) i = gallery.length - 1;
-        if (i >= gallery.length) i = 0;
-        modal.currentIndex = i;
-        modalImage.src = gallery[i];
-        // also sync main image and active thumb border
-        if (mainImage) mainImage.src = gallery[i];
-        thumbs.forEach(t => t.classList.remove('border-2', 'border-primary-DEFAULT'));
-        const activeThumb = thumbs.find(t => (t.dataset.src || t.src) === gallery[i]);
-        if (activeThumb) activeThumb.classList.add('border-2', 'border-primary-DEFAULT');
-    }
-
-    modalPrev.addEventListener('click', function (e) {
-        e.stopPropagation();
-        showAtIndex((modal.currentIndex || 0) - 1);
-    });
-
-    modalNext.addEventListener('click', function (e) {
-        e.stopPropagation();
-        showAtIndex((modal.currentIndex || 0) + 1);
-    });
-
-    // keyboard navigation
-    document.addEventListener('keydown', function (e) {
-        if (modal.classList.contains('hidden')) return;
-        if (e.key === 'ArrowLeft') {
-            showAtIndex((modal.currentIndex || 0) - 1);
-        } else if (e.key === 'ArrowRight') {
-            showAtIndex((modal.currentIndex || 0) + 1);
-        } else if (e.key === 'Escape') {
-            closeModal();
+        /* Zoom Lens */
+        #zoomLens {
+            display: none;
+            position: absolute;
+            border: 2px solid rgba(0,0,0,0.7);
+            width: 140px;
+            height: 140px;
+            pointer-events: none;
+            background-repeat: no-repeat;
+            z-index: 60;
+            border-radius: 6px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.25);
         }
-    });
-});
-</script>
 
-                <div class="space-y-6">
-                    <div
-                        class="bg-card-light dark:bg-card-dark p-4 rounded-lg border border-border-light dark:border-border-dark">
-                        <h2 class="text-lg font-semibold mb-3 flex items-center">
-                            Auction Vehicle Details
-                            <span
-                                class="material-icons text-muted-light dark:text-muted-dark ml-2 text-base cursor-pointer">info</span>
-                        </h2>
-                        <div class="space-y-2 text-sm">
-                            <div class="flex justify-between">
-                                <span class="text-muted-light dark:text-muted-dark">Lot Number:</span>
-                                <span class="font-medium text-text-light dark:text-text-dark">{{ $lotNumber }}</span>
-                            </div>
-                            <div class="flex justify-between items-start">
-                                <span class="text-muted-light dark:text-muted-dark">VIN:</span>
-                                <div class="text-right">
-                                    <span
-                                        class="font-medium text-text-light dark:text-text-dark">{{ $vin }}</span>
-                                    <a class="text-primary-DEFAULT text-xs block hover:underline" href="#">Get History
-                                        Report</a>
-                                </div>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-muted-light dark:text-muted-dark">Title Code:</span>
-                                <div class="text-right">
-                                    <span
-                                        class="font-medium text-text-light dark:text-text-dark">{{ $titleCode }}</span>
-                                    <span
-                                        class="material-icons text-muted-light dark:text-muted-dark text-base cursor-pointer ml-1">info</span>
-                                    @if (($auctionListing->title_pending_days ?? 0) >= 90)
-                                        <div
-                                            class="bg-danger-light text-danger-text-light dark:bg-danger-dark dark:text-danger-text-dark text-xs px-2 py-1 rounded-md mt-1">
-                                            TITLE IS PENDING FOR {{ $auctionListing->title_pending_days ?? '90+' }}+ DAYS
-                                            <span class="material-icons text-xs align-middle">error_outline</span>
-                                        </div>
-                                    @endif
-                                </div>
-                            </div>
+        .sticky-sidebar {
+            position: sticky;
+            top: 20px;
+        }
+        /* vehicle-image no longer forces display; slider rules control visibility */
+        .vehicle-image {
+            border-radius: 0.5rem;
+            cursor: pointer;
+        }
+        .thumbnail {
+            border-radius: 0.25rem;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.15s;
+            width: 100%;
+            height: 70px;
+            object-fit: cover;
+        }
+        .thumbnail:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        .thumbnail.active {
+            border: 2px solid #359EFF;
+        }
+        .bid-section {
+            background: #f8f9fa;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+        }
+        .similar-listing-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .similar-listing-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        @media (max-width: 991.98px) {
+            .sticky-sidebar {
+                position: static;
+            }
+            #zoomLens { display: none !important; } /* disable lens on small screens */
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container py-4">
+        <!-- Breadcrumb -->
+        <nav class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="#" class="text-decoration-none">A Better Bid</a></li>
+                <li class="breadcrumb-item"><a href="#" class="text-decoration-none">Cars</a></li>
+                <li class="breadcrumb-item"><a href="#" class="text-decoration-none">{{ $vehicle->make ?? 'Vehicle' }}</a></li>
+                <li class="breadcrumb-item"><a href="#" class="text-decoration-none">{{ $vehicle->model ?? 'Model' }}</a></li>
+                <li class="breadcrumb-item active">{{ $vehicle->year ?? '' }} {{ $vehicle->make ?? '' }} {{ $vehicle->model ?? '' }}</li>
+            </ol>
+        </nav>
 
-                            <div class="flex justify-between">
-                                <span class="text-muted-light dark:text-muted-dark">Odometer:</span>
-                                <span class="font-medium text-text-light dark:text-text-dark">
-                                    {{ $odometer ? number_format($odometer) . ' mi (ACTUAL)' : '—' }}
-                                </span>
-                            </div>
+        <!-- Watchlist Button -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <button class="btn btn-outline-primary btn-sm d-flex align-items-center">
+                <span class="material-icons me-1">star_outline</span>
+                Watchlist
+            </button>
+        </div>
 
-                            <div class="flex justify-between">
-                                <span class="text-muted-light dark:text-muted-dark">Primary Damage:</span>
-                                <span class="font-medium text-text-light dark:text-text-dark">{{ $primaryDamage }}</span>
-                            </div>
+        <!-- Main Title -->
+        <h1 class="h2 mb-4">{{ $vehicle->year ?? '' }} {{ $vehicle->make ?? '' }} {{ $vehicle->model ?? '' }} for Sale in {{ strtoupper($vehicle->location ?? ($vehicle->city ?? '')) }}</h1>
 
-                            <div class="flex justify-between">
-                                <span class="text-muted-light dark:text-muted-dark">Est. Retail Value:</span>
-                                <span class="font-medium text-text-light dark:text-text-dark flex items-center">
-                                    @if ($estRetail)
-                                        ${{ number_format($estRetail, 2) }} USD
-                                    @else
-                                        —
-                                    @endif
-                                    <span
-                                        class="material-icons text-muted-light dark:text-muted-dark ml-1 text-base cursor-pointer">info</span>
-                                </span>
-                            </div>
+        <!-- Three Column Layout -->
+        <div class="row g-4">
+            <!-- Column 1: Images Gallery -->
+            <div class="col-lg-6">
+                <!-- Image Slider -->
+                <div id="vehicleSlider" class="position-relative mb-3">
+                    <div class="slider-container">
+                        @php
+                            $images = $vehicle->images ?? [];
+                            if($images && is_iterable($images)) {
+                                $first = current($images);
+                                if(is_object($first)) {
+                                    $images = array_map(function($i) {
+                                        return is_object($i) ? ($i->url ?? $i->path ?? $i->image ?? $i->image_path ?? null) : $i;
+                                    }, (array)$images);
+                                } else {
+                                    $images = (array)$images;
+                                }
+                            } else {
+                                $images = [];
+                            }
+                        @endphp
 
-                            <div class="flex justify-between">
-                                <span class="text-muted-light dark:text-muted-dark">Body Style:</span>
-                                <span class="font-medium text-text-light dark:text-text-dark">{{ $bodyStyle }}</span>
-                            </div>
-
-                            <div class="flex justify-between">
-                                <span class="text-muted-light dark:text-muted-dark">Vehicle Type:</span>
-                                <span class="font-medium text-text-light dark:text-text-dark">{{ $vehicleType }}</span>
-                            </div>
-
-                            <div class="flex justify-between">
-                                <span class="text-muted-light dark:text-muted-dark">Color:</span>
-                                <span class="font-medium text-text-light dark:text-text-dark">{{ $color }}</span>
-                            </div>
-
-                            <div class="flex justify-between">
-                                <span class="text-muted-light dark:text-muted-dark">Engine:</span>
-                                <span class="font-medium text-text-light dark:text-text-dark">{{ $engine }}</span>
-                            </div>
-
-                            <div class="flex justify-between">
-                                <span class="text-muted-light dark:text-muted-dark">Cylinders:</span>
-                                <span class="font-medium text-text-light dark:text-text-dark">{{ $cylinders }}</span>
-                            </div>
-
-                            <div class="flex justify-between">
-                                <span class="text-muted-light dark:text-muted-dark">Transmission:</span>
-                                <span class="font-medium text-text-light dark:text-text-dark">{{ $transmission }}</span>
-                            </div>
-
-                            <div class="flex justify-between">
-                                <span class="text-muted-light dark:text-muted-dark">Drive:</span>
-                                <span class="font-medium text-text-light dark:text-text-dark">{{ $drive }}</span>
-                            </div>
-
-                            <div class="flex justify-between">
-                                <span class="text-muted-light dark:text-muted-dark">Fuel:</span>
-                                <span class="font-medium text-text-light dark:text-text-dark">{{ $fuel }}</span>
-                            </div>
-
-                            <div class="flex justify-between">
-                                <span class="text-muted-light dark:text-muted-dark">Auction Highlights:</span>
-                                <span class="font-medium text-text-light dark:text-text-dark flex items-center">
-                                    {{ $auctionHighlights }}
-                                    <span
-                                        class="material-icons text-muted-light dark:text-muted-dark ml-1 text-base cursor-pointer">info</span>
-                                </span>
-                            </div>
-
-                            <div class="flex justify-between">
-                                <span class="text-muted-light dark:text-muted-dark">Keys:</span>
-                                <span class="font-medium text-text-light dark:text-text-dark flex items-center">
-                                    {{ $keys }}
-                                    <span
-                                        class="material-icons text-muted-light dark:text-muted-dark ml-1 text-base cursor-pointer">info</span>
-                                </span>
-                            </div>
-
-                            <div class="flex justify-between">
-                                <span class="text-muted-light dark:text-muted-dark">Special Note:</span>
-                                <span class="font-medium text-text-light dark:text-text-dark">{{ $specialNote }}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div
-                        class="bg-success-light dark:bg-success-dark border border-green-200 dark:border-green-800 p-4 rounded-lg">
-                        <h2 class="font-semibold text-success-text-light dark:text-success-text-dark mb-1">Auction In
-                            Progress</h2>
-                        <p class="text-sm text-success-text-light dark:text-success-text-dark mb-3">
-                            {{ $auctionListing->auction_status_message ?? 'Preliminary bidding is now closed. To place a live bid, please sign in or register' }}
-                        </p>
-                        <button
-                            class="w-full bg-white dark:bg-card-dark text-primary-DEFAULT font-semibold py-2 px-4 rounded-full border border-primary-DEFAULT hover:bg-primary-light hover:text-white dark:hover:bg-primary-dark transition-colors flex items-center justify-center">
-                            <span class="material-icons mr-2">notifications</span> SET ALERT
-                        </button>
-                    </div>
-
-                    <div
-                        class="bg-card-light dark:bg-card-dark p-4 rounded-lg border border-border-light dark:border-border-dark">
-                        <h2 class="text-lg font-semibold mb-4">Bid Information</h2>
-
-                        <div class="space-y-2 text-sm">
-                            <div class="flex justify-between">
-                                <span class="text-muted-light dark:text-muted-dark flex items-center">
-                                    Bid Status:
-                                    <span
-                                        class="material-icons text-muted-light dark:text-muted-dark ml-1 text-base cursor-pointer">info</span>
-                                </span>
-                                <span id="bidStatus"
-                                    class="font-medium text-text-light dark:text-text-dark">{{ $auctionListing->bid_status_label ?? "You Haven't Bid" }}</span>
-                            </div>
-
-                            <div class="flex justify-between">
-                                <span class="text-muted-light dark:text-muted-dark flex items-center">
-                                    Sale Status:
-                                    <span
-                                        class="material-icons text-muted-light dark:text-muted-dark ml-1 text-base cursor-pointer">info</span>
-                                </span>
-                                <span id="saleStatus"
-                                    class="font-medium text-text-light dark:text-text-dark">{{ $auctionListing->sale_status_label ?? 'On Minimum Bid' }}</span>
-                            </div>
-
-                            <div class="flex justify-between">
-                                <span class="text-muted-light dark:text-muted-dark flex items-center">
-                                    Recommended Bid:
-                                    <span
-                                        class="material-icons text-muted-light dark:text-muted-dark ml-1 text-base cursor-pointer">info</span>
-                                </span>
-
-                                {{-- recommended bid element --}}
-                                <div id="recommendedBidWrap">
-                                    @if ($recommendedBidText)
-                                        <span id="recommendedBid"
-                                            class="font-medium text-primary-DEFAULT">{{ $recommendedBidText }}</span>
-                                    @else
-                                        <a id="recommendedBid" class="font-medium text-primary-DEFAULT hover:underline"
-                                            href="#">{{ $auctionListing->login_cta_text ?? 'Login or Register to view' }}</a>
-                                    @endif
-                                </div>
-                            </div>
-
-                            <div class="flex justify-between items-start">
-                                <span class="text-muted-light dark:text-muted-dark">Current Bid:</span>
-                                <div class="text-right">
-                                    <span id="currentBid"
-                                        class="text-2xl font-bold text-text-light dark:text-text-dark">${{ number_format($currentBid, 2) }}</span>
-                                    <p id="reserveText" class="text-xs text-muted-light dark:text-muted-dark">
-                                        {{ $auctionListing->reserve_met ? 'Reserve met' : 'Seller Reserve Not Yet Met' }}
-                                        <span
-                                            class="material-icons text-muted-light dark:text-muted-dark ml-1 text-base cursor-pointer align-middle">info</span>
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {{-- Bid form for logged-in users (unchanged) --}}
-                        @auth
-                            <form id="bidForm" class="mt-4 space-y-3">
-                                @csrf
-                                <div class="flex gap-2">
-                                    <input id="bidAmount" name="amount" type="number" step="0.01" min="0"
-                                        class="w-full rounded-md border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark focus:ring-primary-DEFAULT focus:border-primary-DEFAULT text-sm p-2"
-                                        placeholder="Enter your bid amount" />
-                                    <button type="submit"
-                                        class="bg-primary-600 hover:bg-primary-700 text-white font-medium py-2.5 px-6 rounded-lg transition-colors text-sm">
-                                        Place Bid
-                                    </button>
-                                </div>
-                                <p id="bidError" class="text-xs text-red-500 hidden"></p>
-                                <p id="bidSuccess" class="text-xs text-green-600 hidden"></p>
-                            </form>
+                        @if(count($images) > 0)
+                            @foreach($images as $index => $image)
+                                <img src="{{ $image ?? asset('images/placeholder.png') }}"
+                                     alt="{{ $vehicle->year ?? '' }} {{ $vehicle->make ?? '' }} {{ $vehicle->model ?? '' }} - Image {{ $index + 1 }}"
+                                     class="img-fluid vehicle-image w-100 slider-image {{ $index === 0 ? 'active' : '' }}"
+                                     data-index="{{ $index }}">
+                            @endforeach
                         @else
-                            <div class="mt-4">
-                                <button onclick="document.getElementById('loginModal').classList.remove('hidden')"
-                                    class="w-full bg-primary-600 hover:bg-primary-700 text-white font-medium py-2.5 px-6 rounded-lg transition-colors text-sm">
-                                    Login to Bid
-                                </button>
-                            </div>
-                        @endauth
-
-                        <p class="text-xs text-muted-light dark:text-muted-dark mt-4 text-center">All bids are legally
-                            binding, and sales are "as-is" and final. <a class="text-primary-DEFAULT hover:underline"
-                                href="#">{{ $auctionListing->learn_more_link_text ?? 'Learn More' }}</a></p>
+                            <img src="{{ asset('images/placeholder.png') }}"
+                                 alt="No images available"
+                                 class="img-fluid vehicle-image w-100 slider-image active"
+                                 data-index="0">
+                        @endif
                     </div>
 
+                    <!-- Zoom lens -->
+                    <div id="zoomLens" aria-hidden="true"></div>
 
-                    <script>
-                        document.addEventListener('DOMContentLoaded', function() {
-                            @auth
-                            const form = document.getElementById('bidForm');
-                            const input = document.getElementById('bidAmount');
-                            const bidError = document.getElementById('bidError');
-                            const bidSuccess = document.getElementById('bidSuccess');
-                            const currentBidEl = document.getElementById('currentBid');
+                    <!-- Controls -->
+                    <button class="btn btn-dark position-absolute top-50 start-0 translate-middle-y slider-prev" aria-label="Previous image">
+                        <span class="material-icons">chevron_left</span>
+                    </button>
+                    <button class="btn btn-dark position-absolute top-50 end-0 translate-middle-y slider-next" aria-label="Next image">
+                        <span class="material-icons">chevron_right</span>
+                    </button>
 
-                            // new elements
-                            const bidStatusEl = document.getElementById('bidStatus');
-                            const saleStatusEl = document.getElementById('saleStatus');
-                            const recommendedBidEl = document.getElementById('recommendedBid');
-                            const reserveTextEl = document.getElementById('reserveText');
+                    <!-- Image counter -->
+                    <div class="position-absolute bottom-0 end-0 m-3 bg-dark text-white px-2 py-1 rounded small">
+                        <span id="currentSlide">1</span> / <span id="totalSlides">{{ count($images) ?: 1 }}</span>
+                    </div>
+                </div>
 
-                            form.addEventListener('submit', async function(e) {
-                                e.preventDefault();
-                                bidError.classList.add('hidden');
-                                bidSuccess.classList.add('hidden');
-
-                                const amount = parseFloat(input.value);
-                                if (isNaN(amount) || amount <= 0) {
-                                    bidError.textContent = 'Please enter a valid bid amount.';
-                                    bidError.classList.remove('hidden');
-                                    return;
-                                }
-
-                                try {
-                                    const token = document.querySelector('input[name="_token"]').value;
-                                    const res = await fetch("{{ route('auction.bid.store', $auctionListing->id) }}", {
-                                        method: 'POST',
-                                        headers: {
-                                            'Content-Type': 'application/json',
-                                            'X-CSRF-TOKEN': token,
-                                            'Accept': 'application/json',
-                                        },
-                                        body: JSON.stringify({
-                                            amount
-                                        })
-                                    });
-
-                                    const json = await res.json();
-
-                                    if (!res.ok) {
-                                        // handle validation error (Laravel -> 422) or other errors
-                                        const errMsg = (json?.errors?.amount && json.errors.amount[0]) || json
-                                            ?.message || 'Failed to place bid';
-                                        bidError.textContent = errMsg;
-                                        bidError.classList.remove('hidden');
-                                        return;
-                                    }
-
-                                    // success — update UI values (use server-provided values if available)
-                                    // expected: json.currentBid, json.bid, json.reserve_met, json.bid_status_label, json.sale_status_label, json.recommendedBidText
-                                    const currentBid = json.currentBid ?? json.bid?.amount ?? null;
-                                    if (currentBid !== null) {
-                                        // ensure formatted as string with 2 decimals (server may already return formatted)
-                                        const formatted = (typeof currentBid === 'number') ? currentBid.toFixed(2) :
-                                            currentBid;
-                                        currentBidEl.textContent = '$' + formatted;
-                                    }
-
-                                    // update reserve text if server supplied boolean
-                                    if (typeof json.reserve_met !== 'undefined') {
-                                        reserveTextEl.textContent = json.reserve_met ? 'Reserve met' :
-                                            'Seller Reserve Not Yet Met';
-                                    }
-
-                                    // update bid status label (server can return a better label)
-                                    if (json.bid_status_label) {
-                                        bidStatusEl.textContent = json.bid_status_label;
-                                    } else {
-                                        // fallback: show user-friendly message
-                                        bidStatusEl.textContent = 'You have placed a bid';
-                                    }
-
-                                    // update sale status if supplied
-                                    if (json.sale_status_label) {
-                                        saleStatusEl.textContent = json.sale_status_label;
-                                    }
-
-                                    // update recommended bid (can be text or html)
-                                    if (json.recommendedBidText) {
-                                        // replace inner element content (string)
-                                        recommendedBidEl.textContent = json.recommendedBidText;
-                                        // if you expect HTML, use recommendedBidEl.innerHTML = json.recommendedBidText;
-                                    }
-
-                                    // show success
-                                    const displayBid = currentBid ?? json.bid?.amount ?? '';
-                                    bidSuccess.textContent = 'Bid placed successfully' + (displayBid ? ': $' + (
-                                            typeof displayBid === 'number' ? displayBid.toFixed(2) : displayBid) :
-                                        '');
-                                    bidSuccess.classList.remove('hidden');
-
-                                    // clear input
-                                    input.value = '';
-                                } catch (err) {
-                                    bidError.textContent = 'An error occurred. Try again.';
-                                    bidError.classList.remove('hidden');
-                                    console.error(err);
-                                }
-                            });
-                        @endauth
-                        });
-                    </script>
-
-
-
-                    <div
-                        class="bg-card-light dark:bg-card-dark p-4 rounded-lg border border-border-light dark:border-border-dark">
-                        <h2 class="text-lg font-semibold mb-4 flex items-center">Get Alerts for Similar Vehicles <span
-                                class="material-icons text-muted-light dark:text-muted-dark ml-2 text-base cursor-pointer">info</span>
-                        </h2>
-                        <div class="mb-4">
-                            <label class="text-sm font-medium text-muted-light dark:text-muted-dark">Select
-                                Frequency:</label>
-                            <div class="flex items-center space-x-4 mt-2">
-                                <label class="flex items-center">
-                                    <input checked=""
-                                        class="form-radio text-primary-DEFAULT focus:ring-primary-DEFAULT"
-                                        name="frequency" type="radio" />
-                                    <span class="ml-2 text-sm text-text-light dark:text-text-dark">Daily</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input class="form-radio text-primary-DEFAULT focus:ring-primary-DEFAULT"
-                                        name="frequency" type="radio" />
-                                    <span class="ml-2 text-sm text-text-light dark:text-text-dark">Weekly</span>
-                                </label>
+                <!-- Thumbnails row (optional) -->
+                <div class="row g-2 mt-2">
+                    @if(count($images) > 0)
+                        @foreach($images as $index => $image)
+                            <div class="col-3 col-md-2">
+                                <img src="{{ $image ?? asset('images/placeholder.png') }}"
+                                     alt="Thumbnail {{ $index + 1 }}"
+                                     class="img-fluid thumbnail {{ $index === 0 ? 'active' : '' }}"
+                                     data-image="{{ $image }}" data-index="{{ $index }}">
                             </div>
+                        @endforeach
+                    @else
+                        <div class="col-3 col-md-2">
+                            <img src="{{ asset('images/placeholder.png') }}" alt="No images" class="img-fluid thumbnail active">
                         </div>
-                        <div class="mb-4">
-                            <input
-                                class="w-full rounded-md border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark focus:ring-primary-DEFAULT focus:border-primary-DEFAULT text-sm"
-                                placeholder="Email" type="email" />
+                    @endif
+                </div>
+            </div>
+
+            <!-- Column 2: Bid Information & Action Buttons -->
+            <div class="col-lg-3">
+                <div class="sticky-sidebar">
+                    <!-- Bid Information -->
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h2 class="h5 card-title mb-0">Bid Information</h2>
+                                <span class="badge bg-danger d-flex align-items-center">
+                                    <span class="material-icons me-1">timer</span>
+                                    {{ $vehicle->time_remaining ?? '23h 37m 22s' }}
+                                </span>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-6">
+                                    <p class="text-muted mb-1 small">Current Bid</p>
+                                    <p class="h5 text-dark fw-bold">${{ number_format($vehicle->current_bid ?? 525) }}</p>
+                                </div>
+                                <div class="col-6">
+                                    <p class="text-muted mb-1 small">Bid Status</p>
+                                    <p class="text-success fw-semibold">{{ $vehicle->bid_status ?? "You Haven't Bid" }}</p>
+                                </div>
+                                <div class="col-6">
+                                    <p class="text-muted mb-1 small">Sale Status</p>
+                                    <p>{{ $vehicle->sale_status ?? 'On Minimum Bid' }}</p>
+                                </div>
+                                <div class="col-6">
+                                    <p class="text-muted mb-1 small">Seller's Reserve</p>
+                                    <p>{{ $vehicle->reserve_met ? 'Met' : 'Not yet met' }}</p>
+                                </div>
+                            </div>
+
+                            <form action="{{ route('auction.bid.store', $vehicle->id) }}" method="POST">
+                                @csrf
+                                <p class="text-muted small mb-2">Enter Maximum Bid ($25 Bid Increments)</p>
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number"
+                                           name="bid_amount"
+                                           class="form-control"
+                                           value="{{ ($vehicle->current_bid ?? 525) + 25 }}"
+                                           min="{{ ($vehicle->current_bid ?? 525) + 25 }}"
+                                           step="25">
+                                    <button type="submit" class="btn btn-primary">Bid Now</button>
+                                </div>
+                                <p class="text-muted small text-center">ALL SALES ARE FINAL, SOLD "AS IS, WHERE IS"</p>
+                            </form>
                         </div>
-                        <button
-                            class="w-full bg-white dark:bg-card-dark text-primary-DEFAULT font-semibold py-2 px-4 rounded-full border border-primary-DEFAULT hover:bg-primary-light hover:text-white dark:hover:bg-primary-dark transition-colors flex items-center justify-center">
-                            <span class="material-icons mr-2">notifications</span> SET ALERT
+                    </div>
+
+                    <!-- Buy It Now -->
+                    <div class="card bg-info bg-opacity-10 border-info mb-4">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <p class="small mb-0">Buy this lot now before it goes to the auction!</p>
+                                <span class="material-icons text-primary">sell</span>
+                            </div>
+                            <p class="small mb-3">Get it for: <span class="h5 fw-bold text-dark">${{ number_format($vehicle->buy_now_price ?? 2550) }}</span></p>
+                            <button class="btn btn-primary w-100">Buy It Now</button>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-grid gap-2">
+                        @auth
+                            <button class="btn btn-primary d-flex align-items-center justify-content-center">
+                                <span class="material-icons me-2">gavel</span>
+                                Place Bid
+                            </button>
+                        @else
+                            <a href="{{ route('login') }}" class="btn btn-primary d-flex align-items-center justify-content-center">
+                                <span class="material-icons me-2">login</span>
+                                Login to Bid
+                            </a>
+                        @endauth
+
+                        @auth
+                            <button class="btn btn-outline-primary d-flex align-items-center justify-content-center">
+                                <span class="material-icons me-2">star</span>
+                                Add to Watchlist
+                            </button>
+                        @else
+                            <a href="{{ route('login') }}" class="btn btn-outline-primary d-flex align-items-center justify-center">
+                                <span class="material-icons me-2">star</span>
+                                Add to Watchlist
+                            </a>
+                        @endauth
+
+                        <button class="btn btn-outline-secondary d-flex align-items-center justify-content-center">
+                            <span class="material-icons me-2">share</span>
+                            Share
                         </button>
                     </div>
                 </div>
-            </main>
+            </div>
+
+            <!-- Column 3: Vehicle Details, Information, History & Sale Info -->
+            <div class="col-lg-3">
+                <div class="sticky-sidebar">
+                    <!-- Vehicle Details -->
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h2 class="h5 card-title mb-3">Vehicle Details</h2>
+                            <div class="row">
+                                <div class="col-12">
+                                    <dl class="row mb-3">
+                                        <dt class="col-sm-6 text-muted">VIN#</dt>
+                                        <dd class="col-sm-6">{{ $vehicle->vin ?? '—' }}</dd>
+
+                                        <dt class="col-sm-6 text-muted">Lot#</dt>
+                                        <dd class="col-sm-6 text-primary">{{ $vehicle->lot_number ?? '—' }}</dd>
+
+                                        <dt class="col-sm-6 text-muted">Title Code</dt>
+                                        <dd class="col-sm-6">{{ $vehicle->title_code ?? '—' }}</dd>
+
+                                        <dt class="col-sm-6 text-muted">Odometer</dt>
+                                        <dd class="col-sm-6">{{ $vehicle->mileage ? number_format($vehicle->mileage) . ' mi. Actual' : '—' }}</dd>
+
+                                        <dt class="col-sm-6 text-muted">Primary Damage</dt>
+                                        <dd class="col-sm-6">{{ $vehicle->primary_damage ?? 'Unknown' }}</dd>
+
+                                        <dt class="col-sm-6 text-muted">Secondary Damage</dt>
+                                        <dd class="col-sm-6">{{ $vehicle->secondary_damage ?? '—' }}</dd>
+
+                                        <dt class="col-sm-6 text-muted">Est. Retail Value</dt>
+                                        <dd class="col-sm-6">{{ $vehicle->price ? '$' . number_format($vehicle->price) . ' USD' : '—' }}</dd>
+
+                                        <dt class="col-sm-6 text-muted">Keys</dt>
+                                        <dd class="col-sm-6">{{ $vehicle->keys ?? 'Yes (not guaranteed)' }}</dd>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Vehicle Information -->
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h2 class="h5 card-title mb-3">Vehicle Information</h2>
+                            <dl class="row small">
+                                <dt class="col-sm-5 text-muted">Vehicle Type</dt>
+                                <dd class="col-sm-7">{{ $vehicle->vehicle_type ?? 'AUTOMOBILE' }}</dd>
+
+                                <dt class="col-sm-5 text-muted">Year</dt>
+                                <dd class="col-sm-7">{{ $vehicle->year ?? '—' }}</dd>
+
+                                <dt class="col-sm-5 text-muted">Make</dt>
+                                <dd class="col-sm-7">{{ $vehicle->make ?? '—' }}</dd>
+
+                                <dt class="col-sm-5 text-muted">Model</dt>
+                                <dd class="col-sm-7">{{ $vehicle->model ?? '—' }}</dd>
+
+                                <dt class="col-sm-5 text-muted">Body Style</dt>
+                                <dd class="col-sm-7">{{ $vehicle->body_style ?? 'Sedan' }}</dd>
+
+                                <dt class="col-sm-5 text-muted">Color</dt>
+                                <dd class="col-sm-7">{{ $vehicle->color ?? 'White' }}</dd>
+
+                                <dt class="col-sm-5 text-muted">Engine Type</dt>
+                                <dd class="col-sm-7">{{ $vehicle->engine ?? '—' }}</dd>
+
+                                <dt class="col-sm-5 text-muted">Cylinders</dt>
+                                <dd class="col-sm-7">{{ $vehicle->cylinders ?? '—' }}</dd>
+
+                                <dt class="col-sm-5 text-muted">Transmission</dt>
+                                <dd class="col-sm-7">{{ $vehicle->transmission ?? 'Automatic' }}</dd>
+
+                                <dt class="col-sm-5 text-muted">Drive</dt>
+                                <dd class="col-sm-7">{{ $vehicle->drive ?? 'All Wheel Drive' }}</dd>
+
+                                <dt class="col-sm-5 text-muted">Fuel</dt>
+                                <dd class="col-sm-7">{{ $vehicle->fuel ?? 'Gasoline' }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+
+                    <!-- Sale Information -->
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h2 class="h5 card-title mb-3">Sale Information</h2>
+                            <dl class="row small">
+                                <dt class="col-sm-5 text-muted">Auction Location</dt>
+                                <dd class="col-sm-7 text-primary">{{ $vehicle->location ?? 'TRENTON, NJ' }}</dd>
+
+                                <dt class="col-sm-5 text-muted">Sale Date</dt>
+                                <dd class="col-sm-7">
+                                    {{ $vehicle->sale_date ?? 'Monday, October 13, 2025' }}
+                                    <a href="#" class="text-primary small ms-1">Add to Calendar</a>
+                                </dd>
+
+                                <dt class="col-sm-5 text-muted">Live Auction Starts</dt>
+                                <dd class="col-sm-7">{{ $vehicle->auction_time ?? '10:00 AM EST' }}</dd>
+
+                                <dt class="col-sm-5 text-muted">Sale Name</dt>
+                                <dd class="col-sm-7">{{ $vehicle->sale_name ?? 'NJ - TRENTON' }}</dd>
+
+                                <dt class="col-sm-5 text-muted">Last Updated</dt>
+                                <dd class="col-sm-7">{{ $vehicle->updated_at ? $vehicle->updated_at->format('F j, Y g:i A UTC') : 'October 12, 2025 2:41 AM UTC' }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+
+                    <!-- Vehicle History -->
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h2 class="h5 card-title mb-0">Vehicle History</h2>
+                                <img alt="EpicVin logo" height="20" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDRTPJunOOb6OBRzT_23hBSlyLMMLn9WRoEeFBAFzIilCX05yimmf0lUW-sY2t9TGBiPZj6xXoy8Ra8nPJa6Ch-Ooxewy1pE_Gd8sAUTgObvgYi-bcxtT090zv5PTTJAGoeS9N7cdSYfT31A9BmFi9DNB57SoeG1RciZ4YB2o0FJ0pFOHXpB9hYI_VBUSMH_9HaY2x4fgstPI4cEks910xNcXLtl72u4frU-gAC1dKxwuys1LgKtspRerX9Uih1Ni0OuoyxDdUWQws"/>
+                            </div>
+                            <dl class="row small mb-3">
+                                <dt class="col-sm-6 text-muted">Sales Records</dt>
+                                <dd class="col-sm-6">{{ $vehicle->sales_records ?? '12 records found' }}</dd>
+
+                                <dt class="col-sm-6 text-muted">Odometer Reading</dt>
+                                <dd class="col-sm-6">{{ $vehicle->mileage ? number_format($vehicle->mileage) : '60659' }}</dd>
+
+                                <dt class="col-sm-6 text-muted">Previous Sales</dt>
+                                <dd class="col-sm-6">{{ $vehicle->previous_sales ?? '12 sales found' }}</dd>
+
+                                <dt class="col-sm-6 text-muted">Ownership History</dt>
+                                <dd class="col-sm-6">{{ $vehicle->ownership_history ?? '1 owner found' }}</dd>
+
+                                <dt class="col-sm-6 text-muted">Safety Recalls</dt>
+                                <dd class="col-sm-6">{{ $vehicle->safety_recalls ?? '2 records found' }}</dd>
+
+                                <dt class="col-sm-6 text-muted">Accidents</dt>
+                                <dd class="col-sm-6">{{ $vehicle->accidents ?? '1 record found' }}</dd>
+                            </dl>
+                            <button class="btn btn-outline-primary w-100">Get Vehicle History Report</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
-    </body>
+        <!-- Similar Listings Section -->
+        <div class="row mt-5">
+            <div class="col-12">
+                <h2 class="h3 mb-4">Similar Listings</h2>
+                <div class="row g-4">
+                    <!-- Similar Listing cards (kept as-is) -->
+                    <div class="col-md-6 col-lg-3">
+                        <div class="card similar-listing-card h-100">
+                            <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCGCq-w4UNmCP1kJ1GfP2F2IgYnFJyGkaFXlHQxMxv4cQadUl6tQjKNOkcTPlobDN0kXub_5BKcDI9wk4QjrOSqTorJuy3AljXJ_cspy6IKbr3jyqK33bhXlwTMGn68qBRlsnURUYPxwQxRdGVZDsw6eJNjLmooYcLOiSTZOYfJ05XL7LeOmaYc7J6Nwr8FWTdPzVvRO_cdU9uMsyw2W2Dnr_zweRoGSxhZrqtrDOPrLJLXqgRV-lB-QfMH2kj4RxiwT3LZglTXMAk"
+                                 class="card-img-top"
+                                 alt="Similar Vehicle 1">
+                            <div class="card-body">
+                                <h5 class="card-title">2018 BMW 3 Series</h5>
+                                <p class="card-text text-muted small">Sedan • 45,200 mi • White</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="h6 text-primary mb-0">$32,500</span>
+                                    <span class="badge bg-warning text-dark">3 days left</span>
+                                </div>
+                            </div>
+                            <div class="card-footer bg-transparent">
+                                <button class="btn btn-outline-primary btn-sm w-100">View Details</button>
+                            </div>
+                        </div>
+                    </div>
 
-    </html>
+                    <!-- ... other similar cards ... -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Consolidated Slider + Zoom Script -->
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const images = Array.from(document.querySelectorAll('.slider-image'));
+        const totalSlidesEl = document.getElementById('totalSlides');
+        const currentSlideEl = document.getElementById('currentSlide');
+        const nextBtn = document.querySelector('.slider-next');
+        const prevBtn = document.querySelector('.slider-prev');
+        const zoomLens = document.getElementById('zoomLens');
+        const thumbnails = Array.from(document.querySelectorAll('.thumbnail'));
+        const sliderWrap = document.getElementById('vehicleSlider');
+        let currentIndex = 0;
+        const total = Math.max(images.length, 1);
+
+        if (totalSlidesEl) totalSlidesEl.textContent = total;
+
+        function showImage(index) {
+            if (!images.length) return;
+            images.forEach((img, i) => {
+                img.classList.toggle('active', i === index);
+            });
+
+            thumbnails.forEach((t, i) => t.classList.toggle('active', i === index));
+
+            if (currentSlideEl) currentSlideEl.textContent = index + 1;
+        }
+
+        // init
+        showImage(currentIndex);
+
+        // Next / Prev
+        if (nextBtn) nextBtn.addEventListener('click', () => {
+            currentIndex = (currentIndex + 1) % total;
+            showImage(currentIndex);
+        });
+        if (prevBtn) prevBtn.addEventListener('click', () => {
+            currentIndex = (currentIndex - 1 + total) % total;
+            showImage(currentIndex);
+        });
+
+        // Auto slide (only if >1)
+        let autoSlideInterval = null;
+        if (images.length > 1) {
+            autoSlideInterval = setInterval(() => {
+                currentIndex = (currentIndex + 1) % total;
+                showImage(currentIndex);
+            }, 5000);
+        }
+
+        // Pause on hover / resume on leave
+        if (sliderWrap) {
+            sliderWrap.addEventListener('mouseenter', () => {
+                if (autoSlideInterval) clearInterval(autoSlideInterval);
+            });
+            sliderWrap.addEventListener('mouseleave', () => {
+                if (images.length > 1) {
+                    autoSlideInterval = setInterval(() => {
+                        currentIndex = (currentIndex + 1) % total;
+                        showImage(currentIndex);
+                    }, 5000);
+                }
+            });
+        }
+
+        // Thumbnails click
+        if (thumbnails.length) {
+            thumbnails.forEach((thumb, idx) => {
+                thumb.addEventListener('click', () => {
+                    const idxFromData = parseInt(thumb.getAttribute('data-index'));
+                    currentIndex = Number.isFinite(idxFromData) ? idxFromData : idx;
+                    showImage(currentIndex);
+                });
+            });
+        }
+
+        // Zoom lens logic
+        const zoomFactor = 2; // 2x by default
+
+        images.forEach(img => {
+            function moveLens(clientX, clientY) {
+                const rect = img.getBoundingClientRect();
+                const x = clientX - rect.left;
+                const y = clientY - rect.top;
+
+                if (x < 0 || y < 0 || x > rect.width || y > rect.height) {
+                    zoomLens.style.display = 'none';
+                    return;
+                }
+
+                const lensW = zoomLens.offsetWidth;
+                const lensH = zoomLens.offsetHeight;
+
+                let left = x - lensW / 2;
+                let top = y - lensH / 2;
+
+                // clamp inside image area
+                left = Math.max(0, Math.min(left, rect.width - lensW));
+                top = Math.max(0, Math.min(top, rect.height - lensH));
+
+                // position relative to slider container (slider image is direct child of .slider-container)
+                zoomLens.style.display = 'block';
+                zoomLens.style.left = (left) + 'px';
+                zoomLens.style.top = (top) + 'px';
+
+                // background image & size
+                zoomLens.style.backgroundImage = `url("${img.src}")`;
+                const bgW = (img.naturalWidth || rect.width) * zoomFactor;
+                const bgH = (img.naturalHeight || rect.height) * zoomFactor;
+                zoomLens.style.backgroundSize = `${bgW}px ${bgH}px`;
+
+                // background position as percent
+                const posXPercent = (x / rect.width) * 100;
+                const posYPercent = (y / rect.height) * 100;
+                zoomLens.style.backgroundPosition = `${posXPercent}% ${posYPercent}%`;
+            }
+
+            // mousemove: call moveLens
+            img.addEventListener('mousemove', (e) => {
+                moveLens(e.clientX, e.clientY);
+            });
+
+            img.addEventListener('mouseleave', () => {
+                zoomLens.style.display = 'none';
+            });
+
+            // touch support
+            img.addEventListener('touchmove', (e) => {
+                if (!e.touches || !e.touches[0]) return;
+                const t = e.touches[0];
+                moveLens(t.clientX, t.clientY);
+                e.preventDefault();
+            }, { passive: false });
+
+            img.addEventListener('touchend', () => {
+                zoomLens.style.display = 'none';
+            });
+        });
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') {
+                currentIndex = (currentIndex + 1) % total;
+                showImage(currentIndex);
+            } else if (e.key === 'ArrowLeft') {
+                currentIndex = (currentIndex - 1 + total) % total;
+                showImage(currentIndex);
+            }
+        });
+    });
+    </script>
+
+</body>
+
 @endsection
