@@ -45,6 +45,24 @@ class CheckoutController extends Controller
     public function buyNow($listingId)
 {
     try {
+        $user = auth()->user();
+        
+        // SELLER RESTRICTION: Sellers cannot buy (per PDF requirements)
+        if ($user->role === 'seller') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Sellers are not allowed to purchase items.',
+            ], 403);
+        }
+        
+        // BUYER MEMBERSHIP REQUIRED
+        if ($user->role !== 'buyer') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Buyer membership required to use Buy Now.',
+            ], 403);
+        }
+        
         $listing = Listing::findOrFail($listingId);
 
         // Update listing state

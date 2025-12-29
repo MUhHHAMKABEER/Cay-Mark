@@ -11,7 +11,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Str;
-use App\Http\Controllers\Controller;   // ✅ add this line
+use App\Http\Controllers\Controller;
+use App\Services\DepositService;
+use App\Services\BiddingIncrementService;
 
 
 class AuctionController extends Controller
@@ -157,8 +159,14 @@ public function show($id)
     }
 
     // determine current bid from bids table (preferred)
+    // Show starting price as "Current Bid" if no bids yet (per PDF requirements)
     $highest = $auctionListing->bids()->where('status', 'active')->orderByDesc('amount')->first();
-    $currentBid = $highest ? (float) $highest->amount : (float) ($auctionListing->current_bid ?? 0);
+    if ($highest) {
+        $currentBid = (float) $highest->amount;
+    } else {
+        // No bids yet - show starting price as "Current Bid" (not "Starting Price")
+        $currentBid = (float) ($auctionListing->starting_price ?? $auctionListing->price ?? $auctionListing->current_bid ?? 0);
+    }
 
     // Map images relation -> URLs
     $images = collect($auctionListing->images ?? [])
@@ -271,6 +279,40 @@ private function calculateTimeRemaining($endDate)
     public function storeBid(Request $request, $id)
     {
         $user = Auth::user();
+        
+        // SELLER RESTRICTION: Sellers cannot bid (per PDF requirements)
+        if ($user->role === 'seller') {
+            throw ValidationException::withMessages([
+                'amount' => 'Sellers are not allowed to bid on auctions.',
+            ]);
+        }
+        
+        // BUYER MEMBERSHIP REQUIRED
+        if ($user->role !== 'buyer') {
+            throw ValidationException::withMessages([
+                'amount' => 'Buyer membership required to place bids.',
+            ]);
+        }
+
+        // ACCOUNT RESTRICTION: Check if user is restricted from auction participation (per PDF requirements)
+        if ($user->is_restricted) {
+            // Check if restriction has expired
+            if ($user->restriction_ends_at && now()->greaterThan($user->restriction_ends_at)) {
+                // Auto-remove expired restriction
+                $user->update([
+                    'is_restricted' => false,
+                    'restriction_ends_at' => null,
+                    'restriction_reason' => null,
+                ]);
+            } else {
+                throw ValidationException::withMessages([
+                    'amount' => 'Your account is currently restricted from placing bids due to a non-payment default. This restriction will be lifted on ' . $user->restriction_ends_at->format('F d, Y') . '. You can still browse listings, view your account, and contact support.',
+                ]);
+            }
+        }
+        
+        $depositService = new DepositService();
+        $incrementService = new BiddingIncrementService();
 
         // simple validation
         $data = $request->validate([
@@ -280,26 +322,62 @@ private function calculateTimeRemaining($endDate)
         $amount = (float) $data['amount'];
 
         // Use DB transaction to avoid race conditions
-        return DB::transaction(function () use ($id, $user, $amount) {
+        return DB::transaction(function () use ($id, $user, $amount, $depositService, $incrementService) {
             $listing = Listing::lockForUpdate()->where('id', $id)
                 ->where('listing_method', 'auction')
-                ->where('status', 'approved') // or your rules
+                ->where('status', 'approved')
                 ->firstOrFail();
+
+            // Check if auction is still active (use auction_end_time if set, otherwise calculate)
+            $auctionEndDate = $listing->auction_end_time 
+                ? Carbon::parse($listing->auction_end_time)
+                : Carbon::parse($listing->auction_start_time ?? $listing->created_at)->addDays($listing->auction_duration);
+                
+            if (now()->greaterThanOrEqualTo($auctionEndDate)) {
+                throw ValidationException::withMessages([
+                    'amount' => 'This auction has ended.',
+                ]);
+            }
 
             // fetch current highest active bid
             $highestBid = $listing->bids()->where('status', 'active')->orderByDesc('amount')->first();
             $current = $highestBid ? (float) $highestBid->amount : (float) ($listing->current_bid ?? 0);
             $startingPrice = (float) ($listing->starting_price ?? $listing->price ?? 0);
 
-            // determine minimum required
-            $minIncrement = (float) ($listing->min_increment ?? 50); // default increment rule
-            // require at least max(startingPrice, current + minIncrement)
-            $minimumRequired = max($startingPrice, $current + $minIncrement);
+            // Use the higher of starting price or current bid for increment validation
+            $bidBase = max($startingPrice, $current);
 
-            if ($amount < $minimumRequired) {
+            // Validate bid increment using CayMark Increment Table
+            $incrementValidation = $incrementService->validateBidIncrement($bidBase, $amount);
+            if (!$incrementValidation['valid']) {
                 throw ValidationException::withMessages([
-                    'amount' => 'Your bid must be at least $'.number_format($minimumRequired, 2).'.',
+                    'amount' => $incrementValidation['message'],
                 ]);
+            }
+
+            // Ensure bid is at least starting price
+            if ($amount < $startingPrice) {
+                throw ValidationException::withMessages([
+                    'amount' => 'Your bid must be at least the starting price of $' . number_format($startingPrice, 2) . '.',
+                ]);
+            }
+
+            // Check deposit requirement (10% for bids >= $2,000)
+            $depositCheck = $depositService->checkDepositForBid($user, $amount);
+            if (!$depositCheck['has_deposit']) {
+                throw ValidationException::withMessages([
+                    'amount' => 'Insufficient deposit. Required: $' . number_format($depositCheck['required'], 2) . '. Available: $' . number_format($depositCheck['available'], 2) . '. Please add funds to your deposit wallet.',
+                ]);
+            }
+
+            // AUTO-SNIPING PROTECTION: If bid placed < 60 seconds remaining, reset timer to 60 seconds
+            $secondsRemaining = now()->diffInSeconds($auctionEndDate, false);
+            $timerReset = false;
+            if ($secondsRemaining > 0 && $secondsRemaining < 60) {
+                // Reset auction end time to 60 seconds from now (per PDF requirements)
+                $newEndTime = now()->addSeconds(60);
+                $listing->auction_end_time = $newEndTime;
+                $timerReset = true;
             }
 
             // create bid
@@ -310,11 +388,22 @@ private function calculateTimeRemaining($endDate)
                 'status' => 'active',
             ]);
 
-            // optionally update cached current_bid on listing
+            // Lock deposit for this bid (if required)
+            $requiredDeposit = $depositService->calculateRequiredDeposit($amount);
+            if ($requiredDeposit > 0) {
+                $depositService->lockDepositForBid($user, $bid, $requiredDeposit);
+            }
+
+            // Update listing
             $listing->current_bid = $amount;
             $listing->save();
 
-            // optionally: notify seller / previous highest bidder etc.
+            // Send bid placed notification
+            $notificationService = new \App\Services\NotificationService();
+            $notificationService->bidPlaced($user, $listing);
+
+            // Calculate new end time for response
+            $newEndDate = $timerReset ? $listing->auction_end_time : $auctionEndDate;
 
             // return JSON for AJAX
             return response()->json([
@@ -322,10 +411,12 @@ private function calculateTimeRemaining($endDate)
                 'bid' => [
                     'id' => $bid->id,
                     'amount' => number_format($bid->amount, 2),
-                    'user' => $user->name,
                     'created_at' => $bid->created_at->toDateTimeString(),
                 ],
                 'currentBid' => number_format($amount, 2),
+                'timerReset' => $timerReset,
+                'newEndTime' => $timerReset ? $newEndDate->toDateTimeString() : null,
+                'message' => $timerReset ? 'Bid placed! Timer extended by 60 seconds.' : 'Bid placed successfully!',
             ]);
         });
     }
@@ -348,19 +439,38 @@ public function auctionDetailBuyer($id, $slug = null)
         ]);
     }
 
-    // Auction End Date (created_at + auction_duration days)
+    // Auction End Date (use auction_end_time if set, otherwise calculate)
     $endDate = null;
-    if (!empty($auctionListing->auction_duration)) {
-        $endDate = \Carbon\Carbon::parse($auctionListing->created_at)
-            ->addDays((int) $auctionListing->auction_duration);
+    if ($auctionListing->auction_end_time) {
+        $endDate = Carbon::parse($auctionListing->auction_end_time);
+    } elseif (!empty($auctionListing->auction_duration)) {
+        $startTime = $auctionListing->auction_start_time 
+            ? Carbon::parse($auctionListing->auction_start_time)
+            : Carbon::parse($auctionListing->created_at);
+        $endDate = $startTime->copy()->addDays((int) $auctionListing->auction_duration);
     }
 
     // Check if expired
     $isExpired = $endDate ? $endDate->isPast() : true;
+    
+    // Calculate time remaining
+    $timeRemaining = $endDate && !$isExpired ? now()->diff($endDate) : null;
+    
+    // Get next valid increment
+    $incrementService = new \App\Services\BiddingIncrementService();
+    $highestBid = $auctionListing->bids()->where('status', 'active')->orderByDesc('amount')->first();
+    $currentBid = $highestBid ? (float) $highestBid->amount : (float) ($auctionListing->starting_price ?? $auctionListing->price ?? 0);
+    $nextValidIncrement = $incrementService->calculateMinimumNextBid($currentBid);
+    $incrementAmount = $incrementService->getIncrementForBid($currentBid);
 
-    // Current bid
-    $highest = $auctionListing->bids()->orderByDesc('amount')->first();
-    $currentBid = $highest ? (float) $highest->amount : (float) ($auctionListing->current_bid ?? 0);
+    // Current bid - Show starting price as "Current Bid" if no bids yet (per PDF requirements)
+    $highest = $auctionListing->bids()->where('status', 'active')->orderByDesc('amount')->first();
+    if ($highest) {
+        $currentBid = (float) $highest->amount;
+    } else {
+        // No bids yet - show starting price as "Current Bid" (not "Starting Price")
+        $currentBid = (float) ($auctionListing->starting_price ?? $auctionListing->price ?? $auctionListing->current_bid ?? 0);
+    }
 
     // Normalize images
     $images = collect($auctionListing->images)->map(fn($img) => asset('uploads/listings/' . $img->image_path));
@@ -371,6 +481,9 @@ public function auctionDetailBuyer($id, $slug = null)
         'endDate',
         'isExpired',
         'currentBid',
+        'timeRemaining',
+        'nextValidIncrement',
+        'incrementAmount',
         'images',
         'mainImage'
     ));

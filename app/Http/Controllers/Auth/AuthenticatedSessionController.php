@@ -26,6 +26,12 @@ public function store(LoginRequest $request): RedirectResponse
     $request->session()->regenerate();
 
     $user = $request->user();
+    
+    // Check if registration is complete
+    if (!$user->isRegistrationComplete() || empty($user->role)) {
+        return redirect()->route('dashboard.default');
+    }
+
     $role = trim(strtolower($user->role));
 
     if ($role === 'admin') {
@@ -33,13 +39,11 @@ public function store(LoginRequest $request): RedirectResponse
     } elseif ($role === 'seller') {
         return redirect()->route('dashboard.seller');
     } elseif ($role === 'buyer') {
-      
-            return redirect()->route('welcome'); // listings page
-
+        return redirect()->route('welcome'); // listings page
     }
 
     // fallback in case role is invalid
-    return redirect()->route('login')->with('error', 'Invalid role.');
+    return redirect()->route('dashboard.default');
 }
 
 

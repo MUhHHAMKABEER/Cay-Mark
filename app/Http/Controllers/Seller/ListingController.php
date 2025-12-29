@@ -3,12 +3,19 @@
 namespace App\Http\Controllers\Seller;
 
 use App\Models\Listing;
-use Illuminate\Support\Str;
 use App\Models\ListingImage;
+use App\Models\Payment;
+use App\Models\Subscription;
+use App\Models\Package;
+use App\Services\VinHinDecoderService;
+use App\Helpers\TextFormatter;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
 
 class ListingController extends Controller
 {
@@ -36,113 +43,248 @@ class ListingController extends Controller
 
         sort($makes); // Sort alphabetically
 
-        return view('Seller.submit-listing', compact('makes'));
+        $user = Auth::user();
+        return view('Seller.submit-listing-new', compact('user'));
     }
 
     public function store(Request $request)
     {
-        // Validate
-        $request->validate([
-            'listing_method' => 'required|in:buy_now,auction',
-            'auction_duration' => 'nullable|integer',
-            'major_category' => 'required|string',
-            'condition' => 'required|string',
+        $user = Auth::user();
+        $userPackage = $user->activeSubscription?->package;
+        $isIndividualSeller = $userPackage && $userPackage->price == 25.00;
+
+        // SECTION 1 VALIDATION - Vehicle Information
+        $validated = $request->validate([
+            // VIN/HIN (optional if manual entry)
+            'vin' => 'nullable|string|max:17',
+            
+            // Manual fields (required if VIN decode fails)
             'make' => 'nullable|string',
             'model' => 'nullable|string',
             'year' => 'nullable|string',
-            'color' => 'nullable|string',
+            'trim' => 'nullable|string',
+            'engine_size' => 'nullable|string',
+            'cylinders' => 'nullable|string',
+            'drive_type' => 'nullable|string',
             'fuel_type' => 'nullable|string',
             'transmission' => 'nullable|string',
-            'title_status' => 'nullable|string',
-            'primary_damage' => 'nullable|string',
+            'vehicle_type' => 'nullable|string',
+            
+            // Required condition fields
+            'title_status' => 'required|in:yes,no',
+            'island' => 'required|string',
+            'color' => 'required|string',
+            'interior_color' => 'required|string',
+            'primary_damage' => 'required|string',
+            'keys_available' => 'required|in:yes,no',
             'secondary_damage' => 'nullable|string',
-            'keys_available' => 'required|string',
-            'price' => 'nullable|numeric|min:0',   // ✅ new validation
-            'odometer' => 'nullable|integer|min:0', // ✅ new validation
-            'images.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'additional_notes' => 'nullable|string',
+            
+            // SECTION 2 - Photos
+            'cover_photo' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'photos.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            
+            // SECTION 3 - Auction Settings
+            'auction_duration' => 'required|in:5,7,14,21,28',
+            'starting_price' => 'nullable|numeric|min:0',
+            'reserve_price' => 'nullable|numeric|min:0',
+            'buy_now_price' => 'nullable|numeric|min:0',
+            
+            // Payment (Individual Sellers only)
+            'payment_method' => $isIndividualSeller ? 'required|string' : 'nullable',
         ]);
 
-        // Create listing
-        $listing = Listing::create([
-            'seller_id' => Auth::id(),
-            'listing_method' => $request->listing_method,
-            'auction_duration' => $request->auction_duration,
-            'major_category' => $request->major_category,
-            'subcategory' => $request->subcategory,
-            'other_make' => $request->other_make,
-            'other_model' => $request->other_model,
-            'condition' => $request->condition,
-            'make' => $request->make,
-            'model' => $request->model,
-            'trim' => $request->trim,
-            'year' => $request->year,
-            'color' => $request->color,
-            'fuel_type' => $request->fuel_type,
-            'transmission' => $request->transmission,
-            'title_status' => $request->title_status,
-            'primary_damage' => $request->primary_damage,
-            'secondary_damage' => $request->secondary_damage,
-            'keys_available' => $request->keys_available === 'yes',
-            'engine_type' => $request->engine_type,
-            'hull_material' => $request->hull_material,
-            'category_type' => $request->category_type,
-            'price' => $request->price,          // ✅ storing price
-            'odometer' => $request->odometer,    // ✅ storing odometer
-            'expires_at' => now()->addDays(30),
-            'listing_state' => 'active',
-        ]);
+        // Validate pricing rules
+        if ($request->starting_price && $request->starting_price <= 0) {
+            return back()->withErrors(['starting_price' => 'Starting Bid must be greater than $0 if entered.']);
+        }
+        if ($request->reserve_price && $request->starting_price && $request->reserve_price < $request->starting_price) {
+            return back()->withErrors(['reserve_price' => 'Reserve Price must be greater than or equal to Starting Bid.']);
+        }
 
-        // dd($listing);6
+        // Validate photos (cover + 5-10 additional)
+        $photos = $request->file('photos', []);
+        $totalPhotos = count($photos) + 1; // +1 for cover photo
+        
+        if ($totalPhotos < 6) {
+            return back()->withErrors(['photos' => 'Minimum 5 additional photos required (plus cover photo).']);
+        }
+        if ($totalPhotos > 11) {
+            return back()->withErrors(['photos' => 'Maximum 10 additional photos allowed (plus cover photo).']);
+        }
 
-        // Handle Images
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $image) {
-                // Generate unique filename
-                $newFileName = 'LISTING_IMG_'.microtime(true).'_'.uniqid().'.'.$image->getClientOriginalExtension();
+        // Check for duplicate VIN if provided
+        $duplicateVinFlag = false;
+        if (!empty($validated['vin'])) {
+            $vin = TextFormatter::toAllCaps($validated['vin']);
+            $existingListing = Listing::where('vin', $vin)
+                ->where('id', '!=', $request->id ?? 0)
+                ->where('status', '!=', 'rejected')
+                ->first();
 
-                // Try moving the file to public/uploads/listings
-                if ($image->move(public_path('uploads/listings'), $newFileName)) {
+            if ($existingListing) {
+                $duplicateVinFlag = true;
+            }
+        }
+
+        return DB::transaction(function () use ($request, $validated, $user, $isIndividualSeller, $duplicateVinFlag, $totalPhotos) {
+            // Process payment for Individual Sellers ($25)
+            if ($isIndividualSeller) {
+                // TODO: Integrate with payment gateway (Stripe)
+                // For now, create a payment record
+                $payment = Payment::create([
+                    'user_id' => $user->id,
+                    'amount' => 25.00,
+                    'method' => $request->payment_method ?? 'credit_card',
+                    'status' => 'completed', // Will be updated after payment gateway confirmation
+                ]);
+            }
+
+            // Calculate auction end date
+            $auctionDuration = (int) $validated['auction_duration'];
+            $expiresAt = now()->addDays($auctionDuration);
+
+            // Create listing with status PENDING (per PDF requirements)
+            $listing = Listing::create([
+                'seller_id' => $user->id,
+                'listing_method' => 'auction', // All listings are auctions per PDF
+                'auction_duration' => $auctionDuration,
+                'make' => $validated['make'] ?? null,
+                'model' => $validated['model'] ?? null,
+                'trim' => $validated['trim'] ?? null,
+                'year' => $validated['year'] ?? null,
+                'vin' => !empty($validated['vin']) ? TextFormatter::toAllCaps($validated['vin']) : null,
+                'duplicate_vin_flag' => $duplicateVinFlag,
+                'color' => $validated['color'],
+                'interior_color' => $validated['interior_color'],
+                'island' => $validated['island'],
+                'fuel_type' => $validated['fuel_type'] ?? null,
+                'transmission' => $validated['transmission'] ?? null,
+                'title_status' => $validated['title_status'] === 'yes' ? 'CLEAN' : 'SALVAGE',
+                'primary_damage' => $validated['primary_damage'],
+                'secondary_damage' => $validated['secondary_damage'] ?? null,
+                'keys_available' => $validated['keys_available'] === 'yes',
+                'engine_type' => $validated['engine_size'] ?? null,
+                'starting_price' => $validated['starting_price'] ?? null,
+                'reserve_price' => $validated['reserve_price'] ?? null,
+                'buy_now_price' => $validated['buy_now_price'] ?? null,
+                'status' => 'pending', // PENDING APPROVAL per PDF
+                'expires_at' => $expiresAt,
+                'listing_state' => 'active',
+            ]);
+
+            // Handle Cover Photo (first image)
+            $coverPhotoId = null;
+            if ($request->hasFile('cover_photo')) {
+                $coverPhoto = $request->file('cover_photo');
+                $newFileName = 'COVER_' . microtime(true) . '_' . uniqid() . '.' . $coverPhoto->getClientOriginalExtension();
+                
+                if ($coverPhoto->move(public_path('uploads/listings'), $newFileName)) {
+                    $coverImage = ListingImage::create([
+                        'listing_id' => $listing->id,
+                        'image_path' => $newFileName,
+                    ]);
+                    $coverPhotoId = $coverImage->id;
+                }
+            }
+
+            // Handle Additional Photos (preserve order)
+            if ($request->hasFile('photos')) {
+                foreach ($request->file('photos') as $index => $photo) {
+                    $newFileName = 'LISTING_IMG_' . ($index + 1) . '_' . microtime(true) . '_' . uniqid() . '.' . $photo->getClientOriginalExtension();
+                    
+                    if (!$photo->move(public_path('uploads/listings'), $newFileName)) {
+                        $listing->delete();
+                        return back()->with('failure', 'Failed to upload one or more photos.');
+                    }
+                    
                     ListingImage::create([
                         'listing_id' => $listing->id,
                         'image_path' => $newFileName,
                     ]);
-                } else {
-                    // Rollback listing if any image fails
-                    $listing->delete();
-
-                    return back()->with('failure', 'Failed to upload one or more images.');
                 }
             }
-        }
 
-        return redirect()->back()->with('success', 'Listing created successfully!');
+            // Update listing with cover photo ID
+            if ($coverPhotoId) {
+                $listing->cover_photo_id = $coverPhotoId;
+                $listing->save();
+            }
+
+            // Send confirmation email
+            try {
+                Mail::send('emails.listing-submitted', [
+                    'listing' => $listing,
+                    'user' => $user,
+                ], function ($message) use ($user, $listing) {
+                    $message->to($user->email, $user->name)
+                        ->subject('Listing Submitted for Review – ' . ($listing->year ?? '') . ' ' . ($listing->make ?? '') . ' ' . ($listing->model ?? '[VEHICLE_NAME]'));
+                });
+                
+                // Send in-app notification
+                $notificationService = new \App\Services\NotificationService();
+                $notificationService->listingSubmitted($user, $listing);
+            } catch (\Exception $e) {
+                // Log error but don't fail submission
+                \Log::error('Failed to send listing submission email: ' . $e->getMessage());
+            }
+
+            return redirect()->route('seller.listings')
+                ->with('success', 'YOUR LISTING HAS BEEN SUBMITTED FOR REVIEW.');
+        });
     }
 
- public function getModels($make)
-{
-    // Map of car makes to their models
-    $modelsByMake = [
-        'Acura' => ['MDX', 'RDX', 'TLX', 'ILX', 'NSX', 'ZDX'],
-        'Audi' => ['A1', 'A3', 'A4', 'A5', 'A6', 'A7', 'A8', 'Q3', 'Q5', 'Q7', 'Q8', 'TT', 'R8'],
-        'BMW' => ['1 Series', '2 Series', '3 Series', '4 Series', '5 Series', '6 Series', '7 Series', 'X1', 'X3', 'X4', 'X5', 'X6', 'X7', 'Z4'],
-        'Ford' => ['Fiesta', 'Focus', 'Fusion', 'Mustang', 'Escape', 'Edge', 'Explorer', 'Expedition', 'Ranger', 'F-150', 'F-250'],
-        'Honda' => ['Fit', 'Jazz', 'Civic', 'Accord', 'CR-V', 'HR-V', 'BR-V', 'Freed', 'Brio', 'N-One', 'N-Box'],
-        'Toyota' => ['Vitz', 'Yaris', 'Passo', 'Porte', 'Corolla', 'Camry', 'Aqua', 'Prius', 'RAV4', 'Hilux', 'Land Cruiser', 'HiAce', '86'],
-    ];
+    /**
+     * Decode VIN/HIN via AJAX.
+     */
+    public function decodeVinHin(Request $request)
+    {
+        $request->validate([
+            'vin_hin' => 'required|string|max:17',
+        ]);
 
-    // Normalize make input (case-insensitive)
-    $formattedMake = ucfirst(strtolower(trim($make)));
+        $decoder = new VinHinDecoderService();
+        $result = $decoder->decode($request->vin_hin);
 
-    // Get models or return empty array if make not found
-    $models = $modelsByMake[$formattedMake] ?? [];
+        if ($result['success']) {
+            $formatted = $decoder->formatDecodedData($result['data']);
+            return response()->json([
+                'success' => true,
+                'data' => $formatted,
+            ]);
+        }
 
-    // Return JSON response
-    return response()->json([
-        'success' => true,
-        'make' => $formattedMake,
-        'models' => $models
-    ]);
-}
+        return response()->json([
+            'success' => false,
+            'message' => $result['message'],
+        ]);
+    }
+
+    public function getModels($make)
+    {
+        // Map of car makes to their models
+        $modelsByMake = [
+            'Acura' => ['MDX', 'RDX', 'TLX', 'ILX', 'NSX', 'ZDX'],
+            'Audi' => ['A1', 'A3', 'A4', 'A5', 'A6', 'A7', 'A8', 'Q3', 'Q5', 'Q7', 'Q8', 'TT', 'R8'],
+            'BMW' => ['1 Series', '2 Series', '3 Series', '4 Series', '5 Series', '6 Series', '7 Series', 'X1', 'X3', 'X4', 'X5', 'X6', 'X7', 'Z4'],
+            'Ford' => ['Fiesta', 'Focus', 'Fusion', 'Mustang', 'Escape', 'Edge', 'Explorer', 'Expedition', 'Ranger', 'F-150', 'F-250'],
+            'Honda' => ['Fit', 'Jazz', 'Civic', 'Accord', 'CR-V', 'HR-V', 'BR-V', 'Freed', 'Brio', 'N-One', 'N-Box'],
+            'Toyota' => ['Vitz', 'Yaris', 'Passo', 'Porte', 'Corolla', 'Camry', 'Aqua', 'Prius', 'RAV4', 'Hilux', 'Land Cruiser', 'HiAce', '86'],
+        ];
+
+        // Normalize make input (case-insensitive)
+        $formattedMake = ucfirst(strtolower(trim($make)));
+
+        // Get models or return empty array if make not found
+        $models = $modelsByMake[$formattedMake] ?? [];
+
+        // Return JSON response
+        return response()->json([
+            'success' => true,
+            'make' => $formattedMake,
+            'models' => $models
+        ]);
+    }
 
 
     public function showListing()

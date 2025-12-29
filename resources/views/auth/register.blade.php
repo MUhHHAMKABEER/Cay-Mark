@@ -145,14 +145,14 @@
                     @endif
                 </div>
 
-                <!-- Step 1: Personal Information -->
+                <!-- Step 1: Basic Account Creation -->
                 <div x-show="step === 1" x-cloak class="animate-fade-in">
                     <div class="text-center mb-8">
-                        <h2 class="text-3xl font-bold text-gray-900 mb-2">Personal Information</h2>
-                        <p class="text-gray-600">Tell us about yourself to get started</p>
+                        <h2 class="text-3xl font-bold text-gray-900 mb-2">Create Your Account</h2>
+                        <p class="text-gray-600">Get started with just your basic information</p>
                     </div>
 
-                    <form method="POST" action="{{ route('register.step1') }}" enctype="multipart/form-data" id="step1-form" novalidate>
+                    <form method="POST" action="{{ route('register.step1') }}" id="step1-form" novalidate>
                         @csrf
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <!-- Name Fields -->
@@ -161,12 +161,7 @@
                                 <input type="text" id="first_name" name="first_name" required value="{{ old('first_name') }}"
                                     class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200">
                                 @error('first_name')
-                                    <p class="text-sm text-red-600 mt-1 flex items-center">
-                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                        </svg>
-                                        {{ $message }}
-                                    </p>
+                                    <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
                                 @enderror
                             </div>
                             <div class="space-y-2">
@@ -174,12 +169,7 @@
                                 <input type="text" id="last_name" name="last_name" required value="{{ old('last_name') }}"
                                     class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200">
                                 @error('last_name')
-                                    <p class="text-sm text-red-600 mt-1 flex items-center">
-                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                        </svg>
-                                        {{ $message }}
-                                    </p>
+                                    <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
                                 @enderror
                             </div>
 
@@ -189,12 +179,7 @@
                                 <input type="email" id="email" name="email" required value="{{ old('email') }}"
                                     class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200">
                                 @error('email')
-                                    <p class="text-sm text-red-600 mt-1 flex items-center">
-                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                        </svg>
-                                        {{ $message }}
-                                    </p>
+                                    <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
                                 @enderror
                             </div>
                             <div class="space-y-2">
@@ -202,52 +187,7 @@
                                 <input type="email" id="email_confirmation" name="email_confirmation" required value="{{ old('email_confirmation') }}"
                                     class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200">
                                 @error('email_confirmation')
-                                    <p class="text-sm text-red-600 mt-1 flex items-center">
-                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                        </svg>
-                                        {{ $message }}
-                                    </p>
-                                @enderror
-                            </div>
-
-                            <!-- Phone & Gender -->
-                            <div class="space-y-2">
-                                <label for="phone" class="block text-sm font-semibold text-gray-700">Phone Number *</label>
-                                <input type="tel" id="phone" name="phone" required value="{{ old('phone') }}"
-                                    class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200">
-                                @error('phone')
-                                    <p class="text-sm text-red-600 mt-1 flex items-center">
-                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                        </svg>
-                                        {{ $message }}
-                                    </p>
-                                @enderror
-                            </div>
-                            <div class="space-y-2">
-                                <label class="block text-sm font-semibold text-gray-700">Gender *</label>
-                                <div class="flex space-x-4 mt-2">
-                                    <label class="flex items-center cursor-pointer">
-                                        <input type="radio" name="gender" value="Male" required class="hidden peer" {{ old('gender') == 'Male' ? 'checked' : '' }}>
-                                        <div class="px-6 py-3 rounded-xl border-2 border-gray-300 peer-checked:border-blue-500 peer-checked:bg-blue-50 transition duration-200 hover:border-gray-400">
-                                            <span class="font-medium text-gray-700 peer-checked:text-blue-600">Male</span>
-                                        </div>
-                                    </label>
-                                    <label class="flex items-center cursor-pointer">
-                                        <input type="radio" name="gender" value="Female" class="hidden peer" {{ old('gender') == 'Female' ? 'checked' : '' }}>
-                                        <div class="px-6 py-3 rounded-xl border-2 border-gray-300 peer-checked:border-blue-500 peer-checked:bg-blue-50 transition duration-200 hover:border-gray-400">
-                                            <span class="font-medium text-gray-700 peer-checked:text-blue-600">Female</span>
-                                        </div>
-                                    </label>
-                                </div>
-                                @error('gender')
-                                    <p class="text-sm text-red-600 mt-1 flex items-center">
-                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                        </svg>
-                                        {{ $message }}
-                                    </p>
+                                    <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
                                 @enderror
                             </div>
 
@@ -257,12 +197,7 @@
                                 <input type="password" id="password" name="password" required
                                     class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200">
                                 @error('password')
-                                    <p class="text-sm text-red-600 mt-1 flex items-center">
-                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                        </svg>
-                                        {{ $message }}
-                                    </p>
+                                    <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
                                 @enderror
                             </div>
                             <div class="space-y-2">
@@ -270,115 +205,32 @@
                                 <input type="password" id="password_confirmation" name="password_confirmation" required
                                     class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200">
                                 @error('password_confirmation')
-                                    <p class="text-sm text-red-600 mt-1 flex items-center">
-                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                        </svg>
-                                        {{ $message }}
-                                    </p>
+                                    <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
                                 @enderror
-                            </div>
-
-                            <!-- Username -->
-                            <div class="space-y-2">
-                                <label for="username" class="block text-sm font-semibold text-gray-700">Username *</label>
-                                <input type="text" id="username" name="username" required value="{{ old('username') }}"
-                                    class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200">
-                                <p class="text-sm text-gray-500 mt-1">Private - will never be displayed publicly</p>
-                                @error('username')
-                                    <p class="text-sm text-red-600 mt-1 flex items-center">
-                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                        </svg>
-                                        {{ $message }}
-                                    </p>
-                                @enderror
-                            </div>
-
-                            <!-- Date of Birth -->
-                            <div class="space-y-2">
-                                <label for="dob" class="block text-sm font-semibold text-gray-700">Date of Birth *</label>
-                                <input type="date" id="dob" name="dob" required value="{{ old('dob') }}"
-                                    class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200">
-                                <p class="text-sm text-amber-600 mt-1 font-medium">You must be 18 years or older to register</p>
-                                @error('dob')
-                                    <p class="text-sm text-red-600 mt-1 flex items-center">
-                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                        </svg>
-                                        {{ $message }}
-                                    </p>
-                                @enderror
-                            </div>
-
-                            <!-- Nationality & Island -->
-                            <div class="space-y-2">
-                                <label for="nationality" class="block text-sm font-semibold text-gray-700">Nationality *</label>
-                                <input type="text" id="nationality" name="nationality" required value="{{ old('nationality') }}"
-                                    class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200">
-                                @error('nationality')
-                                    <p class="text-sm text-red-600 mt-1 flex items-center">
-                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                        </svg>
-                                        {{ $message }}
-                                    </p>
-                                @enderror
-                            </div>
-                            <div class="space-y-2">
-                                <label for="island" class="block text-sm font-semibold text-gray-700">Island *</label>
-                                <select id="island" name="island" required
-                                    class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 bg-white">
-                                    <option value="">Select Island</option>
-                                    @foreach ($islands as $island)
-                                        <option value="{{ $island }}" {{ old('island') == $island ? 'selected' : '' }}>{{ $island }}</option>
-                                    @endforeach
-                                </select>
-                                @error('island')
-                                    <p class="text-sm text-red-600 mt-1 flex items-center">
-                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                        </svg>
-                                        {{ $message }}
-                                    </p>
-                                @enderror
-                            </div>
-
-                            <!-- ID Upload -->
-                            <div class="md:col-span-2 space-y-4">
-                                <div>
-                                    <label class="block text-sm font-semibold text-gray-700">Government Issued ID Documents *</label>
-                                    <p class="text-sm text-gray-500 mt-1">Upload 2 documents (JPG, PNG, PDF, max 5MB each)</p>
-                                </div>
-                                <div id="file-upload-container" class="space-y-4">
-                                    <!-- File upload fields will be added here by JavaScript -->
-                                </div>
-                                @if ($errors->first('id_documents') || $errors->first('id_documents.*'))
-                                    <p class="text-sm text-red-600 mt-1 flex items-center">
-                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                        </svg>
-                                        {{ $errors->first('id_documents') ?? $errors->first('id_documents.*') }}
-                                    </p>
-                                @endif
                             </div>
                         </div>
 
-                        <!-- Enhanced Terms Notice -->
-                        <div class="mt-8 p-6 bg-blue-50 rounded-2xl border border-blue-200">
-                            <p class="text-sm text-blue-800">
-                                By registering, you agree to the
-                                <a href="#" target="_blank" class="font-semibold hover:underline">Site Data & Privacy Policy</a>,
-                                <a href="#" target="_blank" class="font-semibold hover:underline">Terms & Conditions</a>,
-                                and other applicable policies.
-                            </p>
+                        <!-- Terms Checkbox -->
+                        <div class="mt-8">
+                            <label class="flex items-start space-x-4 p-4 rounded-xl border border-gray-200 hover:bg-gray-50 transition duration-200 cursor-pointer">
+                                <input type="checkbox" name="agree_terms" value="1" required
+                                    class="mt-1 w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
+                                    {{ old('agree_terms') ? 'checked' : '' }}>
+                                <span class="text-sm text-gray-700">
+                                    I agree to CayMark's 
+                                    <a href="#" target="_blank" class="font-semibold hover:underline text-blue-600">Terms and Privacy Policy</a>
+                                </span>
+                            </label>
+                            @error('agree_terms')
+                                <p class="text-sm text-red-600 mt-2">{{ $message }}</p>
+                            @enderror
                         </div>
 
-                        <!-- Enhanced Navigation -->
+                        <!-- Submit Button -->
                         <div class="mt-8 flex justify-end">
                             <button type="submit"
                                 class="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-8 py-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition duration-200">
-                                Continue to Package Selection
+                                Create Account
                                 <svg class="w-5 h-5 ml-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                                 </svg>

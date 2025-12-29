@@ -20,7 +20,9 @@ class User extends Authenticatable
 // app/Models/User.php
 protected $fillable = [
     'name','email','password','username','nationality','island',
-    'dob','gender','phone','marketing_opt_in'
+    'dob','gender','phone','marketing_opt_in','role',
+    'id_type','business_license_path','relationship_to_business','registration_complete',
+    'is_restricted','restriction_ends_at','restriction_reason'
 ];
 
 
@@ -43,6 +45,9 @@ protected $fillable = [
         'email_verified_at' => 'datetime',
         'dob' => 'date',
         'marketing_opt_in' => 'boolean',
+        'registration_complete' => 'boolean',
+        'is_restricted' => 'boolean',
+        'restriction_ends_at' => 'datetime',
     ];
 
 
@@ -81,10 +86,40 @@ public function watchlist()
 {
     return $this->belongsToMany(Listing::class, 'watchlists')->withTimestamps();
 }
-public function bids()
-{
-    return $this->hasMany(Bid::class);
-}
+    public function bids()
+    {
+        return $this->hasMany(Bid::class);
+    }
+
+    public function deposits()
+    {
+        return $this->hasMany(Deposit::class);
+    }
+
+    public function wallet()
+    {
+        return $this->hasOne(UserWallet::class);
+    }
+
+    public function invoices()
+    {
+        return $this->hasMany(Invoice::class, 'buyer_id');
+    }
+
+    public function sellerInvoices()
+    {
+        return $this->hasMany(Invoice::class, 'seller_id');
+    }
+
+    public function payouts()
+    {
+        return $this->hasMany(Payout::class, 'seller_id');
+    }
+
+    public function payoutMethod()
+    {
+        return $this->hasOne(SellerPayoutMethod::class);
+    }
 
     public function documents()
     {
@@ -96,11 +131,46 @@ public function bids()
         return $this->hasMany(Subscription::class);
     }
 
-
+    public function listings()
+    {
+        return $this->hasMany(Listing::class, 'seller_id');
+    }
 
     public function activeSubscription()
     {
         return $this->hasOne(Subscription::class)->where('status', 'active');
+    }
+
+    /**
+     * Check if user has completed registration
+     */
+    public function isRegistrationComplete()
+    {
+        return $this->registration_complete === true;
+    }
+
+    /**
+     * Check if user has a role assigned
+     */
+    public function hasRole()
+    {
+        return !empty($this->role);
+    }
+
+    /**
+     * Check if user can access buyer features
+     */
+    public function canAccessBuyerFeatures()
+    {
+        return $this->isRegistrationComplete() && $this->role === self::ROLE_BUYER;
+    }
+
+    /**
+     * Check if user can access seller features
+     */
+    public function canAccessSellerFeatures()
+    {
+        return $this->isRegistrationComplete() && $this->role === self::ROLE_SELLER;
     }
 
 }

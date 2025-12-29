@@ -9,75 +9,59 @@ class PackageSeeder extends Seeder
 {
     public function run()
     {
-        // Buyer Packages
-        Package::create([
-            'title' => 'Basic Buyer',
-            'role' => 'buyer',
-            'price' => 49.99,
-            'duration_days' => 365,
-            'auction_bid_limit' => 2000.00,
-            'auction_access' => true,
-            'marketplace_access' => true,
-            'features' => json_encode([
-                'Access to Marketplace and Auctions',
-                'Auction bidding limit: $2,000',
-                'Limited to one bid at a time'
-            ])
-        ]);
+        // Clear existing packages (optional - comment out if you want to keep old data)
+        Package::truncate();
 
+        // BUYER MEMBERSHIP - Only one option
         Package::create([
-            'title' => 'Premium Buyer',
+            'title' => 'Buyer Membership',
             'role' => 'buyer',
-            'price' => 99.99,
+            'price' => 64.99,
             'duration_days' => 365,
             'auction_access' => true,
             'marketplace_access' => true,
+            'buy_now_feature' => true,
             'features' => json_encode([
-                'Access to Marketplace and Auctions',
-                'No auction bidding limit',
-                'Unlimited bids'
+                'Full vehicle details access',
+                'Bidding in all auctions',
+                'Able to purchase vehicles with Buy Now prices',
+                'Seller messaging AFTER winning an item',
+                'Full buyer dashboard and notifications',
+                'Platform access fee: $64.99 per year'
             ])
         ]);
 
-        // Seller Packages
+        // INDIVIDUAL SELLER - Pay per listing
         Package::create([
-            'title' => 'Casual Seller',
+            'title' => 'Individual Seller',
             'role' => 'seller',
-            'price' => 65.00,
-            'max_listings' => 1,
-            'marketplace_access' => true,
-            'features' => json_encode([
-                'Limited to 1 active listing per purchase',
-                'Listing duration: 30 days',
-                'Access to Marketplace only (no auctions)',
-                'Can repurchase the package to list again'
-            ])
-        ]);
-
-        Package::create([
-            'title' => 'Standard Seller',
-            'role' => 'seller',
-            'price' => 150.00,
-            'duration_days' => 365,
-            'max_listings_per_month' => 2,
+            'price' => 25.00, // Pay per listing at submission
+            'duration_days' => null, // No annual membership
+            'max_listings' => null, // Unlimited submissions
             'auction_access' => true,
             'marketplace_access' => true,
             'seller_dashboard' => true,
+            'buy_now_feature' => true,
+            'reserve_pricing' => true,
             'features' => json_encode([
-                'Up to 2 active listings per month',
-                'Listings can go into either Marketplace or Auction',
-                'Access to seller dashboard',
-                'No Buy Now option',
-                'No reserve pricing allowed'
+                'Unlimited listing submissions',
+                '$25 per listing at submission',
+                'May set Buy Now Price',
+                'May set Reserve Price',
+                'May set Starting Bid Price',
+                'No relisting feature (create new listing)',
+                'Rejected listings can be edited and resubmitted',
+                '4% seller commission (minimum $150)'
             ])
         ]);
 
+        // BUSINESS SELLER - Annual membership
         Package::create([
-            'title' => 'Advanced Seller',
+            'title' => 'Business Seller',
             'role' => 'seller',
-            'price' => 500.00,
+            'price' => 599.99,
             'duration_days' => 365,
-            'max_listings_per_month' => 10,
+            'max_listings' => null, // Unlimited listings
             'auction_access' => true,
             'marketplace_access' => true,
             'seller_dashboard' => true,
@@ -85,31 +69,15 @@ class PackageSeeder extends Seeder
             'reserve_pricing' => true,
             'account_manager' => true,
             'features' => json_encode([
-                'Up to 10 active listings per month',
-                'Listings allowed in both Marketplace and Auction',
-                'Buy Now feature enabled',
-                'Assigned account manager',
-                'Can set a reserve price on auction listings'
-            ])
-        ]);
-
-        Package::create([
-            'title' => 'Enterprise Seller',
-            'role' => 'seller',
-            'price' => 0.00, // Custom pricing
-            'duration_days' => 365,
-            'auction_access' => true,
-            'marketplace_access' => true,
-            'seller_dashboard' => true,
-            'buy_now_feature' => true,
-            'reserve_pricing' => true,
-            'account_manager' => true,
-            'features' => json_encode([
-                'Tailored accounts for large businesses',
-                'Unlimited listings',
-                'Full dashboard access and all seller features',
-                'Custom support options',
-                'Listings can go to either Marketplace or Auction'
+                'Unlimited listing submissions',
+                'No per-listing fee',
+                'Free relisting within 48 hours (for items with no sales)',
+                'May set Buy Now Price',
+                'May set Reserve Price',
+                'May set Starting Bid Price',
+                'Advanced listing management tools',
+                '4% seller commission (minimum $150)',
+                'Annual membership: $599.99 per year'
             ])
         ]);
     }

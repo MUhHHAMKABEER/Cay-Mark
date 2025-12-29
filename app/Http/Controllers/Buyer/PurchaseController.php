@@ -3,63 +3,44 @@
 namespace App\Http\Controllers\Buyer;
 
 use App\Http\Controllers\Controller;
+use App\Services\InvoiceService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class PurchaseController extends Controller
 {
+    protected $invoiceService;
+
+    public function __construct()
+    {
+        $this->invoiceService = new InvoiceService();
+    }
+
     /**
-     * Display a listing of the resource.
+     * Display won auctions with invoices.
      */
     public function index()
     {
-        //
+        $user = Auth::user();
+        $invoices = $this->invoiceService->getBuyerInvoices($user);
+
+        return view('Buyer.auctions-won', compact('invoices'));
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Download invoice PDF.
      */
-    public function create()
+    public function downloadInvoice($invoiceId)
     {
-        //
-    }
+        $user = Auth::user();
+        $invoice = \App\Models\Invoice::where('id', $invoiceId)
+            ->where('buyer_id', $user->id)
+            ->firstOrFail();
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
+        if (!$invoice->pdf_path || !file_exists(public_path($invoice->pdf_path))) {
+            return back()->with('error', 'Invoice PDF not found. Please contact support.');
+        }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return response()->download(public_path($invoice->pdf_path));
     }
 }
