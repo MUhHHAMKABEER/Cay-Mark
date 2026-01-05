@@ -61,6 +61,10 @@ class Listing extends Model
         'buy_now_price',
         'odometer',
         'bought',
+        'rejected_at',
+        'rejected_by',
+        'rejection_reason',
+        'rejection_notes',
     ];
 
     /**
@@ -73,6 +77,7 @@ class Listing extends Model
         'pickup_pin_generated_at' => 'datetime',
         'pickup_confirmed_at' => 'datetime',
         'pickup_confirmed' => 'boolean',
+        'rejected_at' => 'datetime',
     ];
 
     /**

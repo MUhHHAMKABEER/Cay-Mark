@@ -272,6 +272,8 @@ public function disapprove(Request $request, $id)
     $listing->status = 'rejected';
     $listing->rejected_at = now();
     $listing->rejected_by = auth()->id();
+    $listing->rejection_reason = $request->rejection_reason;
+    $listing->rejection_notes = $request->rejection_notes;
     $listing->save();
 
     // Send rejection email to seller

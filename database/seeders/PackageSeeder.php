@@ -31,11 +31,11 @@ class PackageSeeder extends Seeder
             ])
         ]);
 
-        // INDIVIDUAL SELLER - Pay per listing
+        // INDIVIDUAL SELLER - Free (no payment required at registration)
         Package::create([
             'title' => 'Individual Seller',
             'role' => 'seller',
-            'price' => 25.00, // Pay per listing at submission
+            'price' => 0.00, // Free - no payment required at registration
             'duration_days' => null, // No annual membership
             'max_listings' => null, // Unlimited submissions
             'auction_access' => true,
@@ -45,7 +45,7 @@ class PackageSeeder extends Seeder
             'reserve_pricing' => true,
             'features' => json_encode([
                 'Unlimited listing submissions',
-                '$25 per listing at submission',
+                'No registration fee',
                 'May set Buy Now Price',
                 'May set Reserve Price',
                 'May set Starting Bid Price',

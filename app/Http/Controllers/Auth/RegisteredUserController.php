@@ -83,7 +83,6 @@ class RegisteredUserController extends Controller
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'email_confirmation' => 'required|same:email',
             'password' => ['required', 'confirmed', Password::min(8)],
             'agree_terms' => 'required|accepted',
         ], [
@@ -93,13 +92,159 @@ class RegisteredUserController extends Controller
         DB::beginTransaction();
 
         try {
+            Log::info('=== REGISTRATION STEP 1 START ===', [
+                'email' => $validated['email'],
+                'first_name' => $validated['first_name'],
+                'last_name' => $validated['last_name'],
+            ]);
+            
+            // Generate unique username from first name and last name
+            $firstName = strtolower(trim($validated['first_name']));
+            $lastName = strtolower(trim($validated['last_name']));
+            
+            Log::info('Step 1: Names cleaned', [
+                'first_name_original' => $validated['first_name'],
+                'last_name_original' => $validated['last_name'],
+                'first_name_lowercase' => $firstName,
+                'last_name_lowercase' => $lastName,
+            ]);
+            
+            // Remove spaces and special characters, keep only alphanumeric
+            $firstName = preg_replace('/[^a-z0-9]/', '', $firstName);
+            $lastName = preg_replace('/[^a-z0-9]/', '', $lastName);
+            
+            Log::info('Step 2: After regex cleaning', [
+                'first_name_cleaned' => $firstName,
+                'last_name_cleaned' => $lastName,
+                'first_name_empty' => empty($firstName),
+                'last_name_empty' => empty($lastName),
+            ]);
+            
+            // Fallback if names become empty after cleaning
+            if (empty($firstName)) {
+                $firstName = 'user';
+                Log::warning('First name became empty after cleaning, using fallback: user');
+            }
+            if (empty($lastName)) {
+                $lastName = 'name';
+                Log::warning('Last name became empty after cleaning, using fallback: name');
+            }
+            
+            // Combine first name and last name
+            $baseUsername = $firstName . '.' . $lastName;
+            $username = $baseUsername;
+            $counter = 1;
+            
+            Log::info('Step 3: Base username generated', [
+                'base_username' => $baseUsername,
+                'initial_username' => $username,
+            ]);
+            
+            // Check existing users count
+            $existingUsersCount = User::count();
+            Log::info('Step 4: Database check', [
+                'total_users_in_db' => $existingUsersCount,
+                'checking_username' => $username,
+            ]);
+            
+            // Ensure username is unique (check before insert)
+            $checkCount = 0;
+            while (User::where('username', $username)->exists()) {
+                $checkCount++;
+                Log::warning('Username conflict found', [
+                    'attempt' => $checkCount,
+                    'conflicting_username' => $username,
+                    'existing_user' => User::where('username', $username)->first(['id', 'email', 'name']),
+                ]);
+                
+                $username = $baseUsername . $counter;
+                $counter++;
+                
+                // Safety limit to prevent infinite loop
+                if ($counter > 1000) {
+                    // Fallback to email-based username if too many conflicts
+                    $emailPart = strtolower(explode('@', $validated['email'])[0]);
+                    $username = preg_replace('/[^a-z0-9]/', '', $emailPart) . '_' . time();
+                    Log::error('Username generation exceeded limit, using email fallback', [
+                        'final_username' => $username,
+                    ]);
+                    break;
+                }
+            }
+            
+            if ($checkCount > 0) {
+                Log::info('Step 5: Username conflicts resolved', [
+                    'conflicts_found' => $checkCount,
+                    'final_username' => $username,
+                ]);
+            }
+            
+            // Final check before insert
+            $finalCheck = User::where('username', $username)->exists();
+            Log::info('Step 6: Final username check before insert', [
+                'username' => $username,
+                'username_exists' => $finalCheck,
+                'all_existing_usernames' => User::pluck('username')->toArray(),
+            ]);
+            
+            if ($finalCheck) {
+                Log::error('CRITICAL: Username still exists after all checks!', [
+                    'username' => $username,
+                    'existing_user_details' => User::where('username', $username)->first(),
+                ]);
+                throw new \Exception('Username conflict detected after all resolution attempts. Username: ' . $username);
+            }
+            
+            // Log for debugging
+            Log::info('Step 7: Attempting user creation', [
+                'name' => trim($validated['first_name'] . ' ' . $validated['last_name']),
+                'email' => $validated['email'],
+                'username' => $username,
+                'first_name_cleaned' => $firstName,
+                'last_name_cleaned' => $lastName,
+            ]);
+            
             // Create user account immediately
             $user = User::create([
                 'name' => trim($validated['first_name'] . ' ' . $validated['last_name']),
                 'email' => $validated['email'],
+                'username' => $username,
                 'password' => Hash::make($validated['password']),
                 'role' => null, // No role assigned yet
                 'registration_complete' => false, // Registration not complete
+            ]);
+            
+            Log::info('Step 8: User::create() called', [
+                'user_object' => $user ? 'created' : 'null',
+                'user_id' => $user->id ?? 'no_id',
+            ]);
+            
+            // Verify user was created
+            if (!$user || !$user->id) {
+                Log::error('User creation returned null or no ID', [
+                    'user_object' => $user,
+                    'user_id' => $user->id ?? 'missing',
+                ]);
+                throw new \Exception('User creation failed - no user ID returned');
+            }
+            
+            // Verify user exists in database
+            $createdUser = User::find($user->id);
+            if (!$createdUser) {
+                Log::error('User not found in database after creation', [
+                    'user_id' => $user->id,
+                    'username' => $username,
+                ]);
+                throw new \Exception('User was created but not found in database');
+            }
+            
+            Log::info('=== REGISTRATION STEP 1 SUCCESS ===', [
+                'user_id' => $user->id, 
+                'username' => $username,
+                'email' => $user->email,
+                'name' => $user->name,
+                'db_verified' => $createdUser !== null,
+                'user_in_db' => User::where('id', $user->id)->exists(),
             ]);
 
             DB::commit();
@@ -114,11 +259,55 @@ class RegisteredUserController extends Controller
             return redirect()->route('dashboard.default')
                 ->with('success', 'Account created successfully! Please complete your registration to access all features.');
 
+        } catch (\Illuminate\Database\QueryException $e) {
+            DB::rollBack();
+            
+            $errorMessage = $e->getMessage();
+            $sql = $e->getSql() ?? 'N/A';
+            $bindings = $e->getBindings() ?? [];
+            
+            Log::error('=== REGISTRATION STEP 1 FAILED (Database QueryException) ===', [
+                'error_message' => $errorMessage,
+                'sql_query' => $sql,
+                'sql_bindings' => $bindings,
+                'error_code' => $e->getCode(),
+                'exception_class' => get_class($e),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            
+            // Check for specific database errors
+            if (str_contains($errorMessage, 'username') || str_contains($errorMessage, 'Duplicate entry')) {
+                Log::error('=== USERNAME CONFLICT DETECTED ===', [
+                    'error_message' => $errorMessage,
+                    'sql_query' => $sql,
+                    'sql_bindings' => $bindings,
+                    'all_existing_usernames' => User::pluck('username')->toArray(),
+                    'total_users' => User::count(),
+                ]);
+                
+                return redirect()->route('register')
+                    ->with('error', 'Username generation conflict. Please try again with a different name combination.');
+            }
+            
+            return redirect()->route('register')
+                ->with('error', 'Account creation failed due to a database error. Please check logs for details.');
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Registration Step 1 failed: ' . $e->getMessage(), ['exception' => $e]);
+            
+            Log::error('=== REGISTRATION STEP 1 FAILED (General Exception) ===', [
+                'error_message' => $e->getMessage(),
+                'exception_class' => get_class($e),
+                'error_code' => $e->getCode(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'full_trace' => $e->getTraceAsString(),
+                'request_data' => $request->all(),
+            ]);
+            
             return redirect()->route('register')
-                ->with('error', 'Account creation failed. Please try again.');
+                ->with('error', 'Account creation failed: ' . $e->getMessage());
         }
     }
 

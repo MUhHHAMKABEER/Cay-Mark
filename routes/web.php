@@ -46,13 +46,14 @@ Route::middleware('auth')->group(function () {
 });
 
 
-Route::get('/dashboard/buyer', function () {
-    return view('dashboard.buyer');
-})->name('dashboard.buyer');
+Route::get('/dashboard/buyer', [App\Http\Controllers\Buyer\BuyerDashboardController::class, 'index'])->middleware(['auth'])->name('dashboard.buyer');
+Route::post('/dashboard/buyer/update-email', [App\Http\Controllers\Buyer\BuyerDashboardController::class, 'updateEmail'])->middleware(['auth'])->name('buyer-dashboard.update-email');
+Route::post('/dashboard/buyer/change-password', [App\Http\Controllers\Buyer\BuyerDashboardController::class, 'changePassword'])->middleware(['auth'])->name('buyer-dashboard.change-password');
 
-Route::get('/dashboard/seller', function () {
-    return view('dashboard.seller');
-})->name('dashboard.seller');
+Route::get('/dashboard/seller', [App\Http\Controllers\Seller\SellerDashboardController::class, 'index'])->middleware(['auth'])->name('dashboard.seller');
+Route::post('/dashboard/seller/update-payout', [App\Http\Controllers\Seller\SellerDashboardController::class, 'updatePayout'])->middleware(['auth'])->name('seller-dashboard.update-payout');
+Route::post('/dashboard/seller/change-password', [App\Http\Controllers\Seller\SellerDashboardController::class, 'changePassword'])->middleware(['auth'])->name('seller-dashboard.change-password');
+Route::post('/dashboard/seller/confirm-pickup/{listingId}', [App\Http\Controllers\Seller\SellerDashboardController::class, 'confirmPickup'])->middleware(['auth'])->name('seller-dashboard.confirm-pickup');
 
 Route::get('/dashboard/admin', function () {
     return view('dashboard.admin');
@@ -91,7 +92,7 @@ Route::middleware(['auth',
     Route::get('/marketplace', [MarketplaceController::class, 'index'])->name('buyer.marketplace');
     Route::get('/auctions', [AuctionController::class, 'index'])->name('buyer.auctions');
     Route::get('/bids', [App\Http\Controllers\Buyer\BidController::class, 'index'])->name('buyer.bids');
-    Route::get('/watchlist', [App\Http\Controllers\Buyer\WatchlistController::class, 'index'])->name('buyer.watchlist');
+    Route::get('/watchlist', [WatchlistController::class, 'index'])->name('buyer.watchlist');
     Route::get('/purchases', [App\Http\Controllers\Buyer\PurchaseController::class, 'index'])->name('buyer.purchases');
     Route::get('/auctions-won', [App\Http\Controllers\Buyer\PurchaseController::class, 'index'])->name('buyer.auctions-won');
     Route::get('/invoices/{invoice}/download', [App\Http\Controllers\Buyer\PurchaseController::class, 'downloadInvoice'])->name('buyer.invoice.download');
@@ -116,6 +117,7 @@ Route::middleware(['auth',
     Route::get('/profile', [App\Http\Controllers\Buyer\ProfileController::class, 'index'])->name('buyer.profile');
     Route::get('/notifications', [App\Http\Controllers\Buyer\NotificationController::class, 'index'])->name('buyer.notifications');
     Route::get('/support', [App\Http\Controllers\Buyer\SupportController::class, 'index'])->name('buyer.support');
+    Route::post('/support/submit', [App\Http\Controllers\Buyer\SupportController::class, 'store'])->name('buyer.support.submit');
 });
 
 Route::middleware(['auth'])->group(function () {
@@ -141,6 +143,9 @@ Route::prefix('seller')->name('seller.')->group(function () {
 
     // Store new Listing
     Route::post('submit-listings', [ListingController::class, 'store'])->name('listings.store');
+    
+    // Support
+    Route::post('support/submit', [App\Http\Controllers\Seller\SupportController::class, 'store'])->name('support.submit');
     
     // VIN/HIN Decoder endpoint
     Route::post('decode-vin-hin', [ListingController::class, 'decodeVinHin'])->name('listings.decode-vin-hin');
@@ -172,13 +177,10 @@ Route::get('/buyer/dashboard', [ListingController::class, 'showBuyerDashboard'])
 
 
 
-Route::prefix('buyer')->middleware(['auth'])->group(function () {
-    Route::get('/bids', [BidController::class, 'bids'])->name('buyer.bids');
-    Route::get('/watchlist', [BidController::class, 'watchlist'])->name('buyer.watchlist');
-});
+// Removed duplicate routes - already defined in buyer prefix group above
 
 Route::get('/listing/{id}', [ListingController::class, 'show'])->name('listing.show');
-Route::get('/get-models/{make}', [ListingController::class, 'getModels'])->name('get.models');
+// Removed duplicate get-models route - already defined above and in seller routes
 
 
 Route::get('/subscription/plans', [App\Http\Controllers\SubscriptionController::class, 'plans'])
@@ -189,7 +191,7 @@ Route::get('/subscription/plans', [App\Http\Controllers\SubscriptionController::
     Route::get('/AuctionPage',[AuctionController::class, 'index'])->name("Auction.index");
 
     Route::middleware(['auth'])->group(function () {
-    Route::post('/listing/{id}/watchlist', [ListingController::class, 'addToWatchlist'])->name('listing.watchlist');
+    Route::post('/listing/{id}/watchlist', [ListingController::class, 'addToWatchlist'])->name('listing.watchlist.add');
 });
 
 Route::middleware(['auth'])->group(function () {
@@ -319,17 +321,19 @@ Route::get('/api/packages/{role}', function($role) {
 Route::post('/listing/{id}/buy', [CheckoutController::class, 'buyNow'])->name('listing.buy');
 
 
-Route::middleware('auth')->group(function () {
-    Route::get('/chats', [ChatController::class, 'index'])->name('chats.index');
-    Route::get('/chats/{chat}', [ChatController::class, 'show'])->name('chats.show');
-    Route::post('/chats/{chat}/messages', [MessageController::class, 'store'])->name('messages.store');
-});
+// Note: ChatController only has 'chat' and 'sendMessage' methods
+// If chats.index and chats.show routes are needed, add those methods to ChatController
+// Route::middleware('auth')->group(function () {
+//     Route::get('/chats', [chatController::class, 'index'])->name('chats.index');
+//     Route::get('/chats/{chat}', [chatController::class, 'show'])->name('chats.show');
+//     Route::post('/chats/{chat}/messages', [MessageController::class, 'store'])->name('messages.store');
+// });
 
 
 
 Route::middleware(['auth'])->group(function () {
     // show chat UI (optional chatId)
-    Route::get('/seller/Seller_Chat/{chatId?}', [ChatController::class, 'chat'])
+    Route::get('/seller/Seller_Chat/{chatId?}', [chatController::class, 'chat'])
         ->name('seller.chat');
 
 
@@ -347,11 +351,11 @@ Route::middleware(['auth'])->group(function () {
 
 Route::middleware(['auth'])->group(function () {
     // buyer sending
-    Route::post('/buyer/messages/{chat}/send', [ChatController::class, 'sendMessage'])
+    Route::post('/buyer/messages/{chat}/send', [chatController::class, 'sendMessage'])
         ->name('buyer.messages.send');
 
     // seller sending (adjust URL to match your frontend)
-    Route::post('/seller/Seller_Chat/{chat}/message', [ChatController::class, 'sendMessage'])
+    Route::post('/seller/Seller_Chat/{chat}/message', [chatController::class, 'sendMessage'])
         ->name('seller.chat.message');
 });
 
