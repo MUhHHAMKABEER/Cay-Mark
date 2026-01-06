@@ -1,7 +1,11 @@
-@extends('layouts.admin')
+@extends('layouts.dashboard')
+
+@section('title', 'Admin Dashboard - CayMark')
 
 @section('content')
-<div class="mb-6">
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="mb-6">
     <h1 class="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
     <p class="text-gray-600">Welcome back, {{ auth()->user()->name }}</p>
 </div>
@@ -97,6 +101,8 @@
             No recent activity
         </div>
         @endforelse --}}
+    </div>
+</div>
     </div>
 </div>
 @endsection

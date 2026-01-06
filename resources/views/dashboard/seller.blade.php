@@ -1,4 +1,4 @@
-@extends('layouts.Seller')
+@extends('layouts.dashboard')
 
 @section('title', 'Seller Dashboard - CayMark')
 
