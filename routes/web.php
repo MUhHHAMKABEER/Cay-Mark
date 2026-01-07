@@ -46,10 +46,7 @@ Route::middleware('auth')->group(function () {
 });
 
 
-Route::get('/dashboard/buyer', [App\Http\Controllers\Buyer\BuyerDashboardController::class, 'index'])->middleware(['auth'])->name('dashboard.buyer');
-Route::post('/dashboard/buyer/update-email', [App\Http\Controllers\Buyer\BuyerDashboardController::class, 'updateEmail'])->middleware(['auth'])->name('buyer-dashboard.update-email');
-Route::post('/dashboard/buyer/change-password', [App\Http\Controllers\Buyer\BuyerDashboardController::class, 'changePassword'])->middleware(['auth'])->name('buyer-dashboard.change-password');
-
+// Legacy dashboard routes (for backward compatibility)
 Route::get('/dashboard/seller', [App\Http\Controllers\Seller\SellerDashboardController::class, 'index'])->middleware(['auth'])->name('dashboard.seller');
 Route::post('/dashboard/seller/update-payout', [App\Http\Controllers\Seller\SellerDashboardController::class, 'updatePayout'])->middleware(['auth'])->name('seller-dashboard.update-payout');
 Route::post('/dashboard/seller/change-password', [App\Http\Controllers\Seller\SellerDashboardController::class, 'changePassword'])->middleware(['auth'])->name('seller-dashboard.change-password');
@@ -126,35 +123,7 @@ Route::middleware(['auth'])->group(function () {
 
 
 
-Route::prefix('seller')->name('seller.')->group(function () {
-    // Payout Method Setup (REQUIRED before listing creation)
-    Route::get('payout-method', [App\Http\Controllers\Seller\PayoutMethodController::class, 'create'])->name('payout-method');
-    Route::post('payout-method', [App\Http\Controllers\Seller\PayoutMethodController::class, 'store'])->name('payout-method.store');
-    
-    // Pickup PIN Confirmation
-    Route::get('pickup-pin/{listingId}', [App\Http\Controllers\Seller\PickupPinController::class, 'show'])->name('pickup-pin.show');
-    Route::post('pickup-pin/{listingId}/confirm', [App\Http\Controllers\Seller\PickupPinController::class, 'confirm'])->name('pickup-pin.confirm');
-    
-    // Payout History
-    Route::get('payouts', [App\Http\Controllers\Seller\PayoutMethodController::class, 'payoutHistory'])->name('payouts');
-    
-    // Create Listing form
-    Route::get('listings/create', [ListingController::class, 'create'])->name('listings.create');
-
-    // Store new Listing
-    Route::post('submit-listings', [ListingController::class, 'store'])->name('listings.store');
-    
-    // Support
-    Route::post('support/submit', [App\Http\Controllers\Seller\SupportController::class, 'store'])->name('support.submit');
-    
-    // VIN/HIN Decoder endpoint
-    Route::post('decode-vin-hin', [ListingController::class, 'decodeVinHin'])->name('listings.decode-vin-hin');
-    
-     Route::get('listings', [ListingController::class, 'showListing'])->name('listings.index');
-     Route::get('Auction', [ListingController::class, 'showAuctionLisitng'])->name('Auction.index');
-     Route::get('Seller_Chat', [chatController::class, 'chat'])->name('chat');
-
-});
+// Seller routes are now in routes/seller.php
 
 Route::get('/marketplaces', [App\Http\Controllers\MarketplaceController::class, 'index'])->name('marketplace.index');
 Route::get('/About-us', [AboutController::class, 'index'])->name('about.index');
@@ -331,32 +300,10 @@ Route::post('/listing/{id}/buy', [CheckoutController::class, 'buyNow'])->name('l
 
 
 
-Route::middleware(['auth'])->group(function () {
-    // show chat UI (optional chatId)
-    Route::get('/seller/Seller_Chat/{chatId?}', [chatController::class, 'chat'])
-        ->name('seller.chat');
+// Buyer and Seller routes are now in routes/buyer.php and routes/seller.php
 
-
-});
-
-
-Route::middleware(['auth'])->group(function () {
-    // Existing list page (you showed this earlier)
-    Route::get('/buyer/messages', [BuyerMessageController::class, 'index'])->name('buyer.messages');
-
-
-});
-
-
-
-Route::middleware(['auth'])->group(function () {
-    // buyer sending
-    Route::post('/buyer/messages/{chat}/send', [chatController::class, 'sendMessage'])
-        ->name('buyer.messages.send');
-
-    // seller sending (adjust URL to match your frontend)
-    Route::post('/seller/Seller_Chat/{chat}/message', [chatController::class, 'sendMessage'])
-        ->name('seller.chat.message');
-});
+// Include modular route files
+require __DIR__.'/seller.php';
+require __DIR__.'/buyer.php';
 
 require __DIR__.'/auth.php';

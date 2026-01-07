@@ -173,4 +173,196 @@ public function watchlist()
         return $this->isRegistrationComplete() && $this->role === self::ROLE_SELLER;
     }
 
+    /**
+     * Get current auctions for seller (active + awaiting PIN confirmation)
+     */
+    public function getCurrentAuctions()
+    {
+        return $this->listings()
+            ->currentAuctionsForSeller($this->id)
+            ->with(['images', 'bids', 'invoices' => function($query) {
+                $query->where('payment_status', 'paid');
+            }])
+            ->get()
+            ->map(function($listing) {
+                $listing->current_bid = $listing->getCurrentBid();
+                $listing->awaiting_pin = $listing->isAwaitingPickup();
+                $listing->winning_invoice = $listing->getWinningInvoice();
+                return $listing;
+            });
+    }
+
+    /**
+     * Get past auctions for seller (completed with pickup confirmed)
+     */
+    public function getPastAuctions()
+    {
+        return $this->listings()
+            ->pastAuctionsForSeller($this->id)
+            ->with(['images', 'invoices' => function($query) {
+                $query->where('payment_status', 'paid');
+            }])
+            ->latest('pickup_confirmed_at')
+            ->get()
+            ->map(function($listing) {
+                $listing->final_price = $listing->getFinalPrice();
+                return $listing;
+            });
+    }
+
+    /**
+     * Get rejected listings with edit window info
+     */
+    public function getRejectedListings()
+    {
+        return $this->listings()
+            ->rejectedForSeller($this->id)
+            ->with('images')
+            ->get()
+            ->map(function($listing) {
+                $listing->can_edit = $listing->canBeEdited();
+                $listing->edit_deadline = $listing->getEditDeadline();
+                $listing->hours_remaining = $listing->getEditHoursRemaining();
+                return $listing;
+            });
+    }
+
+    /**
+     * Get auction summary statistics for seller
+     */
+    public function getAuctionSummary(): array
+    {
+        $totalListings = $this->listings()->count();
+        $activeListings = $this->listings()
+            ->whereIn('status', ['active', 'pending'])
+            ->count();
+        $soldListings = $this->listings()
+            ->where('status', 'sold')
+            ->count();
+        
+        $totalRevenue = $this->sellerInvoices()
+            ->where('payment_status', 'paid')
+            ->sum('winning_bid_amount');
+
+        return [
+            'total_listings' => $totalListings,
+            'active_listings' => $activeListings,
+            'sold_listings' => $soldListings,
+            'total_revenue' => $totalRevenue,
+        ];
+    }
+
+    /**
+     * Get current auctions where buyer has placed bids
+     */
+    public function getCurrentAuctionsAsBuyer()
+    {
+        $listingIds = $this->bids()->distinct()->pluck('listing_id');
+
+        return Listing::with(['images', 'bids' => function($query) {
+                $query->where('user_id', $this->id)->latest();
+            }])
+            ->whereIn('id', $listingIds)
+            ->where(function($query) {
+                $query->where(function($q) {
+                    $q->where('status', 'active')
+                      ->orWhere('status', 'pending');
+                })
+                ->orWhere(function($q) {
+                    $q->where('status', 'sold')
+                      ->whereHas('invoices', function($inv) {
+                          $inv->where('buyer_id', $this->id)
+                              ->where('payment_status', 'pending');
+                      });
+                });
+            })
+            ->get()
+            ->map(function($listing) {
+                $listing->highest_bid = $listing->getHighestBidAmount();
+                $listing->user_highest_bid = $listing->getUserHighestBid($this->id);
+                $listing->is_winning = $listing->isUserWinning($this->id);
+                $listing->pending_invoice = $listing->getPendingInvoiceForUser($this->id);
+                return $listing;
+            });
+    }
+
+    /**
+     * Get won auctions for buyer (payment completed)
+     */
+    public function getWonAuctions()
+    {
+        return $this->invoices()
+            ->where('payment_status', 'paid')
+            ->with(['listing.images', 'bid'])
+            ->latest('paid_at')
+            ->get()
+            ->map(function($invoice) {
+                $invoice->listing->final_price = $invoice->winning_bid_amount;
+                return $invoice;
+            });
+    }
+
+    /**
+     * Get lost auctions for buyer (ended but didn't win)
+     */
+    public function getLostAuctions()
+    {
+        $listingIds = $this->bids()->distinct()->pluck('listing_id');
+
+        return Listing::with(['images', 'bids' => function($query) {
+                $query->where('user_id', $this->id)->latest();
+            }, 'invoices' => function($query) {
+                $query->where('payment_status', 'paid');
+            }])
+            ->whereIn('id', $listingIds)
+            ->where('status', 'sold')
+            ->whereDoesntHave('invoices', function($query) {
+                $query->where('buyer_id', $this->id)
+                      ->where('payment_status', 'paid');
+            })
+            ->get()
+            ->map(function($listing) {
+                $listing->user_highest_bid = $listing->getUserHighestBid($this->id);
+                $winningInvoice = $listing->getWinningInvoice();
+                $listing->winning_price = $winningInvoice ? $winningInvoice->winning_bid_amount : 0;
+                return $listing;
+            });
+    }
+
+    /**
+     * Get saved items (watchlist) for buyer
+     */
+    public function getSavedItems()
+    {
+        return $this->watchlist()
+            ->with(['images', 'bids' => function($query) {
+                $query->latest()->limit(1);
+            }])
+            ->get()
+            ->map(function($listing) {
+                $listing->highest_bid = $listing->getHighestBidAmount();
+                return $listing;
+            });
+    }
+
+    /**
+     * Get notifications (latest)
+     */
+    public function getNotifications($limit = 20)
+    {
+        return $this->notifications()
+            ->latest()
+            ->take($limit)
+            ->get();
+    }
+
+    /**
+     * Get active payout method
+     */
+    public function getActivePayoutMethod()
+    {
+        return $this->payoutMethod()
+            ->where('is_active', true)
+            ->first();
+    }
 }

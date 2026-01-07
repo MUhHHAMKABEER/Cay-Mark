@@ -255,4 +255,173 @@ public function invoices()
             ->where('pickup_confirmed', false)
             ->exists();
     }
+
+    /**
+     * Get the highest bid amount for this listing
+     */
+    public function getHighestBidAmount(): float
+    {
+        return $this->bids()->max('amount') ?? $this->starting_price ?? 0;
+    }
+
+    /**
+     * Get the winning invoice (paid invoice)
+     */
+    public function getWinningInvoice()
+    {
+        return $this->invoices()->where('payment_status', 'paid')->first();
+    }
+
+    /**
+     * Get current bid (winning invoice amount or highest bid)
+     */
+    public function getCurrentBid(): float
+    {
+        $winningInvoice = $this->getWinningInvoice();
+        if ($winningInvoice) {
+            return $winningInvoice->winning_bid_amount;
+        }
+        return $this->getHighestBidAmount();
+    }
+
+    /**
+     * Check if listing is awaiting pickup confirmation
+     */
+    public function isAwaitingPickup(): bool
+    {
+        $winningInvoice = $this->getWinningInvoice();
+        return $winningInvoice && !$this->pickup_confirmed;
+    }
+
+    /**
+     * Get final price (from winning invoice)
+     */
+    public function getFinalPrice(): float
+    {
+        $winningInvoice = $this->getWinningInvoice();
+        return $winningInvoice ? $winningInvoice->winning_bid_amount : 0;
+    }
+
+    /**
+     * Check if rejected listing can still be edited (72-hour window)
+     */
+    public function canBeEdited(): bool
+    {
+        if ($this->status !== 'rejected') {
+            return false;
+        }
+        
+        $rejectedAt = $this->rejected_at ?? $this->updated_at;
+        $deadline = $rejectedAt->copy()->addHours(72);
+        
+        return now()->lt($deadline);
+    }
+
+    /**
+     * Get hours remaining for editing rejected listing
+     */
+    public function getEditHoursRemaining(): int
+    {
+        if (!$this->canBeEdited()) {
+            return 0;
+        }
+        
+        $rejectedAt = $this->rejected_at ?? $this->updated_at;
+        $deadline = $rejectedAt->copy()->addHours(72);
+        
+        return now()->diffInHours($deadline);
+    }
+
+    /**
+     * Get edit deadline for rejected listing
+     */
+    public function getEditDeadline()
+    {
+        if ($this->status !== 'rejected') {
+            return null;
+        }
+        
+        $rejectedAt = $this->rejected_at ?? $this->updated_at;
+        return $rejectedAt->copy()->addHours(72);
+    }
+
+    /**
+     * Scope: Get current auctions for seller (active + awaiting PIN)
+     */
+    public function scopeCurrentAuctionsForSeller($query, $sellerId)
+    {
+        return $query->where('seller_id', $sellerId)
+            ->where(function($q) {
+                $q->where('status', 'active')
+                    ->orWhere('status', 'pending')
+                    ->orWhere(function($subQ) {
+                        $subQ->where('status', 'sold')
+                            ->whereHas('invoices', function($inv) {
+                                $inv->where('payment_status', 'paid');
+                            })
+                            ->where('pickup_confirmed', false);
+                    });
+            });
+    }
+
+    /**
+     * Scope: Get past auctions for seller (completed with pickup confirmed)
+     */
+    public function scopePastAuctionsForSeller($query, $sellerId)
+    {
+        return $query->where('seller_id', $sellerId)
+            ->where('status', 'sold')
+            ->where('pickup_confirmed', true);
+    }
+
+    /**
+     * Scope: Get rejected listings for seller
+     */
+    public function scopeRejectedForSeller($query, $sellerId)
+    {
+        return $query->where('seller_id', $sellerId)
+            ->where('status', 'rejected');
+    }
+
+    /**
+     * Scope: Get listings where buyer has placed bids
+     */
+    public function scopeWithBuyerBids($query, $buyerId)
+    {
+        return $query->whereHas('bids', function($q) use ($buyerId) {
+            $q->where('user_id', $buyerId);
+        });
+    }
+
+    /**
+     * Get user's highest bid on this listing
+     */
+    public function getUserHighestBid($userId): ?float
+    {
+        return $this->bids()->where('user_id', $userId)->max('amount');
+    }
+
+    /**
+     * Check if user is winning this listing
+     */
+    public function isUserWinning($userId): bool
+    {
+        $invoice = $this->invoices()
+            ->where('buyer_id', $userId)
+            ->where('payment_status', 'pending')
+            ->first();
+        
+        return $invoice !== null;
+    }
+
+    /**
+     * Get pending invoice for user
+     */
+    public function getPendingInvoiceForUser($userId)
+    {
+        return $this->invoices()
+            ->where('buyer_id', $userId)
+            ->where('payment_status', 'pending')
+            ->first();
+    }
 }

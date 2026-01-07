@@ -116,4 +116,77 @@ class Invoice extends Model
     {
         return 'INV-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -6));
     }
+
+    /**
+     * Get paid invoices for buyer
+     */
+    public static function getPaidInvoicesForBuyer($buyerId)
+    {
+        return static::where('buyer_id', $buyerId)
+            ->where('payment_status', 'paid')
+            ->with(['listing.images', 'bid'])
+            ->latest('paid_at')
+            ->get();
+    }
+
+    /**
+     * Get pending invoices for buyer
+     */
+    public static function getPendingInvoicesForBuyer($buyerId)
+    {
+        return static::where('buyer_id', $buyerId)
+            ->where('payment_status', 'pending')
+            ->with(['listing.images', 'bid'])
+            ->latest('invoice_generated_at')
+            ->get();
+    }
+
+    /**
+     * Get paid invoices for seller
+     */
+    public static function getPaidInvoicesForSeller($sellerId)
+    {
+        return static::where('seller_id', $sellerId)
+            ->where('payment_status', 'paid')
+            ->with(['listing.images', 'buyer'])
+            ->latest('paid_at')
+            ->get();
+    }
+
+    /**
+     * Get total revenue for seller
+     */
+    public static function getTotalRevenueForSeller($sellerId): float
+    {
+        return static::where('seller_id', $sellerId)
+            ->where('payment_status', 'paid')
+            ->sum('winning_bid_amount');
+    }
+
+    /**
+     * Check if invoice is paid
+     */
+    public function isPaid(): bool
+    {
+        return $this->payment_status === 'paid';
+    }
+
+    /**
+     * Check if invoice is pending
+     */
+    public function isPending(): bool
+    {
+        return $this->payment_status === 'pending';
+    }
+
+    /**
+     * Mark invoice as paid
+     */
+    public function markAsPaid(): void
+    {
+        $this->payment_status = 'paid';
+        $this->paid_at = now();
+        $this->is_overdue = false;
+        $this->save();
+    }
 }
