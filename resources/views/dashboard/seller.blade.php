@@ -12,43 +12,8 @@
             <p class="text-gray-600 mt-2">Manage your listings, auctions, and sales</p>
         </div>
 
-        <!-- Tab Navigation -->
-        <div class="bg-white rounded-lg shadow mb-6">
-            <div class="border-b border-gray-200">
-                <nav class="flex -mb-px overflow-x-auto">
-                    <button onclick="showTab('user')" 
-                            id="tab-user" 
-                            class="tab-button active px-6 py-4 text-sm font-medium text-blue-600 border-b-2 border-blue-600 whitespace-nowrap">
-                        USER
-                    </button>
-                    <button onclick="showTab('submission')" 
-                            id="tab-submission" 
-                            class="tab-button px-6 py-4 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 border-b-2 border-transparent whitespace-nowrap">
-                        SUBMISSION
-                    </button>
-                    <button onclick="showTab('auctions')" 
-                            id="tab-auctions" 
-                            class="tab-button px-6 py-4 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 border-b-2 border-transparent whitespace-nowrap">
-                        AUCTIONS
-                    </button>
-                    <button onclick="showTab('notifications')" 
-                            id="tab-notifications" 
-                            class="tab-button px-6 py-4 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 border-b-2 border-transparent whitespace-nowrap">
-                        NOTIFICATIONS
-                    </button>
-                    <button onclick="showTab('messaging')" 
-                            id="tab-messaging" 
-                            class="tab-button px-6 py-4 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 border-b-2 border-transparent whitespace-nowrap">
-                        MESSAGING CENTER
-                    </button>
-                    <button onclick="showTab('support')" 
-                            id="tab-support" 
-                            class="tab-button px-6 py-4 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 border-b-2 border-transparent whitespace-nowrap">
-                        CUSTOMER SUPPORT
-                    </button>
-                </nav>
-            </div>
-
+        <!-- Content Area - No horizontal tabs, controlled by sidebar -->
+        <div class="bg-white rounded-lg shadow">
             <!-- USER TAB -->
             <div id="content-user" class="tab-content p-6">
                 <h2 class="text-xl font-bold text-gray-900 mb-6">Account Information</h2>
@@ -173,7 +138,7 @@
                     <div class="bg-amber-50 border-l-4 border-amber-400 p-6 rounded-lg mb-6">
                         <h3 class="text-lg font-semibold text-amber-900 mb-2">Payout Settings Required</h3>
                         <p class="text-amber-800 mb-4">You must add payout settings before submitting a listing.</p>
-                        <a href="#content-user" onclick="showTab('user')" class="inline-block bg-amber-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-amber-700 transition duration-200">
+                        <a href="{{ route('dashboard.seller', ['tab' => 'user']) }}" class="inline-block bg-amber-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-amber-700 transition duration-200">
                             Add Payout Settings
                         </a>
                     </div>
@@ -659,23 +624,34 @@
 </div>
 
 <script>
-// Tab Navigation
+// Tab Navigation - Controlled by sidebar, no horizontal tabs
 function showTab(tabName) {
     document.querySelectorAll('.tab-content').forEach(content => {
         content.classList.add('hidden');
     });
     
-    document.querySelectorAll('.tab-button').forEach(button => {
-        button.classList.remove('active', 'text-blue-600', 'border-blue-600');
-        button.classList.add('text-gray-500', 'border-transparent');
-    });
+    const contentElement = document.getElementById('content-' + tabName);
+    if (contentElement) {
+        contentElement.classList.remove('hidden');
+    }
     
-    document.getElementById('content-' + tabName).classList.remove('hidden');
-    
-    const activeButton = document.getElementById('tab-' + tabName);
-    activeButton.classList.add('active', 'text-blue-600', 'border-blue-600');
-    activeButton.classList.remove('text-gray-500', 'border-transparent');
+    // Update URL without page reload
+    const url = new URL(window.location);
+    url.searchParams.set('tab', tabName);
+    window.history.pushState({}, '', url);
 }
+
+// Show tab on page load based on URL parameter
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tab = urlParams.get('tab');
+    if (tab) {
+        showTab(tab);
+    } else {
+        // Default to 'user' tab
+        showTab('user');
+    }
+});
 
 // Auction Section Navigation
 function showAuctionSection(section) {

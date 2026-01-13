@@ -115,15 +115,15 @@
                 <div class="p-8 md:p-10">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <!-- Buyer Option -->
-                        <label class="relative cursor-pointer group">
+                        <label class="relative cursor-pointer group h-full flex">
                             <input type="radio" name="role" value="buyer" class="sr-only peer" required onchange="loadPackages('buyer')">
-                            <div class="relative p-8 border-2 border-gray-300 rounded-2xl transition-all duration-300 group-hover:border-[#2563eb] group-hover:shadow-xl peer-checked:border-[#063466] peer-checked:bg-gradient-to-br peer-checked:from-blue-50 peer-checked:to-indigo-50 peer-checked:shadow-2xl transform peer-checked:scale-105">
+                            <div class="relative p-8 border-2 border-gray-300 rounded-2xl transition-all duration-300 group-hover:border-[#2563eb] group-hover:shadow-xl peer-checked:border-[#063466] peer-checked:bg-gradient-to-br peer-checked:from-blue-50 peer-checked:to-indigo-50 peer-checked:shadow-2xl transform peer-checked:scale-105 h-full w-full flex flex-col">
                                 <div class="absolute top-4 right-4 w-6 h-6 border-2 border-gray-400 rounded-full peer-checked:border-[#063466] peer-checked:bg-[#063466] transition-all duration-300">
                                     <svg class="w-full h-full text-white opacity-0 peer-checked:opacity-100 transition-opacity duration-300" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                                     </svg>
                                 </div>
-                                <div class="flex flex-col items-center text-center">
+                                <div class="flex flex-col items-center text-center flex-1 justify-center">
                                     <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg transform group-hover:scale-110 transition-transform duration-300">
                                         <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
@@ -142,15 +142,15 @@
                         </label>
 
                         <!-- Seller Option -->
-                        <label class="relative cursor-pointer group">
+                        <label class="relative cursor-pointer group h-full flex">
                             <input type="radio" name="role" value="seller" class="sr-only peer" required onchange="loadPackages('seller')">
-                            <div class="relative p-8 border-2 border-gray-300 rounded-2xl transition-all duration-300 group-hover:border-green-500 group-hover:shadow-xl peer-checked:border-[#063466] peer-checked:bg-gradient-to-br peer-checked:from-green-50 peer-checked:to-emerald-50 peer-checked:shadow-2xl transform peer-checked:scale-105">
+                            <div class="relative p-8 border-2 border-gray-300 rounded-2xl transition-all duration-300 group-hover:border-green-500 group-hover:shadow-xl peer-checked:border-[#063466] peer-checked:bg-gradient-to-br peer-checked:from-green-50 peer-checked:to-emerald-50 peer-checked:shadow-2xl transform peer-checked:scale-105 h-full w-full flex flex-col">
                                 <div class="absolute top-4 right-4 w-6 h-6 border-2 border-gray-400 rounded-full peer-checked:border-[#063466] peer-checked:bg-[#063466] transition-all duration-300">
                                     <svg class="w-full h-full text-white opacity-0 peer-checked:opacity-100 transition-opacity duration-300" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                                     </svg>
                                 </div>
-                                <div class="flex flex-col items-center text-center">
+                                <div class="flex flex-col items-center text-center flex-1 justify-center">
                                     <div class="w-20 h-20 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg transform group-hover:scale-110 transition-transform duration-300">
                                         <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
@@ -192,8 +192,8 @@
                 </div>
 
                 <div class="p-8 md:p-10">
-                    <div id="package-selection" class="space-y-6">
-                        <div class="text-center py-12">
+                    <div id="package-selection" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="col-span-2 text-center py-12">
                             <div class="inline-block bg-gray-50 rounded-2xl p-8 border border-gray-200">
                                 <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -306,7 +306,7 @@
         
         // Show loading state
         container.innerHTML = `
-            <div class="text-center py-12">
+            <div class="col-span-2 text-center py-12">
                 <div class="inline-block bg-gray-50 rounded-2xl p-8 border border-gray-200">
                     <div class="animate-spin rounded-full h-12 w-12 border-4 border-gray-300 border-t-[#063466] mx-auto mb-4"></div>
                     <p class="text-gray-600 text-lg font-semibold">Loading packages...</p>
@@ -323,7 +323,7 @@
 
             if (!Array.isArray(packages) || packages.length === 0) {
                 container.innerHTML = `
-                    <div class="text-center py-12">
+                    <div class="col-span-2 text-center py-12">
                         <div class="inline-block bg-gray-50 rounded-2xl p-8 border border-gray-200">
                             <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -343,7 +343,7 @@
         } catch (error) {
             console.error('Failed to load packages:', error);
             container.innerHTML = `
-                <div class="text-center py-12">
+                <div class="col-span-2 text-center py-12">
                     <div class="inline-block bg-red-50 rounded-2xl p-8 border border-red-200">
                         <svg class="w-16 h-16 text-red-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -357,7 +357,7 @@
 
     function createPackageCard(pkg, role, index) {
         const label = document.createElement('label');
-        label.className = 'block cursor-pointer group';
+        label.className = 'block cursor-pointer group h-full';
 
         const price = pkg.price > 0 ? `$${Number(pkg.price).toFixed(2)}` : 'Free';
         const isFree = pkg.price == 0;
@@ -383,7 +383,7 @@
         });
 
         label.innerHTML = `
-            <div class="package-card relative bg-white border-2 border-gray-300 rounded-2xl p-8 transition-all duration-500 hover:border-[#063466] hover:shadow-xl transform">
+            <div class="package-card relative bg-white border-2 border-gray-300 rounded-2xl p-8 transition-all duration-500 hover:border-[#063466] hover:shadow-xl transform h-full flex flex-col">
                 <div class="absolute top-6 right-6 w-8 h-8 border-2 border-gray-400 rounded-full transition-all duration-300 group-hover:border-[#063466]">
                     <svg class="w-full h-full text-[#063466] opacity-0 transition-opacity duration-300" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
@@ -408,14 +408,14 @@
                 </div>
 
                 ${features.length > 0 ? `
-                    <div class="border-t border-gray-200 pt-6">
+                    <div class="border-t border-gray-200 pt-6 flex-1 flex flex-col">
                         <h4 class="text-gray-900 font-semibold mb-4 flex items-center">
                             <svg class="w-5 h-5 mr-2 text-[#063466]" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
                             </svg>
                             Features Included
                         </h4>
-                        <ul class="space-y-3">
+                        <ul class="space-y-3 flex-1">
                             ${features.slice(0, 5).map(feature => `
                                 <li class="flex items-start text-gray-700">
                                     <svg class="w-5 h-5 text-[#063466] mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -429,7 +429,7 @@
                 ` : ''}
 
                 ${isFree ? `
-                    <div class="mt-6 bg-green-50 border border-green-200 rounded-xl p-4">
+                    <div class="mt-auto bg-green-50 border border-green-200 rounded-xl p-4">
                         <p class="text-green-800 text-sm font-semibold flex items-center">
                             <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>

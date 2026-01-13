@@ -8,6 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
     <link rel="stylesheet" href="https://unpkg.com/shepherd.js/dist/css/shepherd.css" />
 {{-- @vite(['resources/css/app.css', 'resources/js/app.js'])/ --}}
 
@@ -18,19 +19,7 @@
             color: #333;
         }
 
-        .main-content {
-            padding: 2rem;
-            width: calc(100% - 288px);
-        }
-
-        .sidebar {
-            width: 288px;
-            background-color: #F9F1EC;
-            padding: 2rem;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
+        /* Removed duplicate main-content styles - using the one below */
     </style>
        <style>
         :root {
@@ -166,7 +155,20 @@ html, body {
             flex: 1;
             display: flex;
             flex-direction: column;
-            overflow: hidden;
+            overflow-x: hidden;
+            overflow-y: auto;
+            margin-left: 280px; /* Match sidebar width */
+            padding: 2.5rem 3rem;
+            min-height: 100vh;
+            width: calc(100% - 280px);
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 80px;
+                width: calc(100% - 80px);
+                padding: 1rem;
+            }
         }
 
         /* Top Bar */
@@ -682,14 +684,11 @@ html, body {
 </head>
 
 <body class="flex">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
-
-
     {{-- Sidebar --}}
-    @include('partials.Sellersidebar')
+    @include('partials.unifiedSidebar')
 
     {{-- Main Content --}}
-    <main class="main-content" style="margin-left: 230px">
+    <main class="main-content">
         @yield('content')
     </main>
 

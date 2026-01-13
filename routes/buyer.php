@@ -17,17 +17,28 @@ use App\Http\Controllers\chatController;
 
 Route::prefix('buyer')->name('buyer.')->middleware(['auth'])->group(function () {
     
-    // Dashboard
-    Route::get('/dashboard', [BuyerDashboardController::class, 'index'])->name('dashboard');
-    Route::post('/dashboard/update-email', [BuyerDashboardController::class, 'updateEmail'])->name('dashboard.update-email');
-    Route::post('/dashboard/change-password', [BuyerDashboardController::class, 'changePassword'])->name('dashboard.change-password');
+    // Separate Dashboard Pages
+    Route::get('/user', [BuyerDashboardController::class, 'user'])->name('user');
+    Route::get('/auctions', [BuyerDashboardController::class, 'auctions'])->name('auctions');
+    Route::get('/saved-items', [BuyerDashboardController::class, 'savedItems'])->name('saved-items');
+    Route::get('/notifications', [BuyerDashboardController::class, 'notifications'])->name('notifications');
+    
+    // Update email and password (used in user page)
+    Route::post('/user/update-email', [BuyerDashboardController::class, 'updateEmail'])->name('user.update-email');
+    Route::post('/user/change-password', [BuyerDashboardController::class, 'changePassword'])->name('user.change-password');
 
-    // Messages
-    Route::get('messages', [BuyerMessageController::class, 'index'])->name('messages');
-    Route::post('messages/{chat}/send', [chatController::class, 'sendMessage'])->name('messages.send');
+    // Legacy dashboard route - redirect to user page
+    Route::get('/dashboard', function() {
+        return redirect()->route('buyer.user');
+    })->name('dashboard');
+
+    // Messages (Messaging Center)
+    Route::get('/messaging-center', [BuyerMessageController::class, 'index'])->name('messaging-center');
+    Route::post('/messaging-center/{chat}/send', [chatController::class, 'sendMessage'])->name('messaging-center.send');
 
     // Support
-    Route::post('support/submit', [SupportController::class, 'store'])->name('support.submit');
+    Route::get('/customer-support', [SupportController::class, 'index'])->name('customer-support');
+    Route::post('/customer-support/submit', [SupportController::class, 'store'])->name('customer-support.submit');
 });
 
 // Legacy routes (for backward compatibility)

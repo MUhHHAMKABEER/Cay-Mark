@@ -536,16 +536,38 @@ function showTab(tabName) {
     document.querySelectorAll('.tab-button').forEach(button => {
         button.classList.remove('active', 'text-blue-600', 'border-blue-600');
         button.classList.add('text-gray-500', 'border-transparent');
-            });
+    });
 
     // Show selected tab content
-    document.getElementById('content-' + tabName).classList.remove('hidden');
+    const contentElement = document.getElementById('content-' + tabName);
+    if (contentElement) {
+        contentElement.classList.remove('hidden');
+    }
     
     // Add active class to selected tab
     const activeButton = document.getElementById('tab-' + tabName);
-    activeButton.classList.add('active', 'text-blue-600', 'border-blue-600');
-    activeButton.classList.remove('text-gray-500', 'border-transparent');
-                }
+    if (activeButton) {
+        activeButton.classList.add('active', 'text-blue-600', 'border-blue-600');
+        activeButton.classList.remove('text-gray-500', 'border-transparent');
+    }
+    
+    // Update URL without page reload
+    const url = new URL(window.location);
+    url.searchParams.set('tab', tabName);
+    window.history.pushState({}, '', url);
+}
+
+// Show tab on page load based on URL parameter
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tab = urlParams.get('tab');
+    if (tab) {
+        showTab(tab);
+    } else {
+        // Default to 'user' tab
+        showTab('user');
+    }
+});
 
 // Auction Section Navigation
 function showAuctionSection(section) {

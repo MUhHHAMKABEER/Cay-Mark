@@ -249,6 +249,10 @@ public function watchlist()
             'active_listings' => $activeListings,
             'sold_listings' => $soldListings,
             'total_revenue' => $totalRevenue,
+            // For view compatibility
+            'current_count' => $activeListings,
+            'total_items_sold' => $soldListings,
+            'total_sales_revenue' => $totalRevenue,
         ];
     }
 

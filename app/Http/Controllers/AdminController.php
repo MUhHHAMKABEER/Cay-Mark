@@ -182,116 +182,114 @@ class AdminController extends Controller
     /**
      * User Management Page
      */
-     public function adminListing(Request $request)
-{
-  
-    $totalListings    = Listing::count();
-    $pendingListings  = Listing::where('status', 'pending')->count();
-    $approvedListings = Listing::where('status', 'approved')->count();
-    $rejectedListings = Listing::where('status', 'rejected')->count();
+    public function adminListing(Request $request)
+    {
+        $totalListings    = Listing::count();
+        $pendingListings  = Listing::where('status', 'pending')->count();
+        $approvedListings = Listing::where('status', 'approved')->count();
+        $rejectedListings = Listing::where('status', 'rejected')->count();
 
-    $lastMonthTotal = Listing::whereBetween('created_at', [now()->subMonth()->startOfMonth(), now()->subMonth()->endOfMonth()])->count();
-    $currentMonthTotal = Listing::whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])->count();
+        $lastMonthTotal = Listing::whereBetween('created_at', [now()->subMonth()->startOfMonth(), now()->subMonth()->endOfMonth()])->count();
+        $currentMonthTotal = Listing::whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])->count();
 
+        $percentageChange = $lastMonthTotal > 0
+            ? round((($currentMonthTotal - $lastMonthTotal) / $lastMonthTotal) * 100, 2)
+            : 0;
 
-    $percentageChange = $lastMonthTotal > 0
-        ? round((($currentMonthTotal - $lastMonthTotal) / $lastMonthTotal) * 100, 2)
-        : 0;
+        $query = Listing::query();
 
-    
-    $query = Listing::query();
+        if ($request->has('status') && in_array($request->status, ['pending', 'approved', 'rejected'])) {
+            $query->where('status', $request->status);
+        }
 
-    if ($request->has('status') && in_array($request->status, ['pending', 'approved', 'rejected'])) {
-        $query->where('status', $request->status);
+        $listings = $query->paginate(10);
+
+        return view('admin.lisitng', compact(
+            'listings',
+            'totalListings',
+            'pendingListings',
+            'approvedListings',
+            'rejectedListings',
+            'percentageChange',
+            'currentMonthTotal',
+            'lastMonthTotal'
+        ));
     }
-
-    $listings = $query->paginate(10);
-
-    return view('admin.lisitng', compact(
-        'listings',
-        'totalListings',
-        'pendingListings',
-        'approvedListings',
-        'rejectedListings',
-        'percentageChange',
-        'currentMonthTotal',
-        'lastMonthTotal'
-    ));
-}
 
 
     public function approve($id)
-{
-    $listing = Listing::findOrFail($id);
-    
-    // Use AuctionTimeService to calculate start and end times
-    $auctionTimeService = new \App\Services\AuctionTimeService();
-    $approvalTime = now();
-    
-    try {
-        $startTime = $auctionTimeService->calculateStartTime($approvalTime);
-        $endTime = $auctionTimeService->calculateEndTime($startTime, $listing->auction_duration ?? 7);
+    {
+        $listing = Listing::findOrFail($id);
         
-        $listing->auction_start_time = $startTime;
-        $listing->auction_end_time = $endTime;
-    } catch (\Exception $e) {
-        return redirect()->back()->with('error', 'Cannot approve listing: ' . $e->getMessage());
-    }
-    
-    $listing->status = 'approved';
-    
-    // Assign Item Number when approving (per PDF requirements)
-    $listing->assignItemNumber();
-    
-    $listing->save();
+        // Use AuctionTimeService to calculate start and end times
+        $auctionTimeService = new \App\Services\AuctionTimeService();
+        $approvalTime = now();
+        
+        try {
+            $startTime = $auctionTimeService->calculateStartTime($approvalTime);
+            $endTime = $auctionTimeService->calculateEndTime($startTime, $listing->auction_duration ?? 7);
+            
+            $listing->auction_start_time = $startTime;
+            $listing->auction_end_time = $endTime;
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Cannot approve listing: ' . $e->getMessage());
+        }
+        
+        $listing->status = 'approved';
+        
+        // Assign Item Number when approving (per PDF requirements)
+        $listing->assignItemNumber();
+        
+        $listing->save();
 
-    // Send approval email to seller
-    try {
-        \Mail::send('emails.listing-approved', [
-            'listing' => $listing,
-            'seller' => $listing->seller,
-        ], function ($message) use ($listing) {
-            $message->to($listing->seller->email, $listing->seller->name)
-                ->subject('Your Listing Has Been Approved - CayMark');
-        });
-    } catch (\Exception $e) {
-        \Log::error('Failed to send approval email: ' . $e->getMessage());
-    }
+        // Send approval email to seller
+        try {
+            \Mail::send('emails.listing-approved', [
+                'listing' => $listing,
+                'seller' => $listing->seller,
+            ], function ($message) use ($listing) {
+                $message->to($listing->seller->email, $listing->seller->name)
+                    ->subject('Your Listing Has Been Approved - CayMark');
+            });
+        } catch (\Exception $e) {
+            \Log::error('Failed to send approval email: ' . $e->getMessage());
+        }
 
-    return redirect()->back()->with('success', 'Listing approved successfully! Item Number: ' . $listing->item_number);
-}
-
-public function disapprove(Request $request, $id)
-{
-    $request->validate([
-        'rejection_reason' => 'required|string',
-        'rejection_notes' => 'nullable|string|max:1000',
-    ]);
-
-    $listing = Listing::findOrFail($id);
-    $listing->status = 'rejected';
-    $listing->rejected_at = now();
-    $listing->rejected_by = auth()->id();
-    $listing->rejection_reason = $request->rejection_reason;
-    $listing->rejection_notes = $request->rejection_notes;
-    $listing->save();
-
-    // Send rejection email to seller
-    try {
-        \Mail::send('emails.listing-rejected', [
-            'listing' => $listing,
-            'seller' => $listing->seller,
-            'rejectionReason' => $request->rejection_reason,
-        ], function ($message) use ($listing) {
-            $message->to($listing->seller->email, $listing->seller->name)
-                ->subject('Listing Rejected – ' . ($listing->year ?? '') . ' ' . ($listing->make ?? '') . ' ' . ($listing->model ?? '[VEHICLE_NAME]'));
-        });
-    } catch (\Exception $e) {
-        \Log::error('Failed to send rejection email: ' . $e->getMessage());
+        return redirect()->back()->with('success', 'Listing approved successfully! Item Number: ' . $listing->item_number);
     }
 
-    return redirect()->back()->with('success', 'Listing rejected successfully.');
-}
+    public function disapprove(Request $request, $id)
+    {
+        $request->validate([
+            'rejection_reason' => 'required|string',
+            'rejection_notes' => 'nullable|string|max:1000',
+        ]);
+
+        $listing = Listing::findOrFail($id);
+        $listing->status = 'rejected';
+        $listing->rejected_at = now();
+        $listing->rejected_by = auth()->id();
+        $listing->rejection_reason = $request->rejection_reason;
+        $listing->rejection_notes = $request->rejection_notes;
+        $listing->save();
+
+        // Send rejection email to seller
+        try {
+            \Mail::send('emails.listing-rejected', [
+                'listing' => $listing,
+                'seller' => $listing->seller,
+                'rejectionReason' => $request->rejection_reason,
+            ], function ($message) use ($listing) {
+                $message->to($listing->seller->email, $listing->seller->name)
+                    ->subject('Listing Rejected – ' . ($listing->year ?? '') . ' ' . ($listing->make ?? '') . ' ' . ($listing->model ?? '[VEHICLE_NAME]'));
+            });
+        } catch (\Exception $e) {
+            \Log::error('Failed to send rejection email: ' . $e->getMessage());
+        }
+
+        return redirect()->back()->with('success', 'Listing rejected successfully.');
+    }
+
     /**
      * User Management - Complete System
      */
@@ -399,24 +397,32 @@ public function disapprove(Request $request, $id)
      */
     public function toggleUserStatus(Request $request, $id)
     {
+        $request->validate([
+            'action' => 'required|in:suspend,reactivate',
+            'reason' => 'required_if:action,suspend|string|max:255',
+        ]);
+    
         $user = User::findOrFail($id);
-        $action = $request->get('action'); // 'suspend' or 'reactivate'
-
-        if ($action === 'suspend') {
+    
+        if ($request->action === 'suspend') {
             $user->update([
                 'is_restricted' => true,
-                'restriction_reason' => $request->get('reason', 'Account suspended by admin'),
+                'restriction_reason' => $request->reason,
+                'restriction_ends_at' => null, // or set a date if needed
             ]);
-        } else {
+        }
+    
+        if ($request->action === 'reactivate') {
             $user->update([
                 'is_restricted' => false,
-                'restriction_ends_at' => null,
                 'restriction_reason' => null,
-            });
+                'restriction_ends_at' => null,
+            ]);
         }
-
+    
         return back()->with('success', 'User status updated successfully.');
     }
+    
 
     /**
      * Get user activity log
@@ -475,8 +481,9 @@ public function disapprove(Request $request, $id)
             'active' => \App\Models\Subscription::where('status', 'active')->count(),
             'expired' => \App\Models\Subscription::where('status', 'expired')->count(),
             'pending_renewal' => \App\Models\Subscription::where('status', 'pending')->count(),
-            'expiring_soon' => \App\Models\Subscription::where('expires_at', '<=', Carbon::now()->addDays(7))
+            'expiring_soon' => \App\Models\Subscription::where('ends_at', '<=', Carbon::now()->addDays(7))
                                         ->where('status', 'active')
+                                        ->whereNotNull('ends_at')
                                         ->count(),
         ];
 
@@ -562,6 +569,24 @@ public function disapprove(Request $request, $id)
         ];
 
         return view('admin.listing-management', compact('activeListings', 'listingStats'));
+    }
+
+    /**
+     * Boosts & Add-ons Management
+     */
+    public function boostsAddOns(Request $request)
+    {
+        // Placeholder for boosts/add-ons management
+        // This feature can be implemented later when boosts/add-ons functionality is added
+        
+        $stats = [
+            'total_boosts' => 0,
+            'active_boosts' => 0,
+            'total_addons' => 0,
+            'active_addons' => 0,
+        ];
+
+        return view('admin.boosts-addons', compact('stats'));
     }
 
     /**
@@ -879,6 +904,7 @@ public function disapprove(Request $request, $id)
         // Placeholder data until Dispute model exists
         $disputes = collect([]);
         $disputeStats = [
+            'total' => 0,
             'open' => 0,
             'resolved' => 0,
             'in_progress' => 0,

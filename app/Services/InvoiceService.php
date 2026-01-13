@@ -228,6 +228,25 @@ class InvoiceService
                 ->first();
 
             if ($winningBid) {
+                // RESERVE PRICE CHECK: If reserve price is set and winning bid doesn't meet it, don't generate invoice
+                $reservePrice = $listing->reserve_price ? (float) $listing->reserve_price : null;
+                $winningAmount = (float) $winningBid->amount;
+                
+                if ($reservePrice && $winningAmount < $reservePrice) {
+                    // Reserve price not met - don't generate invoice (listing remains approved but unsold)
+                    // Status stays 'approved' - listing will appear in past listings for relisting
+                    
+                    // Send notification to seller that reserve was not met
+                    try {
+                        $notificationService = new \App\Services\NotificationService();
+                        $notificationService->auctionEndedReserveNotMet($listing->seller, $listing, $winningAmount, $reservePrice);
+                    } catch (\Exception $e) {
+                        Log::error('Failed to send no-sale notification for listing ' . $listing->id . ': ' . $e->getMessage());
+                    }
+                    
+                    continue; // Skip invoice generation - auction ended without sale
+                }
+                
                 try {
                     $invoice = $this->generateInvoiceForAuctionWin($listing, $winningBid);
                     
@@ -236,12 +255,16 @@ class InvoiceService
                     
                     // Send in-app notification to seller
                     $notificationService = new \App\Services\NotificationService();
-                    $notificationService->auctionSold($listing->seller, $listing, (float) $winningBid->amount);
+                    $notificationService->auctionSold($listing->seller, $listing, $winningAmount);
                     
                     $count++;
                 } catch (\Exception $e) {
                     Log::error('Failed to generate invoice for listing ' . $listing->id . ': ' . $e->getMessage());
                 }
+            } else {
+                // No bids - auction ended without sale
+                // Status stays 'approved' - listing will appear in past listings for relisting
+                // No invoice generated, so it's clear the auction didn't sell
             }
         }
 

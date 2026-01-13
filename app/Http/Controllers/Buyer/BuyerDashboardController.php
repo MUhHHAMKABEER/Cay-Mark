@@ -21,22 +21,55 @@ class BuyerDashboardController extends Controller
     }
 
     /**
-     * Display the buyer dashboard with all tabs data
+     * Display the buyer dashboard with all tabs data (legacy - redirects to user)
      */
     public function index(Request $request)
     {
+        return redirect()->route('buyer.user');
+    }
+
+    /**
+     * Display USER page - Account Information
+     */
+    public function user()
+    {
         $user = Auth::user();
-        $activeTab = $request->get('tab', 'user');
+        return view('buyer.user', compact('user'));
+    }
 
-        // Get all data using service
-        $dashboardData = $this->dashboardService->getDashboardData($user);
+    /**
+     * Display AUCTIONS page
+     */
+    public function auctions(Request $request)
+    {
+        $user = Auth::user();
+        $section = $request->get('section', 'current'); // current, won, lost
 
-        $data = array_merge([
-            'user' => $user,
-            'activeTab' => $activeTab,
-        ], $dashboardData);
+        $currentAuctions = $this->dashboardService->getCurrentAuctions($user);
+        $wonAuctions = $this->dashboardService->getWonAuctions($user);
+        $lostAuctions = $this->dashboardService->getLostAuctions($user);
 
-        return view('dashboard.buyer', $data);
+        return view('buyer.auctions', compact('user', 'currentAuctions', 'wonAuctions', 'lostAuctions', 'section'));
+    }
+
+    /**
+     * Display SAVED ITEMS page
+     */
+    public function savedItems()
+    {
+        $user = Auth::user();
+        $savedItems = $this->dashboardService->getSavedItems($user);
+        return view('buyer.saved-items', compact('user', 'savedItems'));
+    }
+
+    /**
+     * Display NOTIFICATIONS page
+     */
+    public function notifications()
+    {
+        $user = Auth::user();
+        $notifications = $this->dashboardService->getNotifications($user);
+        return view('buyer.notifications', compact('user', 'notifications'));
     }
 
 

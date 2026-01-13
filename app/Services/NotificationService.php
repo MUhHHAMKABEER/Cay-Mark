@@ -227,6 +227,21 @@ class NotificationService
     }
 
     /**
+     * 16b. Auction Ended - Reserve Price Not Met
+     */
+    public function auctionEndedReserveNotMet(User $seller, Listing $listing, float $winningBidAmount, float $reservePrice): void
+    {
+        $vehicleName = $this->getVehicleName($listing);
+        $this->sendNotification($seller, 'auction_ended_reserve_not_met', "Your auction for {$vehicleName} has ended. The highest bid was $" . number_format($winningBidAmount, 2) . " but did not meet your reserve price of $" . number_format($reservePrice, 2) . ". Business sellers can relist within 48 hours.", [
+            'listing_id' => $listing->id,
+            'item_name' => $vehicleName,
+            'winning_bid_amount' => $winningBidAmount,
+            'reserve_price' => $reservePrice,
+            'link' => route('dashboard.seller', ['tab' => 'auctions']),
+        ]);
+    }
+
+    /**
      * 17. Send Pickup Info
      */
     public function sendPickupInfo(User $seller, Listing $listing): void

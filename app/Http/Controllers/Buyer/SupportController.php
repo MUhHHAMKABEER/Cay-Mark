@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Buyer;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class SupportController extends Controller
 {
@@ -12,7 +13,8 @@ class SupportController extends Controller
      */
     public function index()
     {
-        //
+        $user = Auth::user();
+        return view('buyer.customer-support', compact('user'));
     }
 
     /**

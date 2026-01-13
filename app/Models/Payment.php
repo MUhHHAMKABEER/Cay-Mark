@@ -18,6 +18,11 @@ class Payment extends Model
         'metadata',
     ];
 
+    protected $casts = [
+        'amount' => 'decimal:2',
+        'metadata' => 'array',
+    ];
+
     /**
      * A payment belongs to a subscription.
      */

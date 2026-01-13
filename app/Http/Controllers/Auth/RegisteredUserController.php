@@ -617,16 +617,54 @@ public function step3(Request $request)
      */
     public function completeRegistration(Request $request)
     {
+        Log::info('=== COMPLETE REGISTRATION START ===', [
+            'user_id' => Auth::id(),
+            'timestamp' => now()->toDateTimeString(),
+        ]);
+
         $user = Auth::user();
         $finishData = session('finish_registration');
 
+        Log::info('Step 1: User and session data retrieved', [
+            'user_id' => $user->id ?? 'null',
+            'user_email' => $user->email ?? 'null',
+            'has_finish_data' => !empty($finishData),
+            'finish_data' => $finishData,
+        ]);
+
         if (!$finishData) {
+            Log::warning('Missing finish_registration session data', [
+                'user_id' => $user->id ?? 'null',
+                'session_keys' => array_keys(session()->all()),
+            ]);
             return redirect()->route('finish.registration')
                 ->with('error', 'Please select your membership first.');
         }
 
-        $package = Package::findOrFail($finishData['package_id']);
+        try {
+            $package = Package::findOrFail($finishData['package_id']);
+            Log::info('Step 2: Package retrieved', [
+                'package_id' => $package->id,
+                'package_title' => $package->title,
+                'package_price' => $package->price,
+                'package_role' => $package->role,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Package not found', [
+                'package_id' => $finishData['package_id'] ?? 'null',
+                'error' => $e->getMessage(),
+            ]);
+            return redirect()->route('finish.registration')
+                ->with('error', 'Selected package not found. Please try again.');
+        }
+
         $isBusinessSeller = $finishData['role'] === 'seller' && $package->price > 0;
+
+        Log::info('Step 3: Business seller check', [
+            'role' => $finishData['role'],
+            'package_price' => $package->price,
+            'is_business_seller' => $isBusinessSeller,
+        ]);
 
         // Validation rules
         $rules = [
@@ -648,104 +686,259 @@ public function step3(Request $request)
             $rules['cvc'] = 'required|string|size:3';
         }
 
-        $validated = $request->validate($rules);
+        Log::info('Step 4: Validation rules defined', [
+            'rules' => array_keys($rules),
+            'has_payment_rules' => isset($rules['card_number']),
+            'has_business_license_rules' => isset($rules['business_license']),
+        ]);
+
+        try {
+            $validated = $request->validate($rules);
+            Log::info('Step 5: Validation passed', [
+                'validated_keys' => array_keys($validated),
+                'has_id_document' => $request->hasFile('id_document'),
+                'has_business_license' => $request->hasFile('business_license'),
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $ve) {
+            Log::error('Validation failed', [
+                'errors' => $ve->errors()->toArray(),
+                'request_data' => $request->except(['id_document', 'business_license']), // Exclude files from log
+            ]);
+            return back()->withErrors($ve->validator)->withInput();
+        }
+
+        Log::info('Step 6: Starting database transaction');
 
         DB::beginTransaction();
 
         try {
+            Log::info('Step 7: Updating user with ID type');
+
             // Update user with ID type
             $user->id_type = $validated['id_type'];
             if ($isBusinessSeller) {
                 $user->relationship_to_business = $validated['relationship_to_business'];
+                Log::info('Step 7a: Added relationship_to_business', [
+                    'relationship' => $validated['relationship_to_business'],
+                ]);
             }
+
+            Log::info('Step 8: Handling ID document upload', [
+                'has_file' => $request->hasFile('id_document'),
+            ]);
 
             // Handle ID document upload
             if ($request->hasFile('id_document')) {
-                $idFile = $request->file('id_document');
-                $idPath = $idFile->store('user_documents/' . $user->id, 'public');
-                
-                UserDocument::create([
-                    'user_id' => $user->id,
-                    'doc_type' => 'id',
-                    'path' => $idPath,
-                    'filename' => $idFile->getClientOriginalName(),
-                    'mime_type' => $idFile->getMimeType(),
-                    'size' => $idFile->getSize(),
-                    'verified' => false,
-                ]);
+                try {
+                    $idFile = $request->file('id_document');
+                    Log::info('Step 8a: ID file details', [
+                        'original_name' => $idFile->getClientOriginalName(),
+                        'mime_type' => $idFile->getMimeType(),
+                        'size' => $idFile->getSize(),
+                    ]);
+
+                    $idPath = $idFile->store('user_documents/' . $user->id, 'public');
+                    Log::info('Step 8b: ID file stored', ['path' => $idPath]);
+
+                    $userDoc = UserDocument::create([
+                        'user_id' => $user->id,
+                        'doc_type' => 'id',
+                        'path' => $idPath,
+                        'filename' => $idFile->getClientOriginalName(),
+                        'mime_type' => $idFile->getMimeType(),
+                        'size' => $idFile->getSize(),
+                        'verified' => false,
+                    ]);
+
+                    Log::info('Step 8c: UserDocument created', ['doc_id' => $userDoc->id ?? 'null']);
+                } catch (\Exception $docEx) {
+                    Log::error('ID document upload failed', [
+                        'error' => $docEx->getMessage(),
+                        'trace' => $docEx->getTraceAsString(),
+                    ]);
+                    throw $docEx;
+                }
             }
+
+            Log::info('Step 9: Handling Business License upload', [
+                'is_business_seller' => $isBusinessSeller,
+                'has_file' => $request->hasFile('business_license'),
+            ]);
 
             // Handle Business License upload
             if ($isBusinessSeller && $request->hasFile('business_license')) {
-                $licenseFile = $request->file('business_license');
-                $licensePath = $licenseFile->store('user_documents/' . $user->id, 'public');
-                
-                $user->business_license_path = $licensePath;
-                
-                UserDocument::create([
-                    'user_id' => $user->id,
-                    'doc_type' => 'business_license',
-                    'path' => $licensePath,
-                    'filename' => $licenseFile->getClientOriginalName(),
-                    'mime_type' => $licenseFile->getMimeType(),
-                    'size' => $licenseFile->getSize(),
-                    'verified' => false,
-                ]);
+                try {
+                    $licenseFile = $request->file('business_license');
+                    Log::info('Step 9a: Business license file details', [
+                        'original_name' => $licenseFile->getClientOriginalName(),
+                        'mime_type' => $licenseFile->getMimeType(),
+                        'size' => $licenseFile->getSize(),
+                    ]);
+
+                    $licensePath = $licenseFile->store('user_documents/' . $user->id, 'public');
+                    Log::info('Step 9b: Business license file stored', ['path' => $licensePath]);
+
+                    $user->business_license_path = $licensePath;
+
+                    $licenseDoc = UserDocument::create([
+                        'user_id' => $user->id,
+                        'doc_type' => 'business_license',
+                        'path' => $licensePath,
+                        'filename' => $licenseFile->getClientOriginalName(),
+                        'mime_type' => $licenseFile->getMimeType(),
+                        'size' => $licenseFile->getSize(),
+                        'verified' => false,
+                    ]);
+
+                    Log::info('Step 9c: Business license UserDocument created', ['doc_id' => $licenseDoc->id ?? 'null']);
+                } catch (\Exception $licenseEx) {
+                    Log::error('Business license upload failed', [
+                        'error' => $licenseEx->getMessage(),
+                        'trace' => $licenseEx->getTraceAsString(),
+                    ]);
+                    throw $licenseEx;
+                }
             }
+
+            Log::info('Step 10: Processing payment/subscription', [
+                'role' => $finishData['role'],
+                'requires_payment' => ($finishData['role'] === 'buyer' || $isBusinessSeller),
+            ]);
 
             // Process payment if required
             if ($finishData['role'] === 'buyer' || $isBusinessSeller) {
-                // TODO: Integrate with payment gateway (Stripe)
-                // For now, create a pending payment record
-                $subscription = Subscription::create([
-                    'user_id' => $user->id,
-                    'package_id' => $package->id,
-                    'starts_at' => now(),
-                    'ends_at' => $package->duration_days ? now()->addDays($package->duration_days) : null,
-                    'status' => 'pending',
-                ]);
+                Log::info('Step 10a: Creating subscription for paid package');
+                try {
+                    $subscription = Subscription::create([
+                        'user_id' => $user->id,
+                        'package_id' => $package->id,
+                        'starts_at' => now(),
+                        'ends_at' => $package->duration_days ? now()->addDays($package->duration_days) : null,
+                        'status' => 'pending',
+                    ]);
 
-                Payment::create([
-                    'user_id' => $user->id,
-                    'subscription_id' => $subscription->id,
-                    'amount' => $package->price,
-                    'method' => 'credit_card',
-                    'status' => 'pending', // Will be updated after payment gateway confirmation
-                    'metadata' => [
-                        'card_last4' => substr($validated['card_number'], -4),
-                    ],
-                ]);
+                    Log::info('Step 10b: Subscription created', ['subscription_id' => $subscription->id ?? 'null']);
+
+                    Log::info('Step 10c: Creating payment record');
+                    $payment = Payment::create([
+                        'user_id' => $user->id,
+                        'subscription_id' => $subscription->id,
+                        'amount' => $package->price,
+                        'method' => 'credit_card',
+                        'status' => 'pending', // Will be updated after payment gateway confirmation
+                        'metadata' => [
+                            'card_last4' => substr($validated['card_number'], -4),
+                        ],
+                    ]);
+
+                    Log::info('Step 10d: Payment created', ['payment_id' => $payment->id ?? 'null']);
+                } catch (\Exception $paymentEx) {
+                    Log::error('Payment/Subscription creation failed', [
+                        'error' => $paymentEx->getMessage(),
+                        'trace' => $paymentEx->getTraceAsString(),
+                    ]);
+                    throw $paymentEx;
+                }
             } else {
-                // Individual Seller - no payment required
-                $subscription = Subscription::create([
-                    'user_id' => $user->id,
-                    'package_id' => $package->id,
-                    'starts_at' => now(),
-                    'ends_at' => null,
-                    'status' => 'active',
-                ]);
+                Log::info('Step 10a: Creating subscription for free package (Individual Seller)');
+                try {
+                    $subscription = Subscription::create([
+                        'user_id' => $user->id,
+                        'package_id' => $package->id,
+                        'starts_at' => now(),
+                        'ends_at' => null,
+                        'status' => 'active',
+                    ]);
+
+                    Log::info('Step 10b: Free subscription created', ['subscription_id' => $subscription->id ?? 'null']);
+                } catch (\Exception $subEx) {
+                    Log::error('Free subscription creation failed', [
+                        'error' => $subEx->getMessage(),
+                        'trace' => $subEx->getTraceAsString(),
+                    ]);
+                    throw $subEx;
+                }
             }
+
+            Log::info('Step 11: Assigning role and marking registration complete', [
+                'role' => $finishData['role'],
+            ]);
 
             // Assign role and mark registration as complete
             $user->role = $finishData['role'];
             $user->registration_complete = true;
             $user->save();
 
+            Log::info('Step 12: User updated successfully', [
+                'user_id' => $user->id,
+                'role' => $user->role,
+                'registration_complete' => $user->registration_complete,
+            ]);
+
+            Log::info('Step 13: Committing transaction');
             DB::commit();
+            Log::info('Step 14: Transaction committed successfully');
 
             // Clear session
             $request->session()->forget('finish_registration');
+            Log::info('Step 15: Session cleared');
 
+            Log::info('Step 16: Sending registration complete email');
             // Send Email #2: Registration Complete
-            $this->sendRegistrationCompleteEmail($user);
+            try {
+                $this->sendRegistrationCompleteEmail($user);
+                Log::info('Step 16a: Registration complete email sent');
+            } catch (\Exception $emailEx) {
+                Log::warning('Failed to send registration complete email', [
+                    'error' => $emailEx->getMessage(),
+                ]);
+                // Don't fail registration if email fails
+            }
 
-            // Redirect to appropriate dashboard
-            return redirect()->route('dashboard')
+            Log::info('=== COMPLETE REGISTRATION SUCCESS ===', [
+                'user_id' => $user->id,
+                'role' => $user->role,
+            ]);
+
+            // Redirect to appropriate dashboard based on role
+            $role = trim(strtolower($user->role ?? ''));
+            Log::info('Step 17: Redirecting based on role', ['role' => $role]);
+
+            if ($role === 'seller') {
+                return redirect()->route('dashboard.seller')
+                    ->with('success', 'Registration completed successfully! Welcome to CayMark.');
+            } elseif ($role === 'buyer') {
+                return redirect()->route('welcome') // listings page
+                    ->with('success', 'Registration completed successfully! Welcome to CayMark.');
+            }
+
+            // Fallback to default dashboard if role is invalid
+            return redirect()->route('dashboard.default')
                 ->with('success', 'Registration completed successfully! Welcome to CayMark.');
 
+        } catch (\Illuminate\Database\QueryException $qe) {
+            DB::rollBack();
+            Log::error('=== COMPLETE REGISTRATION FAILED (Database QueryException) ===', [
+                'error_message' => $qe->getMessage(),
+                'sql' => $qe->getSql() ?? 'N/A',
+                'bindings' => $qe->getBindings() ?? [],
+                'error_code' => $qe->getCode(),
+                'file' => $qe->getFile(),
+                'line' => $qe->getLine(),
+                'trace' => $qe->getTraceAsString(),
+            ]);
+            return back()->with('error', 'Registration completion failed due to a database error. Please try again.');
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Complete registration failed: ' . $e->getMessage(), ['exception' => $e]);
+            Log::error('=== COMPLETE REGISTRATION FAILED (General Exception) ===', [
+                'error_message' => $e->getMessage(),
+                'exception_class' => get_class($e),
+                'error_code' => $e->getCode(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+                'user_id' => $user->id ?? 'null',
+            ]);
             return back()->with('error', 'Registration completion failed. Please try again.');
         }
     }

@@ -26,17 +26,20 @@ public function store(LoginRequest $request): RedirectResponse
     $request->session()->regenerate();
 
     $user = $request->user();
+    $role = trim(strtolower($user->role ?? ''));
     
-    // Check if registration is complete
+    // Admin users bypass registration check and go directly to admin dashboard
+    if ($role === 'admin') {
+        return redirect()->route('admin.dashboard');
+    }
+    
+    // For other users, check if registration is complete
     if (!$user->isRegistrationComplete() || empty($user->role)) {
         return redirect()->route('dashboard.default');
     }
 
-    $role = trim(strtolower($user->role));
-
-    if ($role === 'admin') {
-        return redirect()->route('dashboard.admin');
-    } elseif ($role === 'seller') {
+    // Redirect based on role
+    if ($role === 'seller') {
         return redirect()->route('dashboard.seller');
     } elseif ($role === 'buyer') {
         return redirect()->route('welcome'); // listings page

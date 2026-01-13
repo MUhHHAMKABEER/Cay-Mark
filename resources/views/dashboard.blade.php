@@ -11,11 +11,7 @@
 @elseif($role === 'seller')
     <script>window.location="{{ route('dashboard.seller') }}";</script>
 @elseif($role === 'buyer')
-    @if($user->hasActiveSubscription())
-        <script>window.location="{{ route('welcome') }}";</script>
-    @else
-        <script>window.location="{{ route('subscription.plans') }}";</script>
-    @endif
+    <script>window.location="{{ route('welcome') }}";</script>
 @else
     <script>window.location="{{ route('dashboard.default') }}";</script>
 @endif

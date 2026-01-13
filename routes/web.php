@@ -152,10 +152,11 @@ Route::get('/listing/{id}', [ListingController::class, 'show'])->name('listing.s
 // Removed duplicate get-models route - already defined above and in seller routes
 
 
-Route::get('/subscription/plans', [App\Http\Controllers\SubscriptionController::class, 'plans'])
-    ->name('subscription.plans');
+// Removed subscription/plans route - no longer needed after registration flow
+// Route::get('/subscription/plans', [App\Http\Controllers\SubscriptionController::class, 'plans'])
+//     ->name('subscription.plans');
 
-    Route::get('/subscription/simulate', [SubscriptionController::class, 'simulate'])->name('subscription.simulate');
+Route::get('/subscription/simulate', [SubscriptionController::class, 'simulate'])->name('subscription.simulate');
 
     Route::get('/AuctionPage',[AuctionController::class, 'index'])->name("Auction.index");
 
