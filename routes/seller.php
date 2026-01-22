@@ -42,6 +42,7 @@ Route::prefix('seller')->name('seller.')->middleware(['auth'])->group(function (
     // Listings
     Route::get('listings/create', [ListingController::class, 'create'])->name('listings.create');
     Route::post('submit-listings', [ListingController::class, 'store'])->name('listings.store');
+    Route::get('listings/success/{id}', [ListingController::class, 'success'])->name('listings.success');
     Route::get('listings', [ListingController::class, 'showListing'])->name('listings.index');
     Route::get('Auction', [ListingController::class, 'showAuctionLisitng'])->name('Auction.index');
     

@@ -378,6 +378,16 @@
 
         <nav class="nav-menu">
             <ul>
+                <!-- Home -->
+                <li class="nav-item"
+                    data-intro="Go back to the home page to browse auctions and listings."
+                    data-step="0">
+                    <a href="{{ route('welcome') }}" class="nav-link tooltip" data-tooltip="Home">
+                        <span class="material-icons-round nav-icon">home</span>
+                        <span class="nav-text">Home</span>
+                    </a>
+                </li>
+
                 <!-- Dashboard -->
                 <li class="nav-item"
                     data-intro="This is your main dashboard where you can see an overview of your account, bids, and activities."

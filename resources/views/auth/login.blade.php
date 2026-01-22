@@ -1,461 +1,142 @@
 @extends('layouts.welcome')
+@section('title', 'Sign in - CayMark')
 @section('content')
-@section('title', 'Login - CayMark')
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - CayMark</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: {
-                            50: '#f0f9ff',
-                            100: '#e0f2fe',
-                            500: '#3b82f6',
-                            600: '#2563eb',
-                            700: '#1d4ed8',
-                        },
-                        gray: {
-                            50: '#f9fafb',
-                            100: '#f3f4f6',
-                            200: '#e5e7eb',
-                            300: '#d1d5db',
-                            700: '#374151',
-                            800: '#1f2937',
-                            900: '#111827',
-                        }
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                    animation: {
-                        'fade-in-up': 'fadeInUp 0.8s ease-out forwards',
-                        'slide-in-left': 'slideInLeft 0.8s ease-out forwards',
-                        'slide-in-right': 'slideInRight 0.8s ease-out forwards',
-                    },
-                    keyframes: {
-                        fadeInUp: {
-                            '0%': { opacity: '0', transform: 'translateY(20px)' },
-                            '100%': { opacity: '1', transform: 'translateY(0)' }
-                        },
-                        slideInLeft: {
-                            '0%': { opacity: '0', transform: 'translateX(-20px)' },
-                            '100%': { opacity: '1', transform: 'translateX(0)' }
-                        },
-                        slideInRight: {
-                            '0%': { opacity: '0', transform: 'translateX(20px)' },
-                            '100%': { opacity: '1', transform: 'translateX(0)' }
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f9fafb;
-        }
 
-        .glass-card {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.9);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-        }
+<div class="min-h-screen flex flex-col items-center justify-center py-12 px-4 bg-gradient-to-br from-slate-50 via-white to-blue-50/40">
+    <!-- Subtle grid pattern -->
+    <div class="fixed inset-0 opacity-[0.02] pointer-events-none" style="background-image: linear-gradient(#063466 1px, transparent 1px), linear-gradient(90deg, #063466 1px, transparent 1px); background-size: 48px 48px;"></div>
 
-        .brand-gradient {
-            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-        }
+    <div class="w-full max-w-md relative z-10">
+        <!-- Single focused card -->
+        <div class="bg-white rounded-2xl shadow-xl shadow-gray-200/60 border border-gray-100/80 overflow-hidden">
+            <!-- Thin brand accent (replaces heavy top bar) -->
+            <div class="h-1 bg-gradient-to-r from-[#063466] via-[#1e3a8a] to-[#2563eb]"></div>
 
-        .input-group {
-            position: relative;
-            margin-bottom: 1.5rem;
-        }
-
-        .input-field {
-            width: 100%;
-            padding: 1rem 1rem 1rem 3rem;
-            background: #f9fafb;
-            border: 1px solid #e5e7eb;
-            border-radius: 10px;
-            color: #374151;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-        }
-
-        .input-field:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-            background: white;
-        }
-
-        .input-icon {
-            position: absolute;
-            left: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #9ca3af;
-            transition: color 0.3s ease;
-        }
-
-        .input-field:focus + .input-icon {
-            color: #3b82f6;
-        }
-
-        .toggle-password {
-            position: absolute;
-            right: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #9ca3af;
-            cursor: pointer;
-            transition: color 0.3s ease;
-        }
-
-        .toggle-password:hover {
-            color: #3b82f6;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-            color: white;
-            padding: 1rem 2rem;
-            border-radius: 10px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
-        }
-
-        .btn-primary:active {
-            transform: translateY(0);
-        }
-
-        .social-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 48px;
-            height: 48px;
-            border-radius: 10px;
-            background: white;
-            border: 1px solid #e5e7eb;
-            color: #6b7280;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-        }
-
-        .social-btn:hover {
-            background: #f9fafb;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            color: #3b82f6;
-        }
-
-        .feature-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-
-        .feature-icon {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 36px;
-            height: 36px;
-            border-radius: 8px;
-            background: rgba(59, 130, 246, 0.1);
-            margin-right: 1rem;
-            color: #3b82f6;
-        }
-
-        .checkbox-container {
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-        }
-
-        .checkbox-container input {
-            display: none;
-        }
-
-        .checkmark {
-            width: 20px;
-            height: 20px;
-            border: 2px solid #d1d5db;
-            border-radius: 5px;
-            margin-right: 0.5rem;
-            position: relative;
-            transition: all 0.3s ease;
-        }
-
-        .checkbox-container input:checked + .checkmark {
-            background: #3b82f6;
-            border-color: #3b82f6;
-        }
-
-        .checkbox-container input:checked + .checkmark::after {
-            content: '';
-            position: absolute;
-            left: 6px;
-            top: 2px;
-            width: 5px;
-            height: 10px;
-            border: solid white;
-            border-width: 0 2px 2px 0;
-            transform: rotate(45deg);
-        }
-
-        .header {
-            background: white;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-        }
-
-        .footer {
-            background: #f9fafb;
-            border-top: 1px solid #e5e7eb;
-        }
-
-        @media (max-width: 768px) {
-            .login-container {
-                flex-direction: column;
-            }
-
-            .brand-section {
-                padding: 2rem;
-                border-radius: 20px 20px 0 0;
-            }
-
-            .form-section {
-                border-radius: 0 0 20px 20px;
-                margin-top: -20px;
-                padding: 2rem 1.5rem;
-            }
-        }
-    </style>
-</head>
-<body class="min-h-screen flex flex-col">
-    <!-- Header -->
-
-
-    <!-- Main Content -->
-    <main class="flex-grow flex items-center justify-center p-4 py-12">
-        <!-- Login Container -->
-        <div class="w-full max-w-6xl rounded-2xl overflow-hidden flex login-container animate-fade-in-up">
-            <!-- Brand Section -->
-            <div class="w-full md:w-2/5 p-8 md:p-12 text-white brand-section brand-gradient animate-slide-in-left">
-                <div class="flex flex-col h-full justify-center">
-                    <!-- Logo -->
-                    <div class="flex items-center mb-8">
-                        <div class="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center shadow-lg mr-3">
-                            <i class="fas fa-chart-network text-white text-xl"></i>
-                        </div>
-                        <h1 class="text-2xl font-bold">CayMark</h1>
+            <div class="p-8 md:p-10">
+                <!-- Clear, minimal header -->
+                <div class="text-center mb-8">
+                    <h1 class="text-2xl font-bold text-gray-900 font-heading tracking-tight">Sign in</h1>
+                    <p class="text-gray-500 text-sm mt-1">Welcome back. Enter your details to continue.</p>
                     </div>
 
-                    <!-- Welcome Message -->
-                    <h2 class="text-3xl md:text-4xl font-bold mb-4">Welcome Back</h2>
-                    <p class="text-blue-100 mb-8">Sign in to access your CayMark dashboard</p>
+                <!-- Compact flash messages -->
+                <div class="mb-6 space-y-3" role="status" aria-live="polite">
+                    @if (session('status'))
+                        <div class="rounded-lg bg-emerald-50 border border-emerald-200/80 px-4 py-3 text-sm text-emerald-800 flex items-center gap-2">
+                            <svg class="h-5 w-5 flex-shrink-0 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                            {{ session('status') }}
+                        </div>
+                    @endif
 
-                    <!-- Features List -->
-                    <div class="space-y-4 mt-8">
-                        <div class="feature-item">
-                            <div class="feature-icon">
-                                <i class="fas fa-shield-alt"></i>
-                            </div>
-                            <div>
-                                <h3 class="font-semibold">Enterprise Security</h3>
-                                <p class="text-sm text-blue-100">Bank-level encryption & protection</p>
-                            </div>
+                    @if (session('error'))
+                        <div class="rounded-lg bg-red-50 border border-red-200/80 px-4 py-3 text-sm text-red-800 flex items-center gap-2">
+                            <svg class="h-5 w-5 flex-shrink-0 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            {{ session('error') }}
                         </div>
+                    @endif
 
-                        <div class="feature-item">
-                            <div class="feature-icon">
-                                <i class="fas fa-rocket"></i>
-                            </div>
-                            <div>
-                                <h3 class="font-semibold">Lightning Fast</h3>
-                                <p class="text-sm text-blue-100">Optimized for performance</p>
-                            </div>
+                    @if ($errors->any())
+                        <div class="rounded-lg bg-amber-50 border border-amber-200/80 px-4 py-3 text-sm text-amber-800">
+                            <p class="font-medium mb-1">Please fix the following:</p>
+                            <ul class="list-disc list-inside space-y-0.5 text-amber-700">
+                                @foreach ($errors->all() as $err)
+                                    <li>{{ $err }}</li>
+                                @endforeach
+                            </ul>
                         </div>
-
-                        <div class="feature-item">
-                            <div class="feature-icon">
-                                <i class="fas fa-chart-line"></i>
-                            </div>
-                            <div>
-                                <h3 class="font-semibold">Advanced Analytics</h3>
-                                <p class="text-sm text-blue-100">Data-driven insights</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Stats -->
-                    <div class="flex mt-12 pt-8 border-t border-blue-400/30">
-                        <div class="pr-6 border-r border-blue-400/30">
-                            <p class="text-2xl font-bold">15K+</p>
-                            <p class="text-sm text-blue-100">Active Users</p>
-                        </div>
-                        <div class="px-6 border-r border-blue-400/30">
-                            <p class="text-2xl font-bold">99.9%</p>
-                            <p class="text-sm text-blue-100">Uptime</p>
-                        </div>
-                        <div class="pl-6">
-                            <p class="text-2xl font-bold">24/7</p>
-                            <p class="text-sm text-blue-100">Support</p>
-                        </div>
-                    </div>
-                </div>
+                    @endif
             </div>
 
-            <!-- Form Section -->
-            <div class="w-full md:w-3/5 p-8 md:p-12 form-section glass-card animate-slide-in-right">
-                <div class="max-w-md mx-auto">
-                    <!-- Form Header -->
-                    <div class="text-center mb-8">
-                        <h2 class="text-2xl md:text-3xl font-bold text-gray-800">Login to Your Account</h2>
-                        <p class="text-gray-600 mt-2">Enter your credentials to continue</p>
-                    </div>
-
-                    <!-- Login Form -->
-                    <form method="POST" action="{{ route('login') }}" novalidate>
+                <form method="POST" action="{{ route('login') }}" novalidate class="space-y-5">
                         @csrf
 
-                        {{-- Session status --}}
-                        @if (session('status'))
-                            <div class="rounded-lg bg-green-50 border border-green-200 text-green-700 px-4 py-3 text-sm mb-6">
-                                <i class="fas fa-check-circle mr-2"></i> {{ session('status') }}
-                            </div>
-                        @endif
-
-                        <!-- Email Address -->
-                        <div class="input-group">
-                            <input id="email" type="email" name="email" required class="input-field" placeholder="Email address" value="{{ old('email') }}" />
-                            <div class="input-icon">
-                                <i class="fas fa-envelope"></i>
-                            </div>
+                    <!-- Email -->
+                    <div>
+                        <label for="email" class="block text-sm font-semibold text-gray-700 mb-1.5">Email</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                            </span>
+                            <input type="email" id="email" name="email" required value="{{ old('email') }}" autocomplete="email"
+                                class="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:border-[#063466] focus:ring-2 focus:ring-[#063466]/10 transition-all text-gray-900 placeholder-gray-400 text-[15px]"
+                                placeholder="you@example.com">
                             @error('email')
-                                <p class="text-red-500 text-sm mt-2">{{ $message }}</p>
+                                <p class="text-sm text-red-600 mt-1.5">{{ $message }}</p>
                             @enderror
+                        </div>
                         </div>
 
                         <!-- Password -->
-                        <div class="input-group">
-                            <input id="password" type="password" name="password" required class="input-field" placeholder="Password" />
-                            <div class="input-icon">
-                                <i class="fas fa-lock"></i>
-                            </div>
-                            <div class="toggle-password" id="toggle-password">
-                                <i class="fas fa-eye"></i>
-                            </div>
+                    <div>
+                        <label for="password" class="block text-sm font-semibold text-gray-700 mb-1.5">Password</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                            </span>
+                            <input type="password" id="password" name="password" required autocomplete="current-password"
+                                class="w-full pl-11 pr-12 py-3 rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:border-[#063466] focus:ring-2 focus:ring-[#063466]/10 transition-all text-gray-900 placeholder-gray-400 text-[15px]"
+                                placeholder="••••••••">
+                            <button type="button" id="toggle-password" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-gray-600 transition-colors" aria-label="Toggle password visibility">
+                                <svg id="eye-icon" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                                <svg id="eye-slash-icon" class="h-5 w-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
+                            </button>
                             @error('password')
-                                <p class="text-red-500 text-sm mt-2">{{ $message }}</p>
+                                <p class="text-sm text-red-600 mt-1.5">{{ $message }}</p>
                             @enderror
                         </div>
-
-                        <!-- Remember Me & Forgot Password -->
-                        <div class="flex items-center justify-between mb-6">
-                            <label class="checkbox-container">
-                                <input id="remember_me" type="checkbox" name="remember" />
-                                <span class="checkmark"></span>
-                                <span class="text-gray-700 text-sm">Remember me</span>
-                            </label>
-
-                            @if (Route::has('password.request'))
-                                <a class="text-sm text-blue-500 hover:text-blue-700 font-medium transition duration-150 ease-in-out" href="{{ route('password.request') }}">
-                                    Forgot password?
-                                </a>
-                            @endif
-                        </div>
-
-                        <!-- Submit Button -->
-                        <div class="mb-6">
-                            <button type="submit" class="btn-primary w-full flex justify-center items-center">
-                                <span>Sign In</span>
-                                <i class="fas fa-arrow-right ml-2"></i>
-                            </button>
-                        </div>
-                    </form>
-
-                    <!-- Divider -->
-                    <div class="relative my-8">
-                        <div class="absolute inset-0 flex items-center">
-                            <div class="w-full border-t border-gray-200"></div>
-                        </div>
-                        <div class="relative flex justify-center text-sm">
-                            <span class="px-3 bg-white text-gray-500">Or continue with</span>
-                        </div>
                     </div>
 
-                    <!-- Social Login -->
-                    <div class="flex justify-center space-x-4 mb-8">
-                        <button type="button" class="social-btn">
-                            <i class="fab fa-google"></i>
-                        </button>
-                        <button type="button" class="social-btn">
-                            <i class="fab fa-apple"></i>
-                        </button>
-                        <button type="button" class="social-btn">
-                            <i class="fab fa-microsoft"></i>
-                        </button>
+                    <!-- Remember & Forgot -->
+                    <div class="flex items-center justify-between">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="remember_me" name="remember" class="w-4 h-4 rounded border-gray-300 text-[#063466] focus:ring-[#063466]/20">
+                            <span class="text-sm text-gray-600">Remember me</span>
+                        </label>
+                        @if (Route::has('password.request'))
+                            <a href="{{ route('password.request') }}" class="text-sm font-medium text-[#063466] hover:text-[#1e3a8a] transition-colors">Forgot password?</a>
+                        @endif
                     </div>
 
-                    <!-- Sign Up Link -->
-                    <div class="text-center text-sm text-gray-600">
-                        Don't have an account?
-                        <a href="#" class="font-medium text-blue-500 hover:text-blue-700 transition duration-150 ease-in-out ml-1">
-                            Sign up for free
-                        </a>
-                    </div>
-                </div>
+                    <!-- Submit -->
+                    <button type="submit" class="w-full py-3.5 px-4 rounded-xl bg-[#063466] hover:bg-[#052a52] text-white font-semibold text-[15px] shadow-lg shadow-[#063466]/20 hover:shadow-[#063466]/30 focus:outline-none focus:ring-2 focus:ring-[#063466] focus:ring-offset-2 transition-all duration-200">
+                        Sign in
+                    </button>
+
+                    <p class="text-center text-sm text-gray-500 pt-1">
+                        Don't have an account? <a href="{{ route('register') }}" class="font-semibold text-[#063466] hover:text-[#1e3a8a] transition-colors">Create one</a>
+                    </p>
+                </form>
             </div>
         </div>
-    </main>
 
+        <!-- Single, subtle trust line (replaces 3 cards) -->
+        <p class="text-center text-xs text-gray-400 mt-6 flex items-center justify-center gap-1.5">
+            <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+            Secure sign-in. Your data is protected.
+        </p>
+    </div>
+</div>
 
     <script>
-        // Password visibility toggle
-        document.getElementById('toggle-password').addEventListener('click', function() {
-            const passwordInput = document.getElementById('password');
-            const icon = this.querySelector('i');
-
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
+    document.addEventListener('DOMContentLoaded', function() {
+        var btn = document.getElementById('toggle-password');
+        var input = document.getElementById('password');
+        var eye = document.getElementById('eye-icon');
+        var slash = document.getElementById('eye-slash-icon');
+        if (btn && input && eye && slash) {
+            btn.addEventListener('click', function() {
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    eye.classList.add('hidden');
+                    slash.classList.remove('hidden');
             } else {
-                passwordInput.type = 'password';
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
-            }
-        });
-
-        // Add focus effects to form inputs
-        const inputs = document.querySelectorAll('.input-field');
-        inputs.forEach(input => {
-            input.addEventListener('focus', function() {
-                this.parentElement.classList.add('ring-2', 'ring-blue-500/30');
+                    input.type = 'password';
+                    eye.classList.remove('hidden');
+                    slash.classList.add('hidden');
+                }
             });
-
-            input.addEventListener('blur', function() {
-                this.parentElement.classList.remove('ring-2', 'ring-blue-500/30');
-            });
+        }
         });
     </script>
-</body>
-
 
 @endsection

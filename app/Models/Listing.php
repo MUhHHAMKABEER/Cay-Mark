@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Helpers\TextFormatter;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Listing extends Model
 {
@@ -14,6 +15,7 @@ class Listing extends Model
      * The attributes that are mass assignable.
      */
     protected $fillable = [
+        'slug',
         'item_number',
         'seller_id',
         'cover_photo_id',
@@ -92,8 +94,15 @@ class Listing extends Model
             }
         });
 
-        // Auto-convert vehicle fields to ALL CAPS on save
+        // Auto-generate slug before saving
         static::saving(function ($listing) {
+            // Always regenerate slug if it's empty or if any key fields that form the listing "name" have changed
+            // This ensures slug is automatically created when listing name (year, make, model, trim) is entered
+            if (empty($listing->slug) || $listing->isDirty('year', 'make', 'model', 'trim')) {
+                $listing->slug = $listing->generateSlug();
+            }
+
+            // Auto-convert vehicle fields to ALL CAPS on save
             $allCapsFields = [
                 'make', 'model', 'trim', 'year', 'vin', 'color', 'interior_color',
                 'fuel_type', 'transmission', 'title_status', 'primary_damage',
@@ -107,6 +116,74 @@ class Listing extends Model
                 }
             }
         });
+    }
+
+    /**
+     * Generate a unique slug for the listing based on year, make, model, trim.
+     * This is automatically called when listing is created or when these fields are updated.
+     */
+    public function generateSlug(): string
+    {
+        // Build slug from vehicle information (year, make, model, trim)
+        $parts = array_filter([
+            $this->year,
+            $this->make,
+            $this->model,
+            $this->trim,
+        ]);
+
+        // Create base slug from the parts
+        $baseSlug = Str::slug(implode(' ', $parts));
+        
+        // If no vehicle info available, use a fallback
+        if (empty($baseSlug)) {
+            // For new listings without ID, use timestamp
+            if (!$this->id) {
+                $baseSlug = 'listing-' . time();
+            } else {
+                $baseSlug = 'listing-' . $this->id;
+            }
+        }
+
+        $slug = $baseSlug;
+        $counter = 1;
+
+        // Ensure uniqueness - check if slug already exists
+        while (static::where('slug', $slug)->where('id', '!=', $this->id ?? 0)->exists()) {
+            $slug = $baseSlug . '-' . $counter;
+            $counter++;
+        }
+
+        return $slug;
+    }
+
+    /**
+     * Get the route key for the model.
+     */
+    public function getRouteKeyName()
+    {
+        return 'slug';
+    }
+
+    /**
+     * Get or generate slug - ensures slug always exists.
+     * Useful for existing listings that don't have slugs yet.
+     */
+    public function getSlugOrGenerate()
+    {
+        if (!empty($this->slug)) {
+            return $this->slug;
+        }
+
+        // Generate slug for existing listings
+        $slug = $this->generateSlug();
+        
+        // Save it if model exists
+        if ($this->exists) {
+            $this->update(['slug' => $slug]);
+        }
+        
+        return $slug;
     }
 
     /**

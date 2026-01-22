@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Buyer\BuyerDashboardController;
 use App\Http\Controllers\Buyer\BuyerMessageController;
 use App\Http\Controllers\Buyer\SupportController;
+use App\Http\Controllers\Buyer\NotificationController;
 use App\Http\Controllers\chatController;
 
 /*
@@ -39,6 +40,11 @@ Route::prefix('buyer')->name('buyer.')->middleware(['auth'])->group(function () 
     // Support
     Route::get('/customer-support', [SupportController::class, 'index'])->name('customer-support');
     Route::post('/customer-support/submit', [SupportController::class, 'store'])->name('customer-support.submit');
+    
+    // Notifications
+    Route::post('/notifications/{id}/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
+    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+    Route::get('/notifications/unread-count', [NotificationController::class, 'getUnreadCount'])->name('notifications.unread-count');
 });
 
 // Legacy routes (for backward compatibility)

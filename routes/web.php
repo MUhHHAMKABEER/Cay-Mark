@@ -81,6 +81,18 @@ Route::get('/contact', function () {
     return view('contact');
 })->name('contact');
 
+Route::get('/fee-calculator', function () {
+    return view('fee-calculator');
+})->name('fee-calculator');
+
+Route::get('/help-center', function () {
+    return view('help-center');
+})->name('help-center');
+
+Route::get('/rules-policies', function () {
+    return view('rules-policies');
+})->name('rules-policies');
+
 
 
 Route::middleware(['auth',
@@ -169,12 +181,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/watchlist', [WatchlistController::class, 'index'])->name('watchlist.index');
 });
 
-// Single auction listing page
-Route::get('/auction/{id}', [AuctionController::class, 'show'])->name('auction.show');
+// Single auction listing page (using slug for SEO)
+Route::get('/auction/{listing:slug}', [AuctionController::class, 'show'])->name('auction.show');
 // show listing (you already have)
 
 // store bid (only for logged-in users)
-Route::post('/auction/{id}/bid', [AuctionController::class, 'storeBid'])
+Route::post('/auction/{listing:slug}/bid', [AuctionController::class, 'storeBid'])
     ->middleware('auth')
     ->name('auction.bid.store');
 

@@ -75,7 +75,7 @@
                                     </button>
                                 </form>
                                 
-                                <a href="{{ route('auction.show', $listing->id) }}" 
+                                <a href="{{ route('auction.show', $listing->getSlugOrGenerate()) }}" 
                                    class="block w-full bg-blue-600 text-white text-center px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition duration-200">
                                     PLACE BID
                                 </a>

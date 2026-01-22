@@ -3,11 +3,78 @@
 @section('title', 'Auctions - Buyer Dashboard')
 
 @section('content')
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
 <div class="bg-gray-50 min-h-screen p-6">
     <!-- Header -->
     <div class="bg-white shadow-sm mb-6 rounded-lg p-6">
         <h1 class="text-3xl font-bold text-gray-900">My Auctions</h1>
         <p class="text-gray-600 mt-2">Track your current, won, and lost auctions</p>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-blue-100 text-sm font-medium mb-1">Current Auctions</p>
+                    <p class="text-3xl font-bold">{{ $currentAuctions->count() ?? 0 }}</p>
+                </div>
+                <div class="bg-white/20 rounded-lg p-3">
+                    <span class="material-icons-round text-3xl">gavel</span>
+                </div>
+            </div>
+        </div>
+        <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-green-100 text-sm font-medium mb-1">Won Auctions</p>
+                    <p class="text-3xl font-bold">{{ $wonAuctions->count() ?? 0 }}</p>
+                </div>
+                <div class="bg-white/20 rounded-lg p-3">
+                    <span class="material-icons-round text-3xl">check_circle</span>
+                </div>
+            </div>
+        </div>
+        <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-purple-100 text-sm font-medium mb-1">Win Rate</p>
+                    <p class="text-3xl font-bold">{{ $winLossRatioData['winRate'] ?? 0 }}%</p>
+                </div>
+                <div class="bg-white/20 rounded-lg p-3">
+                    <span class="material-icons-round text-3xl">trending_up</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <!-- Bidding Activity Chart -->
+        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Bidding Activity (Last 30 Days)</h3>
+            <div class="h-64">
+                <canvas id="biddingActivityChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Win/Loss Ratio Chart -->
+        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Win/Loss Ratio</h3>
+            <div class="h-64">
+                <canvas id="winLossChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Spending Trends Chart -->
+    <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 mb-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Spending Trends (Last 6 Months)</h3>
+        <div class="h-80">
+            <canvas id="spendingTrendsChart"></canvas>
+        </div>
     </div>
 
     <!-- Sub-tabs for CURRENT, WON, LOST -->
@@ -99,7 +166,7 @@
                                 @endif
 
                                 <!-- BID AGAIN Button -->
-                                <a href="{{ route('auction.show', $listing->id) }}" 
+                                <a href="{{ route('auction.show', $listing->getSlugOrGenerate()) }}" 
                                    class="block w-full bg-blue-600 text-white text-center px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition duration-200">
                                     BID AGAIN
                                 </a>
@@ -296,5 +363,202 @@ function updateCountdowns() {
 
 // Update countdowns every second
 setInterval(updateCountdowns, 1000);
+
+// Initialize Charts
+document.addEventListener('DOMContentLoaded', function() {
+    // Bidding Activity Chart
+    const biddingCtx = document.getElementById('biddingActivityChart');
+    if (biddingCtx) {
+        const biddingData = @json($biddingActivityData ?? ['labels' => [], 'counts' => [], 'amounts' => []]);
+        new Chart(biddingCtx, {
+            type: 'line',
+            data: {
+                labels: biddingData.labels || [],
+                datasets: [
+                    {
+                        label: 'Bid Count',
+                        data: biddingData.counts || [],
+                        borderColor: 'rgb(59, 130, 246)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        yAxisID: 'y',
+                    },
+                    {
+                        label: 'Bid Amount ($)',
+                        data: biddingData.amounts || [],
+                        borderColor: 'rgb(16, 185, 129)',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        yAxisID: 'y1',
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                if (context.datasetIndex === 0) {
+                                    return 'Bids: ' + context.parsed.y;
+                                } else {
+                                    return 'Amount: $' + context.parsed.y.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                                }
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Bid Count'
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Bid Amount ($)'
+                        },
+                        grid: {
+                            drawOnChartArea: false,
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + value.toLocaleString();
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 45
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Win/Loss Chart
+    const winLossCtx = document.getElementById('winLossChart');
+    if (winLossCtx) {
+        const winLossData = @json($winLossRatioData ?? ['labels' => [], 'data' => [], 'colors' => []]);
+        new Chart(winLossCtx, {
+            type: 'doughnut',
+            data: {
+                labels: winLossData.labels || [],
+                datasets: [{
+                    data: winLossData.data || [],
+                    backgroundColor: winLossData.colors || ['#10B981', '#EF4444'],
+                    borderWidth: 0,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 15,
+                            font: {
+                                size: 12
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                return label + ': ' + value + ' (' + percentage + '%)';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Spending Trends Chart
+    const spendingCtx = document.getElementById('spendingTrendsChart');
+    if (spendingCtx) {
+        const spendingData = @json($spendingTrendsData ?? ['labels' => [], 'data' => []]);
+        new Chart(spendingCtx, {
+            type: 'bar',
+            data: {
+                labels: spendingData.labels || [],
+                datasets: [{
+                    label: 'Spending ($)',
+                    data: spendingData.data || [],
+                    backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                    borderColor: 'rgb(59, 130, 246)',
+                    borderWidth: 2,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return '$' + context.parsed.y.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + value.toLocaleString();
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+    }
+});
 </script>
 @endsection

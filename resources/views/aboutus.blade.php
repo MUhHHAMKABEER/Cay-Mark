@@ -1,213 +1,335 @@
 @extends('layouts.welcome')
 
 @section('content')
-    <title>About Us - CayMark</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#4F46E5',
-                        primaryDark: '#4338CA',
-                        secondary: '#10B981',
-                        dark: '#1F2937',
-                        light: '#F9FAFB'
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif']
-                    }
-                }
-            }
+<style>
+    .about-hero-gradient {
+        background: linear-gradient(135deg, #0a2258 0%, #1e3a8a 30%, #312e81 70%, #1e40af 100%);
+    }
+    
+    .floating-shapes {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
+    
+    .shape-circle {
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .shape-circle-1 {
+        width: 300px;
+        height: 300px;
+        top: -100px;
+        right: -50px;
+        animation: float 20s infinite ease-in-out;
+    }
+    
+    .shape-circle-2 {
+        width: 200px;
+        height: 200px;
+        bottom: -50px;
+        left: 10%;
+        animation: float 15s infinite ease-in-out reverse;
+    }
+    
+    .shape-circle-3 {
+        width: 150px;
+        height: 150px;
+        top: 50%;
+        right: 20%;
+        animation: float 25s infinite ease-in-out;
+    }
+    
+    @keyframes float {
+        0%, 100% {
+            transform: translate(0, 0) rotate(0deg);
         }
-    </script>
-    <style>
-        .floating-card {
-            transform-style: preserve-3d;
-            transform: perspective(1000px);
+        33% {
+            transform: translate(30px, -30px) rotate(120deg);
         }
-        .floating-element {
-            transform: translateZ(20px);
+        66% {
+            transform: translate(-20px, 20px) rotate(240deg);
         }
-        .service-card {
-            transition: all 0.3s ease;
-        }
-        .service-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-        }
-        .parallax-bg {
-            background-attachment: fixed;
-            background-position: center;
-            background-repeat: no-repeat;
-            background-size: cover;
-        }
-        .gradient-text {
-            background: linear-gradient(135deg, #4F46E5 0%, #10B981 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-    </style>
-</head>
-<body class="font-sans antialiased text-gray-800 bg-light">
-    <!-- Navigation would be included from layout -->
+    }
+    
+    .feature-icon {
+        width: 80px;
+        height: 80px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .feature-card:hover .feature-icon {
+        transform: scale(1.1) rotate(5deg);
+        border-color: rgba(255, 255, 255, 0.5);
+        background: rgba(255, 255, 255, 0.1);
+    }
+    
+    .stat-card {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .stat-card:hover {
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateY(-5px);
+    }
+    
+    .client-logo {
+        filter: brightness(0) invert(1);
+        opacity: 0.7;
+        transition: all 0.3s ease;
+    }
+    
+    .client-logo:hover {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+    
+    .cta-gradient {
+        background: linear-gradient(135deg, #1e3a8a 0%, #312e81 50%, #1e40af 100%);
+    }
+    
+    .wave-pattern {
+        background-image: 
+            radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.05) 0%, transparent 50%),
+            radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
+    }
+</style>
 
-    <main>
-        <!-- Hero Section with Parallax -->
-        <section class="relative py-28 overflow-hidden">
-            <div class="absolute inset-0 parallax-bg" style="background-image: url('https://images.unsplash.com/photo-1519389950473-47ba0277781c?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1770&q=80');"></div>
-            <div class="absolute inset-0 bg-black opacity-50"></div>
+<!-- Hero Header Section -->
+<section class="relative min-h-[500px] flex items-center about-hero-gradient overflow-hidden">
+    <div class="floating-shapes">
+        <div class="shape-circle shape-circle-1"></div>
+        <div class="shape-circle shape-circle-2"></div>
+        <div class="shape-circle shape-circle-3"></div>
+    </div>
+    
+    <div class="container mx-auto px-4 relative z-10 py-20">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <!-- Left: Title and Tagline -->
+            <div>
+                <h1 class="text-5xl md:text-6xl font-extrabold text-white mb-6 font-heading leading-tight">
+                    About Us
+                </h1>
+                <p class="text-2xl md:text-3xl text-blue-200 font-semibold mb-8">
+                    We believe that technology can change the world.
+                </p>
+            </div>
+            
+            <!-- Right: Description -->
+            <div class="bg-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/20">
+                <p class="text-white text-lg leading-relaxed">
+                    CayMark is The Bahamas' first digital auction platform designed to bring confidence, transparency, and simplicity to the way our islands buy and sell vehicles. Built with the needs of Bahamian buyers and sellers in mind, CayMark blends modern technology with a straightforward, user-friendly experience that makes online auctions accessible to everyone from first-time buyers to seasoned dealerships.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
 
-            <div class="container mx-auto px-4 relative z-10 floating-card">
-                <div class="max-w-3xl mx-auto text-center floating-element">
-                    <h1 class="text-5xl font-bold text-white mb-6">About <span class="gradient-text">CayMark</span></h1>
-                    <h2 class="text-xl text-indigo-200 font-semibold mb-8">All to Know About Our Vision & Mission</h2>
-                    <p class="text-gray-200 text-lg leading-relaxed">
-                        Learn more about who we are and the exciting opportunities we've created to foster
-                        connection, innovation, and growth throughout The Bahamas.
+<!-- Features/Services Section -->
+<section class="py-20 bg-gradient-to-b from-gray-50 to-white">
+    <div class="container mx-auto px-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <!-- Expertise -->
+            <div class="feature-card text-center group">
+                <div class="feature-icon mx-auto mb-6">
+                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">Expertise</h3>
+                <p class="text-gray-600 leading-relaxed">
+                    Our team of experienced experts have the knowledge and expertise to deliver innovative IT solutions that transform how Bahamians buy and sell vehicles.
+                </p>
+            </div>
+            
+            <!-- Technology -->
+            <div class="feature-card text-center group">
+                <div class="feature-icon mx-auto mb-6">
+                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">Technology</h3>
+                <p class="text-gray-600 leading-relaxed">
+                    We stay up to date with the latest trends and technologies in the digital marketplace, so you can get the most advanced auction solutions available.
+                </p>
+            </div>
+            
+            <!-- Solutions -->
+            <div class="feature-card text-center group">
+                <div class="feature-icon mx-auto mb-6">
+                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">Solutions</h3>
+                <p class="text-gray-600 leading-relaxed">
+                    We take a personalized approach to every project, working closely with you to understand your business and create solutions that fit your needs.
+                </p>
+            </div>
+            
+            <!-- Results -->
+            <div class="feature-card text-center group">
+                <div class="feature-icon mx-auto mb-6">
+                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">Results</h3>
+                <p class="text-gray-600 leading-relaxed">
+                    We've helped buyers and sellers of all sizes across The Bahamas achieve their goals with our innovative auction platform and trusted marketplace.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Statistics Section -->
+<section class="py-16 bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 relative overflow-hidden">
+    <div class="wave-pattern absolute inset-0"></div>
+    <div class="container mx-auto px-4 relative z-10">
+        <div class="bg-white/10 backdrop-blur-md rounded-3xl p-12 border border-white/20">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+                <div class="stat-card rounded-2xl p-8">
+                    <div class="text-5xl md:text-6xl font-extrabold text-white mb-3">500+</div>
+                    <div class="text-white/90 text-lg font-semibold">Successful Auctions</div>
+                </div>
+                <div class="stat-card rounded-2xl p-8">
+                    <div class="text-5xl md:text-6xl font-extrabold text-white mb-3">98%</div>
+                    <div class="text-white/90 text-lg font-semibold">Satisfied Users</div>
+                </div>
+                <div class="stat-card rounded-2xl p-8">
+                    <div class="text-5xl md:text-6xl font-extrabold text-white mb-3">35+</div>
+                    <div class="text-white/90 text-lg font-semibold">Bahamas Islands</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Mission & Vision Section -->
+<section class="py-20 bg-white">
+    <div class="container mx-auto px-4">
+        <div class="max-w-4xl mx-auto">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl md:text-5xl font-extrabold text-gray-900 mb-6 font-heading">Our Mission</h2>
+                <div class="w-24 h-1 bg-gradient-to-r from-blue-600 to-indigo-600 mx-auto mb-8"></div>
+            </div>
+            
+            <div class="prose prose-lg max-w-none text-gray-700 leading-relaxed space-y-6">
+                <p class="text-xl">
+                    Our mission is simple: create a safer, smarter, and more reliable marketplace where you can discover quality vehicles, place real-time bids, and secure great deals without stress or uncertainty. Every feature on CayMark is built with purpose. We focus on clarity, fairness, and trust—the essentials of a marketplace that puts users first.
+                </p>
+                
+                <p class="text-xl">
+                    We believe in giving buyers the information they need to make confident decisions, and giving sellers the tools to reach serious, ready-to-act customers across the islands. Whether you're upgrading your vehicle, searching for something specific, or simply exploring what's available, CayMark is here to make the process seamless from start to finish.
+                </p>
+                
+                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-8 border-l-4 border-blue-600 mt-8">
+                    <p class="text-xl font-semibold text-gray-900">
+                        Driven by innovation and shaped by local insight, CayMark is more than a platform—it's the evolution of how Bahamians exchange vehicles. Real auctions. Real people. Real opportunities.
                     </p>
                 </div>
             </div>
-        </section>
+        </div>
+    </div>
+</section>
 
-        <!-- How we became CayMark -->
-        <section class="py-20 bg-white">
-            <div class="container mx-auto px-4">
-                <div class="flex flex-col lg:flex-row items-center gap-16">
-                    <!-- Text Content -->
-                    <div class="lg:w-1/2">
-                        <h2 class="text-3xl font-bold text-dark mb-6">Why Choose Cay Mark <span class="text-primary">— Our Story</span></h2>
-                        <div class="h-1 w-20 bg-secondary mb-6"></div>
-                        <p class="text-gray-700 leading-relaxed mb-6">
-                            CayMark began with a vision to make trading vehicles and marine crafts simple,
-                            reliable, and accessible across the Bahamas. By combining trusted escrow processes,
-                            careful listing verification, and an easy-to-use online auction platform, we built
-                            a marketplace that empowers buyers and sellers alike.
-                        </p>
-                        <p class="text-gray-700 leading-relaxed">
-                            Our journey is rooted in transparency and community — we listen to users,
-                            improve quickly, and invest in features that bring value and confidence to every transaction.
-                        </p>
-                    </div>
-
-                    <!-- Image with 3D effect -->
-                    <div class="lg:w-1/2 relative">
-                        <div class="floating-card">
-                            <img src="https://images.unsplash.com/photo-1563014959-7aaa83350992?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1032&q=80"
-                                 alt="CayMark story"
-                                 class="rounded-xl shadow-2xl floating-element">
-                        </div>
-                        <div class="absolute -z-10 top-6 left-6 right-6 bottom-6 bg-gradient-to-r from-primary to-secondary rounded-xl opacity-20"></div>
+<!-- Team/Community Section -->
+<section class="py-20 bg-gradient-to-b from-gray-50 to-white">
+    <div class="container mx-auto px-4">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div>
+                <h2 class="text-4xl md:text-5xl font-extrabold text-gray-900 mb-6 font-heading">Built for The Bahamas</h2>
+                <div class="w-24 h-1 bg-gradient-to-r from-blue-600 to-indigo-600 mb-8"></div>
+                <p class="text-lg text-gray-700 leading-relaxed mb-6">
+                    CayMark is the Bahamas' first digital auction platform designed to bring confidence, transparency, and simplicity to the way our islands buy and sell vehicles. Built with the needs of Bahamian buyers and sellers in mind, CayMark blends modern technology with a straightforward, user-friendly experience.
+                </p>
+                <p class="text-lg text-gray-700 leading-relaxed">
+                    Our platform makes online auctions accessible to everyone from first-time buyers to seasoned dealerships, creating a community-driven marketplace that connects people across every island.
+                </p>
+            </div>
+            <div class="relative">
+                <div class="rounded-2xl overflow-hidden shadow-2xl">
+                    <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&h=600&fit=crop" 
+                         alt="CayMark Team" 
+                         class="w-full h-auto object-cover">
+                </div>
+                <div class="absolute -bottom-6 -right-6 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl p-6 shadow-xl">
+                    <div class="text-white">
+                        <div class="text-3xl font-bold mb-1">Trusted</div>
+                        <div class="text-lg">by Bahamians</div>
                     </div>
                 </div>
             </div>
-        </section>
+        </div>
+    </div>
+</section>
 
-        <!-- Services Section -->
-        <section class="py-20 bg-gradient-to-br from-gray-50 to-gray-100">
-            <div class="container mx-auto px-4">
-                <div class="text-center max-w-3xl mx-auto mb-16">
-                    <h2 class="text-3xl font-bold text-dark mb-4">Why Choose a Better Bid <span class="text-primary">— Services We Offer</span></h2>
-                    <div class="h-1 w-20 bg-secondary mx-auto mb-6"></div>
-                    <p class="text-gray-600">Comprehensive solutions designed to make your auction experience seamless and secure</p>
-                </div>
+<!-- Client/Partner Logos Section -->
+<section class="py-16 bg-white border-t border-gray-200">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-12">
+            <h3 class="text-2xl font-bold text-gray-900 mb-2">Trusted Platform</h3>
+            <p class="text-gray-600">Used by buyers and sellers across The Bahamas</p>
+        </div>
+        <div class="flex flex-wrap justify-center items-center gap-12 opacity-60">
+            <!-- Placeholder for partner/client logos -->
+            <div class="text-2xl font-bold text-gray-400">BAHAMAS</div>
+            <div class="text-2xl font-bold text-gray-400">AUTOMOTIVE</div>
+            <div class="text-2xl font-bold text-gray-400">MARINE</div>
+            <div class="text-2xl font-bold text-gray-400">DEALERS</div>
+            <div class="text-2xl font-bold text-gray-400">INDIVIDUALS</div>
+        </div>
+    </div>
+</section>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    <!-- Service Card 1 -->
-                    <div class="service-card bg-white p-8 rounded-xl shadow-md border border-gray-100">
-                        <div class="w-14 h-14 bg-indigo-100 rounded-lg flex items-center justify-center mb-6">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                            </svg>
-                        </div>
-                        <h3 class="text-xl font-semibold text-dark mb-4">Safe & Trusted Payments</h3>
-                        <p class="text-gray-600">Secure escrow services protect all parties by holding funds safely until transactions are complete.</p>
-                    </div>
-
-                    <!-- Service Card 2 -->
-                    <div class="service-card bg-white p-8 rounded-xl shadow-md border border-gray-100">
-                        <div class="w-14 h-14 bg-indigo-100 rounded-lg flex items-center justify-center mb-6">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                            </svg>
-                        </div>
-                        <h3 class="text-xl font-semibold text-dark mb-4">Verified Listings You Can Trust</h3>
-                        <p class="text-gray-600">Every listing undergoes rigorous admin approval to confirm authenticity and quality.</p>
-                    </div>
-
-                    <!-- Service Card 3 -->
-                    <div class="service-card bg-white p-8 rounded-xl shadow-md border border-gray-100">
-                        <div class="w-14 h-14 bg-indigo-100 rounded-lg flex items-center justify-center mb-6">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                            </svg>
-                        </div>
-                        <h3 class="text-xl font-semibold text-dark mb-4">Auction Online, Anytime</h3>
-                        <p class="text-gray-600">Join live auctions from anywhere across The Bahamas without leaving your home.</p>
-                    </div>
-
-                    <!-- Service Card 4 -->
-                    <div class="service-card bg-white p-8 rounded-xl shadow-md border border-gray-100">
-                        <div class="w-14 h-14 bg-indigo-100 rounded-lg flex items-center justify-center mb-6">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
-                            </svg>
-                        </div>
-                        <h3 class="text-xl font-semibold text-dark mb-4">Personalized User Dashboards</h3>
-                        <p class="text-gray-600">Centralized place to manage all your buying and selling activities with intuitive interface.</p>
-                    </div>
-
-                    <!-- Service Card 5 -->
-                    <div class="service-card bg-white p-8 rounded-xl shadow-md border border-gray-100">
-                        <div class="w-14 h-14 bg-indigo-100 rounded-lg flex items-center justify-center mb-6">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                            </svg>
-                        </div>
-                        <h3 class="text-xl font-semibold text-dark mb-4">Flexible Membership Plans</h3>
-                        <p class="text-gray-600">Variety of membership options designed to meet diverse needs of buyers and sellers.</p>
-                    </div>
-
-                    <!-- Service Card 6 -->
-                    <div class="service-card bg-white p-8 rounded-xl shadow-md border border-gray-100">
-                        <div class="w-14 h-14 bg-indigo-100 rounded-lg flex items-center justify-center mb-6">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
-                            </svg>
-                        </div>
-                        <h3 class="text-xl font-semibold text-dark mb-4">Dedicated Customer Support</h3>
-                        <p class="text-gray-600">Expert support team available via chat, email, or phone during business hours.</p>
-                    </div>
-                </div>
+<!-- Call to Action Section -->
+<section class="py-20 cta-gradient relative overflow-hidden">
+    <div class="wave-pattern absolute inset-0"></div>
+    <div class="container mx-auto px-4 relative z-10">
+        <div class="max-w-4xl mx-auto text-center">
+            <div class="inline-block w-32 h-32 bg-white/10 backdrop-blur-md rounded-full mb-8 flex items-center justify-center border border-white/20">
+                <svg class="w-16 h-16 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
             </div>
-        </section>
-
-        <!-- Mission Section -->
-        <section class="py-20 bg-white">
-            <div class="container mx-auto px-4">
-                <div class="max-w-4xl mx-auto text-center">
-                    <div class="inline-block p-2 bg-indigo-100 rounded-full mb-6">
-                        <div class="bg-indigo-200 rounded-full p-3">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                            </svg>
-                        </div>
-                    </div>
-                    <h2 class="text-3xl font-bold text-dark mb-6">Our Mission Today</h2>
-                    <p class="text-gray-600 text-lg leading-relaxed mb-10">
-                        At CayMark, our mission is to connect buyers and sellers across The Bahamas through a dynamic and innovative platform
-                        that makes trading vehicles and marine crafts effortless and reliable. We aim to break down barriers, making access to
-                        quality listings simple for everyone—eliminating doubt and uncertainty so you can trade boldly.
-                    </p>
-                    <a href="#" class="inline-block px-8 py-4 bg-gradient-to-r from-primary to-primaryDark text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-                        Join CayMark Today
-                    </a>
-                </div>
+            <h2 class="text-4xl md:text-5xl font-extrabold text-white mb-6 font-heading">
+                Ready to Get Started?
+            </h2>
+            <p class="text-xl text-blue-100 mb-10 leading-relaxed">
+                Welcome to the future of buying and selling in The Bahamas.<br>
+                Welcome to CayMark.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="{{ route('register') }}" 
+                   class="inline-flex items-center justify-center bg-white text-blue-600 font-bold py-4 px-8 rounded-xl hover:bg-blue-50 transition-all transform hover:scale-105 shadow-xl">
+                    Get Started Free
+                    <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                    </svg>
+                </a>
+                <a href="{{ route('Auction.index') }}" 
+                   class="inline-flex items-center justify-center bg-white/10 backdrop-blur-md text-white font-bold py-4 px-8 rounded-xl border border-white/30 hover:bg-white/20 transition-all transform hover:scale-105">
+                    Browse Auctions
+                </a>
             </div>
-        </section>
-    </main>
-
-
+        </div>
+    </div>
+</section>
 
 @endsection

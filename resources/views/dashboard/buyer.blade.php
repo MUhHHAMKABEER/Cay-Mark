@@ -3,201 +3,353 @@
 @section('title', 'Buyer Dashboard - CayMark')
 
 @section('content')
-<div class="min-h-screen bg-gray-50 py-8">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
-        <!-- Header -->
-        <div class="bg-white rounded-lg shadow mb-6 p-6">
-            <h1 class="text-3xl font-bold text-gray-900">Buyer Dashboard</h1>
-            <p class="text-gray-600 mt-2">Manage your auctions, bids, and purchases</p>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<div class="w-full h-full bg-gray-50" style="min-height: calc(100vh - 0px); padding: 0;">
+    <div class="w-full h-full px-3 sm:px-4 lg:px-6 py-3">
+        @php $summary = $buyerSummary ?? []; $avgPurchase = $averagePurchaseData ?? []; @endphp
+
+        <div class="bg-white rounded-xl shadow-sm h-full" style="min-height: calc(100vh - 60px);">
+            <!-- DASHBOARD TAB (Overview with Stats & Charts) -->
+            <div id="content-dashboard" class="tab-content p-4" style="display: none; height: 100%; overflow-y: auto;">
+                <div class="mb-4">
+                    <h2 class="text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 bg-clip-text text-transparent mb-1">Dashboard Overview</h2>
+                    <p class="text-gray-600 text-sm">Real-time insights into your bidding activity and purchase analytics</p>
         </div>
 
-        <!-- Tab Navigation -->
-        <div class="bg-white rounded-lg shadow mb-6">
-            <div class="border-b border-gray-200">
-                <nav class="flex -mb-px overflow-x-auto">
-                    <button onclick="showTab('user')" 
-                            id="tab-user" 
-                            class="tab-button active px-6 py-4 text-sm font-medium text-blue-600 border-b-2 border-blue-600 whitespace-nowrap">
-                        USER
-                    </button>
-                    <button onclick="showTab('auctions')" 
-                            id="tab-auctions" 
-                            class="tab-button px-6 py-4 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 border-b-2 border-transparent whitespace-nowrap">
-                        AUCTIONS
-                    </button>
-                    <button onclick="showTab('saved')" 
-                            id="tab-saved" 
-                            class="tab-button px-6 py-4 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 border-b-2 border-transparent whitespace-nowrap">
-                        SAVED ITEMS
-                    </button>
-                    <button onclick="showTab('notifications')" 
-                            id="tab-notifications" 
-                            class="tab-button px-6 py-4 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 border-b-2 border-transparent whitespace-nowrap">
-                        NOTIFICATIONS
-                    </button>
-                    <button onclick="showTab('messaging')" 
-                            id="tab-messaging" 
-                            class="tab-button px-6 py-4 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 border-b-2 border-transparent whitespace-nowrap">
-                        MESSAGING CENTER
-                    </button>
-                    <button onclick="showTab('support')" 
-                            id="tab-support" 
-                            class="tab-button px-6 py-4 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 border-b-2 border-transparent whitespace-nowrap">
-                        CUSTOMER SUPPORT
-                </button>
-                </nav>
+                <!-- Top Stats Cards -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+                    <div class="bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 rounded-xl shadow-xl p-4 text-white transform hover:scale-105 transition-all duration-300 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
+                        <div class="relative z-10">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="material-icons-round text-3xl opacity-80">payments</span>
+                                <span class="text-xs font-semibold bg-white/20 px-2 py-0.5 rounded-full">Spent</span>
+                            </div>
+                            <p class="text-blue-100 text-xs font-medium mb-1">Total Spent</p>
+                            <p class="text-3xl font-bold mb-0.5">${{ number_format($summary['total_spent'] ?? 0, 0) }}</p>
+                            <p class="text-xs text-blue-100 opacity-75">All paid purchases</p>
+                        </div>
+                    </div>
+                    <div class="bg-gradient-to-br from-emerald-600 via-green-600 to-teal-700 rounded-xl shadow-xl p-4 text-white transform hover:scale-105 transition-all duration-300 relative overflow-hidden" style="background: linear-gradient(to bottom right, #059669, #16a34a, #0f766e);">
+                        <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
+                        <div class="relative z-10">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="material-icons-round text-3xl text-white" style="opacity: 0.95;">check_circle</span>
+                                <span class="text-xs font-semibold bg-white/25 px-2 py-0.5 rounded-full text-white">Won</span>
+                            </div>
+                            <p class="text-xs font-medium mb-1 text-white">Items Won</p>
+                            <p class="text-3xl font-bold mb-0.5 text-white">{{ $summary['items_won'] ?? 0 }}</p>
+                            <p class="text-xs text-white" style="opacity: 0.95;">{{ $winLossRatioData['winRate'] ?? 0 }}% win rate</p>
+                        </div>
+                    </div>
+                    <div class="bg-gradient-to-br from-purple-500 via-pink-500 to-rose-600 rounded-xl shadow-xl p-4 text-white transform hover:scale-105 transition-all duration-300 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
+                        <div class="relative z-10">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="material-icons-round text-3xl opacity-80">gavel</span>
+                                <span class="text-xs font-semibold bg-white/20 px-2 py-0.5 rounded-full">Active</span>
+                            </div>
+                            <p class="text-purple-100 text-xs font-medium mb-1">Active Bids</p>
+                            <p class="text-3xl font-bold mb-0.5">{{ $summary['active_bids_count'] ?? 0 }}</p>
+                            <p class="text-xs text-purple-100 opacity-75">Currently bidding</p>
+                        </div>
+                    </div>
+                    <div class="bg-gradient-to-br from-amber-600 via-orange-600 to-red-700 rounded-xl shadow-xl p-4 text-white transform hover:scale-105 transition-all duration-300 relative overflow-hidden" style="background: linear-gradient(to bottom right, #d97706, #ea580c, #b91c1c);">
+                        <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
+                        <div class="relative z-10">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="material-icons-round text-3xl text-white" style="opacity: 0.95;">bookmark</span>
+                                <span class="text-xs font-semibold bg-white/25 px-2 py-0.5 rounded-full text-white">Saved</span>
+                            </div>
+                            <p class="text-xs font-medium mb-1 text-white">Saved Items</p>
+                            <p class="text-3xl font-bold mb-0.5 text-white">{{ $summary['saved_items_count'] ?? 0 }}</p>
+                            <p class="text-xs text-white" style="opacity: 0.95;">Watchlist</p>
             </div>
+                    </div>
+                </div>
+
+                <!-- Secondary Stats -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg shadow-md border border-blue-200 p-4 hover:shadow-lg transition-all duration-300">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-blue-700 text-xs font-medium">Avg. Purchase</span>
+                            <span class="material-icons-round text-blue-600 text-lg">trending_up</span>
+                        </div>
+                        <p class="text-xl font-bold text-blue-900">${{ number_format($avgPurchase['average'] ?? 0, 0) }}</p>
+                        <p class="text-xs text-blue-600 mt-0.5">Based on {{ $avgPurchase['count'] ?? 0 }} purchases</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-lg shadow-md border border-green-200 p-4 hover:shadow-lg transition-all duration-300">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-green-700 text-xs font-medium">Win Rate</span>
+                            <span class="material-icons-round text-green-600 text-lg">percent</span>
+                        </div>
+                        <p class="text-xl font-bold text-green-900">{{ $winLossRatioData['winRate'] ?? 0 }}%</p>
+                        <p class="text-xs text-green-600 mt-0.5">{{ $winLossRatioData['won'] ?? 0 }} won / {{ $winLossRatioData['total'] ?? 0 }} total</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg shadow-md border border-purple-200 p-4 hover:shadow-lg transition-all duration-300">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-purple-700 text-xs font-medium">Highest Purchase</span>
+                            <span class="material-icons-round text-purple-600 text-lg">arrow_upward</span>
+                        </div>
+                        <p class="text-xl font-bold text-purple-900">${{ number_format($avgPurchase['highest'] ?? 0, 0) }}</p>
+                        <p class="text-xs text-purple-600 mt-0.5">Best deal</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg shadow-md border border-amber-200 p-4 hover:shadow-lg transition-all duration-300">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-amber-700 text-xs font-medium">Pending Payment</span>
+                            <span class="material-icons-round text-amber-600 text-lg">schedule</span>
+                        </div>
+                        <p class="text-xl font-bold text-amber-900">${{ number_format($summary['pending_payment_amount'] ?? 0, 0) }}</p>
+                        <p class="text-xs text-amber-600 mt-0.5">{{ $summary['pending_payment_count'] ?? 0 }} invoice(s)</p>
+                    </div>
+        </div>
+
+                <!-- Charts Row -->
+                <div class="grid grid-cols-1 xl:grid-cols-3 gap-4 mb-4">
+                    <div class="xl:col-span-2 bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-lg border border-gray-200 p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-900">Spending Trend</h3>
+                                <p class="text-xs text-gray-500">Last 6 months</p>
+                            </div>
+                            <div class="bg-blue-100 rounded-lg p-1.5"><span class="material-icons-round text-blue-600 text-lg">show_chart</span></div>
+                        </div>
+                        <div class="h-64"><canvas id="spendingTrendsChart"></canvas></div>
+                    </div>
+                    <div class="bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-lg border border-gray-200 p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-900">Win / Loss</h3>
+                                <p class="text-xs text-gray-500">Auction results</p>
+                            </div>
+                            <div class="bg-purple-100 rounded-lg p-1.5"><span class="material-icons-round text-purple-600 text-lg">pie_chart</span></div>
+                        </div>
+                        <div class="h-64"><canvas id="winLossChart"></canvas></div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1">
+                    <div class="bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-lg border border-gray-200 p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-900">Bidding Activity</h3>
+                                <p class="text-xs text-gray-500">Last 30 days</p>
+                            </div>
+                            <div class="bg-green-100 rounded-lg p-1.5"><span class="material-icons-round text-green-600 text-lg">bar_chart</span></div>
+                        </div>
+                        <div class="h-72"><canvas id="biddingActivityChart"></canvas></div>
+                    </div>
+                    </div>
+                </div>
 
             <!-- USER TAB -->
-            <div id="content-user" class="tab-content p-6">
-                <h2 class="text-xl font-bold text-gray-900 mb-6">Account Information</h2>
-
-                <!-- Full Name -->
-                <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-                    <div class="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3">
-                        <span class="text-gray-900">{{ $user->name }}</span>
-                    </div>
-                </div>
-
-                <!-- Email Address -->
-                <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Registered Email Address</label>
-                    <form method="POST" action="{{ route('buyer-dashboard.update-email') }}" class="flex items-center space-x-3">
-                        @csrf
-                        <div class="flex-1">
-                            <input type="email" 
-                                   name="email" 
-                                   value="{{ $user->email }}" 
-                                   class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                   required>
+            <div id="content-user" class="tab-content hidden p-6">
+                <!-- Header -->
+                <div class="mb-8">
+                    <div class="flex items-center gap-3 mb-1">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                            <span class="material-icons-round text-white text-xl">person</span>
                         </div>
-                        <button type="submit" 
-                                class="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition duration-200">
-                            Update Email
-                    </button>
-                    </form>
-                    <p class="text-sm text-gray-500 mt-2">Email is visible only and can be edited.</p>
-                </div>
-
-                <!-- Account Type -->
-                <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Account Type</label>
-                    <div class="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3">
-                        <span class="text-gray-900 font-semibold">Buyer</span>
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-900 tracking-tight">Account Information</h2>
+                            <p class="text-sm text-gray-500">Manage your profile and security settings</p>
+                        </div>
                     </div>
                 </div>
 
-                <!-- ID -->
-                <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">ID</label>
-                    <div class="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3">
-                        <span class="text-gray-900">{{ $user->id }}</span>
+                @if(session('success'))
+                    <div class="flex items-center gap-3 rounded-xl bg-emerald-50 border border-emerald-200/80 px-4 py-3 mb-6 text-emerald-800 shadow-sm">
+                        <span class="material-icons-round text-emerald-600 text-xl">check_circle</span>
+                        <span class="font-medium">{{ session('success') }}</span>
                     </div>
-                </div>
+                @endif
+                @if($errors->any())
+                    <div class="flex items-start gap-3 rounded-xl bg-red-50 border border-red-200/80 px-4 py-3 mb-6 text-red-800 shadow-sm">
+                        <span class="material-icons-round text-red-600 text-xl flex-shrink-0">error</span>
+                        <ul class="list-disc list-inside text-sm">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
+                    </div>
+                @endif
 
-                <!-- Password Management -->
-                <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Password Management</label>
-                    <button onclick="showPasswordModal()" 
-                            class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-medium transition duration-200">
+                <!-- Main Card -->
+                <div class="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden">
+                    <div class="p-6 md:p-8 space-y-6">
+                        <!-- Profile section -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Full Name -->
+                            <div class="group">
+                                <label class="flex items-center gap-2 text-sm font-semibold text-gray-600 mb-2">
+                                    <span class="material-icons-round text-gray-400 text-lg group-focus-within:text-blue-600 transition-colors">badge</span>
+                                    Full Name
+                                </label>
+                                <div class="flex items-center gap-3 rounded-xl bg-slate-50/80 border border-gray-200 px-4 py-3.5">
+                                    <span class="material-icons-round text-gray-400 text-xl">person_outline</span>
+                                    <span class="text-gray-900 font-medium">{{ $user->name }}</span>
+                                </div>
+                                <p class="text-xs text-gray-400 mt-1.5">Display name on your account</p>
+                            </div>
+
+                            <!-- Account Type -->
+                            <div class="group">
+                                <label class="flex items-center gap-2 text-sm font-semibold text-gray-600 mb-2">
+                                    <span class="material-icons-round text-gray-400 text-lg">workspace_premium</span>
+                                    Account Type
+                                </label>
+                                <div class="flex items-center gap-3 rounded-xl bg-slate-50/80 border border-gray-200 px-4 py-3.5">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-semibold bg-blue-100 text-blue-800">Buyer</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Email (editable) -->
+                        <div class="pt-2 border-t border-gray-100">
+                            <form method="POST" action="{{ route('buyer.user.update-email') }}" class="group">
+                                @csrf
+                                <label class="flex items-center gap-2 text-sm font-semibold text-gray-600 mb-2">
+                                    <span class="material-icons-round text-gray-400 text-lg group-focus-within:text-blue-600 transition-colors">mail</span>
+                                    Email Address
+                                </label>
+                                <div class="flex flex-col sm:flex-row gap-3">
+                                    <div class="flex-1">
+                                        <input type="email" name="email" value="{{ $user->email }}" required
+                                            class="w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-gray-900 font-medium placeholder-gray-400 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all">
+                                    </div>
+                                    <button type="submit" class="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3.5 rounded-xl font-semibold shadow-lg shadow-blue-600/20 hover:shadow-blue-600/30 transition-all duration-200">
+                                        <span class="material-icons-round text-lg">save</span>
+                                        Update Email
+                                    </button>
+                                </div>
+                                <p class="text-xs text-gray-400 mt-1.5">Visible only to you. You can change it anytime.</p>
+                            </form>
+                        </div>
+
+                        <!-- ID + Password row -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2 border-t border-gray-100">
+                            <!-- ID -->
+                            <div class="group">
+                                <label class="flex items-center gap-2 text-sm font-semibold text-gray-600 mb-2">
+                                    <span class="material-icons-round text-gray-400 text-lg">tag</span>
+                                    Account ID
+                                </label>
+                                <div class="flex items-center gap-3 rounded-xl bg-slate-50/80 border border-gray-200 px-4 py-3.5">
+                                    <span class="text-gray-500 font-mono text-sm">#</span>
+                                    <span class="text-gray-900 font-semibold">{{ $user->id }}</span>
+                                </div>
+                                <p class="text-xs text-gray-400 mt-1.5">Your unique account identifier</p>
+                            </div>
+
+                            <!-- Password -->
+                            <div class="group">
+                                <label class="flex items-center gap-2 text-sm font-semibold text-gray-600 mb-2">
+                                    <span class="material-icons-round text-gray-400 text-lg">lock</span>
+                                    Password
+                                </label>
+                                <div class="rounded-xl border-2 border-dashed border-gray-200 bg-gray-50/50 p-4">
+                                    <p class="text-sm text-gray-500 mb-3">Your password is encrypted and never displayed.</p>
+                                    <button type="button" onclick="showPasswordModal()"
+                                        class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl border-2 border-gray-300 bg-white text-gray-700 font-semibold hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50/50 transition-all duration-200">
+                                        <span class="material-icons-round text-lg">key</span>
                         Change Password
                     </button>
-                    <p class="text-sm text-gray-500 mt-2">Password is not displayed.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <!-- AUCTIONS TAB -->
             <div id="content-auctions" class="tab-content hidden p-6">
-                <h2 class="text-xl font-bold text-gray-900 mb-6">My Auctions</h2>
+                <!-- Header -->
+                <div class="mb-8">
+                    <div class="flex items-center justify-between mb-1">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                                <span class="material-icons-round text-white text-xl">gavel</span>
+                            </div>
+                            <div>
+                                <h2 class="text-2xl font-bold text-gray-900 tracking-tight">My Auctions</h2>
+                                <p class="text-sm text-gray-500">Track your bidding activity and results</p>
+                            </div>
+                        </div>
+                        <div class="hidden md:flex items-center gap-4">
+                            <div class="text-right">
+                                <p class="text-xs text-gray-500 mb-0.5">Current</p>
+                                <p class="text-lg font-bold text-blue-600">{{ $currentAuctions->count() }}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs text-gray-500 mb-0.5">Won</p>
+                                <p class="text-lg font-bold text-emerald-600">{{ $wonAuctions->count() }}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs text-gray-500 mb-0.5">Lost</p>
+                                <p class="text-lg font-bold text-gray-600">{{ $lostAuctions->count() }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                <!-- Sub-tabs for CURRENT, WON, LOST -->
-                <div class="border-b border-gray-200 mb-6">
-                    <nav class="flex -mb-px">
-                        <button onclick="showAuctionSection('current')" 
-                                id="auction-current" 
-                                class="auction-tab-button active px-6 py-3 text-sm font-medium text-blue-600 border-b-2 border-blue-600">
+                <!-- Tab Navigation -->
+                <div class="mb-6">
+                    <nav class="flex gap-2 bg-gray-100 p-1 rounded-xl border border-gray-200">
+                        <button onclick="showAuctionSection('current')" id="auction-current" class="auction-tab-button active flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg shadow-sm transition-all duration-200">
+                            <span class="material-icons-round text-sm mr-1.5 align-middle">schedule</span>
                             CURRENT
                         </button>
-                        <button onclick="showAuctionSection('won')" 
-                                id="auction-won" 
-                                class="auction-tab-button px-6 py-3 text-sm font-medium text-gray-500 hover:text-gray-700 border-b-2 border-transparent">
+                        <button onclick="showAuctionSection('won')" id="auction-won" class="auction-tab-button flex-1 px-4 py-2.5 text-sm font-semibold text-gray-600 hover:text-gray-900 rounded-lg transition-all duration-200">
+                            <span class="material-icons-round text-sm mr-1.5 align-middle">check_circle</span>
                             WON
                         </button>
-                        <button onclick="showAuctionSection('lost')" 
-                                id="auction-lost" 
-                                class="auction-tab-button px-6 py-3 text-sm font-medium text-gray-500 hover:text-gray-700 border-b-2 border-transparent">
+                        <button onclick="showAuctionSection('lost')" id="auction-lost" class="auction-tab-button flex-1 px-4 py-2.5 text-sm font-semibold text-gray-600 hover:text-gray-900 rounded-lg transition-all duration-200">
+                            <span class="material-icons-round text-sm mr-1.5 align-middle">cancel</span>
                             LOST
                         </button>
                     </nav>
                 </div>
 
-                <!-- CURRENT AUCTIONS -->
                 <div id="auction-section-current" class="auction-section">
                     @if($currentAuctions->count() > 0)
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             @foreach($currentAuctions as $listing)
-                                <div class="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition duration-200">
-                                    <!-- Vehicle Thumbnail -->
-                                    <div class="h-48 bg-gray-200 overflow-hidden">
+                                @php $pendingInvoice = $listing->pending_invoice ?? $listing->getPendingInvoiceForUser($user->id); @endphp
+                                <div class="group bg-white rounded-2xl border-2 border-gray-200 overflow-hidden shadow-sm hover:shadow-xl hover:border-blue-300 transition-all duration-300">
+                                    <div class="relative h-52 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
                                         @if($listing->images->first())
-                                            <img src="{{ asset('storage/' . $listing->images->first()->image_path) }}" 
-                                                 alt="{{ $listing->make }} {{ $listing->model }}" 
-                                                 class="w-full h-full object-cover">
+                                            <img src="{{ asset('storage/' . $listing->images->first()->image_path) }}" alt="{{ $listing->make }} {{ $listing->model }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                                         @else
                                             <div class="w-full h-full flex items-center justify-center text-gray-400">
-                                                <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                </svg>
+                                                <span class="material-icons-round text-6xl">directions_car</span>
                                             </div>
                                         @endif
+                                        <div class="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-lg shadow-sm">
+                                            <span class="text-xs font-bold text-blue-600">LIVE</span>
+                                        </div>
                                     </div>
-
-                                    <div class="p-4">
-                                        <!-- Item Title -->
-                                        <h3 class="text-lg font-semibold text-gray-900 mb-2">
-                                            {{ $listing->year }} {{ $listing->make }} {{ $listing->model }}
-                                        </h3>
-
-                                        <!-- ITEM NUMBER -->
-                                        <p class="text-sm text-gray-600 mb-3">
-                                            <span class="font-medium">ITEM NUMBER:</span> {{ $listing->item_number ?? 'CM' . str_pad($listing->id, 6, '0', STR_PAD_LEFT) }}
-                                        </p>
-
-                                        <!-- Current Highest Bid -->
-                                        <p class="text-lg font-bold text-blue-600 mb-3">
-                                            Current Highest Bid: ${{ number_format($listing->highest_bid ?? $listing->starting_price ?? 0, 2) }}
-                                        </p>
-
-                                        @if($listing->pending_invoice)
-                                            <!-- WIN PENDING PAYMENT STATE -->
-                                            <div class="bg-amber-50 border-l-4 border-amber-400 p-4 rounded mb-3">
-                                                <p class="font-semibold text-amber-900 mb-2">PAYMENT REQUIRED</p>
-                                                <a href="{{ route('buyer.payment.checkout-single', $listing->pending_invoice->id) }}" 
-                                                   class="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition duration-200">
-                                                    COMPLETE PAYMENT
+                                    <div class="p-5">
+                                        <h3 class="text-lg font-bold text-gray-900 mb-1.5 line-clamp-1">{{ $listing->year }} {{ $listing->make }} {{ $listing->model }}</h3>
+                                        <p class="text-xs text-gray-500 mb-3 font-mono">ITEM #{{ $listing->item_number ?? 'CM' . str_pad($listing->id, 6, '0', STR_PAD_LEFT) }}</p>
+                                        <div class="flex items-baseline gap-2 mb-4">
+                                            <span class="text-xs text-gray-500 font-medium">Current Bid</span>
+                                            <span class="text-2xl font-bold text-blue-600">${{ number_format($listing->highest_bid ?? $listing->starting_price ?? 0, 0) }}</span>
+                                        </div>
+                                        @if($pendingInvoice)
+                                            <div class="bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-300 rounded-xl p-4 mb-4">
+                                                <div class="flex items-center gap-2 mb-2">
+                                                    <span class="material-icons-round text-amber-600 text-lg">warning</span>
+                                                    <p class="font-bold text-amber-900 text-sm">PAYMENT REQUIRED</p>
+                                                </div>
+                                                <a href="{{ route('buyer.payment.checkout-single', ['invoiceId' => $pendingInvoice->id]) }}" class="block w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-center px-4 py-2.5 rounded-lg font-semibold hover:shadow-lg transition-all duration-200">
+                                                    Complete Payment
                                                 </a>
                                             </div>
                                         @else
-                                            <!-- Countdown Timer -->
-                                            @php
-                                                $endTime = $listing->auction_end_time ?? ($listing->auction_start_time ? \Carbon\Carbon::parse($listing->auction_start_time)->addDays($listing->auction_duration) : null);
-                                            @endphp
+                                            @php $endTime = $listing->auction_end_time ?? ($listing->auction_start_time ? \Carbon\Carbon::parse($listing->auction_start_time)->addDays($listing->auction_duration ?? 7) : null); @endphp
                                             @if($endTime && $endTime->isFuture())
-                                                <div class="mb-3">
-                                                    <p class="text-sm text-gray-600 mb-1">Time Remaining:</p>
-                                                    <p class="text-lg font-bold text-red-600" id="countdown-{{ $listing->id }}" 
-                                                       data-end-time="{{ $endTime->toIso8601String() }}">
-                                                        Calculating...
-                                                    </p>
+                                                <div class="bg-red-50 border border-red-200 rounded-xl p-3 mb-4">
+                                                    <p class="text-xs text-red-600 font-medium mb-1">Time Remaining</p>
+                                                    <p class="text-lg font-bold text-red-600" id="countdown-{{ $listing->id }}" data-end-time="{{ $endTime->toIso8601String() }}">—</p>
                                                 </div>
                                             @endif
-
-                                            <!-- BID AGAIN Button -->
-                                            <a href="{{ route('auction.show', $listing->id) }}" 
-                                               class="block w-full bg-blue-600 text-white text-center px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition duration-200">
-                                                BID AGAIN
+                                            <a href="{{ route('auction.show', $listing->getSlugOrGenerate()) }}" class="block w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-center px-4 py-2.5 rounded-lg font-semibold hover:shadow-lg transition-all duration-200">
+                                                Place Bid
                                             </a>
                                         @endif
                                     </div>
@@ -205,96 +357,102 @@
                             @endforeach
                         </div>
                     @else
-                        <div class="text-center py-12 bg-gray-50 rounded-lg">
-                            <p class="text-gray-500 text-lg">No current auctions with active bids.</p>
+                        <div class="bg-white rounded-2xl border-2 border-dashed border-gray-200 p-12 text-center">
+                            <div class="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center">
+                                <span class="material-icons-round text-blue-600 text-4xl">gavel</span>
+                            </div>
+                            <h3 class="text-lg font-bold text-gray-900 mb-2">No Active Bids</h3>
+                            <p class="text-gray-500 text-sm max-w-sm mx-auto mb-4">You don't have any active bids at the moment. Start bidding on auctions to see them here.</p>
+                            <a href="{{ route('buyer.auctions') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-all">
+                                <span class="material-icons-round text-lg">search</span>
+                                Browse Auctions
+                            </a>
                         </div>
                     @endif
                 </div>
 
-                <!-- WON AUCTIONS -->
                 <div id="auction-section-won" class="auction-section hidden">
                     @if($wonAuctions->count() > 0)
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             @foreach($wonAuctions as $invoice)
-                                <div class="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
-                                    <div class="h-48 bg-gray-200 overflow-hidden">
-                                        @if($invoice->listing->images->first())
-                                            <img src="{{ asset('storage/' . $invoice->listing->images->first()->image_path) }}" 
-                                                 alt="{{ $invoice->listing->make }} {{ $invoice->listing->model }}" 
-                                                 class="w-full h-full object-cover">
+                                <div class="group bg-white rounded-2xl border-2 border-emerald-200 overflow-hidden shadow-sm hover:shadow-xl hover:border-emerald-300 transition-all duration-300">
+                                    <div class="relative h-52 bg-gradient-to-br from-emerald-50 to-green-100 overflow-hidden">
+                                        @if($invoice->listing && $invoice->listing->images->first())
+                                            <img src="{{ asset('storage/' . $invoice->listing->images->first()->image_path) }}" alt="" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                                         @else
                                             <div class="w-full h-full flex items-center justify-center text-gray-400">
-                                                <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                </svg>
+                                                <span class="material-icons-round text-6xl">directions_car</span>
                                             </div>
                                         @endif
-                    </div>
-
-                                    <div class="p-4">
-                                        <h3 class="text-lg font-semibold text-gray-900 mb-2">
-                                            {{ $invoice->listing->year }} {{ $invoice->listing->make }} {{ $invoice->listing->model }}
-                                        </h3>
-                                        <p class="text-sm text-gray-600 mb-2">
-                                            <span class="font-medium">ITEM NUMBER:</span> {{ $invoice->listing->item_number ?? 'CM' . str_pad($invoice->listing->id, 6, '0', STR_PAD_LEFT) }}
-                                        </p>
-                                        <p class="text-lg font-bold text-green-600 mb-2">
-                                            Final Winning Price: ${{ number_format($invoice->final_price ?? $invoice->winning_bid_amount, 2) }}
-                                        </p>
-                                        <span class="inline-block bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">
-                                            WON
-                                        </span>
+                                        <div class="absolute top-3 right-3 bg-emerald-500 px-3 py-1 rounded-lg shadow-sm">
+                                            <span class="text-xs font-bold text-white">WON</span>
+                                        </div>
+                                    </div>
+                                    <div class="p-5">
+                                        <h3 class="text-lg font-bold text-gray-900 mb-1.5 line-clamp-1">{{ $invoice->listing->year ?? '' }} {{ $invoice->listing->make ?? '' }} {{ $invoice->listing->model ?? 'Item' }}</h3>
+                                        <p class="text-xs text-gray-500 mb-3 font-mono">ITEM #{{ $invoice->listing->item_number ?? $invoice->item_id ?? '—' }}</p>
+                                        <div class="flex items-baseline gap-2 mb-4">
+                                            <span class="text-xs text-gray-500 font-medium">Final Price</span>
+                                            <span class="text-2xl font-bold text-emerald-600">${{ number_format($invoice->winning_bid_amount ?? 0, 0) }}</span>
+                                        </div>
+                                        <div class="flex items-center gap-2 text-xs text-emerald-600 font-semibold">
+                                            <span class="material-icons-round text-sm">check_circle</span>
+                                            <span>Purchase Complete</span>
+                                        </div>
                                     </div>
                                 </div>
                             @endforeach
                         </div>
                     @else
-                        <div class="text-center py-12 bg-gray-50 rounded-lg">
-                            <p class="text-gray-500 text-lg">No won auctions yet.</p>
+                        <div class="bg-white rounded-2xl border-2 border-dashed border-gray-200 p-12 text-center">
+                            <div class="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-emerald-100 to-green-100 flex items-center justify-center">
+                                <span class="material-icons-round text-emerald-600 text-4xl">celebration</span>
+                            </div>
+                            <h3 class="text-lg font-bold text-gray-900 mb-2">No Won Auctions Yet</h3>
+                            <p class="text-gray-500 text-sm max-w-sm mx-auto">Auctions you've won will appear here after payment is completed.</p>
                         </div>
                     @endif
                 </div>
 
-                <!-- LOST AUCTIONS -->
                 <div id="auction-section-lost" class="auction-section hidden">
                     @if($lostAuctions->count() > 0)
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             @foreach($lostAuctions as $listing)
-                                <div class="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
-                                    <div class="h-48 bg-gray-200 overflow-hidden">
+                                <div class="group bg-white rounded-2xl border-2 border-gray-200 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 opacity-75">
+                                    <div class="relative h-52 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
                                         @if($listing->images->first())
-                                            <img src="{{ asset('storage/' . $listing->images->first()->image_path) }}" 
-                                                 alt="{{ $listing->make }} {{ $listing->model }}" 
-                                                 class="w-full h-full object-cover">
+                                            <img src="{{ asset('storage/' . $listing->images->first()->image_path) }}" alt="{{ $listing->make }} {{ $listing->model }}" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-300">
                                         @else
                                             <div class="w-full h-full flex items-center justify-center text-gray-400">
-                                                <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                </svg>
+                                                <span class="material-icons-round text-6xl">directions_car</span>
                                             </div>
                                         @endif
+                                        <div class="absolute top-3 right-3 bg-gray-600 px-3 py-1 rounded-lg shadow-sm">
+                                            <span class="text-xs font-bold text-white">ENDED</span>
+                                        </div>
                                     </div>
-
-                                    <div class="p-4">
-                                        <h3 class="text-lg font-semibold text-gray-900 mb-2">
-                                            {{ $listing->year }} {{ $listing->make }} {{ $listing->model }}
-                                        </h3>
-                                        <p class="text-sm text-gray-600 mb-2">
-                                            <span class="font-medium">ITEM NUMBER:</span> {{ $listing->item_number ?? 'CM' . str_pad($listing->id, 6, '0', STR_PAD_LEFT) }}
-                                        </p>
-                                        <p class="text-lg font-bold text-gray-600 mb-2">
-                                            Final Winning Price: ${{ number_format($listing->final_price, 2) }}
-                                        </p>
-                                        <span class="inline-block bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-semibold">
-                                            LOST
-                                        </span>
-                            </div>
+                                    <div class="p-5">
+                                        <h3 class="text-lg font-bold text-gray-900 mb-1.5 line-clamp-1">{{ $listing->year }} {{ $listing->make }} {{ $listing->model }}</h3>
+                                        <p class="text-xs text-gray-500 mb-3 font-mono">ITEM #{{ $listing->item_number ?? 'CM' . str_pad($listing->id, 6, '0', STR_PAD_LEFT) }}</p>
+                                        <div class="flex items-baseline gap-2 mb-4">
+                                            <span class="text-xs text-gray-500 font-medium">Winning Bid</span>
+                                            <span class="text-2xl font-bold text-gray-600">${{ number_format($listing->getHighestBidAmount() ?? $listing->starting_price ?? 0, 0) }}</span>
+                                        </div>
+                                        <div class="flex items-center gap-2 text-xs text-red-600 font-semibold">
+                                            <span class="material-icons-round text-sm">cancel</span>
+                                            <span>Outbid</span>
+                                        </div>
+                                    </div>
                                 </div>
                             @endforeach
-                            </div>
+                        </div>
                     @else
-                        <div class="text-center py-12 bg-gray-50 rounded-lg">
-                            <p class="text-gray-500 text-lg">No lost auctions.</p>
+                        <div class="bg-white rounded-2xl border-2 border-dashed border-gray-200 p-12 text-center">
+                            <div class="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                                <span class="material-icons-round text-gray-400 text-4xl">trending_up</span>
+                            </div>
+                            <h3 class="text-lg font-bold text-gray-900 mb-2">No Lost Auctions</h3>
+                            <p class="text-gray-500 text-sm max-w-sm mx-auto">Great! You haven't lost any auctions yet. Keep bidding to increase your chances of winning.</p>
                         </div>
                     @endif
                 </div>
@@ -302,97 +460,232 @@
 
             <!-- SAVED ITEMS TAB -->
             <div id="content-saved" class="tab-content hidden p-6">
-                <h2 class="text-xl font-bold text-gray-900 mb-6">Saved Items</h2>
+                <!-- Header -->
+                <div class="mb-8">
+                    <div class="flex items-center justify-between mb-1">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/20">
+                                <span class="material-icons-round text-white text-xl">bookmark</span>
+                            </div>
+                            <div>
+                                <h2 class="text-2xl font-bold text-gray-900 tracking-tight">Saved Items</h2>
+                                <p class="text-sm text-gray-500">Your watchlist of favorite auctions</p>
+                            </div>
+                        </div>
+                        @if($savedItems->count() > 0)
+                            <div class="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-50 border border-amber-200">
+                                <span class="material-icons-round text-amber-600 text-lg">bookmark</span>
+                                <span class="text-sm font-semibold text-amber-700">{{ $savedItems->count() }} saved</span>
+                            </div>
+                        @endif
+                    </div>
+                </div>
 
                 @if($savedItems->count() > 0)
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         @foreach($savedItems as $listing)
-                            <div class="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition duration-200">
-                                <div class="h-48 bg-gray-200 overflow-hidden">
+                            @php 
+                                $endTime = $listing->auction_end_time ?? ($listing->auction_start_time ? \Carbon\Carbon::parse($listing->auction_start_time)->addDays($listing->auction_duration ?? 7) : null);
+                                $isActive = $listing->status === 'active' && $endTime && $endTime->isFuture();
+                            @endphp
+                            <div class="group bg-white rounded-2xl border-2 border-amber-200 overflow-hidden shadow-sm hover:shadow-xl hover:border-amber-300 transition-all duration-300">
+                                <div class="relative h-52 bg-gradient-to-br from-amber-50 to-orange-100 overflow-hidden">
                                     @if($listing->images->first())
-                                        <img src="{{ asset('storage/' . $listing->images->first()->image_path) }}" 
-                                             alt="{{ $listing->make }} {{ $listing->model }}" 
-                                             class="w-full h-full object-cover">
+                                        <img src="{{ asset('storage/' . $listing->images->first()->image_path) }}" alt="{{ $listing->make }} {{ $listing->model }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                                     @else
                                         <div class="w-full h-full flex items-center justify-center text-gray-400">
-                                            <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                            </svg>
+                                            <span class="material-icons-round text-6xl">directions_car</span>
+                                        </div>
+                                    @endif
+                                    <div class="absolute top-3 right-3 bg-amber-500 px-3 py-1 rounded-lg shadow-sm">
+                                        <span class="text-xs font-bold text-white">SAVED</span>
+                                    </div>
+                                    @if($isActive)
+                                        <div class="absolute top-3 left-3 bg-blue-600 px-2.5 py-1 rounded-lg shadow-sm">
+                                            <span class="text-xs font-bold text-white">LIVE</span>
                                         </div>
                                     @endif
                                 </div>
-
-                                <div class="p-4">
-                                    <h3 class="text-lg font-semibold text-gray-900 mb-2">
-                                        {{ $listing->year }} {{ $listing->make }} {{ $listing->model }}
-                                    </h3>
-                                    <p class="text-sm text-gray-600 mb-2">
-                                        <span class="font-medium">ITEM NUMBER:</span> {{ $listing->item_number ?? 'CM' . str_pad($listing->id, 6, '0', STR_PAD_LEFT) }}
-                                    </p>
-                                    <p class="text-lg font-bold text-blue-600 mb-3">
-                                        Current Highest Bid: ${{ number_format($listing->highest_bid, 2) }}
-                                    </p>
-
-                                    @php
-                                        $endTime = $listing->auction_end_time ?? ($listing->auction_start_time ? \Carbon\Carbon::parse($listing->auction_start_time)->addDays($listing->auction_duration) : null);
-                                    @endphp
-                                    @if($endTime && $endTime->isFuture())
-                                        <div class="mb-3">
-                                            <p class="text-sm text-gray-600 mb-1">Time Remaining:</p>
-                                            <p class="text-lg font-bold text-red-600" id="countdown-saved-{{ $listing->id }}" 
-                                               data-end-time="{{ $endTime->toIso8601String() }}">
-                                                Calculating...
-                                            </p>
+                                <div class="p-5">
+                                    <h3 class="text-lg font-bold text-gray-900 mb-1.5 line-clamp-1">{{ $listing->year }} {{ $listing->make }} {{ $listing->model }}</h3>
+                                    <p class="text-xs text-gray-500 mb-3 font-mono">ITEM #{{ $listing->item_number ?? 'CM' . str_pad($listing->id, 6, '0', STR_PAD_LEFT) }}</p>
+                                    <div class="flex items-baseline gap-2 mb-4">
+                                        <span class="text-xs text-gray-500 font-medium">Current Bid</span>
+                                        <span class="text-2xl font-bold text-blue-600">${{ number_format($listing->highest_bid ?? $listing->starting_price ?? 0, 0) }}</span>
+                                    </div>
+                                    @if($isActive && $endTime)
+                                        <div class="bg-red-50 border border-red-200 rounded-xl p-3 mb-4">
+                                            <p class="text-xs text-red-600 font-medium mb-1">Time Remaining</p>
+                                            <p class="text-sm font-bold text-red-600" id="countdown-saved-{{ $listing->id }}" data-end-time="{{ $endTime->toIso8601String() }}">—</p>
                                         </div>
                                     @endif
-
-                                    <div class="flex space-x-2">
-                                        <form method="POST" action="{{ route('listing.watchlist', $listing->id) }}" class="flex-1">
+                                    <div class="flex flex-col gap-2">
+                                        <a href="{{ route('auction.show', $listing->getSlugOrGenerate()) }}" class="block w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-center px-4 py-2.5 rounded-lg font-semibold hover:shadow-lg transition-all duration-200">
+                                            Place Bid
+                                        </a>
+                                        <form method="POST" action="{{ route('listing.watchlist', $listing) }}">
                                             @csrf
-                                            <button type="submit" 
-                                                    class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium transition duration-200">
-                                                REMOVE FROM SAVED
+                                            <button type="submit" class="w-full inline-flex items-center justify-center gap-2 border-2 border-gray-300 bg-white text-gray-700 px-4 py-2.5 rounded-lg font-semibold hover:border-red-400 hover:text-red-600 hover:bg-red-50 transition-all duration-200">
+                                                <span class="material-icons-round text-lg">bookmark_remove</span>
+                                                Remove from Saved
                                             </button>
                                         </form>
-                                        <a href="{{ route('auction.show', $listing->id) }}" 
-                                           class="flex-1 bg-blue-600 text-white text-center px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition duration-200">
-                                            PLACE BID
-                                        </a>
-                            </div>
+                                    </div>
                                 </div>
                             </div>
                         @endforeach
                     </div>
                 @else
-                    <div class="text-center py-12 bg-gray-50 rounded-lg">
-                        <p class="text-gray-500 text-lg">No saved items yet.</p>
+                    <div class="bg-white rounded-2xl border-2 border-dashed border-gray-200 p-12 text-center">
+                        <div class="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center">
+                            <span class="material-icons-round text-amber-600 text-4xl">bookmark_border</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 mb-2">No Saved Items Yet</h3>
+                        <p class="text-gray-500 text-sm max-w-sm mx-auto mb-4">Save auctions you're interested in to track them easily. Click the bookmark icon on any auction to add it here.</p>
+                        <a href="{{ route('buyer.auctions') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-all">
+                            <span class="material-icons-round text-lg">search</span>
+                            Browse Auctions
+                        </a>
                     </div>
                 @endif
-                        </div>
+            </div>
 
             <!-- NOTIFICATIONS TAB -->
             <div id="content-notifications" class="tab-content hidden p-6">
-                <h2 class="text-xl font-bold text-gray-900 mb-6">Notifications</h2>
+                <!-- Header -->
+                <div class="mb-8">
+                    <div class="flex items-center justify-between mb-1">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center shadow-lg shadow-purple-500/20">
+                                <span class="material-icons-round text-white text-xl">notifications</span>
+                            </div>
+                            <div>
+                                <h2 class="text-2xl font-bold text-gray-900 tracking-tight">Notifications</h2>
+                                <p class="text-sm text-gray-500">Stay updated with your auction activity</p>
+                            </div>
+                        </div>
+                        @if($notifications->count() > 0)
+                            @php $unreadCount = $notifications->whereNull('read_at')->count(); @endphp
+                            @if($unreadCount > 0)
+                                <div class="unread-count-display flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-50 border border-blue-200">
+                                    <span class="w-2 h-2 bg-blue-600 rounded-full animate-pulse"></span>
+                                    <span class="text-sm font-semibold text-blue-700">{{ $unreadCount }} unread</span>
+                                </div>
+                            @endif
+                        @endif
+                    </div>
+                </div>
+
+                <!-- Filter Buttons -->
+                <div class="mb-6 flex items-center gap-3" x-data="{ currentFilter: 'all' }" x-init="window.notificationFilter = currentFilter">
+                    <button @click="currentFilter = 'all'; window.notificationFilter = 'all'; filterNotifications('all')" 
+                            :class="currentFilter === 'all' ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+                            class="px-5 py-2.5 rounded-lg font-semibold text-sm transition-all">
+                        All
+                    </button>
+                    <button @click="currentFilter = 'unread'; window.notificationFilter = 'unread'; filterNotifications('unread')" 
+                            :class="currentFilter === 'unread' ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+                            class="px-5 py-2.5 rounded-lg font-semibold text-sm transition-all">
+                        Unread
+                    </button>
+                    <button @click="currentFilter = 'read'; window.notificationFilter = 'read'; filterNotifications('read')" 
+                            :class="currentFilter === 'read' ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+                            class="px-5 py-2.5 rounded-lg font-semibold text-sm transition-all">
+                        Read
+                    </button>
+                </div>
 
                 @if($notifications->count() > 0)
-                    <div class="space-y-4">
-                        @foreach($notifications as $notification)
-                            <div class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition duration-200">
-                                <div class="flex items-start justify-between">
-                                    <div class="flex-1">
-                                        <p class="text-gray-900 font-medium">{{ $notification->data['message'] ?? ($notification->data['title'] ?? 'Notification') }}</p>
-                                        <p class="text-sm text-gray-500 mt-1">{{ $notification->created_at->diffForHumans() }}</p>
+                    @php
+                        // Group notifications by month and sort by date (newest first)
+                        $groupedNotifications = $notifications->sortByDesc('created_at')->groupBy(function($notification) {
+                            return $notification->created_at->format('F Y');
+                        });
+                    @endphp
+                    
+                    <div class="notifications-container space-y-6">
+                        @foreach($groupedNotifications as $month => $monthNotifications)
+                            <div class="notification-month-group" data-month="{{ $month }}">
+                                <!-- Month Header -->
+                                <div class="mb-4 flex items-center gap-3">
+                                    <div class="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
+                                    <h3 class="text-lg font-bold text-gray-700 px-4">{{ $month }}</h3>
+                                    <div class="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
+                                </div>
+                                
+                                <!-- Notifications for this month -->
+                                <div class="space-y-3">
+                                    @foreach($monthNotifications->sortByDesc('created_at') as $notification)
+                            @php 
+                                $d = is_array($notification->data) ? $notification->data : [];
+                                $msg = $d['message'] ?? $d['title'] ?? 'Notification';
+                                $type = $d['type'] ?? 'info';
+                                $isUnread = !$notification->read_at;
+                                
+                                // Icon mapping based on type
+                                $iconMap = [
+                                    'bid' => 'gavel',
+                                    'outbid' => 'trending_down',
+                                    'win' => 'celebration',
+                                    'payment' => 'payment',
+                                    'auction' => 'schedule',
+                                    'default' => 'notifications'
+                                ];
+                                $icon = $iconMap[$type] ?? $iconMap['default'];
+                                
+                                // Color mapping
+                                $colorMap = [
+                                    'bid' => ['bg' => 'bg-blue-50', 'border' => 'border-blue-200', 'icon' => 'text-blue-600', 'dot' => 'bg-blue-600'],
+                                    'outbid' => ['bg' => 'bg-amber-50', 'border' => 'border-amber-200', 'icon' => 'text-amber-600', 'dot' => 'bg-amber-600'],
+                                    'win' => ['bg' => 'bg-emerald-50', 'border' => 'border-emerald-200', 'icon' => 'text-emerald-600', 'dot' => 'bg-emerald-600'],
+                                    'payment' => ['bg' => 'bg-purple-50', 'border' => 'border-purple-200', 'icon' => 'text-purple-600', 'dot' => 'bg-purple-600'],
+                                    'default' => ['bg' => 'bg-gray-50', 'border' => 'border-gray-200', 'icon' => 'text-gray-600', 'dot' => 'bg-gray-600']
+                                ];
+                                $colors = $colorMap[$type] ?? $colorMap['default'];
+                            @endphp
+                            <div class="notification-card group relative bg-white rounded-xl border-2 {{ $isUnread ? $colors['border'] . ' ' . $colors['bg'] : 'border-gray-200' }} p-4 hover:shadow-lg transition-all duration-200 {{ $isUnread ? 'shadow-sm cursor-pointer' : '' }}" 
+                                 data-notification-id="{{ $notification->id }}"
+                                 data-is-unread="{{ $isUnread ? 'true' : 'false' }}"
+                                 data-read-status="{{ $isUnread ? 'unread' : 'read' }}"
+                                 @if($isUnread) onclick="markNotificationAsRead('{{ $notification->id }}', this)" @endif>
+                                <div class="flex items-start gap-4">
+                                    <!-- Icon -->
+                                    <div class="flex-shrink-0 w-12 h-12 rounded-xl {{ $isUnread ? $colors['bg'] : 'bg-gray-100' }} flex items-center justify-center border-2 {{ $isUnread ? $colors['border'] : 'border-gray-200' }}">
+                                        <span class="material-icons-round {{ $isUnread ? $colors['icon'] : 'text-gray-400' }} text-xl">{{ $icon }}</span>
                                     </div>
-                                    @if(!$notification->read_at)
-                                        <span class="ml-4 w-2 h-2 bg-blue-600 rounded-full"></span>
-                                    @endif
+                                    
+                                    <!-- Content -->
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-start justify-between gap-3">
+                                    <div class="flex-1">
+                                                <p class="text-gray-900 font-semibold leading-snug {{ $isUnread ? 'text-gray-900' : 'text-gray-700' }}">{{ $msg }}</p>
+                                                <div class="flex items-center gap-2 mt-2">
+                                                    <span class="text-xs text-gray-500 font-medium">{{ $notification->created_at->format('M d, Y') }}</span>
+                                                    <span class="text-gray-300">•</span>
+                                                    <span class="text-xs text-gray-500">{{ $notification->created_at->diffForHumans() }}</span>
+                                                </div>
+                                            </div>
+                                            @if($isUnread)
+                                                <div class="flex-shrink-0 unread-dot">
+                                                    <span class="w-2.5 h-2.5 {{ $colors['dot'] }} rounded-full inline-block"></span>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                                    @endforeach
                                 </div>
                             </div>
                         @endforeach
                     </div>
                 @else
-                    <div class="text-center py-12 bg-gray-50 rounded-lg">
-                        <p class="text-gray-500 text-lg">No notifications at this time.</p>
+                    <div class="bg-white rounded-2xl border-2 border-dashed border-gray-200 p-12 text-center">
+                        <div class="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                            <span class="material-icons-round text-gray-400 text-4xl">notifications_off</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 mb-2">No notifications yet</h3>
+                        <p class="text-gray-500 text-sm max-w-sm mx-auto">You'll receive notifications for bid updates, auction wins, payment reminders, and more.</p>
                     </div>
                 @endif
             </div>
@@ -400,275 +693,436 @@
             <!-- MESSAGING CENTER TAB -->
             <div id="content-messaging" class="tab-content hidden p-6">
                 <h2 class="text-xl font-bold text-gray-900 mb-6">Messaging Center</h2>
-                <p class="text-gray-600 mb-4">Post-payment messaging threads for pickup coordination.</p>
-
+                <p class="text-gray-600 mb-4">Post-payment pickup coordination threads with sellers.</p>
                 @if($messagingThreads->count() > 0)
                     <div class="space-y-4">
                         @foreach($messagingThreads as $thread)
                             <div class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition duration-200">
                                 <div class="flex items-center space-x-4">
                                     <div class="h-20 w-20 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
-                                        @if($thread->listing->images->first())
-                                            <img src="{{ asset('storage/' . $thread->listing->images->first()->image_path) }}" 
-                                                 alt="{{ $thread->listing->make }} {{ $thread->listing->model }}" 
-                                                 class="w-full h-full object-cover">
+                                        @if($thread->listing && $thread->listing->images->first())
+                                            <img src="{{ asset('storage/' . $thread->listing->images->first()->image_path) }}" alt="" class="w-full h-full object-cover">
                                         @endif
                                     </div>
                                     <div class="flex-1">
-                                        <h3 class="text-lg font-semibold text-gray-900">
-                                            {{ $thread->listing->year }} {{ $thread->listing->make }} {{ $thread->listing->model }}
-                                        </h3>
-                                        <p class="text-sm text-gray-600">Seller: {{ $thread->seller->name }}</p>
+                                        <h3 class="text-lg font-semibold text-gray-900">{{ $thread->listing->year ?? '' }} {{ $thread->listing->make ?? '' }} {{ $thread->listing->model ?? 'Item' }}</h3>
+                                        <p class="text-sm text-gray-600">Seller: {{ $thread->seller->name ?? '—' }}</p>
                                     </div>
-                                    <div>
-                                        <a href="{{ route('post-auction.thread', $thread->invoice->id) }}" 
-                                           class="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition duration-200">
-                                            View Thread
-                                        </a>
-                                    </div>
+                                    @if($thread->invoice)
+                                        <a href="{{ route('post-auction.thread', $thread->invoice->id) }}" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700">View Thread</a>
+                                    @endif
                                 </div>
                             </div>
                         @endforeach
                     </div>
                 @else
-                    <div class="text-center py-12 bg-gray-50 rounded-lg">
-                        <p class="text-gray-500 text-lg">No messaging threads available. Messaging Center unlocks after payment is completed.</p>
-                    </div>
+                    <div class="text-center py-12 bg-gray-50 rounded-lg"><p class="text-gray-500 text-lg">No messaging threads. Messaging unlocks after payment.</p></div>
                 @endif
             </div>
 
             <!-- CUSTOMER SUPPORT TAB -->
             <div id="content-support" class="tab-content hidden p-6">
-                <h2 class="text-xl font-bold text-gray-900 mb-6">Customer Support</h2>
-
-                <div class="bg-white border border-gray-200 rounded-lg p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Submit Support Ticket</h3>
-                    <form method="POST" action="{{ route('buyer.support.submit') }}">
-                        @csrf
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Ticket Title</label>
-                            <input type="text" 
-                                   name="title" 
-                                   required
-                                   class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <!-- Header -->
+                <div class="mb-8">
+                    <div class="flex items-center gap-3 mb-1">
+                        <div class="w-10 h-10 rounded-xl bg-teal-600 flex items-center justify-center shadow-lg" style="background-color: #0d9488;">
+                            <span class="material-icons-round text-white text-xl">support_agent</span>
                         </div>
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Message</label>
-                            <textarea name="message" 
-                                      rows="6" 
-                                      required
-                                      class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3">
+                                <h2 class="text-2xl font-bold text-gray-900 tracking-tight">Customer Support</h2>
+                                <div class="hidden md:flex items-center gap-2 px-3 py-1 rounded-lg bg-teal-50 border border-teal-200">
+                                    <span class="text-xs font-semibold text-teal-700">CayMark</span>
+                                </div>
+                            </div>
+                            <p class="text-sm text-gray-500">Get help with your account and auctions</p>
+                        </div>
                     </div>
-                        <button type="submit" 
-                                class="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition duration-200">
-                            Submit Ticket
-                        </button>
-                    </form>
                 </div>
 
-                <!-- Ticket History (if implemented) -->
-                <div class="mt-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Ticket History</h3>
-                    <div class="bg-gray-50 rounded-lg p-6 text-center">
-                        <p class="text-gray-500">Ticket history will appear here once tickets are submitted.</p>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Support Form -->
+                    <div class="lg:col-span-2">
+                        <div class="bg-white rounded-2xl border-2 border-gray-200 shadow-sm overflow-hidden">
+                            <div class="bg-teal-50 border-b-2 border-teal-200 px-6 py-4" style="background-color: #f0fdfa;">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-teal-600 flex items-center justify-center" style="background-color: #0d9488;">
+                                        <span class="material-icons-round text-white text-lg">help_outline</span>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-lg font-bold text-gray-900">Submit Support Ticket</h3>
+                                        <p class="text-xs text-gray-600">We'll respond within 24 hours</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <form method="POST" action="{{ route('buyer.customer-support.submit') }}" class="p-6 space-y-5">
+                                @csrf
+                                <div class="group">
+                                    <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                                        <span class="material-icons-round text-gray-400 text-lg group-focus-within:text-teal-600 transition-colors">title</span>
+                                        Ticket Title
+                                    </label>
+                                    <input type="text" name="title" required placeholder="Brief description of your issue"
+                                        class="w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-gray-900 font-medium placeholder-gray-400 focus:bg-white focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 transition-all">
+                                    <p class="text-xs text-gray-400 mt-1.5">Be specific to help us assist you faster</p>
+                                </div>
+                                <div class="group">
+                                    <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                                        <span class="material-icons-round text-gray-400 text-lg group-focus-within:text-teal-600 transition-colors">description</span>
+                                        Message
+                                    </label>
+                                    <textarea name="message" rows="8" required placeholder="Describe your issue in detail..."
+                                        class="w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-gray-900 font-medium placeholder-gray-400 focus:bg-white focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 transition-all resize-none"></textarea>
+                                    <p class="text-xs text-gray-400 mt-1.5">Include any relevant details, auction numbers, or error messages</p>
+                                </div>
+                                <div class="pt-2">
+                                    <button type="submit" class="w-full inline-flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-700 text-white px-6 py-3.5 rounded-xl font-semibold shadow-lg shadow-teal-600/30 hover:shadow-teal-600/40 transition-all duration-200" style="background-color: #0d9488; color: #ffffff;">
+                                        <span class="material-icons-round text-lg text-white">send</span>
+                                        <span class="text-white font-semibold">Submit Ticket</span>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
+
+                    <!-- Help Sidebar -->
+                    <div class="space-y-6">
+                        <!-- Quick Help -->
+                        <div class="bg-white rounded-2xl border-2 border-gray-200 shadow-sm p-6">
+                            <div class="flex items-center gap-2 mb-4">
+                                <span class="material-icons-round text-xl" style="color: #0d9488;">lightbulb</span>
+                                <h4 class="font-bold text-gray-900">Quick Help</h4>
+                            </div>
+                            <div class="space-y-3 text-sm">
+                                <div class="flex items-start gap-3">
+                                    <span class="material-icons-round text-lg flex-shrink-0" style="color: #14b8a6;">check_circle</span>
+                                    <div>
+                                        <p class="font-semibold text-gray-900">Payment Issues</p>
+                                        <p class="text-gray-600 text-xs">Include invoice number and payment method</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-3">
+                                    <span class="material-icons-round text-lg flex-shrink-0" style="color: #14b8a6;">check_circle</span>
+                                    <div>
+                                        <p class="font-semibold text-gray-900">Auction Questions</p>
+                                        <p class="text-gray-600 text-xs">Mention item number and auction details</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-3">
+                                    <span class="material-icons-round text-lg flex-shrink-0" style="color: #14b8a6;">check_circle</span>
+                                    <div>
+                                        <p class="font-semibold text-gray-900">Account Help</p>
+                                        <p class="text-gray-600 text-xs">Describe the issue you're experiencing</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Contact Info -->
+                        <div class="bg-teal-50 rounded-2xl border-2 border-teal-200 p-6" style="background-color: #f0fdfa;">
+                            <div class="flex items-center gap-2 mb-4">
+                                <span class="material-icons-round text-teal-600 text-xl" style="color: #0d9488;">contact_support</span>
+                                <h4 class="font-bold text-gray-900">Need Immediate Help?</h4>
+                            </div>
+                            <p class="text-sm text-gray-700 mb-4">For urgent matters, our support team is available 24/7.</p>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex items-center gap-2 text-gray-700">
+                                    <span class="material-icons-round text-lg" style="color: #0d9488;">schedule</span>
+                                    <span class="font-medium text-gray-700">Response Time: 24 hours</span>
+                                </div>
+                                <div class="flex items-center gap-2 text-gray-700">
+                                    <span class="material-icons-round text-lg" style="color: #0d9488;">email</span>
+                                    <span class="font-medium text-gray-700">support@caymark.com</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- FAQ Link -->
+                        <div class="bg-white rounded-2xl border-2 border-dashed border-gray-200 p-6 text-center">
+                            <span class="material-icons-round text-gray-400 text-4xl mb-3 block">quiz</span>
+                            <p class="text-sm font-semibold text-gray-900 mb-1">Check Our FAQ</p>
+                            <p class="text-xs text-gray-500 mb-3">Find answers to common questions</p>
+                            <a href="#" class="inline-flex items-center gap-2 text-sm font-semibold hover:underline" style="color: #0d9488;">
+                                <span style="color: #0d9488;">View FAQ</span>
+                                <span class="material-icons-round text-sm" style="color: #0d9488;">arrow_forward</span>
+                            </a>
                         </div>
                     </div>
                 </div>
             </div>
+            </div>
         </div>
 
-<!-- Password Change Modal -->
-<div id="passwordModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-        <div class="mt-3">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Change Password</h3>
-            <form method="POST" action="{{ route('buyer-dashboard.change-password') }}">
-                @csrf
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
-                    <input type="password" 
-                           name="current_password" 
-                           required
-                           class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+<!-- Password Modal -->
+<div id="passwordModal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4" onclick="if(event.target===this)hidePasswordModal()">
+    <div class="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-gray-200/80 overflow-hidden">
+        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
+                    <span class="material-icons-round text-white text-xl">key</span>
                 </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">New Password</label>
-                    <input type="password" 
-                           name="password" 
-                           required
-                           minlength="8"
-                           class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <div>
+                    <h3 class="text-lg font-bold text-white">Change Password</h3>
+                    <p class="text-blue-100 text-sm">Create a strong, unique password</p>
                 </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
-                    <input type="password" 
-                           name="password_confirmation" 
-                           required
-                           minlength="8"
-                           class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+        </div>
+        <form method="POST" action="{{ route('buyer.user.change-password') }}" class="p-6 space-y-4">@csrf
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">Current Password</label>
+                <input type="password" name="current_password" required placeholder="Enter current password"
+                    class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-gray-50/50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all">
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">New Password</label>
+                <input type="password" name="password" required minlength="8" placeholder="Min. 8 characters"
+                    class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-gray-50/50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all">
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">Confirm New Password</label>
+                <input type="password" name="password_confirmation" required minlength="8" placeholder="Re-enter new password"
+                    class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-gray-50/50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all">
                 </div>
-                <div class="flex items-center justify-end space-x-3">
-                    <button type="button" 
-                            onclick="hidePasswordModal()" 
-                            class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition duration-200">
-                        Cancel
-                    </button>
+            <div class="flex gap-3 pt-2">
+                <button type="button" onclick="hidePasswordModal()"
+                    class="flex-1 px-4 py-3 rounded-xl border-2 border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 transition-all">Cancel</button>
                     <button type="submit" 
-                            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200">
-                        Change Password
-                    </button>
+                    class="flex-1 px-4 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-lg shadow-blue-600/25 transition-all">Update Password</button>
                 </div>
             </form>
-        </div>
     </div>
 </div>
 
         <script>
-// Tab Navigation
 function showTab(tabName) {
-    // Hide all tab contents
-    document.querySelectorAll('.tab-content').forEach(content => {
-        content.classList.add('hidden');
-    });
-    
-    // Remove active class from all tabs
-    document.querySelectorAll('.tab-button').forEach(button => {
-        button.classList.remove('active', 'text-blue-600', 'border-blue-600');
-        button.classList.add('text-gray-500', 'border-transparent');
-    });
-
-    // Show selected tab content
-    const contentElement = document.getElementById('content-' + tabName);
-    if (contentElement) {
-        contentElement.classList.remove('hidden');
-    }
-    
-    // Add active class to selected tab
-    const activeButton = document.getElementById('tab-' + tabName);
-    if (activeButton) {
-        activeButton.classList.add('active', 'text-blue-600', 'border-blue-600');
-        activeButton.classList.remove('text-gray-500', 'border-transparent');
-    }
-    
-    // Update URL without page reload
-    const url = new URL(window.location);
-    url.searchParams.set('tab', tabName);
-    window.history.pushState({}, '', url);
+    document.querySelectorAll('.tab-content').forEach(c => { c.style.display = 'none'; });
+    var el = document.getElementById('content-' + tabName);
+    if (el) el.style.display = 'block';
+    var url = new URL(window.location); url.searchParams.set('tab', tabName); window.history.pushState({}, '', url);
+    if (tabName === 'dashboard') setTimeout(initializeCharts, 50);
 }
-
-// Show tab on page load based on URL parameter
-document.addEventListener('DOMContentLoaded', function() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const tab = urlParams.get('tab');
-    if (tab) {
-        showTab(tab);
-    } else {
-        // Default to 'user' tab
-        showTab('user');
+function showAuctionSection(section) {
+    document.querySelectorAll('.auction-section').forEach(s => s.classList.add('hidden'));
+    document.querySelectorAll('.auction-tab-button').forEach(b => { 
+        b.classList.remove('active', 'text-white', 'bg-gradient-to-r', 'from-blue-600', 'to-indigo-600', 'shadow-sm'); 
+        b.classList.add('text-gray-600', 'hover:text-gray-900'); 
+    });
+    var el = document.getElementById('auction-section-' + section);
+    if (el) el.classList.remove('hidden');
+    var btn = document.getElementById('auction-' + section);
+    if (btn) { 
+        btn.classList.add('active', 'text-white', 'bg-gradient-to-r', 'from-blue-600', 'to-indigo-600', 'shadow-sm'); 
+        btn.classList.remove('text-gray-600', 'hover:text-gray-900'); 
     }
+}
+function showPasswordModal() { document.getElementById('passwordModal').classList.remove('hidden'); }
+function hidePasswordModal() { document.getElementById('passwordModal').classList.add('hidden'); }
+window.onclick = function(e) { if (e.target === document.getElementById('passwordModal')) hidePasswordModal(); };
+
+document.addEventListener('DOMContentLoaded', function() {
+    var tab = new URLSearchParams(window.location.search).get('tab') || 'dashboard';
+        showTab(tab);
+    if (tab === 'auctions') showAuctionSection(new URLSearchParams(window.location.search).get('section') || 'current');
+    setInterval(updateCountdowns, 1000);
+    updateCountdowns();
 });
 
-// Auction Section Navigation
-function showAuctionSection(section) {
-    // Hide all auction sections
-    document.querySelectorAll('.auction-section').forEach(section => {
-        section.classList.add('hidden');
+function updateCountdowns() {
+    document.querySelectorAll('[id^="countdown-"]').forEach(function(el) {
+        var end = new Date(el.getAttribute('data-end-time')); var d = end - new Date();
+        if (d <= 0) { el.textContent = 'Auction Ended'; return; }
+        var days = Math.floor(d / 86400000), h = Math.floor((d % 86400000) / 3600000), m = Math.floor((d % 3600000) / 60000), s = Math.floor((d % 60000) / 1000);
+        el.textContent = days > 0 ? days + 'd ' + h + 'h ' + m + 'm' : (h > 0 ? h + 'h ' + m + 'm ' + s + 's' : m + 'm ' + s + 's');
     });
-    
-    // Remove active class from all auction tabs
-    document.querySelectorAll('.auction-tab-button').forEach(button => {
-        button.classList.remove('active', 'text-blue-600', 'border-blue-600');
-        button.classList.add('text-gray-500', 'border-transparent');
-    });
-    
-    // Show selected section
-    document.getElementById('auction-section-' + section).classList.remove('hidden');
-    
-    // Add active class to selected tab
-    const activeButton = document.getElementById('auction-' + section);
-    activeButton.classList.add('active', 'text-blue-600', 'border-blue-600');
-    activeButton.classList.remove('text-gray-500', 'border-transparent');
 }
 
-// Password Modal
-function showPasswordModal() {
-    document.getElementById('passwordModal').classList.remove('hidden');
-}
-
-function hidePasswordModal() {
-    document.getElementById('passwordModal').classList.add('hidden');
-                }
-
-// Close modal when clicking outside
-window.onclick = function(event) {
-    const modal = document.getElementById('passwordModal');
-    if (event.target == modal) {
-        hidePasswordModal();
+function initializeCharts() {
+    var spendingData = @json($spendingTrendsData ?? ['labels' => [], 'data' => []]);
+    var ctx1 = document.getElementById('spendingTrendsChart');
+    if (ctx1) {
+        new Chart(ctx1, { type: 'line', data: { labels: spendingData.labels || [], datasets: [{ label: 'Spending ($)', data: spendingData.data || [], borderColor: 'rgb(59, 130, 246)', backgroundColor: 'rgba(59, 130, 246, 0.1)', tension: 0.4, fill: true }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: function(v) { return '$' + v; } } }, x: { grid: { display: false } } } } });
+    }
+    var winLossData = @json($winLossRatioData ?? ['labels' => [], 'data' => [], 'colors' => []]);
+    var ctx2 = document.getElementById('winLossChart');
+    if (ctx2) {
+        new Chart(ctx2, { type: 'doughnut', data: { labels: winLossData.labels || [], datasets: [{ data: winLossData.data || [], backgroundColor: winLossData.colors || ['#10B981', '#EF4444'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } } });
+    }
+    var bidData = @json($biddingActivityData ?? ['labels' => [], 'counts' => [], 'amounts' => []]);
+    var ctx3 = document.getElementById('biddingActivityChart');
+    if (ctx3) {
+        new Chart(ctx3, { type: 'line', data: { labels: bidData.labels || [], datasets: [{ label: 'Bid Count', data: bidData.counts || [], borderColor: 'rgb(59, 130, 246)', backgroundColor: 'rgba(59, 130, 246, 0.1)', tension: 0.4, fill: true, yAxisID: 'y' }, { label: 'Bid Amount ($)', data: bidData.amounts || [], borderColor: 'rgb(16, 185, 129)', backgroundColor: 'rgba(16, 185, 129, 0.1)', tension: 0.4, fill: true, yAxisID: 'y1' }] }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, plugins: { legend: { position: 'top' } }, scales: { y: { type: 'linear', position: 'left', beginAtZero: true, title: { display: true, text: 'Bid Count' }, grid: { drawOnChartArea: true } }, y1: { type: 'linear', position: 'right', beginAtZero: true, title: { display: true, text: 'Amount ($)' }, grid: { drawOnChartArea: false }, ticks: { callback: function(v) { return '$' + v; } } }, x: { grid: { display: false } } } } });
     }
 }
 
-// Countdown Timer
-function updateCountdowns() {
-    document.querySelectorAll('[id^="countdown-"]').forEach(element => {
-        const endTime = new Date(element.getAttribute('data-end-time'));
-        const now = new Date();
-        const diff = endTime - now;
-
-        if (diff <= 0) {
-            element.textContent = 'Auction Ended';
-            return;
+// Mark notification as read
+function markNotificationAsRead(notificationId, element) {
+    if (!element.dataset.isUnread || element.dataset.isUnread === 'false') {
+        return; // Already read
+    }
+    
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || 
+                      document.querySelector('input[name="_token"]')?.value || '';
+    
+    fetch(`/buyer/notifications/${notificationId}/mark-read`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Remove unread styling
+            element.classList.remove('bg-blue-50', 'bg-amber-50', 'bg-emerald-50', 'bg-purple-50', 'border-blue-200', 'border-amber-200', 'border-emerald-200', 'border-purple-200', 'shadow-sm', 'cursor-pointer');
+            element.classList.add('border-gray-200');
+            element.dataset.isUnread = 'false';
+            element.setAttribute('data-read-status', 'read');
+            element.removeAttribute('onclick');
+            
+            // Remove unread dot
+            const unreadDot = element.querySelector('.unread-dot');
+            if (unreadDot) {
+                unreadDot.remove();
+            }
+            
+            // Update icon styling
+            const iconContainer = element.querySelector('.flex-shrink-0.w-12');
+            if (iconContainer) {
+                iconContainer.classList.remove('bg-blue-50', 'bg-amber-50', 'bg-emerald-50', 'bg-purple-50', 'border-blue-200', 'border-amber-200', 'border-emerald-200', 'border-purple-200');
+                iconContainer.classList.add('bg-gray-100', 'border-gray-200');
+            }
+            
+            const icon = element.querySelector('.material-icons-round');
+            if (icon) {
+                icon.classList.remove('text-blue-600', 'text-amber-600', 'text-emerald-600', 'text-purple-600');
+                icon.classList.add('text-gray-400');
+            }
+            
+            // Update text styling
+            const text = element.querySelector('.font-semibold');
+            if (text) {
+                text.classList.remove('text-gray-900');
+                text.classList.add('text-gray-700');
+            }
+            
+            // Update unread count in header
+            updateUnreadCount();
+            
+            // If filtering by unread, hide this notification
+            const currentFilter = window.notificationFilter || 'all';
+            if (currentFilter === 'unread') {
+                element.style.display = 'none';
+                // Check if month group should be hidden
+                const monthGroup = element.closest('.notification-month-group');
+                if (monthGroup) {
+                    const visibleCards = monthGroup.querySelectorAll('.notification-card[style*="display: block"], .notification-card:not([style*="display: none"])');
+                    if (visibleCards.length === 0) {
+                        monthGroup.style.display = 'none';
+                    }
+                }
+            }
         }
-
-        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-        let timeString = '';
-        if (days > 0) {
-            timeString = `${days}d ${hours}h ${minutes}m`;
-        } else if (hours > 0) {
-            timeString = `${hours}h ${minutes}m ${seconds}s`;
-        } else {
-            timeString = `${minutes}m ${seconds}s`;
-        }
-
-        element.textContent = timeString;
+    })
+    .catch(error => {
+        console.error('Error marking notification as read:', error);
     });
 }
 
-// Update countdowns every second
-setInterval(updateCountdowns, 1000);
-updateCountdowns();
+// Update unread count in header and sidebar
+function updateUnreadCount() {
+    fetch('/buyer/notifications/unread-count')
+        .then(response => response.json())
+        .then(data => {
+            const count = data.count || 0;
+            
+            // Update header badge
+            const headerBadge = document.querySelector('.unread-count-badge');
+            if (headerBadge) {
+                if (count > 0) {
+                    headerBadge.textContent = count;
+                    headerBadge.style.display = 'flex';
+                } else {
+                    headerBadge.style.display = 'none';
+                }
+            }
+            
+            // Update sidebar badge
+            const sidebarBadge = document.querySelector('.sidebar-notification-badge');
+            if (sidebarBadge) {
+                if (count > 0) {
+                    sidebarBadge.textContent = count;
+                    sidebarBadge.style.display = 'flex';
+                } else {
+                    sidebarBadge.style.display = 'none';
+                }
+            }
+            
+            // Update header unread count display
+            const unreadDisplay = document.querySelector('.unread-count-display');
+            if (unreadDisplay) {
+                if (count > 0) {
+                    unreadDisplay.innerHTML = `<span class="w-2 h-2 bg-blue-600 rounded-full animate-pulse"></span><span class="text-sm font-semibold text-blue-700">${count} unread</span>`;
+                    unreadDisplay.style.display = 'flex';
+                } else {
+                    unreadDisplay.style.display = 'none';
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching unread count:', error);
+        });
+}
+
+// Filter notifications by read/unread status
+function filterNotifications(filterType) {
+    const allCards = document.querySelectorAll('.notification-card');
+    const monthGroups = document.querySelectorAll('.notification-month-group');
+    
+    allCards.forEach(card => {
+        const readStatus = card.getAttribute('data-read-status');
+        
+        if (filterType === 'all') {
+            card.style.display = '';
+        } else if (filterType === 'unread') {
+            if (readStatus === 'unread') {
+                card.style.display = '';
+            } else {
+                card.style.display = 'none';
+            }
+        } else if (filterType === 'read') {
+            if (readStatus === 'read') {
+                card.style.display = '';
+            } else {
+                card.style.display = 'none';
+            }
+        }
+    });
+    
+    // Hide month groups that have no visible notifications
+    monthGroups.forEach(group => {
+        const cards = group.querySelectorAll('.notification-card');
+        let hasVisible = false;
+        cards.forEach(card => {
+            if (card.style.display !== 'none') {
+                hasVisible = true;
+            }
+        });
+        
+        if (!hasVisible) {
+            group.style.display = 'none';
+        } else {
+            group.style.display = '';
+        }
+    });
+}
+
+// Update count on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updateUnreadCount();
+});
 </script>
-
-@if(session('success'))
-    <div class="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50">
-        {{ session('success') }}
-    </div>
-    <script>
-        setTimeout(() => {
-            const el = document.querySelector('.fixed.top-4');
-            if (el) el.remove();
-        }, 3000);
-    </script>
-            @endif
-
-@if($errors->any())
-    <div class="fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50">
-        <ul>
-            @foreach($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-    <script>
-        setTimeout(() => {
-            const el = document.querySelector('.fixed.top-4');
-            if (el) el.remove();
-        }, 5000);
-        </script>
-@endif
 
 @endsection

@@ -3,17 +3,183 @@
 @section('title', 'Seller Dashboard - CayMark')
 
 @section('content')
-<div class="min-h-screen bg-gray-50 py-8">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+<div class="w-full h-full bg-gray-50" style="min-height: calc(100vh - 0px); padding: 0;">
+    <div class="w-full h-full px-3 sm:px-4 lg:px-6 py-3">
         
-        <!-- Header -->
-        <div class="bg-white rounded-lg shadow mb-6 p-6">
-            <h1 class="text-3xl font-bold text-gray-900">Seller Dashboard</h1>
-            <p class="text-gray-600 mt-2">Manage your listings, auctions, and sales</p>
-        </div>
-
         <!-- Content Area - No horizontal tabs, controlled by sidebar -->
-        <div class="bg-white rounded-lg shadow">
+        <div class="bg-white rounded-xl shadow-sm h-full" style="min-height: calc(100vh - 60px);">
+            <!-- DASHBOARD TAB (Main Overview with Charts) -->
+            <div id="content-dashboard" class="tab-content p-4" style="display: none; height: 100%; overflow-y: auto;">
+                <!-- Header Section -->
+                <div class="mb-4">
+                    <h2 class="text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 bg-clip-text text-transparent mb-1">
+                        Dashboard Overview
+                    </h2>
+                    <p class="text-gray-600 text-sm">Real-time insights into your sales performance and auction analytics</p>
+                </div>
+
+                <!-- Top Stats Cards Row (Horizontal) -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+                    <div class="bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 rounded-xl shadow-xl p-4 text-white transform hover:scale-105 transition-all duration-300 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
+                        <div class="relative z-10">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="material-icons-round text-3xl opacity-80">attach_money</span>
+                                <span class="text-xs font-semibold bg-white/20 px-2 py-0.5 rounded-full">Revenue</span>
+                            </div>
+                            <p class="text-blue-100 text-xs font-medium mb-1">Total Revenue</p>
+                            <p class="text-3xl font-bold mb-0.5">${{ number_format($auctionSummary['total_sales_revenue'] ?? 0, 0) }}</p>
+                            <p class="text-xs text-blue-100 opacity-75">All time earnings</p>
+                        </div>
+                    </div>
+                    <div class="bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 rounded-xl shadow-xl p-4 text-white transform hover:scale-105 transition-all duration-300 relative overflow-hidden" style="background: linear-gradient(to bottom right, #10b981, #059669, #0d9488);">
+                        <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
+                        <div class="relative z-10">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="material-icons-round text-3xl opacity-80 text-white">check_circle</span>
+                                <span class="text-xs font-semibold bg-white/20 px-2 py-0.5 rounded-full text-white">Sales</span>
+                            </div>
+                            <p class="text-white text-xs font-medium mb-1">Items Sold</p>
+                            <p class="text-3xl font-bold mb-0.5 text-white">{{ $auctionSummary['total_items_sold'] ?? 0 }}</p>
+                            <p class="text-xs text-white opacity-90">{{ $salesConversionData['conversion_rate'] ?? 0 }}% conversion</p>
+                        </div>
+                    </div>
+                    <div class="bg-gradient-to-br from-purple-500 via-pink-500 to-rose-600 rounded-xl shadow-xl p-4 text-white transform hover:scale-105 transition-all duration-300 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
+                        <div class="relative z-10">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="material-icons-round text-3xl opacity-80">gavel</span>
+                                <span class="text-xs font-semibold bg-white/20 px-2 py-0.5 rounded-full">Active</span>
+                            </div>
+                            <p class="text-purple-100 text-xs font-medium mb-1">Active Auctions</p>
+                            <p class="text-3xl font-bold mb-0.5">{{ $auctionSummary['current_count'] ?? 0 }}</p>
+                            <p class="text-xs text-purple-100 opacity-75">Currently live</p>
+                        </div>
+                    </div>
+                    <div class="bg-gradient-to-br from-amber-500 via-orange-500 to-red-600 rounded-xl shadow-xl p-4 text-white transform hover:scale-105 transition-all duration-300 relative overflow-hidden" style="background: linear-gradient(to bottom right, #f59e0b, #f97316, #dc2626);">
+                        <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
+                        <div class="relative z-10">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="material-icons-round text-3xl opacity-80 text-white">inventory_2</span>
+                                <span class="text-xs font-semibold bg-white/20 px-2 py-0.5 rounded-full text-white">Total</span>
+                            </div>
+                            <p class="text-white text-xs font-medium mb-1">Total Listings</p>
+                            <p class="text-3xl font-bold mb-0.5 text-white">{{ $auctionSummary['total_listings'] ?? 0 }}</p>
+                            <p class="text-xs text-white opacity-90">All listings</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Secondary Stats Row (Horizontal) -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg shadow-md border border-blue-200 p-4 hover:shadow-lg transition-all duration-300">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-blue-700 text-xs font-medium">Avg. Sale Price</span>
+                            <span class="material-icons-round text-blue-600 text-lg">trending_up</span>
+                        </div>
+                        <p class="text-xl font-bold text-blue-900">${{ number_format($averageSalePriceData['average'] ?? 0, 0) }}</p>
+                        <p class="text-xs text-blue-600 mt-0.5">Based on {{ $averageSalePriceData['count'] ?? 0 }} sales</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-lg shadow-md border border-green-200 p-4 hover:shadow-lg transition-all duration-300">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-green-700 text-xs font-medium">Conversion Rate</span>
+                            <span class="material-icons-round text-green-600 text-lg">percent</span>
+                        </div>
+                        <p class="text-xl font-bold text-green-900">{{ $salesConversionData['conversion_rate'] ?? 0 }}%</p>
+                        <p class="text-xs text-green-600 mt-0.5">{{ $salesConversionData['sold'] ?? 0 }} of {{ $salesConversionData['total'] ?? 0 }} sold</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg shadow-md border border-purple-200 p-4 hover:shadow-lg transition-all duration-300">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-purple-700 text-xs font-medium">Highest Sale</span>
+                            <span class="material-icons-round text-purple-600 text-lg">arrow_upward</span>
+                        </div>
+                        <p class="text-xl font-bold text-purple-900">${{ number_format($averageSalePriceData['highest'] ?? 0, 0) }}</p>
+                        <p class="text-xs text-purple-600 mt-0.5">Best performing listing</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg shadow-md border border-amber-200 p-4 hover:shadow-lg transition-all duration-300">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-amber-700 text-xs font-medium">Pending Payout</span>
+                            <span class="material-icons-round text-amber-600 text-lg">account_balance_wallet</span>
+                        </div>
+                        <p class="text-xl font-bold text-amber-900">${{ number_format(($auctionSummary['total_sales_revenue'] ?? 0) * 0.96, 0) }}</p>
+                        <p class="text-xs text-amber-600 mt-0.5">After 4% commission</p>
+                    </div>
+                </div>
+
+                <!-- Main Charts Row (Horizontal Layout) -->
+                <div class="grid grid-cols-1 xl:grid-cols-3 gap-4 mb-4">
+                    <!-- Revenue Trend Chart -->
+                    <div class="xl:col-span-2 bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-lg border border-gray-200 p-4 hover:shadow-xl transition-all duration-300">
+                        <div class="flex items-center justify-between mb-3">
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-900">Revenue Trend</h3>
+                                <p class="text-xs text-gray-500">Last 6 months performance</p>
+                            </div>
+                            <div class="bg-blue-100 rounded-lg p-1.5">
+                                <span class="material-icons-round text-blue-600 text-lg">show_chart</span>
+                            </div>
+                        </div>
+                        <div class="h-64">
+                            <canvas id="revenueChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Listing Status Chart -->
+                    <div class="bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-lg border border-gray-200 p-4 hover:shadow-xl transition-all duration-300">
+                        <div class="flex items-center justify-between mb-3">
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-900">Status Overview</h3>
+                                <p class="text-xs text-gray-500">Listing distribution</p>
+                            </div>
+                            <div class="bg-purple-100 rounded-lg p-1.5">
+                                <span class="material-icons-round text-purple-600 text-lg">pie_chart</span>
+                            </div>
+                        </div>
+                        <div class="h-64">
+                            <canvas id="listingStatusChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Second Charts Row (Horizontal) -->
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                    <!-- Auction Performance Chart -->
+                    <div class="bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-lg border border-gray-200 p-4 hover:shadow-xl transition-all duration-300">
+                        <div class="flex items-center justify-between mb-3">
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-900">Auction Activity</h3>
+                                <p class="text-xs text-gray-500">Last 30 days performance</p>
+                            </div>
+                            <div class="bg-green-100 rounded-lg p-1.5">
+                                <span class="material-icons-round text-green-600 text-lg">bar_chart</span>
+                            </div>
+                        </div>
+                        <div class="h-72">
+                            <canvas id="auctionPerformanceChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Bid Activity Chart -->
+                    <div class="bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-lg border border-gray-200 p-4 hover:shadow-xl transition-all duration-300">
+                        <div class="flex items-center justify-between mb-3">
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-900">Bid Activity</h3>
+                                <p class="text-xs text-gray-500">Last 7 days bid trends</p>
+                            </div>
+                            <div class="bg-orange-100 rounded-lg p-1.5">
+                                <span class="material-icons-round text-orange-600 text-lg">timeline</span>
+                            </div>
+                        </div>
+                        <div class="h-72">
+                            <canvas id="bidActivityChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- USER TAB -->
             <div id="content-user" class="tab-content p-6">
                 <h2 class="text-xl font-bold text-gray-900 mb-6">Account Information</h2>
@@ -627,29 +793,38 @@
 // Tab Navigation - Controlled by sidebar, no horizontal tabs
 function showTab(tabName) {
     document.querySelectorAll('.tab-content').forEach(content => {
-        content.classList.add('hidden');
+        content.style.display = 'none';
     });
     
     const contentElement = document.getElementById('content-' + tabName);
     if (contentElement) {
-        contentElement.classList.remove('hidden');
+        contentElement.style.display = 'block';
     }
     
     // Update URL without page reload
     const url = new URL(window.location);
     url.searchParams.set('tab', tabName);
     window.history.pushState({}, '', url);
+    
+    // Initialize charts if switching to dashboard tab
+    if (tabName === 'dashboard') {
+        setTimeout(initializeCharts, 50);
+    }
 }
 
 // Show tab on page load based on URL parameter
 document.addEventListener('DOMContentLoaded', function() {
     const urlParams = new URLSearchParams(window.location.search);
-    const tab = urlParams.get('tab');
-    if (tab) {
-        showTab(tab);
+    const tab = urlParams.get('tab') || 'dashboard'; // Default to 'dashboard' if no tab specified
+    
+    showTab(tab);
+    
+    // Initialize Charts (will work for dashboard tab, safe to call for others)
+    if (tab === 'dashboard') {
+        initializeCharts();
     } else {
-        // Default to 'user' tab
-        showTab('user');
+        // Initialize charts with delay in case user switches to dashboard
+        setTimeout(initializeCharts, 100);
     }
 });
 
@@ -767,6 +942,315 @@ setInterval(() => {
 }, 1000);
 updateCountdowns();
 updateRejectionTimers();
+
+// Initialize Chart.js charts
+function initializeCharts() {
+    // Revenue Chart
+    const revenueCtx = document.getElementById('revenueChart');
+    if (revenueCtx) {
+        const revenueData = @json($revenueChartData ?? ['labels' => [], 'data' => []]);
+        new Chart(revenueCtx, {
+            type: 'line',
+            data: {
+                labels: revenueData.labels || [],
+                datasets: [{
+                    label: 'Revenue ($)',
+                    data: revenueData.data || [],
+                    borderColor: 'rgb(59, 130, 246)',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    borderWidth: 3,
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    pointBackgroundColor: 'rgb(59, 130, 246)',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        titleFont: { size: 14, weight: 'bold' },
+                        bodyFont: { size: 13 },
+                        callbacks: {
+                            label: function(context) {
+                                return '$' + context.parsed.y.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + value.toLocaleString();
+                            },
+                            font: { size: 11 }
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)',
+                            drawBorder: false
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            font: { size: 11 }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Listing Status Chart
+    const statusCtx = document.getElementById('listingStatusChart');
+    if (statusCtx) {
+        const statusData = @json($listingStatusChartData ?? ['labels' => [], 'data' => [], 'colors' => []]);
+        new Chart(statusCtx, {
+            type: 'doughnut',
+            data: {
+                labels: statusData.labels || [],
+                datasets: [{
+                    data: statusData.data || [],
+                    backgroundColor: statusData.colors || ['#3B82F6', '#10B981', '#EF4444', '#F59E0B'],
+                    borderWidth: 0,
+                    hoverOffset: 8,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 15,
+                            font: { size: 12, weight: '500' },
+                            usePointStyle: true,
+                            pointStyle: 'circle'
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                return label + ': ' + value + ' (' + percentage + '%)';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Auction Performance Chart
+    const performanceCtx = document.getElementById('auctionPerformanceChart');
+    if (performanceCtx) {
+        const performanceData = @json($auctionPerformanceData ?? ['labels' => [], 'listings' => [], 'bids' => []]);
+        new Chart(performanceCtx, {
+            type: 'bar',
+            data: {
+                labels: performanceData.labels || [],
+                datasets: [
+                    {
+                        label: 'New Listings',
+                        data: performanceData.listings || [],
+                        backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                        borderColor: 'rgb(59, 130, 246)',
+                        borderWidth: 2,
+                        borderRadius: 6,
+                    },
+                    {
+                        label: 'Bids Received',
+                        data: performanceData.bids || [],
+                        backgroundColor: 'rgba(16, 185, 129, 0.7)',
+                        borderColor: 'rgb(16, 185, 129)',
+                        borderWidth: 2,
+                        borderRadius: 6,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            padding: 15,
+                            font: { size: 12, weight: '500' },
+                            usePointStyle: true
+                        }
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            font: { size: 11 }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 45,
+                            font: { size: 10 }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Bid Activity Chart
+    const bidActivityCtx = document.getElementById('bidActivityChart');
+    if (bidActivityCtx) {
+        const bidActivityData = @json($bidActivityData ?? ['labels' => [], 'counts' => [], 'amounts' => []]);
+        new Chart(bidActivityCtx, {
+            type: 'line',
+            data: {
+                labels: bidActivityData.labels || [],
+                datasets: [
+                    {
+                        label: 'Bid Count',
+                        data: bidActivityData.counts || [],
+                        borderColor: 'rgb(249, 115, 22)',
+                        backgroundColor: 'rgba(249, 115, 22, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        borderWidth: 3,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        yAxisID: 'y',
+                    },
+                    {
+                        label: 'Bid Amount ($)',
+                        data: bidActivityData.amounts || [],
+                        borderColor: 'rgb(236, 72, 153)',
+                        backgroundColor: 'rgba(236, 72, 153, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        borderWidth: 3,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        yAxisID: 'y1',
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            padding: 15,
+                            font: { size: 12, weight: '500' },
+                            usePointStyle: true
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        callbacks: {
+                            label: function(context) {
+                                if (context.datasetIndex === 0) {
+                                    return 'Bids: ' + context.parsed.y;
+                                } else {
+                                    return 'Amount: $' + context.parsed.y.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                                }
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Bid Count',
+                            font: { size: 12, weight: 'bold' }
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            font: { size: 11 }
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Bid Amount ($)',
+                            font: { size: 12, weight: 'bold' }
+                        },
+                        grid: {
+                            drawOnChartArea: false,
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + value.toLocaleString();
+                            },
+                            font: { size: 11 }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            font: { size: 11 }
+                        }
+                    }
+                }
+            }
+        });
+    }
+}
 </script>
 
 @if(session('success'))

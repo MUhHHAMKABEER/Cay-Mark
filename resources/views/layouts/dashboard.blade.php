@@ -4,6 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'CayMark Dashboard')</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -191,6 +192,9 @@
             flex-direction: column;
             overflow: hidden;
             margin-left: 250px;
+            width: calc(100% - 250px);
+            height: 100vh;
+            padding: 0;
         }
 
         /* Responsive */

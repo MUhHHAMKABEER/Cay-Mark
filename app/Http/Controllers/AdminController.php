@@ -1101,12 +1101,19 @@ class AdminController extends Controller
         return back()->with('success', 'Listing approved successfully. Item Number: ' . $listing->item_number);
     }
 
-    public function rejectListing(Listing $listing)
+    public function rejectListing(Request $request, Listing $listing)
     {
+        $request->validate([
+            'rejection_reason' => 'required|string',
+            'rejection_notes' => 'nullable|string|max:1000',
+        ]);
+
         $listing->update([
             'status' => 'rejected',
             'rejected_at' => now(),
-            'rejected_by' => auth()->id()
+            'rejected_by' => auth()->id(),
+            'rejection_reason' => $request->rejection_reason,
+            'rejection_notes' => $request->rejection_notes,
         ]);
         
         // Send rejection email to seller
@@ -1114,7 +1121,7 @@ class AdminController extends Controller
             \Mail::send('emails.listing-rejected', [
                 'listing' => $listing,
                 'seller' => $listing->seller,
-                'rejectionReason' => 'Your listing did not meet our quality standards. Please review our listing guidelines and resubmit.',
+                'rejectionReason' => $request->rejection_reason,
             ], function ($message) use ($listing) {
                 $message->to($listing->seller->email, $listing->seller->name)
                     ->subject('Listing Rejected – ' . ($listing->year ?? '') . ' ' . ($listing->make ?? '') . ' ' . ($listing->model ?? '[VEHICLE_NAME]'));

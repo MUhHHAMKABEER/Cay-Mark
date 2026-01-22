@@ -23,31 +23,31 @@
         $dashboardRoute = 'admin.dashboard';
     } elseif ($role === 'seller') {
         $menuItems = [
-            ['route' => 'dashboard.seller', 'icon' => 'dashboard', 'label' => 'Dashboard'],
+            ['route' => 'dashboard.seller', 'icon' => 'dashboard', 'label' => 'Dashboard', 'tab' => 'dashboard'],
             ['route' => 'dashboard.seller', 'icon' => 'person', 'label' => 'User', 'tab' => 'user'],
             ['route' => 'seller.listings.create', 'icon' => 'add_box', 'label' => 'Submission'],
             ['route' => 'dashboard.seller', 'icon' => 'gavel', 'label' => 'Auctions', 'tab' => 'auctions'],
             ['route' => 'dashboard.seller', 'icon' => 'notifications', 'label' => 'Notifications', 'tab' => 'notifications'],
             ['route' => 'seller.chat', 'icon' => 'mail', 'label' => 'Messaging Center'],
             ['route' => 'dashboard.seller', 'icon' => 'support_agent', 'label' => 'Customer Support', 'tab' => 'support'],
-            ['route' => 'profile.edit', 'icon' => 'manage_accounts', 'label' => 'Account Settings'],
             ['route' => 'seller.listings.index', 'icon' => 'directions_car', 'label' => 'My Listings'],
-            ['route' => '#', 'icon' => 'account_balance', 'label' => 'Payout Settings'],
         ];
         $roleLabel = $user->business_license_path ? 'Business Seller' : 'Individual Seller';
         $dashboardRoute = 'dashboard.seller';
     } else {
-        // Buyer
+        // Buyer (unified dashboard like seller - all tabs in one view)
         $menuItems = [
-            ['route' => 'buyer.user', 'icon' => 'person', 'label' => 'User'],
-            ['route' => 'buyer.auctions', 'icon' => 'gavel', 'label' => 'Auctions'],
-            ['route' => 'buyer.saved-items', 'icon' => 'bookmark', 'label' => 'Saved Items'],
-            ['route' => 'buyer.notifications', 'icon' => 'notifications', 'label' => 'Notifications'],
-            ['route' => 'buyer.messaging-center', 'icon' => 'mail', 'label' => 'Messaging Center'],
-            ['route' => 'buyer.customer-support', 'icon' => 'support_agent', 'label' => 'Customer Support'],
+            ['route' => 'welcome', 'icon' => 'home', 'label' => 'Home'],
+            ['route' => 'dashboard.buyer', 'icon' => 'dashboard', 'label' => 'Dashboard', 'tab' => 'dashboard'],
+            ['route' => 'dashboard.buyer', 'icon' => 'person', 'label' => 'User', 'tab' => 'user'],
+            ['route' => 'dashboard.buyer', 'icon' => 'gavel', 'label' => 'Auctions', 'tab' => 'auctions'],
+            ['route' => 'dashboard.buyer', 'icon' => 'bookmark', 'label' => 'Saved Items', 'tab' => 'saved'],
+            ['route' => 'dashboard.buyer', 'icon' => 'notifications', 'label' => 'Notifications', 'tab' => 'notifications'],
+            ['route' => 'dashboard.buyer', 'icon' => 'mail', 'label' => 'Messaging Center', 'tab' => 'messaging'],
+            ['route' => 'dashboard.buyer', 'icon' => 'support_agent', 'label' => 'Customer Support', 'tab' => 'support'],
         ];
         $roleLabel = 'Buyer';
-        $dashboardRoute = 'buyer.user';
+        $dashboardRoute = 'dashboard.buyer';
     }
 @endphp
 
@@ -281,9 +281,23 @@
         flex-shrink: 0;
     }
     
-    .unified-sidebar nav a span:not(.material-icons):not(.material-icons-round) {
+    .unified-sidebar nav a span:not(.material-icons):not(.material-icons-round):not(.sidebar-notification-badge) {
         flex: 1;
         white-space: nowrap;
+    }
+    
+    .unified-sidebar .sidebar-notification-badge {
+        min-width: 20px;
+        height: 20px;
+        font-size: 0.7rem;
+        line-height: 1;
+        padding: 2px 6px;
+        box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+        display: flex;
+    }
+    
+    .unified-sidebar .sidebar-notification-badge[style*="display: none"] {
+        display: none !important;
     }
 
     .unified-sidebar .logout-section {
@@ -418,7 +432,7 @@
                         
                         // If tab is specified, check if current tab matches
                         if (isset($item['tab']) && ($currentRoute === 'dashboard.seller' || $currentRoute === 'dashboard.buyer')) {
-                            $currentTab = request()->get('tab', 'user');
+                            $currentTab = request()->get('tab', 'dashboard');
                             $isActive = $currentTab === $item['tab'];
                         }
                         
@@ -445,10 +459,20 @@
                 @endphp
                 <li>
                     <a href="{{ $url }}" 
-                       class="{{ $isActive ? 'active' : '' }}"
+                       class="{{ $isActive ? 'active' : '' }} relative"
                        @if($item['route'] === '#') onclick="return false;" @endif>
                         <span class="material-icons-round">{{ $item['icon'] }}</span>
                         <span>{{ $item['label'] }}</span>
+                        @if($item['icon'] === 'notifications' && isset($user))
+                            @php
+                                $unreadCount = $user->unreadNotifications()->count();
+                            @endphp
+                            @if($unreadCount > 0)
+                                <span class="sidebar-notification-badge absolute right-3 top-1/2 -translate-y-1/2 min-w-[20px] h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center px-1.5" style="display: flex;">{{ $unreadCount > 99 ? '99+' : $unreadCount }}</span>
+                            @else
+                                <span class="sidebar-notification-badge absolute right-3 top-1/2 -translate-y-1/2 min-w-[20px] h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center px-1.5" style="display: none;">0</span>
+                            @endif
+                        @endif
                     </a>
                 </li>
             @endforeach

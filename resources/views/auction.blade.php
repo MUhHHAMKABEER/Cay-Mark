@@ -207,6 +207,15 @@
         .image-container:hover .view-details-btn {
             transform: translateY(0);
         }
+        
+        /* Countdown Timer Styles - Modern Glassmorphism */
+        .countdown-badge {
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.95) 0%, rgba(79, 70, 229, 0.95) 100%);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
     </style>
 
     <div class="bg-gray-50 text-gray-800" x-data="{ viewMode: 'detail', isLoading: false, activeFilters: false }" x-init="// Check if user has a preference saved
@@ -220,15 +229,15 @@
         setTimeout(() => { isLoading = false; }, 300);
     });">
 
-        <main class="container mx-auto px-4 py-6">
+        <main class="w-full px-4 py-6">
 
             <!-- Page Header -->
             <div class="mb-6 animate-fade-in">
                 <h2 class="text-2xl md:text-3xl font-bold text-secondary-800 mb-2">Repairable, Salvage and Wrecked Car
                     Auctions</h2>
                 <div class="flex flex-col md:flex-row md:items-center justify-between">
-                    <p class="text-sm text-secondary-500 mb-2 md:mb-0">
-                        Showing results {{ $auctions->firstItem() }} - {{ $auctions->lastItem() }} of
+                    <p class="text-sm text-secondary-500 mb-2 md:mb-0 results-count">
+                        Showing results {{ $auctions->firstItem() ?? 0 }} - {{ $auctions->lastItem() ?? 0 }} of
                         {{ $auctions->total() }}
                     </p>
 
@@ -262,269 +271,307 @@
                         <!-- Sort -->
                         <div class="flex items-center">
                             <label for="sort" class="text-sm text-secondary-600 mr-2">Sort by:</label>
-                            <select id="sort"
+                            <select id="sort" x-model="sortBy" @change="applyFilters()"
                                 class="border border-gray-300 rounded-lg py-1.5 px-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors">
-                                <option>Recommended</option>
-                                <option>Newest First</option>
-                                <option>Price: Low to High</option>
-                                <option>Price: High to Low</option>
-                                <option>Ending Soonest</option>
+                                <option value="newest">Newest First</option>
+                                <option value="price_low">Price: Low to High</option>
+                                <option value="price_high">Price: High to Low</option>
+                                <option value="ending_soon">Ending Soonest</option>
                             </select>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="flex flex-col lg:flex-row gap-6">
+            <div class="flex flex-col lg:flex-row gap-6" x-data="filterData()" x-init="initFilters()">
                 <!-- Filters Sidebar -->
                 <aside class="w-full lg:w-1/4">
-                    <form method="GET" action="{{ route('Auction.index') }}">
-                        <div
-                            class="bg-white rounded-xl shadow-sm p-5 mb-6 sticky top-4 transition-all duration-300 hover:shadow-md">
-                            <div class="flex justify-between items-center mb-5">
-                                <h3 class="font-semibold text-secondary-800 text-lg">Filter Vehicles</h3>
-                                <a href="{{ route('Auction.index') }}"
-                                    class="text-sm text-primary-600 font-medium hover:text-primary-800 transition-colors">Clear
-                                    All</a>
-                            </div>
+                    <div
+                        class="bg-white rounded-xl shadow-sm p-5 mb-6 sticky top-4 transition-all duration-300 hover:shadow-md">
+                        <div class="flex justify-between items-center mb-5">
+                            <h3 class="font-semibold text-secondary-800 text-lg">Filter Vehicles</h3>
+                            <button type="button" @click="clearAllFilters()"
+                                class="text-sm text-primary-600 font-medium hover:text-primary-800 transition-colors">Clear
+                                All</button>
+                        </div>
 
-                            <div class="space-y-5 max-h-[70vh] overflow-y-auto filter-scroll pr-2">
-                                <!-- Type -->
+                        <div class="space-y-5 max-h-[70vh] overflow-y-auto filter-scroll pr-2" id="filterForm">
+                                <!-- 1. Location -->
                                 <div class="filter-section">
                                     <h4 class="text-sm font-medium text-secondary-800 mb-2 flex justify-between items-center cursor-pointer"
-                                        @click="$event.target.nextElementSibling.classList.toggle('hidden'); $event.target.querySelector('span').textContent = $event.target.nextElementSibling.classList.contains('hidden') ? 'expand_more' : 'expand_less'">
-                                        <span>Type</span>
-                                        <span
-                                            class="material-icons text-gray-500 text-lg transition-transform">expand_less</span>
+                                        @click="toggleFilter('location')">
+                                        <span>Location</span>
+                                        <span class="material-icons text-gray-500 text-lg transition-transform" x-bind:class="filtersOpen.location ? 'rotate-180' : ''">expand_less</span>
                                     </h4>
-                                    <div class="space-y-2 max-h-40 overflow-y-auto filter-scroll">
-                                        @foreach ($filterOptions['types'] as $type)
+                                    <div x-show="filtersOpen.location" class="space-y-2 max-h-40 overflow-y-auto filter-scroll">
+                                        @foreach ($filterOptions['locations'] as $location)
                                             <label class="flex items-center py-1 cursor-pointer group">
-                                                <input type="checkbox" name="type[]" value="{{ $type }}"
-                                                    @checked(in_array($type, request('type', [])))
+                                                <input type="checkbox" name="location[]" value="{{ $location }}"
+                                                    x-model="selectedFilters.location"
+                                                    @change="applyFilters()"
                                                     class="rounded text-primary-600 focus:ring-primary-500 mr-2 transition-all group-hover:scale-110">
                                                 <span
-                                                    class="text-sm text-secondary-600 group-hover:text-secondary-800 transition-colors">{{ $type }}</span>
+                                                    class="text-sm text-secondary-600 group-hover:text-secondary-800 transition-colors">{{ $location }}</span>
                                             </label>
                                         @endforeach
                                     </div>
                                 </div>
 
-                                <!-- Makes -->
+                                <!-- 2. Vehicle Type -->
                                 <div class="filter-section">
                                     <h4 class="text-sm font-medium text-secondary-800 mb-2 flex justify-between items-center cursor-pointer"
-                                        @click="$event.target.nextElementSibling.classList.toggle('hidden'); $event.target.querySelector('span').textContent = $event.target.nextElementSibling.classList.contains('hidden') ? 'expand_more' : 'expand_less'">
-                                        <span>Makes</span>
-                                        <span
-                                            class="material-icons text-gray-500 text-lg transition-transform">expand_less</span>
+                                        @click="toggleFilter('vehicle_type')">
+                                        <span>Vehicle Type</span>
+                                        <span class="material-icons text-gray-500 text-lg transition-transform" x-bind:class="filtersOpen.vehicle_type ? 'rotate-180' : ''">expand_less</span>
                                     </h4>
-                                    <div>
-                                        <input type="text" placeholder="Search Makes..."
+                                    <div x-show="filtersOpen.vehicle_type">
+                                        <select name="vehicle_type" x-model="selectedFilters.vehicle_type" @change="applyFilters()"
+                                            class="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all">
+                                            <option value="">All Types</option>
+                                            @foreach ($filterOptions['vehicle_types'] as $type)
+                                                <option value="{{ $type }}">{{ $type }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- 3. Make -->
+                                <div class="filter-section">
+                                    <h4 class="text-sm font-medium text-secondary-800 mb-2 flex justify-between items-center cursor-pointer"
+                                        @click="toggleFilter('make')">
+                                        <span>Make</span>
+                                        <span class="material-icons text-gray-500 text-lg transition-transform" x-bind:class="filtersOpen.make ? 'rotate-180' : ''">expand_less</span>
+                                    </h4>
+                                    <div x-show="filtersOpen.make">
+                                        <input type="text" x-model="makeSearch" placeholder="Search Makes..."
                                             class="w-full border rounded-lg p-2 mb-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all">
                                         <div class="space-y-2 max-h-40 overflow-y-auto filter-scroll">
-                                            @foreach ($filterOptions['makes'] as $make)
+                                            <template x-for="make in filteredMakes" :key="make">
                                                 <label class="flex items-center py-1 cursor-pointer group">
-                                                    <input type="checkbox" name="makes[]" value="{{ $make }}"
-                                                        @checked(in_array($make, request('makes', [])))
+                                                    <input type="checkbox" :value="make"
+                                                        x-model="selectedFilters.makes"
+                                                        @change="applyFilters()"
                                                         class="rounded text-primary-600 focus:ring-primary-500 mr-2 transition-all group-hover:scale-110">
-                                                    <span
-                                                        class="text-sm text-secondary-600 group-hover:text-secondary-800 transition-colors">{{ $make }}</span>
+                                                    <span class="text-sm text-secondary-600 group-hover:text-secondary-800 transition-colors" x-text="make"></span>
                                                 </label>
-                                            @endforeach
+                                            </template>
                                         </div>
                                     </div>
                                 </div>
 
-                                <!-- Models -->
+                                <!-- 4. Model -->
                                 <div class="filter-section">
                                     <h4 class="text-sm font-medium text-secondary-800 mb-2 flex justify-between items-center cursor-pointer"
-                                        @click="$event.target.nextElementSibling.classList.toggle('hidden'); $event.target.querySelector('span').textContent = $event.target.nextElementSibling.classList.contains('hidden') ? 'expand_more' : 'expand_less'">
-                                        <span>Models</span>
-                                        <span
-                                            class="material-icons text-gray-500 text-lg transition-transform">expand_less</span>
+                                        @click="toggleFilter('model')">
+                                        <span>Model</span>
+                                        <span class="material-icons text-gray-500 text-lg transition-transform" x-bind:class="filtersOpen.model ? 'rotate-180' : ''">expand_less</span>
                                     </h4>
-                                    <div>
-                                        <input type="text" placeholder="Search Models..."
+                                    <div x-show="filtersOpen.model">
+                                        <input type="text" x-model="modelSearch" placeholder="Search Models..."
                                             class="w-full border rounded-lg p-2 mb-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all">
                                         <div class="space-y-2 max-h-40 overflow-y-auto filter-scroll">
-                                            @foreach ($filterOptions['models'] as $model)
+                                            <template x-for="model in filteredModels" :key="model">
                                                 <label class="flex items-center py-1 cursor-pointer group">
-                                                    <input type="checkbox" name="models[]" value="{{ $model }}"
-                                                        @checked(in_array($model, request('models', [])))
+                                                    <input type="checkbox" :value="model"
+                                                        x-model="selectedFilters.models"
+                                                        @change="applyFilters()"
                                                         class="rounded text-primary-600 focus:ring-primary-500 mr-2 transition-all group-hover:scale-110">
-                                                    <span
-                                                        class="text-sm text-secondary-600 group-hover:text-secondary-800 transition-colors">{{ $model }}</span>
+                                                    <span class="text-sm text-secondary-600 group-hover:text-secondary-800 transition-colors" x-text="model"></span>
                                                 </label>
-                                            @endforeach
+                                            </template>
                                         </div>
                                     </div>
                                 </div>
 
-                                <!-- Locations -->
-                                <div class="filter-section">
-                                    <h4 class="text-sm font-medium text-secondary-800 mb-2 flex justify-between items-center cursor-pointer"
-                                        @click="$event.target.nextElementSibling.classList.toggle('hidden'); $event.target.querySelector('span').textContent = $event.target.nextElementSibling.classList.contains('hidden') ? 'expand_more' : 'expand_less'">
-                                        <span>Locations</span>
-                                        <span
-                                            class="material-icons text-gray-500 text-lg transition-transform">expand_less</span>
-                                    </h4>
-                                    <div>
-                                        <input type="text" placeholder="Search Locations..."
-                                            class="w-full border rounded-lg p-2 mb-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all">
-                                        <div class="space-y-2 max-h-40 overflow-y-auto filter-scroll">
-                                            @foreach ($filterOptions['locations'] as $location)
-                                                <label class="flex items-center py-1 cursor-pointer group">
-                                                    <input type="checkbox" name="locations[]" value="{{ $location }}"
-                                                        @checked(in_array($location, request('locations', [])))
-                                                        class="rounded text-primary-600 focus:ring-primary-500 mr-2 transition-all group-hover:scale-110">
-                                                    <span
-                                                        class="text-sm text-secondary-600 group-hover:text-secondary-800 transition-colors">{{ $location }}</span>
-                                                </label>
-                                            @endforeach
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Year -->
+                                <!-- 5. Year (Range Slider) -->
                                 <div class="filter-section">
                                     <h4 class="text-sm font-medium text-secondary-800 mb-2">Year</h4>
-                                    <div class="flex items-center space-x-2">
-                                        <input type="number" name="year_from" value="{{ request('year_from') }}"
-                                            placeholder="From"
-                                            class="w-1/2 border rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all">
-                                        <input type="number" name="year_to" value="{{ request('year_to') }}"
-                                            placeholder="To"
-                                            class="w-1/2 border rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all">
+                                    <div class="space-y-3">
+                                        <div class="flex items-center space-x-2">
+                                            <input type="number" x-model.number="yearFrom" @input.debounce.500ms="applyFilters()"
+                                                :min="1900" :max="yearTo || {{ date('Y') + 1 }}"
+                                                placeholder="From"
+                                                class="w-1/2 border rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all">
+                                            <input type="number" x-model.number="yearTo" @input.debounce.500ms="applyFilters()"
+                                                :min="yearFrom || 1900" :max="{{ date('Y') + 1 }}"
+                                                placeholder="To"
+                                                class="w-1/2 border rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all">
+                                        </div>
+                                        <div class="px-2">
+                                            <input type="range" x-model.number="yearFrom" @input.debounce.500ms="applyFilters()"
+                                                :min="1900" :max="yearTo || {{ date('Y') + 1 }}"
+                                                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                                            <input type="range" x-model.number="yearTo" @input.debounce.500ms="applyFilters()"
+                                                :min="yearFrom || 1900" :max="{{ date('Y') + 1 }}"
+                                                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-2">
+                                        </div>
                                     </div>
                                 </div>
 
-                                <!-- Odometer -->
+                                <!-- 6. Odometer (Range Slider) -->
                                 <div class="filter-section">
                                     <h4 class="text-sm font-medium text-secondary-800 mb-2">Odometer</h4>
-                                    <div class="flex items-center space-x-2">
-                                        <input type="number" name="odo_min" value="{{ request('odo_min') }}"
-                                            placeholder="Min"
-                                            class="w-1/2 border rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all">
-                                        <input type="number" name="odo_max" value="{{ request('odo_max') }}"
-                                            placeholder="Max"
-                                            class="w-1/2 border rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all">
+                                    <div class="space-y-3">
+                                        <div class="flex items-center space-x-2">
+                                            <input type="number" x-model.number="odometerMin" @input.debounce.500ms="applyFilters()"
+                                                :min="0" :max="odometerMax || {{ $filterOptions['odometer_max'] ?? 250000 }}"
+                                                placeholder="Min"
+                                                class="w-1/2 border rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all">
+                                            <input type="number" x-model.number="odometerMax" @input.debounce.500ms="applyFilters()"
+                                                :min="odometerMin || 0" :max="{{ $filterOptions['odometer_max'] ?? 250000 }}"
+                                                placeholder="Max"
+                                                class="w-1/2 border rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all">
+                                        </div>
+                                        <div class="px-2">
+                                            <input type="range" x-model.number="odometerMin" @input.debounce.500ms="applyFilters()"
+                                                :min="0" :max="odometerMax || {{ $filterOptions['odometer_max'] ?? 250000 }}"
+                                                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                                            <input type="range" x-model.number="odometerMax" @input.debounce.500ms="applyFilters()"
+                                                :min="odometerMin || 0" :max="{{ $filterOptions['odometer_max'] ?? 250000 }}"
+                                                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-2">
+                                        </div>
+                                        <p class="text-xs text-gray-500 text-center" x-text="`${odometerMin || 0} mi - ${odometerMax || {{ $filterOptions['odometer_max'] ?? 250000 }}} mi`"></p>
                                     </div>
                                 </div>
 
-                                <!-- Color -->
+                                <!-- 7. Damage Type -->
                                 <div class="filter-section">
                                     <h4 class="text-sm font-medium text-secondary-800 mb-2 flex justify-between items-center cursor-pointer"
-                                        @click="$event.target.nextElementSibling.classList.toggle('hidden'); $event.target.querySelector('span').textContent = $event.target.nextElementSibling.classList.contains('hidden') ? 'expand_more' : 'expand_less'">
-                                        <span>Color</span>
-                                        <span
-                                            class="material-icons text-gray-500 text-lg transition-transform">expand_less</span>
+                                        @click="toggleFilter('damage_type')">
+                                        <span>Damage Type</span>
+                                        <span class="material-icons text-gray-500 text-lg transition-transform" x-bind:class="filtersOpen.damage_type ? 'rotate-180' : ''">expand_less</span>
                                     </h4>
-                                    <div class="space-y-2 max-h-40 overflow-y-auto filter-scroll">
-                                        @foreach ($filterOptions['colors'] as $color)
+                                    <div x-show="filtersOpen.damage_type" class="space-y-2 max-h-40 overflow-y-auto filter-scroll">
+                                        @foreach ($filterOptions['damage_types'] as $damage)
                                             <label class="flex items-center py-1 cursor-pointer group">
-                                                <input type="checkbox" name="colors[]" value="{{ $color }}"
-                                                    @checked(in_array($color, request('colors', [])))
+                                                <input type="checkbox" name="damage_type[]" value="{{ $damage }}"
+                                                    x-model="selectedFilters.damage_type"
+                                                    @change="applyFilters()"
                                                     class="rounded text-primary-600 focus:ring-primary-500 mr-2 transition-all group-hover:scale-110">
                                                 <span
-                                                    class="text-sm text-secondary-600 group-hover:text-secondary-800 transition-colors">{{ $color }}</span>
+                                                    class="text-sm text-secondary-600 group-hover:text-secondary-800 transition-colors">{{ $damage }}</span>
                                             </label>
                                         @endforeach
                                     </div>
                                 </div>
 
-                                <!-- Primary Damage -->
+                                <!-- 8. Body Style -->
                                 <div class="filter-section">
                                     <h4 class="text-sm font-medium text-secondary-800 mb-2 flex justify-between items-center cursor-pointer"
-                                        @click="$event.target.nextElementSibling.classList.toggle('hidden'); $event.target.querySelector('span').textContent = $event.target.nextElementSibling.classList.contains('hidden') ? 'expand_more' : 'expand_less'">
-                                        <span>Primary Damage</span>
-                                        <span
-                                            class="material-icons text-gray-500 text-lg transition-transform">expand_less</span>
+                                        @click="toggleFilter('body_style')">
+                                        <span>Body Style</span>
+                                        <span class="material-icons text-gray-500 text-lg transition-transform" x-bind:class="filtersOpen.body_style ? 'rotate-180' : ''">expand_less</span>
                                     </h4>
-                                    <div class="space-y-2 max-h-40 overflow-y-auto filter-scroll">
-                                        @foreach ($filterOptions['primary_damage'] as $pd)
-                                            <label class="flex items-center py-1 cursor-pointer group">
-                                                <input type="checkbox" name="primary_damage[]"
-                                                    value="{{ $pd }}" @checked(in_array($pd, request('primary_damage', [])))
-                                                    class="rounded text-primary-600 focus:ring-primary-500 mr-2 transition-all group-hover:scale-110">
-                                                <span
-                                                    class="text-sm text-secondary-600 group-hover:text-secondary-800 transition-colors">{{ $pd }}</span>
-                                            </label>
-                                        @endforeach
+                                    <div x-show="filtersOpen.body_style">
+                                        <select name="body_style" x-model="selectedFilters.body_style" @change="applyFilters()"
+                                            class="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all">
+                                            <option value="">All Body Styles</option>
+                                            @foreach ($filterOptions['body_styles'] as $style)
+                                                <option value="{{ $style }}">{{ $style }}</option>
+                                            @endforeach
+                                        </select>
                                     </div>
                                 </div>
 
-                                <!-- Secondary Damage -->
+                                <!-- 9. Engine Type -->
                                 <div class="filter-section">
                                     <h4 class="text-sm font-medium text-secondary-800 mb-2 flex justify-between items-center cursor-pointer"
-                                        @click="$event.target.nextElementSibling.classList.toggle('hidden'); $event.target.querySelector('span').textContent = $event.target.nextElementSibling.classList.contains('hidden') ? 'expand_more' : 'expand_less'">
-                                        <span>Secondary Damage</span>
-                                        <span
-                                            class="material-icons text-gray-500 text-lg transition-transform">expand_less</span>
+                                        @click="toggleFilter('engine_type')">
+                                        <span>Engine Type</span>
+                                        <span class="material-icons text-gray-500 text-lg transition-transform" x-bind:class="filtersOpen.engine_type ? 'rotate-180' : ''">expand_less</span>
                                     </h4>
-                                    <div class="space-y-2 max-h-40 overflow-y-auto filter-scroll">
-                                        @foreach ($filterOptions['secondary_damage'] as $sd)
-                                            <label class="flex items-center py-1 cursor-pointer group">
-                                                <input type="checkbox" name="secondary_damage[]"
-                                                    value="{{ $sd }}" @checked(in_array($sd, request('secondary_damage', [])))
-                                                    class="rounded text-primary-600 focus:ring-primary-500 mr-2 transition-all group-hover:scale-110">
-                                                <span
-                                                    class="text-sm text-secondary-600 group-hover:text-secondary-800 transition-colors">{{ $sd }}</span>
-                                            </label>
-                                        @endforeach
+                                    <div x-show="filtersOpen.engine_type">
+                                        <select name="engine_type" x-model="selectedFilters.engine_type" @change="applyFilters()"
+                                            class="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all">
+                                            <option value="">All Engine Types</option>
+                                            @foreach ($filterOptions['engine_types'] as $engine)
+                                                <option value="{{ $engine }}">{{ $engine }}</option>
+                                            @endforeach
+                                        </select>
                                     </div>
                                 </div>
 
-                                <!-- Transmission -->
+                                <!-- 10. Cylinders -->
                                 <div class="filter-section">
                                     <h4 class="text-sm font-medium text-secondary-800 mb-2 flex justify-between items-center cursor-pointer"
-                                        @click="$event.target.nextElementSibling.classList.toggle('hidden'); $event.target.querySelector('span').textContent = $event.target.nextElementSibling.classList.contains('hidden') ? 'expand_more' : 'expand_less'">
+                                        @click="toggleFilter('cylinders')">
+                                        <span>Cylinders</span>
+                                        <span class="material-icons text-gray-500 text-lg transition-transform" x-bind:class="filtersOpen.cylinders ? 'rotate-180' : ''">expand_less</span>
+                                    </h4>
+                                    <div x-show="filtersOpen.cylinders">
+                                        <select name="cylinders" x-model="selectedFilters.cylinders" @change="applyFilters()"
+                                            class="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all">
+                                            <option value="">All</option>
+                                            @foreach ($filterOptions['cylinders'] as $cyl)
+                                                <option value="{{ $cyl }}">{{ $cyl }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- 11. Transmission -->
+                                <div class="filter-section">
+                                    <h4 class="text-sm font-medium text-secondary-800 mb-2 flex justify-between items-center cursor-pointer"
+                                        @click="toggleFilter('transmission')">
                                         <span>Transmission</span>
-                                        <span
-                                            class="material-icons text-gray-500 text-lg transition-transform">expand_less</span>
+                                        <span class="material-icons text-gray-500 text-lg transition-transform" x-bind:class="filtersOpen.transmission ? 'rotate-180' : ''">expand_less</span>
                                     </h4>
-                                    <div class="space-y-2 max-h-40 overflow-y-auto filter-scroll">
-                                        @foreach ($filterOptions['transmission'] as $tr)
-                                            <label class="flex items-center py-1 cursor-pointer group">
-                                                <input type="checkbox" name="transmission[]" value="{{ $tr }}"
-                                                    @checked(in_array($tr, request('transmission', [])))
-                                                    class="rounded text-primary-600 focus:ring-primary-500 mr-2 transition-all group-hover:scale-110">
-                                                <span
-                                                    class="text-sm text-secondary-600 group-hover:text-secondary-800 transition-colors">{{ $tr }}</span>
-                                            </label>
-                                        @endforeach
+                                    <div x-show="filtersOpen.transmission" class="space-y-2">
+                                        <label class="flex items-center py-2 cursor-pointer group">
+                                            <input type="radio" name="transmission" value="Automatic"
+                                                x-model="selectedFilters.transmission"
+                                                @change="applyFilters()"
+                                                class="text-primary-600 focus:ring-primary-500 mr-2">
+                                            <span class="text-sm text-secondary-600 group-hover:text-secondary-800 transition-colors">Automatic</span>
+                                        </label>
+                                        <label class="flex items-center py-2 cursor-pointer group">
+                                            <input type="radio" name="transmission" value="Manual"
+                                                x-model="selectedFilters.transmission"
+                                                @change="applyFilters()"
+                                                class="text-primary-600 focus:ring-primary-500 mr-2">
+                                            <span class="text-sm text-secondary-600 group-hover:text-secondary-800 transition-colors">Manual</span>
+                                        </label>
                                     </div>
                                 </div>
 
-                                <!-- Title Condition -->
+                                <!-- 12. Drive Train -->
                                 <div class="filter-section">
                                     <h4 class="text-sm font-medium text-secondary-800 mb-2 flex justify-between items-center cursor-pointer"
-                                        @click="$event.target.nextElementSibling.classList.toggle('hidden'); $event.target.querySelector('span').textContent = $event.target.nextElementSibling.classList.contains('hidden') ? 'expand_more' : 'expand_less'">
-                                        <span>Title Condition</span>
-                                        <span
-                                            class="material-icons text-gray-500 text-lg transition-transform">expand_less</span>
+                                        @click="toggleFilter('drive_train')">
+                                        <span>Drive Train</span>
+                                        <span class="material-icons text-gray-500 text-lg transition-transform" x-bind:class="filtersOpen.drive_train ? 'rotate-180' : ''">expand_less</span>
                                     </h4>
-                                    <div class="space-y-2 max-h-40 overflow-y-auto filter-scroll">
-                                        @foreach ($filterOptions['title_status'] as $ts)
-                                            <label class="flex items-center py-1 cursor-pointer group">
-                                                <input type="checkbox" name="title_condition[]"
-                                                    value="{{ $ts }}" @checked(in_array($ts, request('title_condition', [])))
-                                                    class="rounded text-primary-600 focus:ring-primary-500 mr-2 transition-all group-hover:scale-110">
-                                                <span
-                                                    class="text-sm text-secondary-600 group-hover:text-secondary-800 transition-colors">{{ $ts }}</span>
-                                            </label>
-                                        @endforeach
+                                    <div x-show="filtersOpen.drive_train">
+                                        <select name="drive_train" x-model="selectedFilters.drive_train" @change="applyFilters()"
+                                            class="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all">
+                                            <option value="">All Drive Trains</option>
+                                            @foreach ($filterOptions['drive_trains'] as $dt)
+                                                <option value="{{ $dt }}">{{ $dt }}</option>
+                                            @endforeach
+                                        </select>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div class="mt-5">
-                                <button type="submit"
-                                    class="w-full bg-primary-600 text-white font-medium py-2.5 px-4 rounded-lg text-sm hover:bg-primary-700 transition-all duration-300 transform hover:-translate-y-0.5 shadow-md hover:shadow-lg">
-                                    Apply Filters
-                                </button>
+                                <!-- 13. Fuel Type -->
+                                <div class="filter-section">
+                                    <h4 class="text-sm font-medium text-secondary-800 mb-2 flex justify-between items-center cursor-pointer"
+                                        @click="toggleFilter('fuel_type')">
+                                        <span>Fuel Type</span>
+                                        <span class="material-icons text-gray-500 text-lg transition-transform" x-bind:class="filtersOpen.fuel_type ? 'rotate-180' : ''">expand_less</span>
+                                    </h4>
+                                    <div x-show="filtersOpen.fuel_type">
+                                        <select name="fuel_type" x-model="selectedFilters.fuel_type" @change="applyFilters()"
+                                            class="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all">
+                                            <option value="">All Fuel Types</option>
+                                            @foreach ($filterOptions['fuel_types'] as $fuel)
+                                                <option value="{{ $fuel }}">{{ $fuel }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
-                    </form>
                 </aside>
 
                 <!-- Vehicle Listings -->
@@ -588,9 +635,32 @@
                                             <span
                                                 class="badge bg-red-500 text-white px-2 py-1 rounded-full text-xs font-semibold">Featured</span>
                                         @endif
-                                        <span
-                                            class="badge bg-primary-500 text-white px-2 py-1 rounded-full text-xs font-semibold">Bid
-                                            Now</span>
+                                        @php
+                                            // Calculate end date from database
+                                            if ($listing->auction_end_time) {
+                                                $endDate = \Carbon\Carbon::parse($listing->auction_end_time);
+                                            } elseif ($listing->auction_start_time) {
+                                                $endDate = \Carbon\Carbon::parse($listing->auction_start_time)->addDays($listing->auction_duration ?? 7);
+                                            } else {
+                                                $endDate = \Carbon\Carbon::parse($listing->created_at)->addDays($listing->auction_duration ?? 7);
+                                            }
+                                            $isExpired = \Carbon\Carbon::now()->greaterThanOrEqualTo($endDate);
+                                        @endphp
+                                        @if(!$isExpired)
+                                        <div class="bg-gradient-to-br from-blue-600/95 to-indigo-700/95 backdrop-blur-md text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-xl border border-white/20" 
+                                             id="countdown-grid-{{ $listing->id }}" 
+                                             data-end-time="{{ $endDate->toIso8601String() }}">
+                                            <div class="flex items-center space-x-1">
+                                                <span class="bg-white/20 backdrop-blur-sm px-1.5 py-0.5 rounded font-mono text-xs" id="days-grid-{{ $listing->id }}">00</span>
+                                                <span class="text-white/70 text-xs">:</span>
+                                                <span class="bg-white/20 backdrop-blur-sm px-1.5 py-0.5 rounded font-mono text-xs" id="hours-grid-{{ $listing->id }}">00</span>
+                                                <span class="text-white/70 text-xs">:</span>
+                                                <span class="bg-white/20 backdrop-blur-sm px-1.5 py-0.5 rounded font-mono text-xs" id="minutes-grid-{{ $listing->id }}">00</span>
+                                            </div>
+                                        </div>
+                                        @else
+                                        <span class="badge bg-gray-500/90 backdrop-blur-sm text-white px-2 py-1 rounded-full text-xs font-semibold border border-gray-400/30">Ended</span>
+                                        @endif
                                     </div>
                                 </div>
 
@@ -607,7 +677,7 @@
                                         </div>
                                         <div class="flex items-center text-sm text-gray-600">
                                             <span class="material-icons text-gray-400 text-sm mr-1">location_on</span>
-                                            <span class="truncate">{{ $listing->location ?? 'N/A' }}</span>
+                                            <span class="truncate">{{ $listing->island ?? 'N/A' }}</span>
                                         </div>
                                         <div class="flex items-center text-sm text-gray-600">
                                             <span class="material-icons text-gray-400 text-sm mr-1">receipt</span>
@@ -626,7 +696,7 @@
                                                 ${{ number_format($listing->current_bid ?? 0) }}
                                             </p>
                                             @if (Auth::check())
-                                                <a href="{{ route('auction.show', $listing->id) }}"
+                                                <a href="{{ route('auction.show', $listing->getSlugOrGenerate()) }}"
                                                     class="bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg transition-all duration-300 text-sm transform hover:-translate-y-0.5 hover:shadow-md">
                                                     Bid Now
                                                 </a>
@@ -650,146 +720,13 @@
                     </div>
 
                     <!-- Detailed View -->
-                    <div x-show="viewMode === 'detail'" class="detail-view grid grid-cols-1 gap-5" x-cloak>
-                        @forelse($auctions as $listing)
-                            <div
-                                class="vehicle-card bg-white rounded-xl shadow-sm overflow-hidden flex flex-col md:flex-row animate-slide-down">
-                                <!-- Image -->
-                                <div class="md:w-2/5 relative image-container">
-                                    @php
-                                        $img = $listing->images->first();
-                                        $imgUrl = $img
-                                            ? (str_contains($img->image_path, '/')
-                                                ? asset($img->image_path)
-                                                : asset('uploads/listings/' . $img->image_path))
-                                            : asset('images/placeholder-car.png');
-                                    @endphp
-                                    <img alt="{{ $listing->title ?? $listing->make . ' ' . $listing->model }}"
-                                        style="height:250px" src="{{ $imgUrl }}"
-                                        class="w-full h-full object-cover rounded-lg cursor-pointer transition-transform duration-300 hover:scale-105"
-                                        onclick="openImageModal('{{ $imgUrl }}')" />
-                                    <div class="image-overlay">
-                                        <button
-                                            class="view-details-btn bg-white text-primary-600 font-medium py-2 px-4 rounded-lg text-sm hover:bg-primary-50 transition-colors"
-                                            onclick="openImageModal('{{ $imgUrl }}')">
-                                            View Image
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <!-- Info -->
-                                <div class="p-5 flex-1 flex flex-col">
-                                    <div class="flex justify-between items-start mb-2">
-                                        <h3 class="text-lg font-semibold text-secondary-800">
-                                            {{ $listing->year }} {{ $listing->make }} {{ $listing->model }}
-                                        </h3>
-                                        <div class="flex space-x-2">
-                                            <span
-                                                class="material-icons text-gray-400 hover:text-red-500 cursor-pointer transition-colors">favorite_border</span>
-                                            <span
-                                                class="material-icons text-gray-400 hover:text-primary-500 cursor-pointer transition-colors">share</span>
-                                        </div>
-                                    </div>
-
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
-                                        <div class="flex items-center">
-                                            <span class="material-icons text-gray-400 text-sm mr-2">speed</span>
-                                            <div>
-                                                <p class="text-xs text-gray-500">Odometer</p>
-                                                <p class="text-sm font-medium">
-                                                    {{ $listing->odometer ? number_format($listing->odometer) . ' miles' : 'N/A' }}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-center">
-                                            <span class="material-icons text-gray-400 text-sm mr-2">receipt</span>
-                                            <div>
-                                                <p class="text-xs text-gray-500">Title Code</p>
-                                                <p class="text-sm font-medium">{{ $listing->title_status ?? 'N/A' }}</p>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-center">
-                                            <span class="material-icons text-gray-400 text-sm mr-2">location_on</span>
-                                            <div>
-                                                <p class="text-xs text-gray-500">Location</p>
-                                                <p class="text-sm font-medium">{{ $listing->location ?? 'N/A' }}</p>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-center">
-                                            <span class="material-icons text-gray-400 text-sm mr-2">event</span>
-                                            <div>
-                                                <p class="text-xs text-gray-500">Sale Date</p>
-                                                <p class="text-sm font-medium">
-                                                    {{ $listing->sale_date ? \Carbon\Carbon::parse($listing->sale_date)->format('M d, Y') : 'N/A' }}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Additional details -->
-                                    <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-600">
-                                        @if ($listing->primary_damage)
-                                            <div class="flex"><span class="font-medium mr-1">Primary Damage:</span>
-                                                <span>{{ $listing->primary_damage }}</span>
-                                            </div>
-                                        @endif
-                                        @if ($listing->secondary_damage)
-                                            <div class="flex"><span class="font-medium mr-1">Secondary Damage:</span>
-                                                <span>{{ $listing->secondary_damage }}</span>
-                                            </div>
-                                        @endif
-                                        @if ($listing->transmission)
-                                            <div class="flex"><span class="font-medium mr-1">Transmission:</span>
-                                                <span>{{ $listing->transmission }}</span>
-                                            </div>
-                                        @endif
-                                        @if ($listing->color)
-                                            <div class="flex"><span class="font-medium mr-1">Color:</span>
-                                                <span>{{ $listing->color }}</span>
-                                            </div>
-                                        @endif
-                                    </div>
-
-                                    <div
-                                        class="mt-4 pt-4 border-t border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between">
-                                        <div>
-                                            <p class="text-xs text-gray-500">Current Bid</p>
-                                            <p class="text-2xl font-bold text-green-600 price-tag">
-                                                ${{ number_format($listing->current_bid ?? 0) }}
-                                            </p>
-                                        </div>
-                                        <div class="mt-3 sm:mt-0 flex space-x-2">
-                                            @if (Auth::check())
-                                                <a href="{{ route('auction.show', $listing->id) }}"
-                                                    class="bg-primary-600 hover:bg-primary-700 text-white font-medium py-2.5 px-6 rounded-lg transition-all duration-300 text-sm transform hover:-translate-y-0.5 hover:shadow-md flex-1 sm:flex-none text-center">
-                                                    Bid Now
-                                                </a>
-                                            @else
-                                                <button @click="openModal = true"
-                                                    class="bg-primary-600 hover:bg-primary-700 text-white font-medium py-2.5 px-6 rounded-lg transition-all duration-300 text-sm transform hover:-translate-y-0.5 hover:shadow-md flex-1 sm:flex-none">
-                                                    Bid Now
-                                                </button>
-                                            @endif
-                                            <a href="{{ route('auction.show', $listing->id) }}"
-                                                class="border border-gray-300 text-secondary-700 font-medium py-2.5 px-3 rounded-lg hover:bg-gray-50 transition-all duration-300 text-sm transform hover:-translate-y-0.5 hover:shadow-sm">
-                                                <span class="material-icons text-lg">visibility</span>
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        @empty
-                            <div class="col-span-full text-center py-10">
-                                <span class="material-icons text-gray-400 text-6xl mb-4">search_off</span>
-                                <h3 class="text-xl font-semibold text-gray-600 mb-2">No listings found</h3>
-                                <p class="text-gray-500">Try adjusting your filters to find more results.</p>
-                            </div>
-                        @endforelse
+                    <div x-show="viewMode === 'detail'" class="detail-view grid grid-cols-1 gap-5" id="auctionListings" x-cloak>
+                        @include('partials.auction-listings', ['auctions' => $auctions])
                     </div>
 
                     <!-- Pagination -->
-                    <div class="mt-8 flex justify-center animate-fade-in">
-                        {{ $auctions->links('pagination::tailwind') }}
+                    <div class="mt-8 flex justify-center animate-fade-in" id="auctionPagination">
+                        @include('partials.auction-pagination', ['auctions' => $auctions])
                     </div>
             </div>
             </section>
@@ -799,6 +736,162 @@
 
 
             <script>
+                function filterData() {
+                    return {
+                        isLoading: false,
+                        filtersOpen: {
+                            location: true,
+                            vehicle_type: false,
+                            make: false,
+                            model: false,
+                            damage_type: false,
+                            body_style: false,
+                            engine_type: false,
+                            cylinders: false,
+                            transmission: false,
+                            drive_train: false,
+                            fuel_type: false,
+                        },
+                        selectedFilters: {
+                            location: @json(request('location', [])),
+                            vehicle_type: '{{ request('vehicle_type', '') }}',
+                            makes: @json(request('makes', [])),
+                            models: @json(request('models', [])),
+                            damage_type: @json(request('damage_type', [])),
+                            body_style: '{{ request('body_style', '') }}',
+                            engine_type: '{{ request('engine_type', '') }}',
+                            cylinders: '{{ request('cylinders', '') }}',
+                            transmission: '{{ request('transmission', '') }}',
+                            drive_train: '{{ request('drive_train', '') }}',
+                            fuel_type: '{{ request('fuel_type', '') }}',
+                        },
+                        yearFrom: {{ request('year_from', 1900) }},
+                        yearTo: {{ request('year_to', date('Y') + 1) }},
+                        odometerMin: {{ request('odometer_min', 0) }},
+                        odometerMax: {{ request('odometer_max', $filterOptions['odometer_max'] ?? 250000) }},
+                        sortBy: '{{ request('sort', 'newest') }}',
+                        makeSearch: '',
+                        modelSearch: '',
+                        allMakes: @json($filterOptions['makes']),
+                        allModels: @json($filterOptions['models']),
+                        
+                        get filteredMakes() {
+                            if (!this.makeSearch) return this.allMakes;
+                            return this.allMakes.filter(make => 
+                                make.toLowerCase().includes(this.makeSearch.toLowerCase())
+                            );
+                        },
+                        
+                        get filteredModels() {
+                            if (!this.modelSearch) return this.allModels;
+                            return this.allModels.filter(model => 
+                                model.toLowerCase().includes(this.modelSearch.toLowerCase())
+                            );
+                        },
+                        
+                        toggleFilter(filterName) {
+                            this.filtersOpen[filterName] = !this.filtersOpen[filterName];
+                        },
+                        
+                        initFilters() {
+                            // Initialize from URL params if present
+                        },
+                        
+                        clearAllFilters() {
+                            this.selectedFilters = {
+                                location: [],
+                                vehicle_type: '',
+                                makes: [],
+                                models: [],
+                                damage_type: [],
+                                body_style: '',
+                                engine_type: '',
+                                cylinders: '',
+                                transmission: '',
+                                drive_train: '',
+                                fuel_type: '',
+                            };
+                            this.yearFrom = 1900;
+                            this.yearTo = {{ date('Y') + 1 }};
+                            this.odometerMin = 0;
+                            this.odometerMax = {{ $filterOptions['odometer_max'] ?? 250000 }};
+                            this.sortBy = 'newest';
+                            this.applyFilters();
+                        },
+                        
+                        applyFilters() {
+                            this.isLoading = true;
+                            
+                            const params = new URLSearchParams();
+                            
+                            // Add array filters
+                            if (this.selectedFilters.location.length > 0) {
+                                this.selectedFilters.location.forEach(loc => params.append('location[]', loc));
+                            }
+                            if (this.selectedFilters.makes.length > 0) {
+                                this.selectedFilters.makes.forEach(make => params.append('makes[]', make));
+                            }
+                            if (this.selectedFilters.models.length > 0) {
+                                this.selectedFilters.models.forEach(model => params.append('models[]', model));
+                            }
+                            if (this.selectedFilters.damage_type.length > 0) {
+                                this.selectedFilters.damage_type.forEach(damage => params.append('damage_type[]', damage));
+                            }
+                            
+                            // Add single value filters
+                            if (this.selectedFilters.vehicle_type) params.append('vehicle_type', this.selectedFilters.vehicle_type);
+                            if (this.selectedFilters.body_style) params.append('body_style', this.selectedFilters.body_style);
+                            if (this.selectedFilters.engine_type) params.append('engine_type', this.selectedFilters.engine_type);
+                            if (this.selectedFilters.cylinders) params.append('cylinders', this.selectedFilters.cylinders);
+                            if (this.selectedFilters.transmission) params.append('transmission', this.selectedFilters.transmission);
+                            if (this.selectedFilters.drive_train) params.append('drive_train', this.selectedFilters.drive_train);
+                            if (this.selectedFilters.fuel_type) params.append('fuel_type', this.selectedFilters.fuel_type);
+                            
+                            // Add range filters
+                            if (this.yearFrom && this.yearFrom > 1900) params.append('year_from', this.yearFrom);
+                            if (this.yearTo && this.yearTo < {{ date('Y') + 1 }}) params.append('year_to', this.yearTo);
+                            if (this.odometerMin && this.odometerMin > 0) params.append('odometer_min', this.odometerMin);
+                            if (this.odometerMax && this.odometerMax < {{ $filterOptions['odometer_max'] ?? 250000 }}) params.append('odometer_max', this.odometerMax);
+                            
+                            // Add sort
+                            if (this.sortBy) params.append('sort', this.sortBy);
+                            
+                            // Update URL without reload
+                            const newUrl = '{{ route('Auction.index') }}' + (params.toString() ? '?' + params.toString() : '');
+                            window.history.pushState({}, '', newUrl);
+                            
+                            // Make AJAX request
+                            fetch(newUrl, {
+                                headers: {
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                    'Accept': 'application/json',
+                                }
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    document.getElementById('auctionListings').innerHTML = data.html;
+                                    document.getElementById('auctionPagination').innerHTML = data.pagination;
+                                    
+                                    // Update results count
+                                    const resultsText = document.querySelector('.results-count');
+                                    if (resultsText) {
+                                        resultsText.textContent = `Showing results 1 - ${data.count} of ${data.count}`;
+                                    }
+                                    
+                                    // Update countdown timers after AJAX load
+                                    setTimeout(updateCountdownTimers, 100);
+                                }
+                                this.isLoading = false;
+                            })
+                            .catch(error => {
+                                console.error('Filter error:', error);
+                                this.isLoading = false;
+                            });
+                        }
+                    }
+                }
+                
                 function openImageModal(url) {
                     document.getElementById('modalImage').src = url;
                     document.getElementById('imageModal').classList.remove('hidden');
@@ -822,32 +915,65 @@
                         closeImageModal();
                     }
                 });
-
-                // Filter section toggle functionality
-                document.querySelectorAll('.filter-section h4').forEach(header => {
-                    header.addEventListener('click', () => {
-                        const content = header.nextElementSibling;
-                        const icon = header.querySelector('span.material-icons');
-
-                        if (content.style.maxHeight && content.style.maxHeight !== '0px') {
-                            content.style.maxHeight = '0';
-                            content.style.opacity = '0';
-                            icon.textContent = 'expand_more';
-                            icon.style.transform = 'rotate(0deg)';
-                        } else {
-                            content.style.maxHeight = content.scrollHeight + 'px';
-                            content.style.opacity = '1';
-                            icon.textContent = 'expand_less';
-                            icon.style.transform = 'rotate(180deg)';
+                
+                // Countdown Timer Function
+                function updateCountdownTimers() {
+                    // Update grid view timers
+                    document.querySelectorAll('[id^="countdown-grid-"]').forEach(element => {
+                        const listingId = element.id.replace('countdown-grid-', '');
+                        const endTime = new Date(element.getAttribute('data-end-time'));
+                        const now = new Date();
+                        const diff = Math.max(0, Math.floor((endTime - now) / 1000));
+                        
+                        if (diff <= 0) {
+                            element.innerHTML = '<span class="badge bg-gray-500/90 backdrop-blur-sm text-white px-2 py-1 rounded-full text-xs font-semibold border border-gray-400/30">Ended</span>';
+                            return;
                         }
+                        
+                        const days = Math.floor(diff / 86400);
+                        const hours = Math.floor((diff % 86400) / 3600);
+                        const minutes = Math.floor((diff % 3600) / 60);
+                        
+                        const daysEl = document.getElementById('days-grid-' + listingId);
+                        const hoursEl = document.getElementById('hours-grid-' + listingId);
+                        const minutesEl = document.getElementById('minutes-grid-' + listingId);
+                        
+                        if (daysEl) daysEl.textContent = String(days).padStart(2, '0');
+                        if (hoursEl) hoursEl.textContent = String(hours).padStart(2, '0');
+                        if (minutesEl) minutesEl.textContent = String(minutes).padStart(2, '0');
                     });
-                });
-
-                // Initialize filter sections
-                document.querySelectorAll('.filter-section > div').forEach(section => {
-                    section.style.maxHeight = section.scrollHeight + 'px';
-                    section.style.opacity = '1';
-                    section.style.transition = 'max-height 0.3s ease, opacity 0.3s ease';
-                });
+                    
+                    // Update detail view timers
+                    document.querySelectorAll('[id^="countdown-detail-"]').forEach(element => {
+                        const listingId = element.id.replace('countdown-detail-', '');
+                        const endTime = new Date(element.getAttribute('data-end-time'));
+                        const now = new Date();
+                        const diff = Math.max(0, Math.floor((endTime - now) / 1000));
+                        
+                        if (diff <= 0) {
+                            element.innerHTML = '<div class="bg-gray-500/90 backdrop-blur-md text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-xl border border-gray-400/30">Auction Ended</div>';
+                            return;
+                        }
+                        
+                        const days = Math.floor(diff / 86400);
+                        const hours = Math.floor((diff % 86400) / 3600);
+                        const minutes = Math.floor((diff % 3600) / 60);
+                        const seconds = diff % 60;
+                        
+                        const daysEl = document.getElementById('days-detail-' + listingId);
+                        const hoursEl = document.getElementById('hours-detail-' + listingId);
+                        const minutesEl = document.getElementById('minutes-detail-' + listingId);
+                        const secondsEl = document.getElementById('seconds-detail-' + listingId);
+                        
+                        if (daysEl) daysEl.textContent = String(days).padStart(2, '0');
+                        if (hoursEl) hoursEl.textContent = String(hours).padStart(2, '0');
+                        if (minutesEl) minutesEl.textContent = String(minutes).padStart(2, '0');
+                        if (secondsEl) secondsEl.textContent = String(seconds).padStart(2, '0');
+                    });
+                }
+                
+                // Update countdown timers every second
+                setInterval(updateCountdownTimers, 1000);
+                updateCountdownTimers(); // Initial call
             </script>
         @endsection

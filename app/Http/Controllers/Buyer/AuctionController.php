@@ -39,28 +39,33 @@ class AuctionController extends Controller
         return trim($val) === '' ? [] : [trim($val)];
     };
 
-    // Collect filters from request
+    // Collect all filters from request
     $filters = [
-        'types' => $toArray($request->input('type')),
+        'location' => $toArray($request->input('location')),
+        'vehicle_type' => $toArray($request->input('vehicle_type')),
         'makes' => $toArray($request->input('makes')),
         'models' => $toArray($request->input('models')),
-        'locations' => $toArray($request->input('locations')),
-        'colors' => $toArray($request->input('colors')),
-        'primary_damage' => $toArray($request->input('primary_damage')),
-        'secondary_damage' => $toArray($request->input('secondary_damage')),
+        'damage_type' => $toArray($request->input('damage_type')),
+        'body_style' => $toArray($request->input('body_style')),
+        'engine_type' => $toArray($request->input('engine_type')),
+        'cylinders' => $toArray($request->input('cylinders')),
         'transmission' => $toArray($request->input('transmission')),
-        'title_condition' => $toArray($request->input('title_condition')),
+        'drive_train' => $toArray($request->input('drive_train')),
+        'fuel_type' => $toArray($request->input('fuel_type')),
     ];
 
     // Numeric / range filters
     $yearFrom = $request->input('year_from');
     $yearTo   = $request->input('year_to');
-    $odoMin   = $request->input('odo_min');
-    $odoMax   = $request->input('odo_max');
+    $odoMin   = $request->input('odometer_min');
+    $odoMax   = $request->input('odometer_max');
 
     // Apply filters dynamically
-    if (! empty($filters['types'])) {
-        $query->whereIn('major_category', $filters['types']);
+    if (! empty($filters['location'])) {
+        $query->whereIn('island', $filters['location']);
+    }
+    if (! empty($filters['vehicle_type'])) {
+        $query->whereIn('major_category', $filters['vehicle_type']);
     }
     if (! empty($filters['makes'])) {
         $query->whereIn('make', $filters['makes']);
@@ -68,31 +73,49 @@ class AuctionController extends Controller
     if (! empty($filters['models'])) {
         $query->whereIn('model', $filters['models']);
     }
-    if (! empty($filters['locations']) && Schema::hasColumn('listings', 'location')) {
-        $query->whereIn('location', $filters['locations']);
+    if (! empty($filters['damage_type'])) {
+        $query->where(function($q) use ($filters) {
+            $q->whereIn('primary_damage', $filters['damage_type'])
+              ->orWhereIn('secondary_damage', $filters['damage_type']);
+        });
     }
-    if (! empty($filters['colors'])) {
-        $query->whereIn('color', $filters['colors']);
+    if (! empty($filters['body_style'])) {
+        if (Schema::hasColumn('listings', 'body_style')) {
+            $query->whereIn('body_style', $filters['body_style']);
+        } elseif (Schema::hasColumn('listings', 'subcategory')) {
+            $query->whereIn('subcategory', $filters['body_style']);
+        }
     }
-    if (! empty($filters['primary_damage'])) {
-        $query->whereIn('primary_damage', $filters['primary_damage']);
+    if (! empty($filters['engine_type'])) {
+        if (Schema::hasColumn('listings', 'engine_type')) {
+            $query->whereIn('engine_type', $filters['engine_type']);
+        }
     }
-    if (! empty($filters['secondary_damage'])) {
-        $query->whereIn('secondary_damage', $filters['secondary_damage']);
+    if (! empty($filters['cylinders'])) {
+        if (Schema::hasColumn('listings', 'cylinders')) {
+            $query->whereIn('cylinders', $filters['cylinders']);
+        }
     }
     if (! empty($filters['transmission'])) {
         $query->whereIn('transmission', $filters['transmission']);
     }
-    if (! empty($filters['title_condition'])) {
-        $query->whereIn('title_status', $filters['title_condition']);
+    if (! empty($filters['drive_train'])) {
+        if (Schema::hasColumn('listings', 'drive_train')) {
+            $query->whereIn('drive_train', $filters['drive_train']);
+        }
+    }
+    if (! empty($filters['fuel_type'])) {
+        if (Schema::hasColumn('listings', 'fuel_type')) {
+            $query->whereIn('fuel_type', $filters['fuel_type']);
+        }
     }
 
     // Year range
     if ($yearFrom !== null && $yearFrom !== '') {
-        $query->where('year', '>=', $yearFrom);
+        $query->where('year', '>=', (int) $yearFrom);
     }
     if ($yearTo !== null && $yearTo !== '') {
-        $query->where('year', '<=', $yearTo);
+        $query->where('year', '<=', (int) $yearTo);
     }
 
     // Odometer range
@@ -108,26 +131,67 @@ class AuctionController extends Controller
     // Only show ACTIVE auctions
     $query->where('listing_state', 'active');
 
+    // Sorting
+    $sortBy = $request->input('sort', 'newest');
+    switch ($sortBy) {
+        case 'price_low':
+            $query->orderBy('starting_price', 'asc');
+            break;
+        case 'price_high':
+            $query->orderBy('starting_price', 'desc');
+            break;
+        case 'ending_soon':
+            $query->orderBy('auction_end_time', 'asc');
+            break;
+        case 'newest':
+        default:
+            $query->orderBy('created_at', 'desc');
+            break;
+    }
+
+    // Check if AJAX request
+    if ($request->ajax()) {
+        $auctions = $query->paginate(20);
+        return response()->json([
+            'success' => true,
+            'html' => view('partials.auction-listings', compact('auctions'))->render(),
+            'pagination' => view('partials.auction-pagination', compact('auctions'))->render(),
+            'count' => $auctions->total(),
+        ]);
+    }
+
     // Paginate results (20 per page)
     $auctions = $query
-        ->orderBy('created_at', 'desc')
         ->paginate(20)
         ->appends($request->query());
 
-    // Build filter option lists for UI
+    // Build filter option lists for UI (only from active auctions)
+    $baseQuery = Listing::where('listing_method', 'auction')
+        ->where('listing_state', 'active')
+        ->where('status', 'approved');
+
     $filterOptions = [
-        'types' => Listing::select('major_category')->distinct()->pluck('major_category')->filter()->values(),
-        'makes' => Listing::select('make')->distinct()->pluck('make')->filter()->values(),
-        'models' => Listing::select('model')->distinct()->pluck('model')->filter()->values(),
-        'colors' => Listing::select('color')->distinct()->pluck('color')->filter()->values(),
-        'primary_damage' => Listing::select('primary_damage')->distinct()->pluck('primary_damage')->filter()->values(),
-        'secondary_damage' => Listing::select('secondary_damage')->distinct()->pluck('secondary_damage')->filter()->values(),
-        'transmission' => Listing::select('transmission')->distinct()->pluck('transmission')->filter()->values(),
-        'title_status' => Listing::select('title_status')->distinct()->pluck('title_status')->filter()->values(),
-        'locations' => Schema::hasColumn('listings', 'location')
-            ? Listing::select('location')->distinct()->pluck('location')->filter()->values()
-            : collect(),
-        'years' => Listing::select('year')->distinct()->pluck('year')->filter()->sortDesc()->values(),
+        'locations' => $baseQuery->select('island')->distinct()->pluck('island')->filter()->sort()->values(),
+        'vehicle_types' => $baseQuery->select('major_category')->distinct()->pluck('major_category')->filter()->sort()->values(),
+        'makes' => $baseQuery->select('make')->distinct()->pluck('make')->filter()->sort()->values(),
+        'models' => $baseQuery->select('model')->distinct()->pluck('model')->filter()->sort()->values(),
+        'damage_types' => collect([
+            'All Over', 'Front End', 'Rear End', 'Side', 'Mechanical', 
+            'Minor Dents/Scratches', 'Flood', 'Fire', 'Vandalism', 
+            'Interior', 'Undercarriage', 'Normal Wear', 'Engine', 
+            'Transmission', 'None (No Reported Damage)'
+        ]),
+        'body_styles' => collect([
+            'Sedan', 'SUV', 'Truck', 'Coupe', 'Hatchback', 
+            'Van', 'Crossover', 'Convertible', 'Wagon', 'Other'
+        ]),
+        'engine_types' => $baseQuery->select('engine_type')->distinct()->pluck('engine_type')->filter()->sort()->values(),
+        'cylinders' => collect(['2', '3', '4', '6', '8', '10', '12']),
+        'transmissions' => $baseQuery->select('transmission')->distinct()->pluck('transmission')->filter()->sort()->values(),
+        'drive_trains' => collect(['FWD', 'RWD', 'AWD', '4WD']),
+        'fuel_types' => $baseQuery->select('fuel_type')->distinct()->pluck('fuel_type')->filter()->sort()->values(),
+        'years' => $baseQuery->select('year')->distinct()->pluck('year')->filter()->sortDesc()->values(),
+        'odometer_max' => $baseQuery->max('odometer') ?? 250000,
     ];
 
     return view('auction', compact('auctions', 'filterOptions'));
@@ -138,27 +202,30 @@ class AuctionController extends Controller
 
 
 
-public function show($id)
+public function show(Listing $listing)
 {
-    // eager-load bids (with user) and images relation (named 'images' in your model)
-    $auctionListing = Listing::with('bids.user', 'images')
-        ->where('id', $id)
-        ->where('listing_method', 'auction')
-        ->firstOrFail();
-
-    if (!$auctionListing) {
-        dd("No auction listing found for ID: $id", \App\Models\Listing::find($id));
+    // Check if listing is an auction
+    if ($listing->listing_method !== 'auction') {
+        abort(404, "Listing '{$listing->slug}' exists but is not an auction listing (method: '{$listing->listing_method}').");
     }
 
-    // ✅ Auction timing check
-    $startDate = $auctionListing->auction_start ?? $auctionListing->created_at;
-    $endDate = Carbon::parse($startDate)->addDays($auctionListing->auction_duration);
+    // Eager-load bids (with user) and images relation
+    $auctionListing = $listing->load('bids.user', 'images');
 
-    if (Carbon::now()->greaterThanOrEqualTo($endDate)) {
-        abort(404, 'This auction has ended.');
+    // ✅ Auction timing check - Use auction_end_time if set, otherwise calculate
+    if ($auctionListing->auction_end_time) {
+        $endDate = Carbon::parse($auctionListing->auction_end_time);
+    } else {
+        $startDate = $auctionListing->auction_start_time ?? $auctionListing->auction_start ?? $auctionListing->created_at;
+        $endDate = Carbon::parse($startDate)->addDays($auctionListing->auction_duration ?? 7);
     }
 
-    // determine current bid from bids table (preferred)
+    $isExpired = Carbon::now()->greaterThanOrEqualTo($endDate);
+    
+    // Don't abort on expired - just show the page with expired status
+    // This allows users to view ended auctions
+
+    // Determine current bid from bids table (preferred)
     // Show starting price as "Current Bid" if no bids yet (per PDF requirements)
     $highest = $auctionListing->bids()->where('status', 'active')->orderByDesc('amount')->first();
     if ($highest) {
@@ -168,91 +235,36 @@ public function show($id)
         $currentBid = (float) ($auctionListing->starting_price ?? $auctionListing->price ?? $auctionListing->current_bid ?? 0);
     }
 
-    // Map images relation -> URLs
-    $images = collect($auctionListing->images ?? [])
-        ->map(function($img) {
-            $path = null;
-            if (is_object($img)) {
-                $path = $img->image_path ?? $img->path ?? $img->url ?? $img->image ?? null;
-            } else {
-                $path = $img;
-            }
+    // Calculate time remaining
+    $timeRemaining = !$isExpired ? now()->diff($endDate) : null;
+    
+    // Get increment service
+    $incrementService = new \App\Services\BiddingIncrementService();
+    $nextValidIncrement = $incrementService->calculateMinimumNextBid($currentBid);
+    $incrementAmount = $incrementService->getIncrementForBid($currentBid);
+    
+    // Normalize images for the new view format
+    $images = collect($auctionListing->images ?? [])->map(function($img) {
+        $path = is_object($img) ? ($img->image_path ?? $img->path ?? null) : $img;
+        if (!$path) return null;
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) return $path;
+        return asset('uploads/listings/' . ltrim($path, '/'));
+    })->filter()->values();
+    
+    $mainImage = $images->first() ?? asset('images/placeholder.png');
 
-            if (! $path) return null;
-
-            if (Str::startsWith($path, ['http://', 'https://'])) {
-                return $path;
-            }
-
-            return asset('uploads/listings/' . ltrim($path, '/'));
-        })
-        ->filter()
-        ->values();
-
-    $mainImage = $images->first() ?? ($auctionListing->main_image_url ?? asset('images/placeholder.png'));
-
-    // Prepare data for the new dynamic view
-    $vehicle = (object) [
-        // Basic vehicle info
-        'id' => $auctionListing->id,
-        'year' => $auctionListing->year,
-        'make' => $auctionListing->make,
-        'model' => $auctionListing->model,
-        'location' => $auctionListing->location ?? $auctionListing->city,
-        'city' => $auctionListing->city,
-
-        // Pricing and bidding
-        'price' => $auctionListing->price ?? $auctionListing->est_retail_value,
-        'current_bid' => $currentBid,
-        'buy_now_price' => $auctionListing->buy_now_price ?? $auctionListing->price,
-        'reserve_met' => $auctionListing->reserve_met ?? false,
-        'bid_status' => $auctionListing->bid_status_label ?? "You Haven't Bid",
-        'sale_status' => $auctionListing->sale_status_label ?? 'On Minimum Bid',
-
-        // Vehicle details
-        'vin' => $auctionListing->vin ?? $auctionListing->vehicle_vin,
-        'lot_number' => $auctionListing->lot_number ?? $auctionListing->lot ?? $auctionListing->id,
-        'title_code' => $auctionListing->title_code ?? $auctionListing->title,
-        'mileage' => $auctionListing->odometer ?? $auctionListing->mileage,
-        'primary_damage' => $auctionListing->primary_damage ?? $auctionListing->damage,
-        'secondary_damage' => $auctionListing->secondary_damage,
-        'keys' => $auctionListing->keys ?? ($auctionListing->has_keys ? 'Yes' : 'No'),
-
-        // Vehicle specifications
-        'vehicle_type' => $auctionListing->vehicle_type ?? $auctionListing->type,
-        'body_style' => $auctionListing->body_style ?? $auctionListing->body,
-        'color' => $auctionListing->color,
-        'engine' => $auctionListing->engine ?? $auctionListing->engine_size,
-        'cylinders' => $auctionListing->cylinders ?? $auctionListing->cyl,
-        'transmission' => $auctionListing->transmission,
-        'drive' => $auctionListing->drive ?? $auctionListing->drive_type,
-        'fuel' => $auctionListing->fuel,
-
-        // Auction timing
-        'time_remaining' => $this->calculateTimeRemaining($endDate),
-        'sale_date' => $endDate->format('l, F j, Y'),
-        'auction_time' => $endDate->format('g:i A T'),
-        'sale_name' => $auctionListing->sale_name ?? 'Online Auction',
-
-        // History and additional info
-        'sales_records' => $auctionListing->sales_records ?? '12 records found',
-        'previous_sales' => $auctionListing->previous_sales ?? '12 sales found',
-        'ownership_history' => $auctionListing->ownership_history ?? '1 owner found',
-        'safety_recalls' => $auctionListing->safety_recalls ?? '2 records found',
-        'accidents' => $auctionListing->accidents ?? '1 record found',
-
-        // Images
-        'main_image_url' => $mainImage,
-        'images' => $images->toArray(),
-
-        // Timestamps
-        'updated_at' => $auctionListing->updated_at,
-        'created_at' => $auctionListing->created_at,
-    ];
-
-    // dd($vehicle); // Uncomment to debug the vehicle data
-
-    return view('showAuctionDetail', compact('vehicle'));
+    // Use the new professional AuctionDetail view
+    return view('Buyer.AuctionDetail', compact(
+        'auctionListing',
+        'endDate',
+        'isExpired',
+        'currentBid',
+        'timeRemaining',
+        'nextValidIncrement',
+        'incrementAmount',
+        'images',
+        'mainImage'
+    ));
 }
 
 // Helper method to calculate time remaining (add this to your controller)
@@ -274,11 +286,47 @@ private function calculateTimeRemaining($endDate)
     return $diff->h . 'h ' . $diff->i . 'm ' . $diff->s . 's';
 }
 
+// Helper method to get bid status for current user
+private function getBidStatus($listing, $userId = null)
+{
+    if (!$userId) {
+        return "You Haven't Bid";
+    }
+
+    $userBid = $listing->bids()
+        ->where('user_id', $userId)
+        ->where('status', 'active')
+        ->orderByDesc('amount')
+        ->first();
+
+    if (!$userBid) {
+        return "You Haven't Bid";
+    }
+
+    $highestBid = $listing->bids()
+        ->where('status', 'active')
+        ->orderByDesc('amount')
+        ->first();
+
+    if ($highestBid && $highestBid->user_id == $userId) {
+        return 'You are Winning';
+    }
+
+    return 'You are Outbid';
+}
 
 
-    public function storeBid(Request $request, $id)
+
+    public function storeBid(Request $request, Listing $listing)
     {
         $user = Auth::user();
+        
+        // Check if listing is an auction
+        if ($listing->listing_method !== 'auction') {
+            throw ValidationException::withMessages([
+                'amount' => 'This listing is not an auction.',
+            ]);
+        }
         
         // SELLER RESTRICTION: Sellers cannot bid (per PDF requirements)
         if ($user->role === 'seller') {
@@ -322,8 +370,10 @@ private function calculateTimeRemaining($endDate)
         $amount = (float) $data['amount'];
 
         // Use DB transaction to avoid race conditions
-        return DB::transaction(function () use ($id, $user, $amount, $depositService, $incrementService) {
-            $listing = Listing::lockForUpdate()->where('id', $id)
+        return DB::transaction(function () use ($listing, $user, $amount, $depositService, $incrementService) {
+            // Re-fetch with lock and additional checks
+            $listing = Listing::lockForUpdate()
+                ->where('id', $listing->id)
                 ->where('listing_method', 'auction')
                 ->where('status', 'approved')
                 ->firstOrFail();

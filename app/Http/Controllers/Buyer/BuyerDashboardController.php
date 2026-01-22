@@ -21,11 +21,19 @@ class BuyerDashboardController extends Controller
     }
 
     /**
-     * Display the buyer dashboard with all tabs data (legacy - redirects to user)
+     * Display the buyer dashboard with all tabs (Dashboard Overview, User, Auctions, etc.)
      */
     public function index(Request $request)
     {
-        return redirect()->route('buyer.user');
+        $user = Auth::user();
+        $dashboardData = $this->dashboardService->getDashboardData($user);
+
+        $data = array_merge(
+            ['user' => $user, 'activeTab' => $request->get('tab', 'dashboard')],
+            $dashboardData
+        );
+
+        return view('dashboard.buyer', $data);
     }
 
     /**
@@ -48,8 +56,14 @@ class BuyerDashboardController extends Controller
         $currentAuctions = $this->dashboardService->getCurrentAuctions($user);
         $wonAuctions = $this->dashboardService->getWonAuctions($user);
         $lostAuctions = $this->dashboardService->getLostAuctions($user);
+        
+        // Get chart data
+        $biddingActivityData = $this->dashboardService->getBiddingActivityData($user);
+        $spendingTrendsData = $this->dashboardService->getSpendingTrendsData($user);
+        $winLossRatioData = $this->dashboardService->getWinLossRatioData($user);
 
-        return view('buyer.auctions', compact('user', 'currentAuctions', 'wonAuctions', 'lostAuctions', 'section'));
+        return view('buyer.auctions', compact('user', 'currentAuctions', 'wonAuctions', 'lostAuctions', 'section', 
+            'biddingActivityData', 'spendingTrendsData', 'winLossRatioData'));
     }
 
     /**

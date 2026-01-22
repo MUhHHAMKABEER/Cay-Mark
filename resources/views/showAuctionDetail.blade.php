@@ -52,7 +52,28 @@
 
         .sticky-sidebar {
             position: sticky;
-            top: 20px;
+            top: 100px;
+            max-height: calc(100vh - 120px);
+            overflow-y: auto;
+            z-index: 10;
+        }
+        
+        .sticky-sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .sticky-sidebar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .sticky-sidebar::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 10px;
+        }
+        
+        .sticky-sidebar::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
         }
         /* vehicle-image no longer forces display; slider rules control visibility */
         .vehicle-image {
@@ -75,9 +96,44 @@
             border: 2px solid #359EFF;
         }
         .bid-section {
-            background: #f8f9fa;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border-radius: 0.5rem;
             padding: 1.5rem;
+            color: white;
+        }
+        .card {
+            border: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+        .card-body {
+            padding: 1.5rem;
+        }
+        .badge {
+            padding: 0.5rem 0.75rem;
+            font-weight: 600;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            border: none;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+        }
+        .form-control:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
+        }
+        .alert {
+            border-radius: 0.5rem;
+            border: none;
         }
         .similar-listing-card {
             transition: transform 0.2s, box-shadow 0.2s;
@@ -196,49 +252,106 @@
             <div class="col-lg-3">
                 <div class="sticky-sidebar">
                     <!-- Bid Information -->
-                    <div class="card mb-4">
+                    <div class="card mb-4 border-0 shadow-lg">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h2 class="h5 card-title mb-0">Bid Information</h2>
-                                <span class="badge bg-danger d-flex align-items-center">
-                                    <span class="material-icons me-1">timer</span>
-                                    {{ $vehicle->time_remaining ?? '23h 37m 22s' }}
+                                <h2 class="h5 card-title mb-0 fw-bold text-dark">Bid Information</h2>
+                                <span class="badge bg-gradient text-white d-flex align-items-center px-3 py-2" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+                                    <span class="material-icons me-1" style="font-size: 18px;">timer</span>
+                                    <span id="countdown">{{ $vehicle->time_remaining ?? 'Calculating...' }}</span>
                                 </span>
                             </div>
 
-                            <div class="row mb-3">
+                            <div class="row mb-3 g-3">
                                 <div class="col-6">
-                                    <p class="text-muted mb-1 small">Current Bid</p>
-                                    <p class="h5 text-dark fw-bold">${{ number_format($vehicle->current_bid ?? 525) }}</p>
+                                    <p class="text-muted mb-1 small fw-semibold">Current Bid</p>
+                                    <p class="h4 text-primary fw-bold mb-0">${{ number_format($vehicle->current_bid ?? 525, 2) }}</p>
                                 </div>
                                 <div class="col-6">
-                                    <p class="text-muted mb-1 small">Bid Status</p>
-                                    <p class="text-success fw-semibold">{{ $vehicle->bid_status ?? "You Haven't Bid" }}</p>
+                                    <p class="text-muted mb-1 small fw-semibold">Bid Status</p>
+                                    <p class="text-success fw-bold mb-0">
+                                        <span class="badge bg-success bg-opacity-10 text-success border border-success">{{ $vehicle->bid_status ?? "You Haven't Bid" }}</span>
+                                    </p>
                                 </div>
                                 <div class="col-6">
-                                    <p class="text-muted mb-1 small">Sale Status</p>
-                                    <p>{{ $vehicle->sale_status ?? 'On Minimum Bid' }}</p>
+                                    <p class="text-muted mb-1 small fw-semibold">Sale Status</p>
+                                    <p class="mb-0 fw-semibold">
+                                        @if($vehicle->current_bid > $vehicle->starting_price)
+                                            <span class="badge bg-info text-white">Above Minimum</span>
+                                        @else
+                                            <span class="badge bg-warning text-dark">On Minimum Bid</span>
+                                        @endif
+                                    </p>
                                 </div>
                                 <div class="col-6">
-                                    <p class="text-muted mb-1 small">Seller's Reserve</p>
-                                    <p>{{ $vehicle->reserve_met ? 'Met' : 'Not yet met' }}</p>
+                                    <p class="text-muted mb-1 small fw-semibold">Reserve</p>
+                                    <p class="mb-0">
+                                        @if($vehicle->reserve_price)
+                                            @if($vehicle->reserve_met)
+                                                <span class="badge bg-success">Met</span>
+                                            @else
+                                                <span class="badge bg-warning text-dark">Not Met</span>
+                                            @endif
+                                        @else
+                                            <span class="text-muted small">No Reserve</span>
+                                        @endif
+                                    </p>
                                 </div>
                             </div>
 
-                            <form action="{{ route('auction.bid.store', $vehicle->id) }}" method="POST">
-                                @csrf
-                                <p class="text-muted small mb-2">Enter Maximum Bid ($25 Bid Increments)</p>
-                                <div class="input-group mb-3">
-                                    <span class="input-group-text">$</span>
-                                    <input type="number"
-                                           name="bid_amount"
-                                           class="form-control"
-                                           value="{{ ($vehicle->current_bid ?? 525) + 25 }}"
-                                           min="{{ ($vehicle->current_bid ?? 525) + 25 }}"
-                                           step="25">
-                                    <button type="submit" class="btn btn-primary">Bid Now</button>
+                            @if($errors->any())
+                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                    <strong>Error:</strong>
+                                    <ul class="mb-0 mt-2">
+                                        @foreach($errors->all() as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                                 </div>
-                                <p class="text-muted small text-center">ALL SALES ARE FINAL, SOLD "AS IS, WHERE IS"</p>
+                            @endif
+
+                            @if(session('success'))
+                                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                    {{ session('success') }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            @endif
+
+                            <form action="{{ route('auction.bid.store', $vehicle->id) }}" method="POST" id="bidForm">
+                                @csrf
+                                <p class="text-muted small mb-2">
+                                    <strong>Minimum Bid:</strong> $<span id="minBidAmount">{{ number_format($vehicle->next_valid_bid ?? ($vehicle->current_bid + ($vehicle->increment_amount ?? 25)), 2) }}</span>
+                                    <br>
+                                    <small class="text-muted">Increment: ${{ number_format($vehicle->increment_amount ?? 25, 0) }}</small>
+                                </p>
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text bg-primary text-white fw-bold">$</span>
+                                    <input type="number"
+                                           name="amount"
+                                           id="bidAmount"
+                                           class="form-control form-control-lg @error('amount') is-invalid @enderror"
+                                           value="{{ $vehicle->next_valid_bid ?? ($vehicle->current_bid + ($vehicle->increment_amount ?? 25)) }}"
+                                           min="{{ $vehicle->next_valid_bid ?? ($vehicle->current_bid + ($vehicle->increment_amount ?? 25)) }}"
+                                           step="{{ $vehicle->increment_amount ?? 25 }}"
+                                           required>
+                                    <button type="submit" class="btn btn-primary btn-lg px-4" id="bidSubmitBtn">
+                                        <span class="material-icons me-1">gavel</span>
+                                        Bid Now
+                                    </button>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setBidAmount({{ $vehicle->next_valid_bid ?? ($vehicle->current_bid + ($vehicle->increment_amount ?? 25)) }})">
+                                        Min Bid
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addIncrement()">
+                                        +${{ number_format($vehicle->increment_amount ?? 25) }}
+                                    </button>
+                                </div>
+                                <p class="text-muted small text-center mb-0">
+                                    <span class="material-icons" style="font-size: 14px; vertical-align: middle;">info</span>
+                                    ALL SALES ARE FINAL, SOLD "AS IS, WHERE IS"
+                                </p>
                             </form>
                         </div>
                     </div>
@@ -250,8 +363,15 @@
                                 <p class="small mb-0">Buy this lot now before it goes to the auction!</p>
                                 <span class="material-icons text-primary">sell</span>
                             </div>
-                            <p class="small mb-3">Get it for: <span class="h5 fw-bold text-dark">${{ number_format($vehicle->buy_now_price ?? 2550) }}</span></p>
-                            <button class="btn btn-primary w-100">Buy It Now</button>
+                            @if($vehicle->buy_now_price)
+                                <p class="small mb-3">Get it for: <span class="h5 fw-bold text-dark">${{ number_format($vehicle->buy_now_price, 2) }}</span></p>
+                                <button class="btn btn-primary w-100">
+                                    <span class="material-icons me-1" style="font-size: 18px; vertical-align: middle;">sell</span>
+                                    Buy It Now
+                                </button>
+                            @else
+                                <p class="small mb-3 text-muted">Buy It Now option not available for this listing.</p>
+                            @endif
                         </div>
                     </div>
 
@@ -305,8 +425,8 @@
                                         <dt class="col-sm-6 text-muted">Lot#</dt>
                                         <dd class="col-sm-6 text-primary">{{ $vehicle->lot_number ?? '—' }}</dd>
 
-                                        <dt class="col-sm-6 text-muted">Title Code</dt>
-                                        <dd class="col-sm-6">{{ $vehicle->title_code ?? '—' }}</dd>
+                                        <dt class="col-sm-6 text-muted">Title Status</dt>
+                                        <dd class="col-sm-6">{{ $vehicle->title_code ?? ($auctionListing->title_status ?? 'N/A') }}</dd>
 
                                         <dt class="col-sm-6 text-muted">Odometer</dt>
                                         <dd class="col-sm-6">{{ $vehicle->mileage ? number_format($vehicle->mileage) . ' mi. Actual' : '—' }}</dd>
@@ -321,7 +441,13 @@
                                         <dd class="col-sm-6">{{ $vehicle->price ? '$' . number_format($vehicle->price) . ' USD' : '—' }}</dd>
 
                                         <dt class="col-sm-6 text-muted">Keys</dt>
-                                        <dd class="col-sm-6">{{ $vehicle->keys ?? 'Yes (not guaranteed)' }}</dd>
+                                        <dd class="col-sm-6">
+                                            @if(isset($vehicle->keys))
+                                                {{ $vehicle->keys === 'yes' || $vehicle->keys === true ? 'Yes' : 'No' }}
+                                            @else
+                                                N/A
+                                            @endif
+                                        </dd>
                                     </dl>
                                 </div>
                             </div>
@@ -375,22 +501,24 @@
                             <h2 class="h5 card-title mb-3">Sale Information</h2>
                             <dl class="row small">
                                 <dt class="col-sm-5 text-muted">Auction Location</dt>
-                                <dd class="col-sm-7 text-primary">{{ $vehicle->location ?? 'TRENTON, NJ' }}</dd>
+                                <dd class="col-sm-7 text-primary">{{ strtoupper($vehicle->location ?? $vehicle->island ?? 'N/A') }}</dd>
 
                                 <dt class="col-sm-5 text-muted">Sale Date</dt>
                                 <dd class="col-sm-7">
-                                    {{ $vehicle->sale_date ?? 'Monday, October 13, 2025' }}
-                                    <a href="#" class="text-primary small ms-1">Add to Calendar</a>
+                                    {{ $vehicle->sale_date ?? 'N/A' }}
+                                    @if($vehicle->sale_date)
+                                        <a href="#" class="text-primary small ms-1">Add to Calendar</a>
+                                    @endif
                                 </dd>
 
-                                <dt class="col-sm-5 text-muted">Live Auction Starts</dt>
-                                <dd class="col-sm-7">{{ $vehicle->auction_time ?? '10:00 AM EST' }}</dd>
+                                <dt class="col-sm-5 text-muted">Auction Ends</dt>
+                                <dd class="col-sm-7">{{ $vehicle->auction_time ?? 'N/A' }}</dd>
 
                                 <dt class="col-sm-5 text-muted">Sale Name</dt>
-                                <dd class="col-sm-7">{{ $vehicle->sale_name ?? 'NJ - TRENTON' }}</dd>
+                                <dd class="col-sm-7">{{ $vehicle->sale_name ?? 'CayMark Online Auction' }}</dd>
 
                                 <dt class="col-sm-5 text-muted">Last Updated</dt>
-                                <dd class="col-sm-7">{{ $vehicle->updated_at ? $vehicle->updated_at->format('F j, Y g:i A UTC') : 'October 12, 2025 2:41 AM UTC' }}</dd>
+                                <dd class="col-sm-7">{{ $vehicle->updated_at ? $vehicle->updated_at->format('F j, Y g:i A') : 'N/A' }}</dd>
                             </dl>
                         </div>
                     </div>
@@ -611,6 +739,69 @@
             }
         });
     });
+
+    // Bid form helpers
+    function setBidAmount(amount) {
+        document.getElementById('bidAmount').value = amount;
+        document.getElementById('bidAmount').focus();
+    }
+
+    function addIncrement() {
+        const current = parseFloat(document.getElementById('bidAmount').value) || 0;
+        const increment = {{ $vehicle->increment_amount ?? 25 }};
+        const minBid = {{ $vehicle->next_valid_bid ?? ($vehicle->current_bid + ($vehicle->increment_amount ?? 25)) }};
+        const newAmount = Math.max(current + increment, minBid);
+        document.getElementById('bidAmount').value = newAmount;
+        document.getElementById('bidAmount').focus();
+    }
+
+    // Form submission handling
+    document.getElementById('bidForm')?.addEventListener('submit', function(e) {
+        const submitBtn = document.getElementById('bidSubmitBtn');
+        const amount = parseFloat(document.getElementById('bidAmount').value);
+        const minBid = {{ $vehicle->next_valid_bid ?? ($vehicle->current_bid + ($vehicle->increment_amount ?? 25)) }};
+        
+        if (amount < minBid) {
+            e.preventDefault();
+            alert('Your bid must be at least $' + minBid.toLocaleString() + '. Minimum bid is $' + minBid.toLocaleString() + '.');
+            document.getElementById('bidAmount').focus();
+            return false;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Placing Bid...';
+    });
+
+    // Real-time countdown timer
+    @if(isset($vehicle->time_remaining_seconds) && $vehicle->time_remaining_seconds > 0)
+    let timeRemaining = {{ $vehicle->time_remaining_seconds ?? 0 }};
+    const countdownEl = document.getElementById('countdown');
+    
+    function updateCountdown() {
+        if (timeRemaining <= 0) {
+            countdownEl.textContent = 'Auction Ended';
+            return;
+        }
+        
+        const days = Math.floor(timeRemaining / 86400);
+        const hours = Math.floor((timeRemaining % 86400) / 3600);
+        const minutes = Math.floor((timeRemaining % 3600) / 60);
+        const seconds = timeRemaining % 60;
+        
+        if (days > 0) {
+            countdownEl.textContent = days + 'd ' + hours + 'h ' + minutes + 'm';
+        } else if (hours > 0) {
+            countdownEl.textContent = hours + 'h ' + minutes + 'm ' + seconds + 's';
+        } else {
+            countdownEl.textContent = minutes + 'm ' + seconds + 's';
+        }
+        
+        timeRemaining--;
+    }
+    
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+    @endif
     </script>
 
 </body>

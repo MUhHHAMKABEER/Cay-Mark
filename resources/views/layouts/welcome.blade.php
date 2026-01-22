@@ -218,114 +218,56 @@
             }
         }
 
-        /* Enhanced Footer Styles */
+        /* Enhanced Modern Footer Styles */
         .footer-section {
-            background: linear-gradient(135deg, #0a2258 0%, #1e3a8a 50%, #2563eb 100%);
+            background: linear-gradient(135deg, #111827 0%, #1e3a8a 50%, #312e81 100%);
             position: relative;
             overflow: hidden;
         }
 
-        .footer-section::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        .footer-link {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .footer-link:hover {
+            color: #ffffff;
+            transform: translateX(4px);
         }
 
         .footer-column {
             position: relative;
         }
 
-        .footer-column::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            left: -15px;
-            width: 1px;
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .footer-column:first-child::before {
-            display: none;
-        }
-
         .footer-heading {
             position: relative;
-            padding-bottom: 12px;
-            margin-bottom: 20px;
         }
 
-        .footer-heading::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 40px;
-            height: 2px;
-            background: linear-gradient(90deg, #3b82f6, transparent);
-        }
-
-        .newsletter-box {
-            background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            transition: all 0.3s ease;
-        }
-
-        .newsletter-box:hover {
-            background: rgba(255, 255, 255, 0.12);
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-        }
-
-        .footer-bottom {
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            padding-top: 24px;
-        }
-
-        .social-icon {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.1);
-            transition: all 0.3s ease;
+        .social-icon-modern {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
         }
 
-        .social-icon::before {
+        .social-icon-modern::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: -100%;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.4s, height 0.4s;
+        }
+
+        .social-icon-modern:hover::before {
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: left 0.5s ease;
-        }
-
-        .social-icon:hover::before {
-            left: 100%;
-        }
-
-        .social-icon:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: translateY(-3px);
         }
 
         @media (max-width: 768px) {
-            .footer-column::before {
-                display: none;
-            }
-
             .footer-column {
                 margin-bottom: 30px;
             }
@@ -360,8 +302,11 @@
 </head>
 
 <body class="bg-gray-50" x-data="{ mobileMenuOpen: false, howItWorksOpen: false, servicesOpen: false }">
-    {{-- Top Header --}}
-    <header class="header-nav sticky top-0 z-50" id="mainHeader">
+    {{-- Unified Header Component --}}
+    @include('partials.unified-header')
+    
+    {{-- Legacy Header (commented out - using unified header above) --}}
+    {{-- <header class="header-nav sticky top-0 z-50" id="mainHeader">
         <div class="container px-4 py-3 flex justify-between items-center">
             <!-- Logo -->
             <div class="flex items-center">
@@ -430,56 +375,7 @@
         </div>
 
         {{-- Main Menu (second header) --}}
-        <div class="main-menu hidden md:block">
-            <div class="container px-4 py-3">
-                <nav class="flex justify-center space-x-10">
-                    <a href="{{ url('/') }}"
-                        class="nav-link text-gray-800 hover:text-blue-600 font-medium transition-colors relative">Home</a>
-                    <a href="{{ route('Auction.index') }}"
-                        class="nav-link text-gray-800 hover:text-blue-600 font-medium transition-colors relative">Auctions</a>
-                    <a href="{{ route('marketplace.index') }}"
-                        class="nav-link text-gray-800 hover:text-blue-600 font-medium transition-colors relative">Marketplace</a>
-
-                    <!-- How It Works Dropdown -->
-                    <div class="relative" x-data="{ open: false }">
-                        <button @click="open = !open" class="nav-link text-gray-800 hover:text-blue-600 font-medium transition-colors relative flex items-center">
-                            How It Works
-                            <span class="material-icons ml-1 text-sm transition-transform duration-300" :class="{ 'rotate-180': open }">expand_more</span>
-                        </button>
-                        <div x-show="open" @click.outside="open = false" x-transition class="dropdown-menu absolute left-0 mt-2 w-56 bg-white rounded-lg shadow-lg overflow-hidden border border-gray-100 z-50">
-                            <a href="#" class="block px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all duration-300">How to Buy</a>
-                            <a href="#" class="block px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all duration-300">How to Sell</a>
-                            <a href="#" class="block px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all duration-300">Bidding 101</a>
-                            <a href="#" class="block px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all duration-300">Video Guides</a>
-                        </div>
-                    </div>
-
-                    <!-- Services & Support Dropdown -->
-                    <div class="relative" x-data="{ open: false }">
-                        <button @click="open = !open" class="nav-link text-gray-800 hover:text-blue-600 font-medium transition-colors relative flex items-center">
-                            Services & Support
-                            <span class="material-icons ml-1 text-sm transition-transform duration-300" :class="{ 'rotate-180': open }">expand_more</span>
-                        </button>
-                        <div x-show="open" @click.outside="open = false" x-transition class="dropdown-menu absolute left-0 mt-2 w-56 bg-white rounded-lg shadow-lg overflow-hidden border border-gray-100 z-50">
-                            <a href="#" class="block px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all duration-300">Fee Calculator</a>
-                            <a href="#" class="block px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all duration-300">Help Center</a>
-                            <a href="#" class="block px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all duration-300">Rules & Policies</a>
-                            <a href="#" class="block px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all duration-300">Contact Us</a>
-                        </div>
-                    </div>
-                </nav>
-            </div>
-        </div>
-
-        {{-- Notification Bar --}}
-        <div class="bg-gradient-to-r from-yellow-400 to-yellow-500 text-gray-900 text-center py-2 text-sm font-medium relative overflow-hidden">
-            <div class="container relative z-10">
-                <span class="inline-block mr-2 animate-bounce">🚨</span>
-                <span>@yield('announcement_text', 'New auction starts this Friday! Free listing upgrades for October!')</span>
-                <a href="#" class="font-bold underline hover:text-gray-800 transition-colors ml-2">Join Now!</a>
-            </div>
-            <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent animate-pulse"></div>
-        </div>
+ 
 
         {{-- Mobile menu (alpine) --}}
         <div x-show="mobileMenuOpen" x-transition class="mobile-menu md:hidden bg-white py-4 px-4 shadow-lg">
@@ -529,81 +425,191 @@
                 </div>
             </div>
         </div>
-    </header>
+    </header> --}}
 
     {{-- Main content area (each page will fill this) --}}
     <main>
         @yield('content')
     </main>
 
-    {{-- Footer (shared) --}}
-    <footer class="footer-section pt-16 pb-8 mt-12" style="color: #ffffff;">
-        <div class="container">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+    {{-- Enhanced Modern Footer --}}
+    <footer class="relative bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 pt-20 pb-8 mt-20 overflow-hidden">
+        <!-- Background Pattern -->
+        <div class="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.03"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-40"></div>
+        
+        <!-- Top Border Gradient -->
+        <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent"></div>
+        
+        <div class="container relative z-10">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-16">
+                <!-- Company Info Column -->
                 <div class="footer-column">
-                    <h3 class="footer-heading text-xl font-bold font-heading" style="color: #ffffff;">CayMark Island Exchange</h3>
-                    <p class="mb-6 leading-relaxed" style="color: #ffffff;">
-                        The Bahamas' premier digital trading center for vehicles and marine vessels.
-                        Transforming how the islands buy, sell, and trade.
+                    <div class="flex items-center space-x-3 mb-6">
+                        <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                            <span class="text-white font-bold text-xl">CM</span>
+                        </div>
+                        <h3 class="text-2xl font-extrabold text-white font-heading">CayMark</h3>
+                    </div>
+                    <p class="mb-6 leading-relaxed text-gray-300 text-base">
+                        The Bahamas' premier digital trading center for vehicles and marine vessels. Transforming how the islands buy, sell, and trade.
                     </p>
-                    <div class="flex space-x-4">
-                        <a href="#" class="social-icon" style="color: #ffffff;">
-                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true" style="color: #ffffff;">
+                    <div class="flex space-x-3">
+                        <a href="#" class="group relative w-11 h-11 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-lg border border-white/10">
+                            <svg class="w-5 h-5 text-white group-hover:text-blue-300 transition-colors" fill="currentColor" viewBox="0 0 24 24">
                                 <path fill-rule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.129 22 16.99 22 12z" clip-rule="evenodd" />
                             </svg>
                         </a>
-                        <a href="#" class="social-icon" style="color: #ffffff;">
-                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true" style="color: #ffffff;">
+                        <a href="#" class="group relative w-11 h-11 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-lg border border-white/10">
+                            <svg class="w-5 h-5 text-white group-hover:text-blue-300 transition-colors" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84" />
                             </svg>
                         </a>
-                        <a href="#" class="social-icon" style="color: #ffffff;">
-                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true" style="color: #ffffff;">
+                        <a href="#" class="group relative w-11 h-11 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-lg border border-white/10">
+                            <svg class="w-5 h-5 text-white group-hover:text-blue-300 transition-colors" fill="currentColor" viewBox="0 0 24 24">
                                 <path fill-rule="evenodd" d="M12.315 2c2.43 0 2.784.013 3.808.06 1.064.049 1.791.218 2.427.465a4.902 4.902 0 011.772 1.153 4.902 4.902 0 011.153 1.772c.247.636.416 1.363.465 2.427.048 1.067.06 1.407.06 4.123v.08c0 2.643-.012 2.987-.06 4.043-.049 1.064-.218 1.791-.465 2.427a4.902 4.902 0 01-1.153 1.772 4.902 4.902 0 01-1.772 1.153c-.636.247-1.363.416-2.427.465-1.067.048-1.407.06-4.123.06h-.08c-2.643 0-2.987-.012-4.043-.06-1.064-.049-1.791-.218-2.427-.465a4.902 4.902 0 01-1.772-1.153 4.902 4.902 0 01-1.153-1.772c-.247-.636-.416-1.363-.465-2.427-.047-1.024-.06-1.379-.06-3.808v-.63c0-2.43.013-2.784.06-3.808.049-1.064.218-1.791.465-2.427a4.902 4.904 0 011.153-1.772A4.902 4.902 0 015.45 2.525c.636-.247 1.363-.416 2.427-.465C8.901 2.013 9.256 2 11.685 2h.63zm-.081 1.802h-.468c-2.456 0-2.784.011-3.807.058-.975.045-1.504.207-1.857.344-.467.182-.8.398-1.15.748-.35.35-.566.683-.748 1.15-.137.353-.3.882-.344 1.857-.047 1.023-.058 1.351-.058 3.807v.468c0 2.456.011 2.784.058 3.807.045.975.207 1.504.344 1.857.182.466.399.8.748 1.15.35.35.683.566 1.15.748.353.137.882.3 1.857.344 1.054.048 1.37.058 4.041.058h.08c2.597 0 2.917-.01 3.96-.058.976-.045 1.505-.207 1.858-.344.466-.182.8-.398 1.15-.748.35-.35.566-.683.748-1.15.137-.353.3-.882.344-1.857.048-1.055.058-1.37.058-4.041v-.08c0-2.597-.01-2.917-.058-3.96-.045-.976-.207-1.505-.344-1.858a3.097 3.097 0 00-.748-1.15 3.098 3.098 0 00-1.15-.748c-.353-.137-.882-.3-1.857-.344-1.023-.047-1.351-.058-3.807-.058zM12 6.865a5.135 5.135 0 110 10.27 5.135 5.135 0 010-10.27zm0 1.802a3.333 3.333 0 100 6.666 3.333 3.333 0 000-6.666zm5.338-3.205a1.2 1.2 0 110 2.4 1.2 1.2 0 010-2.4z" clip-rule="evenodd" />
                             </svg>
                         </a>
                     </div>
                 </div>
 
+                <!-- Quick Links Column -->
                 <div class="footer-column">
-                    <h3 class="footer-heading text-xl font-bold font-heading" style="color: #ffffff;">Quick Links</h3>
+                    <h3 class="footer-heading text-xl font-bold font-heading text-white mb-6 relative pb-3">
+                        Quick Links
+                        <span class="absolute bottom-0 left-0 w-12 h-0.5 bg-gradient-to-r from-blue-400 to-transparent"></span>
+                    </h3>
                     <ul class="space-y-3">
-                        <li><a href="{{ url('/') }}" style="color: #ffffff; text-decoration: none;" class="footer-link flex items-center py-1"><span class="material-icons mr-2 text-sm">chevron_right</span> Home</a></li>
-                        <li><a href="{{ route('Auction.index') }}" style="color: #ffffff; text-decoration: none;" class="footer-link flex items-center py-1"><span class="material-icons mr-2 text-sm">chevron_right</span> Auctions</a></li>
-                        <li><a href="{{ route('marketplace.index') }}" style="color: #ffffff; text-decoration: none;" class="footer-link flex items-center py-1"><span class="material-icons mr-2 text-sm">chevron_right</span> Marketplace</a></li>
-                        <li><a href="#" style="color: #ffffff; text-decoration: none;" class="footer-link flex items-center py-1"><span class="material-icons mr-2 text-sm">chevron_right</span> Contact Us</a></li>
-                    </ul>
-                </div>
-
-                <div class="footer-column">
-                    <h3 class="footer-heading text-xl font-bold font-heading" style="color: #ffffff;">Support</h3>
-                    <ul class="space-y-3">
-                        <li><a href="#" style="color: #ffffff; text-decoration: none;" class="footer-link flex items-center py-1"><span class="material-icons mr-2 text-sm">help_outline</span> Help Center</a></li>
-                        <li><a href="#" style="color: #ffffff; text-decoration: none;" class="footer-link flex items-center py-1"><span class="material-icons mr-2 text-sm">calculate</span> Fee Calculator</a></li>
-                        <li><a href="#" style="color: #ffffff; text-decoration: none;" class="footer-link flex items-center py-1"><span class="material-icons mr-2 text-sm">description</span> Rules & Policies</a></li>
-                        <li><a href="#" style="color: #ffffff; text-decoration: none;" class="footer-link flex items-center py-1"><span class="material-icons mr-2 text-sm">contact_support</span> FAQ</a></li>
-                    </ul>
-                </div>
-
-                <div class="footer-column">
-                    <h3 class="footer-heading text-xl font-bold font-heading" style="color: #ffffff;">Contact Information</h3>
-                    <ul class="space-y-4" style="color: #ffffff;">
-                        <li class="flex items-start py-1"><span class="material-icons mr-3" style="color: #ffffff; margin-top: 4px;">location_on</span>
-                            <span>Nassau, The Bahamas</span>
+                        <li>
+                            <a href="{{ url('/') }}" class="footer-link flex items-center py-2 text-gray-300 hover:text-white transition-all duration-300 group">
+                                <svg class="w-4 h-4 mr-3 text-blue-400 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                </svg>
+                                <span>Home</span>
+                            </a>
                         </li>
-                        <li class="flex items-center py-1"><span class="material-icons mr-3" style="color: #ffffff;">call</span>+1 (242) 555-CARS</li>
-                        <li class="flex items-center py-1"><span class="material-icons mr-3" style="color: #ffffff;">email</span>info@caymark.com</li>
-                        <li class="flex items-center py-1"><span class="material-icons mr-3" style="color: #ffffff;">schedule</span>Mon-Fri: 9AM-6PM EST</li>
+                        <li>
+                            <a href="{{ route('Auction.index') }}" class="footer-link flex items-center py-2 text-gray-300 hover:text-white transition-all duration-300 group">
+                                <svg class="w-4 h-4 mr-3 text-blue-400 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                </svg>
+                                <span>Auctions</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('marketplace.index') }}" class="footer-link flex items-center py-2 text-gray-300 hover:text-white transition-all duration-300 group">
+                                <svg class="w-4 h-4 mr-3 text-blue-400 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                </svg>
+                                <span>Marketplace</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="footer-link flex items-center py-2 text-gray-300 hover:text-white transition-all duration-300 group">
+                                <svg class="w-4 h-4 mr-3 text-blue-400 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                </svg>
+                                <span>Contact Us</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Support Column -->
+                <div class="footer-column">
+                    <h3 class="footer-heading text-xl font-bold font-heading text-white mb-6 relative pb-3">
+                        Support
+                        <span class="absolute bottom-0 left-0 w-12 h-0.5 bg-gradient-to-r from-blue-400 to-transparent"></span>
+                    </h3>
+                    <ul class="space-y-3">
+                        <li>
+                            <a href="#" class="footer-link flex items-center py-2 text-gray-300 hover:text-white transition-all duration-300 group">
+                                <svg class="w-5 h-5 mr-3 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <span>Help Center</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="footer-link flex items-center py-2 text-gray-300 hover:text-white transition-all duration-300 group">
+                                <svg class="w-5 h-5 mr-3 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-5m-3 5h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                                </svg>
+                                <span>Fee Calculator</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="footer-link flex items-center py-2 text-gray-300 hover:text-white transition-all duration-300 group">
+                                <svg class="w-5 h-5 mr-3 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                                <span>Rules & Policies</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="footer-link flex items-center py-2 text-gray-300 hover:text-white transition-all duration-300 group">
+                                <svg class="w-5 h-5 mr-3 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <span>FAQ</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Contact Information Column -->
+                <div class="footer-column">
+                    <h3 class="footer-heading text-xl font-bold font-heading text-white mb-6 relative pb-3">
+                        Contact Information
+                        <span class="absolute bottom-0 left-0 w-12 h-0.5 bg-gradient-to-r from-blue-400 to-transparent"></span>
+                    </h3>
+                    <ul class="space-y-4">
+                        <li class="flex items-start text-gray-300 hover:text-white transition-colors duration-300 group">
+                            <svg class="w-5 h-5 mr-3 text-blue-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                            <span class="group-hover:translate-x-1 transition-transform inline-block">Nassau, The Bahamas</span>
+                        </li>
+                        <li class="flex items-center text-gray-300 hover:text-white transition-colors duration-300 group">
+                            <svg class="w-5 h-5 mr-3 text-blue-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                            </svg>
+                            <span class="group-hover:translate-x-1 transition-transform inline-block">+1 (242) 555-CARS</span>
+                        </li>
+                        <li class="flex items-center text-gray-300 hover:text-white transition-colors duration-300 group">
+                            <svg class="w-5 h-5 mr-3 text-blue-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                            </svg>
+                            <span class="group-hover:translate-x-1 transition-transform inline-block">info@caymark.com</span>
+                        </li>
+                        <li class="flex items-center text-gray-300 hover:text-white transition-colors duration-300 group">
+                            <svg class="w-5 h-5 mr-3 text-blue-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span class="group-hover:translate-x-1 transition-transform inline-block">Mon-Fri: 9AM-6PM EST</span>
+                        </li>
                     </ul>
                 </div>
             </div>
 
-            <div class="footer-bottom flex flex-col md:flex-row justify-between items-center">
-                <p style="color: #ffffff;" class="text-sm mb-4 md:mb-0">&copy; {{ date('Y') }} CayMark Island Exchange & Auction House. All rights reserved.</p>
-                <div class="flex flex-wrap justify-center">
-                    <a href="#" style="color: #ffffff; text-decoration: none;" class="text-sm mx-3 mb-2 md:mb-0 transition-colors duration-300">Privacy Policy</a>
-                    <a href="#" style="color: #ffffff; text-decoration: none;" class="text-sm mx-3 mb-2 md:mb-0 transition-colors duration-300">Terms of Service</a>
-                    <a href="#" style="color: #ffffff; text-decoration: none;" class="text-sm mx-3 mb-2 md:mb-0 transition-colors duration-300">Cookie Policy</a>
+            <!-- Footer Bottom -->
+            <div class="footer-bottom border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center">
+                <p class="text-gray-400 text-sm mb-4 md:mb-0">
+                    &copy; {{ date('Y') }} <span class="text-white font-semibold">CayMark Island Exchange & Auction House</span>. All rights reserved.
+                </p>
+                <div class="flex flex-wrap justify-center gap-6">
+                    <a href="#" class="text-gray-400 hover:text-white text-sm transition-colors duration-300 relative group">
+                        Privacy Policy
+                        <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-400 group-hover:w-full transition-all duration-300"></span>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white text-sm transition-colors duration-300 relative group">
+                        Terms of Service
+                        <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-400 group-hover:w-full transition-all duration-300"></span>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white text-sm transition-colors duration-300 relative group">
+                        Cookie Policy
+                        <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-400 group-hover:w-full transition-all duration-300"></span>
+                    </a>
                 </div>
             </div>
         </div>

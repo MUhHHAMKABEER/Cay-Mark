@@ -4,62 +4,45 @@ namespace App\Http\Controllers\Buyer;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class NotificationController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Mark a notification as read
      */
-    public function index()
+    public function markAsRead(Request $request, $id)
     {
-        //
+        $user = Auth::user();
+        $notification = $user->notifications()->find($id);
+        
+        if ($notification && !$notification->read_at) {
+            $notification->markAsRead();
+            return response()->json(['success' => true, 'message' => 'Notification marked as read']);
+        }
+        
+        return response()->json(['success' => false, 'message' => 'Notification not found or already read'], 404);
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Mark all notifications as read
      */
-    public function create()
+    public function markAllAsRead(Request $request)
     {
-        //
+        $user = Auth::user();
+        $user->unreadNotifications->markAsRead();
+        
+        return response()->json(['success' => true, 'message' => 'All notifications marked as read']);
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Get unread notification count
      */
-    public function store(Request $request)
+    public function getUnreadCount()
     {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        $user = Auth::user();
+        $count = $user->unreadNotifications()->count();
+        
+        return response()->json(['count' => $count]);
     }
 }
