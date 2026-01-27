@@ -79,6 +79,38 @@
         box-sizing: border-box;
         max-height: calc(100vh - 200px);
         overflow-y: auto;
+        overflow-x: hidden;
+        position: relative;
+        /* Add padding-right to make space for scrollbar inside border-radius */
+        padding-right: calc(2rem - 8px);
+    }
+    
+    /* Custom scrollbar styling that respects border-radius */
+    .form-section::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    .form-section::-webkit-scrollbar-track {
+        background: transparent;
+        margin: 20px 0;
+    }
+    
+    .form-section::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+        transition: background 0.3s ease;
+        /* Ensure scrollbar thumb respects container border-radius */
+        margin: 10px 0;
+    }
+    
+    .form-section::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
+    
+    /* Firefox scrollbar styling */
+    .form-section {
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e1 transparent;
     }
     
     .form-section:hover {
@@ -304,7 +336,7 @@
     }
 </style>
 
-<div class="w-full bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 py-4 px-4" style="min-height: calc(100vh - 100px);">
+<div class="w-full py-4 px-4" style="min-height: calc(100vh - 100px); background-color: #FDFBF8;">
     <div class="w-full max-w-full mx-auto">
         <!-- Header -->
         <div class="text-center mb-4 animate-fade-in">
@@ -922,9 +954,9 @@
                 if (photoInput && photoInput.files) {
                     const additionalPhotos = photoInput.files.length;
                     const totalPhotos = additionalPhotos + (document.querySelector('input[name="cover_photo"]').files.length > 0 ? 1 : 0);
-                    if (additionalPhotos < 1) {
+                    if (additionalPhotos < 5) {
                         isValid = false;
-                        errorMessage = `You need to upload at least 1 additional photo (plus 1 cover photo = 2 total minimum). Currently you have ${additionalPhotos} additional photo(s).`;
+                        errorMessage = `You need to upload at least 5 additional photos (plus 1 cover photo = 6 total minimum). Currently you have ${additionalPhotos} additional photo(s).`;
                     } else if (totalPhotos > 11) {
                         isValid = false;
                         errorMessage = `Maximum 10 additional photos allowed (plus 1 cover photo = 11 total). You have uploaded ${totalPhotos} photos.`;
@@ -1427,8 +1459,8 @@
         const count = files.length;
         document.getElementById('photoCount').textContent = count + ' photo' + (count !== 1 ? 's' : '') + ' selected';
         
-        // Show recommendation warning if less than 5 photos (but only 1 is required)
-        if (count > 0 && count < 5) {
+        // Show recommendation warning if less than 7 photos (minimum 5 required)
+        if (count > 0 && count < 7) {
             document.getElementById('photoWarning').style.display = 'block';
         } else {
             document.getElementById('photoWarning').style.display = 'none';

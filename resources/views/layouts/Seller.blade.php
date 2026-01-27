@@ -161,6 +161,7 @@ html, body {
             padding: 2.5rem 3rem;
             min-height: 100vh;
             width: calc(100% - 280px);
+            background-color: #FDFBF8; /* Match body background */
         }
         
         @media (max-width: 768px) {

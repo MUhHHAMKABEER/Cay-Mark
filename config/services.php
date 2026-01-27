@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'auto_dev' => [
+        'api_key' => env('AUTO_DEV_API_KEY', 'sk_ad_E69kTBYOcf2FC9YKcEQ1_iM1'),
+        'base_url' => env('AUTO_DEV_BASE_URL', 'https://api.auto.dev'),
+    ],
+
 ];
