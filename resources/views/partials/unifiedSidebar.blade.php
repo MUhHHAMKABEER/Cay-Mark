@@ -457,9 +457,13 @@
                         }
                     }
                 @endphp
+                @php
+                    $tourId = $role . '-' . \Illuminate\Support\Str::slug($item['label']);
+                @endphp
                 <li>
                     <a href="{{ $url }}" 
                        class="{{ $isActive ? 'active' : '' }} relative"
+                       data-tour-id="{{ $tourId }}"
                        @if($item['route'] === '#') onclick="return false;" @endif>
                         <span class="material-icons-round">{{ $item['icon'] }}</span>
                         <span>{{ $item['label'] }}</span>
@@ -482,7 +486,7 @@
     <div class="logout-section">
         <form method="POST" action="{{ route('logout') }}">
             @csrf
-            <button type="submit" class="logout-btn" onclick="event.preventDefault(); this.closest('form').submit();">
+            <button type="submit" class="logout-btn" data-tour-id="{{ $role }}-logout" onclick="event.preventDefault(); this.closest('form').submit();">
                 <span class="material-icons-round">logout</span>
                 <span>Log out</span>
             </button>

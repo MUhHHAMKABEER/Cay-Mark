@@ -342,7 +342,7 @@
 
                 <!-- Dashboard -->
                 <li class="nav-item">
-                    <a href="{{ route('dashboard.seller') }}" class="nav-link tooltip" data-tooltip="Dashboard">
+                    <a href="{{ route('dashboard.seller') }}" class="nav-link tooltip" data-tooltip="Dashboard" id="seller-tour-dashboard">
                         <span class="material-icons-round nav-icon">dashboard</span>
                         <span>Dashboard</span>
                     </a>
@@ -350,7 +350,7 @@
 
                 <!-- Account Settings -->
                 <li class="nav-item">
-                    <a href="{{ route('profile.edit') }}" class="nav-link tooltip" data-tooltip="Account Settings">
+                    <a href="{{ route('profile.edit') }}" class="nav-link tooltip" data-tooltip="Account Settings" id="seller-tour-profile">
                         <span class="material-icons-round nav-icon">manage_accounts</span>
                         <span>Account Settings</span>
                     </a>
@@ -358,8 +358,7 @@
 
                 <!-- Submit a Listing -->
                 <li class="nav-item">
-                    <a href="{{ route('seller.listings.create') }}" class="nav-link tooltip"
-                        data-tooltip="Submit Listing">
+                    <a href="{{ route('seller.listings.create') }}" class="nav-link tooltip" data-tooltip="Submit Listing" id="seller-tour-submit">
                         <span class="material-icons-round nav-icon">add_box</span>
                         <span>Submit a Listing</span>
                     </a>
@@ -367,7 +366,7 @@
 
                 <!-- My Listings -->
                 <li class="nav-item">
-                    <a href="{{ route('seller.listings.index') }}" class="nav-link tooltip" data-tooltip="My Listings">
+                    <a href="{{ route('seller.listings.index') }}" class="nav-link tooltip" data-tooltip="My Listings" id="seller-tour-listings">
                         <span class="material-icons-round nav-icon">directions_car</span>
                         <span>My Listings</span>
                     </a>
@@ -375,7 +374,7 @@
 
                 <!-- Auctions -->
                 <li class="nav-item">
-                    <a href="{{ route('seller.Auction.index') }}" class="nav-link tooltip" data-tooltip="Auctions">
+                    <a href="{{ route('seller.Auction.index') }}" class="nav-link tooltip" data-tooltip="Auctions" id="seller-tour-auctions">
                         <span class="material-icons-round nav-icon">gavel</span>
                         <span>Auctions</span>
                     </a>
@@ -383,7 +382,7 @@
 
                 <!-- Messaging Center -->
                 <li class="nav-item">
-                    <a href="{{ route('seller.chat') }}" class="nav-link tooltip" data-tooltip="Messages">
+                    <a href="{{ route('seller.chat') }}" class="nav-link tooltip" data-tooltip="Messages" id="seller-tour-messaging">
                         <span class="material-icons-round nav-icon">mail</span>
                         <span>Messaging Center</span>
                     </a>
@@ -391,7 +390,7 @@
 
                 <!-- Payout Settings -->
                 <li class="nav-item">
-                    <a href="" class="nav-link tooltip" data-tooltip="Payout Settings">
+                    <a href="" class="nav-link tooltip" data-tooltip="Payout Settings" id="seller-tour-payout">
                         <span class="material-icons-round nav-icon">account_balance</span>
                         <span>Payout Settings</span>
                     </a>
@@ -404,7 +403,7 @@
 
         <form method="POST" action="{{ route('logout') }}">
             @csrf
-            <button type="submit" class="logout-btn tooltip" data-tooltip="Logout"
+            <button type="submit" class="logout-btn tooltip" data-tooltip="Logout" id="seller-tour-logout"
                 onclick="event.preventDefault(); this.closest('form').submit();">
                 <span class="material-icons-round nav-icon">logout</span>
                 <span>Log out</span>

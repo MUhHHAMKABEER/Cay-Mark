@@ -37,14 +37,33 @@ class VinHinDecoderService
         $type = $this->detectType($vinOrHin);
         $cleaned = strtoupper(preg_replace('/[^A-Z0-9]/', '', $vinOrHin));
 
+        Log::info('[VIN-API] Decode started', [
+            'input_raw' => $vinOrHin,
+            'input_cleaned' => $cleaned,
+            'input_length' => strlen($cleaned),
+            'detected_type' => $type,
+        ]);
+
         try {
             if ($type === 'vin') {
-                return $this->decodeVIN($cleaned);
+                $result = $this->decodeVIN($cleaned);
             } else {
-                return $this->decodeHIN($cleaned);
+                $result = $this->decodeHIN($cleaned);
             }
+            Log::info('[VIN-API] Decode finished', [
+                'type' => $type,
+                'success' => $result['success'],
+                'fields_count' => count($result['data'] ?? []),
+                'message' => $result['message'] ?? '',
+            ]);
+            return $result;
         } catch (\Exception $e) {
-            Log::error('VIN/HIN Decoder Error: ' . $e->getMessage());
+            Log::error('[VIN-API] Decode exception', [
+                'input' => $cleaned,
+                'type' => $type,
+                'exception' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
             return [
                 'success' => false,
                 'data' => [],
@@ -63,9 +82,19 @@ class VinHinDecoderService
     {
         $apiKey = config('services.auto_dev.api_key');
         $baseUrl = config('services.auto_dev.base_url');
-        
+
+        Log::info('[VIN-API] VIN decode config', [
+            'vin' => $vin,
+            'base_url' => $baseUrl,
+            'api_key_set' => !empty($apiKey),
+            'api_key_length' => $apiKey ? strlen($apiKey) : 0,
+        ]);
+
         if (empty($apiKey)) {
-            Log::error('Auto.dev API key not configured');
+            Log::error('[VIN-API] VIN decode failed: API key not configured', [
+                'vin' => $vin,
+                'config_key' => 'services.auto_dev.api_key',
+            ]);
             return [
                 'success' => false,
                 'data' => [],
@@ -73,16 +102,27 @@ class VinHinDecoderService
             ];
         }
 
+        if (empty($baseUrl)) {
+            Log::error('[VIN-API] VIN decode failed: Base URL not configured', [
+                'vin' => $vin,
+                'config_key' => 'services.auto_dev.base_url',
+            ]);
+            return [
+                'success' => false,
+                'data' => [],
+                'message' => 'VEHICLE/HULL NUMBER NOT FOUND. PLEASE ENTER DETAILS MANUALLY.',
+            ];
+        }
+
+        $url = "{$baseUrl}/vin/{$vin}";
+
         try {
-            // Call Auto.dev API with Authorization header
-            $url = "{$baseUrl}/vin/{$vin}";
-            
-            Log::info('Auto.dev API Request', [
+            Log::info('[VIN-API] VIN request sending', [
                 'url' => $url,
                 'vin' => $vin,
                 'api_key_prefix' => substr($apiKey, 0, 10) . '...',
             ]);
-            
+
             $response = Http::withoutVerifying()->withHeaders([
                 'Authorization' => 'Bearer ' . $apiKey,
                 'Content-Type' => 'application/json',
@@ -91,65 +131,70 @@ class VinHinDecoderService
 
             $status = $response->status();
             $body = $response->body();
-            
-            Log::info('Auto.dev API Response', [
-                'status' => $status,
+
+            Log::info('[VIN-API] VIN response received', [
                 'vin' => $vin,
-                'response_preview' => substr($body, 0, 500),
+                'status' => $status,
+                'body_length' => strlen($body),
+                'body_preview' => substr($body, 0, 500),
             ]);
 
             if ($response->successful()) {
                 $data = $response->json();
-                
-                // Log full response for debugging
-                Log::debug('Auto.dev API Full Response', [
-                    'vin' => $vin,
-                    'response' => $data,
-                ]);
-                
-                // Parse Auto.dev API response and map to our format
+                Log::debug('[VIN-API] VIN raw API response', ['vin' => $vin, 'response' => $data]);
+
                 $decodedData = $this->parseAutoDevResponse($data);
-                
-                Log::info('Auto.dev Parsed Data', [
+                Log::info('[VIN-API] VIN parsed data', [
                     'vin' => $vin,
                     'decoded_fields' => array_keys($decodedData),
                     'decoded_data' => $decodedData,
                 ]);
-                
+
                 if (!empty($decodedData)) {
                     return [
                         'success' => true,
                         'data' => $decodedData,
                         'message' => 'Vehicle information decoded successfully.',
                     ];
-                } else {
-                    Log::warning('Auto.dev API returned empty parsed data', [
-                        'vin' => $vin,
-                        'raw_response' => $data,
-                    ]);
                 }
-            } else {
-                Log::warning('Auto.dev API error', [
-                    'status' => $status,
+
+                Log::warning('[VIN-API] VIN decode failed: empty parsed data', [
                     'vin' => $vin,
+                    'raw_response' => $data,
+                    'reason' => 'parseAutoDevResponse returned no fields',
+                ]);
+            } else {
+                Log::warning('[VIN-API] VIN decode failed: API returned error', [
+                    'vin' => $vin,
+                    'status' => $status,
                     'body' => $body,
                     'headers' => $response->headers(),
+                    'reason' => 'HTTP ' . $status,
                 ]);
             }
         } catch (\Illuminate\Http\Client\ConnectionException $e) {
-            Log::error('Auto.dev API connection exception', [
+            Log::error('[VIN-API] VIN decode failed: connection exception', [
                 'vin' => $vin,
+                'url' => $url,
                 'message' => $e->getMessage(),
+                'reason' => 'connection_timeout_or_refused',
+            ]);
+        } catch (\Illuminate\Http\Client\RequestException $e) {
+            Log::error('[VIN-API] VIN decode failed: request exception', [
+                'vin' => $vin,
+                'url' => $url,
+                'message' => $e->getMessage(),
+                'response' => $e->response ? $e->response->body() : null,
             ]);
         } catch (\Exception $e) {
-            Log::error('Auto.dev API exception', [
+            Log::error('[VIN-API] VIN decode failed: exception', [
                 'vin' => $vin,
+                'url' => $url ?? null,
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
         }
 
-        // Return failure if API call fails or no data found
         return [
             'success' => false,
             'data' => [],
@@ -166,15 +211,26 @@ class VinHinDecoderService
      */
     protected function decodeHIN(string $hin): array
     {
-        // Auto.dev primarily supports VIN decoding
-        // For HIN (Hull Identification Number), we may need a different service
-        // For now, try Auto.dev API (it may support some HIN formats)
-        
         $apiKey = config('services.auto_dev.api_key');
         $baseUrl = config('services.auto_dev.base_url');
-        
+        $url = $baseUrl ? "{$baseUrl}/vin/{$hin}" : '';
+
+        Log::info('[VIN-API] HIN decode started', [
+            'hin' => $hin,
+            'base_url' => $baseUrl,
+            'api_key_set' => !empty($apiKey),
+        ]);
+
         if (empty($apiKey)) {
-            Log::error('Auto.dev API key not configured');
+            Log::error('[VIN-API] HIN decode failed: API key not configured', ['hin' => $hin]);
+            return [
+                'success' => false,
+                'data' => [],
+                'message' => 'VEHICLE/HULL NUMBER NOT FOUND. PLEASE ENTER DETAILS MANUALLY.',
+            ];
+        }
+        if (empty($baseUrl)) {
+            Log::error('[VIN-API] HIN decode failed: Base URL not configured', ['hin' => $hin]);
             return [
                 'success' => false,
                 'data' => [],
@@ -183,26 +239,52 @@ class VinHinDecoderService
         }
 
         try {
-            // Try calling Auto.dev API with HIN (may or may not work)
-            $response = Http::withHeaders([
+            Log::info('[VIN-API] HIN request sending', ['url' => $url, 'hin' => $hin]);
+            $response = Http::withoutVerifying()->withHeaders([
                 'Authorization' => 'Bearer ' . $apiKey,
                 'Content-Type' => 'application/json',
-            ])->get("{$baseUrl}/vin/{$hin}"); // Using same endpoint, may need adjustment
+                'Accept' => 'application/json',
+            ])->timeout(30)->get($url);
+
+            $status = $response->status();
+            $body = $response->body();
+            Log::info('[VIN-API] HIN response received', [
+                'hin' => $hin,
+                'status' => $status,
+                'body_preview' => substr($body, 0, 300),
+            ]);
 
             if ($response->successful()) {
                 $data = $response->json();
                 $decodedData = $this->parseAutoDevResponse($data);
-                
                 if (!empty($decodedData)) {
+                    Log::info('[VIN-API] HIN decode success', ['hin' => $hin, 'fields' => array_keys($decodedData)]);
                     return [
                         'success' => true,
                         'data' => $decodedData,
                         'message' => 'Hull information decoded successfully.',
                     ];
                 }
+                Log::warning('[VIN-API] HIN decode failed: empty parsed data', ['hin' => $hin, 'raw' => $data]);
+            } else {
+                Log::warning('[VIN-API] HIN decode failed: API error', [
+                    'hin' => $hin,
+                    'status' => $status,
+                    'body' => $body,
+                ]);
             }
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            Log::error('[VIN-API] HIN decode failed: connection exception', [
+                'hin' => $hin,
+                'url' => $url,
+                'message' => $e->getMessage(),
+            ]);
         } catch (\Exception $e) {
-            Log::error('Auto.dev HIN API exception: ' . $e->getMessage());
+            Log::error('[VIN-API] HIN decode failed: exception', [
+                'hin' => $hin,
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
         }
 
         return [

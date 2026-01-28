@@ -9,7 +9,7 @@ class BuyerController extends Controller
   public function markFirstLogin(Request $request)
 {
     $user = auth()->user();
-    $user->first_login = 1; // mark first login as completed
+    $user->first_login = 1; // mark walkthrough as completed
     $user->save();
 
     return response()->json(['status' => 'success']);

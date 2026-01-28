@@ -213,6 +213,10 @@ class RegisteredUserController extends Controller
                 'role' => null, // No role assigned yet
                 'registration_complete' => false, // Registration not complete
             ]);
+
+            // Mark as first-time so dashboard tour can run
+            $user->first_login = 0;
+            $user->save();
             
             Log::info('Step 8: User::create() called', [
                 'user_object' => $user ? 'created' : 'null',
@@ -399,6 +403,9 @@ public function step3(Request $request)
         ];
 
         $user = User::create($userData);
+        // Mark as first-time so dashboard tour can run
+        $user->first_login = 0;
+        $user->save();
 
         // defensive check
         if (empty($step2Data['package_id'])) {

@@ -382,7 +382,7 @@
                 <li class="nav-item"
                     data-intro="Go back to the home page to browse auctions and listings."
                     data-step="0">
-                    <a href="{{ route('welcome') }}" class="nav-link tooltip" data-tooltip="Home">
+                    <a href="{{ route('welcome') }}" class="nav-link tooltip" data-tooltip="Home" id="buyer-tour-home">
                         <span class="material-icons-round nav-icon">home</span>
                         <span class="nav-text">Home</span>
                     </a>
@@ -392,7 +392,7 @@
                 <li class="nav-item"
                     data-intro="This is your main dashboard where you can see an overview of your account, bids, and activities."
                     data-step="1">
-                    <a href="{{ route('dashboard.buyer') }}" class="nav-link tooltip active" data-tooltip="Dashboard">
+                    <a href="{{ route('dashboard.buyer') }}" class="nav-link tooltip active" data-tooltip="Dashboard" id="buyer-tour-dashboard">
                         <span class="material-icons-round nav-icon">dashboard</span>
                         <span class="nav-text">Dashboard</span>
                     </a>
@@ -402,7 +402,7 @@
                 <li class="nav-item"
                     data-intro="Update your personal information, change your password, and manage your account settings."
                     data-step="2">
-                    <a href="{{ route('profile.edit') }}" class="nav-link tooltip" data-tooltip="Account Profile">
+                    <a href="{{ route('profile.edit') }}" class="nav-link tooltip" data-tooltip="Account Profile" id="buyer-tour-profile">
                         <span class="material-icons-round nav-icon">person</span>
                         <span class="nav-text">Account Profile</span>
                     </a>
@@ -412,7 +412,7 @@
                 <li class="nav-item"
                     data-intro="View your purchase history and details of vehicles you've successfully bought."
                     data-step="3">
-                    <a href="{{ route('buyer.purchases') }}" class="nav-link tooltip" data-tooltip="Past Purchases">
+                    <a href="{{ route('buyer.purchases') }}" class="nav-link tooltip" data-tooltip="Past Purchases" id="buyer-tour-purchases">
                         <span class="material-icons-round nav-icon">shopping_cart</span>
                         <span class="nav-text">Past Purchases</span>
                     </a>
@@ -421,7 +421,7 @@
                 <li class="nav-item"
                     data-intro="View and manage your messages with sellers and buyers."
                     data-step="4">
-                    <a href="{{ route('buyer.messages') }}" class="nav-link tooltip" data-tooltip="Messaging">
+                    <a href="{{ route('buyer.messages') }}" class="nav-link tooltip" data-tooltip="Messaging" id="buyer-tour-messaging">
                         <span class="material-icons-round nav-icon">chat</span>
                         <span class="nav-text">Messaging</span>
                     </a>
@@ -431,7 +431,7 @@
                 <li class="nav-item"
                     data-intro="Manage your active bids and watchlist items. Click the arrow to expand and see more options."
                     data-step="5">
-                    <a href="javascript:void(0)" class="nav-link tooltip" id="bids-toggle" data-tooltip="Bids & Watchlist">
+                    <a href="javascript:void(0)" class="nav-link tooltip" id="buyer-tour-bids" data-tooltip="Bids & Watchlist">
                         <span class="material-icons-round nav-icon">how_to_vote</span>
                         <span class="nav-text">Bids & Watchlist</span>
                         <span class="material-icons-round nav-arrow">arrow_right</span>
@@ -452,8 +452,7 @@
                 <li class="nav-item"
                     data-intro="Monitor your payment status and escrow transactions for secure purchases."
                     data-step="6">
-                    <a href="{{ route('buyer.escrow') }}" class="nav-link tooltip"
-                        data-tooltip="Payment / Escrow Status">
+                    <a href="{{ route('buyer.escrow') }}" class="nav-link tooltip" data-tooltip="Payment / Escrow Status" id="buyer-tour-escrow">
                         <span class="material-icons-round nav-icon">payments</span>
                         <span class="nav-text">Payment / Escrow</span>
                     </a>
@@ -463,7 +462,7 @@
                 <li class="nav-item"
                     data-intro="Check your notifications for important updates about your bids, purchases, and account."
                     data-step="7">
-                    <a href="{{ route('buyer.notifications') }}" class="nav-link tooltip" data-tooltip="Notifications">
+                    <a href="{{ route('buyer.notifications') }}" class="nav-link tooltip" data-tooltip="Notifications" id="buyer-tour-notifications">
                         <span class="material-icons-round nav-icon">notifications</span>
                         <span class="nav-text">Notifications</span>
                         <span class="badge">3</span>
@@ -474,7 +473,7 @@
 
         <form method="POST" action="{{ route('logout') }}">
             @csrf
-            <button type="submit" class="logout-btn tooltip" data-tooltip="Logout"
+            <button type="submit" class="logout-btn tooltip" data-tooltip="Logout" id="buyer-tour-logout"
                 onclick="event.preventDefault(); this.closest('form').submit();">
                 <span class="material-icons-round nav-icon">logout</span>
                 <span>Log out</span>
@@ -486,7 +485,7 @@
         // Add active class to clicked nav item
         document.querySelectorAll('.nav-link').forEach(link => {
             link.addEventListener('click', function(e) {
-                if (!this.id || this.id !== 'bids-toggle') {
+                if (!this.id || this.id !== 'buyer-tour-bids') {
                     document.querySelectorAll('.nav-link').forEach(item => {
                         item.classList.remove('active');
                     });
@@ -497,7 +496,7 @@
 
         // Toggle submenu for Bids & Watchlist
         document.addEventListener('DOMContentLoaded', function() {
-            const toggle = document.getElementById('bids-toggle');
+            const toggle = document.getElementById('buyer-tour-bids');
             const submenu = document.getElementById('bids-submenu');
             const navItem = toggle.closest('.nav-item');
 
@@ -525,7 +524,7 @@
         // Add ripple effect to buttons
         document.querySelectorAll('.nav-link, .logout-btn').forEach(button => {
             button.addEventListener('click', function(e) {
-                if (this.id && this.id === 'bids-toggle') return;
+                if (this.id && this.id === 'buyer-tour-bids') return;
 
                 const x = e.clientX - e.target.getBoundingClientRect().left;
                 const y = e.clientY - e.target.getBoundingClientRect().top;
