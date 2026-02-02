@@ -275,10 +275,16 @@
         font-size: 1.4rem;
         width: 24px;
         height: 24px;
-        display: flex;
+        display: inline-flex;
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
+        font-family: 'Material Icons Round', 'Material Icons', sans-serif;
+        font-weight: normal;
+        font-style: normal;
+        letter-spacing: normal;
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
     }
     
     .unified-sidebar nav a span:not(.material-icons):not(.material-icons-round):not(.sidebar-notification-badge) {

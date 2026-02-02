@@ -216,367 +216,508 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
         }
+
+        /* Vehicle finder panel - Enhanced & Sticky */
+        .vehicle-finder {
+            position: sticky;
+            top: 1rem;
+            max-height: calc(100vh - 2rem);
+            display: flex;
+            flex-direction: column;
+        }
+        .vehicle-finder-header {
+            background: linear-gradient(135deg, #2563eb 0%, #4f46e5 50%, #1d4ed8 100%);
+            color: white;
+            font-weight: 700;
+            font-size: 1.125rem;
+            padding: 1.25rem 1.5rem;
+            border-radius: 16px 16px 0 0;
+            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+            letter-spacing: 0.025em;
+        }
+        .vehicle-finder-body { 
+            padding: 1.5rem 1.5rem 1.75rem; 
+            overflow-y: auto;
+            flex: 1;
+        }
+        .vehicle-finder-row { 
+            display: flex; 
+            flex-direction: column;
+            margin-bottom: 1.25rem;
+            gap: 0.5rem;
+        }
+        .vehicle-finder-row label { 
+            font-size: 0.875rem; 
+            font-weight: 600; 
+            color: #1f2937;
+            margin-bottom: 0.25rem;
+        }
+        .vehicle-finder-row .input-wrap { 
+            width: 100%;
+        }
+        .segmented-control { 
+            display: inline-flex; 
+            border: 1px solid #d1d5db; 
+            border-radius: 10px; 
+            overflow: hidden;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+        .segmented-control button { 
+            padding: 0.625rem 1.25rem; 
+            font-size: 0.875rem; 
+            font-weight: 600; 
+            border: none; 
+            background: #f9fafb; 
+            color: #6b7280; 
+            cursor: pointer; 
+            transition: all 0.2s ease;
+            flex: 1;
+        }
+        .segmented-control button:not(:last-child) { 
+            border-right: 1px solid #d1d5db; 
+        }
+        .segmented-control button.active { 
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); 
+            color: white;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .segmented-control button:hover:not(.active) { 
+            background: #f3f4f6;
+            color: #374151;
+        }
+        .vehicle-finder select, 
+        .vehicle-finder input[type="text"] { 
+            width: 100%; 
+            padding: 0.625rem 0.875rem; 
+            border: 1px solid #d1d5db; 
+            border-radius: 10px; 
+            font-size: 0.875rem;
+            background: white;
+            transition: all 0.2s ease;
+            color: #1f2937;
+        }
+        .vehicle-finder select:focus,
+        .vehicle-finder input[type="text"]:focus {
+            outline: none;
+            border-color: #3b82f6;
+            ring: 2px;
+            ring-color: rgba(59, 130, 246, 0.2);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        .vehicle-finder select:hover,
+        .vehicle-finder input[type="text"]:hover {
+            border-color: #9ca3af;
+        }
+        .vehicle-finder .or-divider { 
+            display: flex; 
+            align-items: center; 
+            margin: 1.5rem 0; 
+        }
+        .vehicle-finder .or-divider::before, 
+        .vehicle-finder .or-divider::after { 
+            content: ''; 
+            flex: 1; 
+            height: 1px; 
+            background: linear-gradient(to right, transparent, #e5e7eb, transparent);
+        }
+        .vehicle-finder .or-divider span { 
+            padding: 0 1.25rem; 
+            font-size: 0.75rem; 
+            font-weight: 700; 
+            color: #9ca3af;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+        .btn-search-vehicle { 
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); 
+            color: white; 
+            font-weight: 700; 
+            font-size: 0.9375rem;
+            padding: 0.875rem 1.5rem; 
+            border-radius: 10px; 
+            border: none; 
+            width: 100%; 
+            cursor: pointer; 
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(22, 163, 74, 0.3);
+            letter-spacing: 0.025em;
+        }
+        .btn-search-vehicle:hover { 
+            background: linear-gradient(135deg, #15803d 0%, #166534 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(22, 163, 74, 0.4);
+        }
+        .btn-search-vehicle:active {
+            transform: translateY(0);
+        }
+        input[type="range"].odometer-range { 
+            appearance: none; 
+            -webkit-appearance: none; 
+            height: 8px; 
+            background: linear-gradient(to right, #dbeafe, #3b82f6);
+            border-radius: 4px;
+            outline: none;
+            transition: opacity 0.2s;
+        }
+        input[type="range"].odometer-range:hover {
+            opacity: 0.9;
+        }
+        input[type="range"].odometer-range::-webkit-slider-thumb { 
+            -webkit-appearance: none; 
+            width: 20px; 
+            height: 20px; 
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); 
+            border-radius: 50%; 
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(37, 99, 235, 0.4);
+            transition: all 0.2s ease;
+        }
+        input[type="range"].odometer-range::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+            box-shadow: 0 3px 6px rgba(37, 99, 235, 0.5);
+        }
+        input[type="range"].odometer-range::-moz-range-thumb {
+            width: 20px; 
+            height: 20px; 
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); 
+            border-radius: 50%; 
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(37, 99, 235, 0.4);
+            border: none;
+        }
+        .location-radio { 
+            display: flex; 
+            flex-wrap: wrap;
+            gap: 0.75rem; 
+            margin-bottom: 0.625rem; 
+        }
+        .location-radio label { 
+            display: flex; 
+            align-items: center; 
+            gap: 0.4rem; 
+            font-size: 0.8125rem; 
+            color: #4b5563;
+            font-weight: 500;
+            cursor: pointer; 
+            min-width: auto;
+            transition: color 0.2s ease;
+        }
+        .location-radio label:hover {
+            color: #1f2937;
+        }
+        .location-radio input[type="radio"] {
+            accent-color: #2563eb;
+            cursor: pointer;
+        }
+        .year-selects {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        .year-selects select {
+            flex: 1;
+        }
+        .year-selects .separator {
+            font-size: 0.875rem;
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        .results-typing-cursor {
+            display: inline-block;
+            animation: typing-cursor-blink 0.8s step-end infinite;
+            color: #3b82f6;
+            margin-left: 1px;
+        }
+        @keyframes typing-cursor-blink {
+            50% { opacity: 0; }
+        }
+
+        /* Page header typography */
+        .auction-page-title {
+            background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 35%, #4f46e5 70%, #1d4ed8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+        }
+        .results-count-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 9999px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: #1e40af;
+            box-shadow: 0 1px 3px rgba(59, 130, 246, 0.08);
+        }
     </style>
 
-    <div class="bg-gray-50 text-gray-800" x-data="{ viewMode: 'detail', isLoading: false, activeFilters: false }" x-init="// Check if user has a preference saved
-    if (localStorage.getItem('auctionViewMode')) {
-        viewMode = localStorage.getItem('auctionViewMode');
-    }
-    $watch('viewMode', value => {
-        isLoading = true;
-        localStorage.setItem('auctionViewMode', value);
-        // Simulate loading delay for smooth transition
-        setTimeout(() => { isLoading = false; }, 300);
-    });">
+    <div class="bg-gray-50 text-gray-800" x-data="filterData()" x-init="initFilters()">
 
         <main class="w-full px-4 py-6">
 
             <!-- Page Header -->
             <div class="mb-6 animate-fade-in">
-                <h2 class="text-2xl md:text-3xl font-bold text-secondary-800 mb-2">Repairable, Salvage and Wrecked Car
-                    Auctions</h2>
-                <div class="flex flex-col md:flex-row md:items-center justify-between">
-                    <p class="text-sm text-secondary-500 mb-2 md:mb-0 results-count">
-                        Showing results {{ $auctions->firstItem() ?? 0 }} - {{ $auctions->lastItem() ?? 0 }} of
-                        {{ $auctions->total() }}
-                    </p>
+                <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-4">
+                    <h2 class="auction-page-title text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight">
+                        Repairable, Salvage &amp; Wrecked Car Auctions
+                    </h2>
+                    <div class="results-count-badge shrink-0">
+                        <span class="material-icons text-lg text-blue-600" aria-hidden="true">analytics</span>
+                        <span class="results-count" data-full-text="Showing results {{ $auctions->firstItem() ?? 0 }} - {{ $auctions->lastItem() ?? 0 }} of {{ $auctions->total() }}">
+                            <span id="results-count-typed"></span><span class="results-typing-cursor" id="results-count-cursor" aria-hidden="true">|</span>
+                        </span>
+                    </div>
+                </div>
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
 
-                    <div class="flex items-center space-x-4">
-                        <!-- View Toggle -->
-                        <div class="flex items-center bg-white rounded-lg border border-gray-300 overflow-hidden shadow-sm">
-                            <button @click="viewMode = 'grid'"
-                                :class="viewMode === 'grid' ? 'active bg-primary-500 text-white' : 'text-gray-600'"
-                                class="view-toggle-btn px-3 py-2 flex items-center transition-all duration-200">
-                                <span class="material-icons text-sm mr-1">grid_view</span>
-                                <span class="text-sm">Grid</span>
+                    <div class="flex flex-wrap items-center gap-3 sm:gap-4">
+                        <!-- View Toggle: Segmented control -->
+                        <div class="inline-flex rounded-xl bg-gray-100 p-1 shadow-inner" role="group" aria-label="View layout">
+                            <button type="button"
+                                @click="viewMode = 'grid'"
+                                :class="viewMode === 'grid'
+                                    ? 'bg-white text-blue-600 shadow-md ring-1 ring-gray-200/80'
+                                    : 'text-gray-500 hover:text-gray-700'"
+                                class="view-toggle-btn inline-flex items-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-200">
+                                <span class="material-icons text-lg">grid_view</span>
+                                <span>Grid</span>
                             </button>
-                            <button @click="viewMode = 'detail'"
-                                :class="viewMode === 'detail' ? 'active bg-primary-500 text-white' : 'text-gray-600'"
-                                class="view-toggle-btn px-3 py-2 flex items-center transition-all duration-200">
-                                <span class="material-icons text-sm mr-1">view_list</span>
-                                <span class="text-sm">List</span>
+                            <button type="button"
+                                @click="viewMode = 'detail'"
+                                :class="viewMode === 'detail'
+                                    ? 'bg-white text-blue-600 shadow-md ring-1 ring-gray-200/80'
+                                    : 'text-gray-500 hover:text-gray-700'"
+                                class="view-toggle-btn inline-flex items-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-200">
+                                <span class="material-icons text-lg">view_list</span>
+                                <span>List</span>
                             </button>
                         </div>
 
-                        <!-- Active Filters -->
-                        <div x-show="activeFilters" x-transition:enter="transition ease-out duration-300"
-                            x-transition:enter-start="opacity-0 transform scale-95"
-                            x-transition:enter-end="opacity-100 transform scale-100"
-                            class="flex items-center bg-primary-100 rounded-lg px-3 py-1">
-                            <span class="text-sm text-primary-700 mr-2">Filters Active</span>
-                            <span
-                                class="material-icons text-primary-500 text-sm cursor-pointer hover:text-primary-700">cancel</span>
+                        <!-- Active Filters pill -->
+                        <div x-show="activeFilters"
+                            x-transition:enter="transition ease-out duration-300"
+                            x-transition:enter-start="opacity-0 scale-95"
+                            x-transition:enter-end="opacity-100 scale-100"
+                            class="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1.5 text-sm text-blue-700 ring-1 ring-blue-200/60">
+                            <span>Filters active</span>
+                            <span class="material-icons text-base cursor-pointer opacity-80 hover:opacity-100">cancel</span>
                         </div>
 
-                        <!-- Sort -->
-                        <div class="flex items-center">
-                            <label for="sort" class="text-sm text-secondary-600 mr-2">Sort by:</label>
-                            <select id="sort" x-model="sortBy" @change="applyFilters()"
-                                class="border border-gray-300 rounded-lg py-1.5 px-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors">
-                                <option value="newest">Newest First</option>
-                                <option value="price_low">Price: Low to High</option>
-                                <option value="price_high">Price: High to Low</option>
-                                <option value="ending_soon">Ending Soonest</option>
-                            </select>
+                        <!-- Sort by: Custom dropdown -->
+                        <div class="inline-flex items-center gap-2" x-data="{ sortOpen: false }">
+                            <span class="text-sm font-medium text-gray-600 whitespace-nowrap">Sort by</span>
+                            <div class="relative" @click.outside="sortOpen = false">
+                                <button type="button"
+                                    @click="sortOpen = !sortOpen"
+                                    class="inline-flex items-center justify-between gap-2 rounded-xl border border-gray-200 bg-white py-2.5 pl-4 pr-10 text-sm font-medium text-gray-800 shadow-sm transition hover:border-gray-300 hover:bg-gray-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none cursor-pointer min-w-[180px]">
+                                    <span x-text="sortBy === 'newest' ? 'Newest First' : sortBy === 'price_low' ? 'Price: Low to High' : sortBy === 'price_high' ? 'Price: High to Low' : 'Ending Soonest'">Newest First</span>
+                                    <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 transition transform" :class="sortOpen && 'rotate-180'">
+                                        <span class="material-icons text-xl">expand_more</span>
+                                    </span>
+                                </button>
+                                <div x-show="sortOpen"
+                                    x-cloak
+                                    x-transition:enter="transition ease-out duration-150"
+                                    x-transition:enter-start="opacity-0 scale-95"
+                                    x-transition:enter-end="opacity-100 scale-100"
+                                    x-transition:leave="transition ease-in duration-100"
+                                    x-transition:leave-start="opacity-100 scale-100"
+                                    x-transition:leave-end="opacity-0 scale-95"
+                                    class="absolute right-0 left-0 top-full z-50 mt-1.5 rounded-xl border border-gray-200 bg-white py-1 shadow-lg ring-1 ring-black/5"
+                                    style="display: none;">
+                                    <button type="button"
+                                        @click="sortBy = 'newest'; applyFilters(); sortOpen = false"
+                                        :class="sortBy === 'newest' ? 'bg-blue-50 text-blue-700' : 'text-gray-800 hover:bg-gray-50'"
+                                        class="flex w-full items-center justify-between px-4 py-2.5 text-left text-sm font-medium transition">
+                                        <span>Newest First</span>
+                                        <span x-show="sortBy === 'newest'" class="material-icons text-lg text-blue-600">check</span>
+                                    </button>
+                                    <button type="button"
+                                        @click="sortBy = 'price_low'; applyFilters(); sortOpen = false"
+                                        :class="sortBy === 'price_low' ? 'bg-blue-50 text-blue-700' : 'text-gray-800 hover:bg-gray-50'"
+                                        class="flex w-full items-center justify-between px-4 py-2.5 text-left text-sm font-medium transition">
+                                        <span>Price: Low to High</span>
+                                        <span x-show="sortBy === 'price_low'" class="material-icons text-lg text-blue-600">check</span>
+                                    </button>
+                                    <button type="button"
+                                        @click="sortBy = 'price_high'; applyFilters(); sortOpen = false"
+                                        :class="sortBy === 'price_high' ? 'bg-blue-50 text-blue-700' : 'text-gray-800 hover:bg-gray-50'"
+                                        class="flex w-full items-center justify-between px-4 py-2.5 text-left text-sm font-medium transition">
+                                        <span>Price: High to Low</span>
+                                        <span x-show="sortBy === 'price_high'" class="material-icons text-lg text-blue-600">check</span>
+                                    </button>
+                                    <button type="button"
+                                        @click="sortBy = 'ending_soon'; applyFilters(); sortOpen = false"
+                                        :class="sortBy === 'ending_soon' ? 'bg-blue-50 text-blue-700' : 'text-gray-800 hover:bg-gray-50'"
+                                        class="flex w-full items-center justify-between px-4 py-2.5 text-left text-sm font-medium transition">
+                                        <span>Ending Soonest</span>
+                                        <span x-show="sortBy === 'ending_soon'" class="material-icons text-lg text-blue-600">check</span>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="flex flex-col lg:flex-row gap-6" x-data="filterData()" x-init="initFilters()">
-                <!-- Filters Sidebar -->
-                <aside class="w-full lg:w-1/4">
-                    <div
-                        class="bg-white rounded-xl shadow-sm p-5 mb-6 sticky top-4 transition-all duration-300 hover:shadow-md">
-                        <div class="flex justify-between items-center mb-5">
-                            <h3 class="font-semibold text-secondary-800 text-lg">Filter Vehicles</h3>
-                            <button type="button" @click="clearAllFilters()"
-                                class="text-sm text-primary-600 font-medium hover:text-primary-800 transition-colors">Clear
-                                All</button>
-                        </div>
-
-                        <div class="space-y-5 max-h-[70vh] overflow-y-auto filter-scroll pr-2" id="filterForm">
-                                <!-- 1. Location -->
-                                <div class="filter-section">
-                                    <h4 class="text-sm font-medium text-secondary-800 mb-2 flex justify-between items-center cursor-pointer"
-                                        @click="toggleFilter('location')">
-                                        <span>Location</span>
-                                        <span class="material-icons text-gray-500 text-lg transition-transform" x-bind:class="filtersOpen.location ? 'rotate-180' : ''">expand_less</span>
-                                    </h4>
-                                    <div x-show="filtersOpen.location" class="space-y-2 max-h-40 overflow-y-auto filter-scroll">
-                                        @foreach ($filterOptions['locations'] as $location)
-                                            <label class="flex items-center py-1 cursor-pointer group">
-                                                <input type="checkbox" name="location[]" value="{{ $location }}"
-                                                    x-model="selectedFilters.location"
-                                                    @change="applyFilters()"
-                                                    class="rounded text-primary-600 focus:ring-primary-500 mr-2 transition-all group-hover:scale-110">
-                                                <span
-                                                    class="text-sm text-secondary-600 group-hover:text-secondary-800 transition-colors">{{ $location }}</span>
-                                            </label>
-                                        @endforeach
-                                    </div>
-                                </div>
-
-                                <!-- 2. Vehicle Type -->
-                                <div class="filter-section">
-                                    <h4 class="text-sm font-medium text-secondary-800 mb-2 flex justify-between items-center cursor-pointer"
-                                        @click="toggleFilter('vehicle_type')">
-                                        <span>Vehicle Type</span>
-                                        <span class="material-icons text-gray-500 text-lg transition-transform" x-bind:class="filtersOpen.vehicle_type ? 'rotate-180' : ''">expand_less</span>
-                                    </h4>
-                                    <div x-show="filtersOpen.vehicle_type">
-                                        <select name="vehicle_type" x-model="selectedFilters.vehicle_type" @change="applyFilters()"
-                                            class="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all">
-                                            <option value="">All Types</option>
-                                            @foreach ($filterOptions['vehicle_types'] as $type)
-                                                <option value="{{ $type }}">{{ $type }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <!-- 3. Make -->
-                                <div class="filter-section">
-                                    <h4 class="text-sm font-medium text-secondary-800 mb-2 flex justify-between items-center cursor-pointer"
-                                        @click="toggleFilter('make')">
-                                        <span>Make</span>
-                                        <span class="material-icons text-gray-500 text-lg transition-transform" x-bind:class="filtersOpen.make ? 'rotate-180' : ''">expand_less</span>
-                                    </h4>
-                                    <div x-show="filtersOpen.make">
-                                        <input type="text" x-model="makeSearch" placeholder="Search Makes..."
-                                            class="w-full border rounded-lg p-2 mb-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all">
-                                        <div class="space-y-2 max-h-40 overflow-y-auto filter-scroll">
-                                            <template x-for="make in filteredMakes" :key="make">
-                                                <label class="flex items-center py-1 cursor-pointer group">
-                                                    <input type="checkbox" :value="make"
-                                                        x-model="selectedFilters.makes"
-                                                        @change="applyFilters()"
-                                                        class="rounded text-primary-600 focus:ring-primary-500 mr-2 transition-all group-hover:scale-110">
-                                                    <span class="text-sm text-secondary-600 group-hover:text-secondary-800 transition-colors" x-text="make"></span>
-                                                </label>
-                                            </template>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- 4. Model -->
-                                <div class="filter-section">
-                                    <h4 class="text-sm font-medium text-secondary-800 mb-2 flex justify-between items-center cursor-pointer"
-                                        @click="toggleFilter('model')">
-                                        <span>Model</span>
-                                        <span class="material-icons text-gray-500 text-lg transition-transform" x-bind:class="filtersOpen.model ? 'rotate-180' : ''">expand_less</span>
-                                    </h4>
-                                    <div x-show="filtersOpen.model">
-                                        <input type="text" x-model="modelSearch" placeholder="Search Models..."
-                                            class="w-full border rounded-lg p-2 mb-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all">
-                                        <div class="space-y-2 max-h-40 overflow-y-auto filter-scroll">
-                                            <template x-for="model in filteredModels" :key="model">
-                                                <label class="flex items-center py-1 cursor-pointer group">
-                                                    <input type="checkbox" :value="model"
-                                                        x-model="selectedFilters.models"
-                                                        @change="applyFilters()"
-                                                        class="rounded text-primary-600 focus:ring-primary-500 mr-2 transition-all group-hover:scale-110">
-                                                    <span class="text-sm text-secondary-600 group-hover:text-secondary-800 transition-colors" x-text="model"></span>
-                                                </label>
-                                            </template>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- 5. Year (Range Slider) -->
-                                <div class="filter-section">
-                                    <h4 class="text-sm font-medium text-secondary-800 mb-2">Year</h4>
-                                    <div class="space-y-3">
-                                        <div class="flex items-center space-x-2">
-                                            <input type="number" x-model.number="yearFrom" @input.debounce.500ms="applyFilters()"
-                                                :min="1900" :max="yearTo || {{ date('Y') + 1 }}"
-                                                placeholder="From"
-                                                class="w-1/2 border rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all">
-                                            <input type="number" x-model.number="yearTo" @input.debounce.500ms="applyFilters()"
-                                                :min="yearFrom || 1900" :max="{{ date('Y') + 1 }}"
-                                                placeholder="To"
-                                                class="w-1/2 border rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all">
-                                        </div>
-                                        <div class="px-2">
-                                            <input type="range" x-model.number="yearFrom" @input.debounce.500ms="applyFilters()"
-                                                :min="1900" :max="yearTo || {{ date('Y') + 1 }}"
-                                                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
-                                            <input type="range" x-model.number="yearTo" @input.debounce.500ms="applyFilters()"
-                                                :min="yearFrom || 1900" :max="{{ date('Y') + 1 }}"
-                                                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-2">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- 6. Odometer (Range Slider) -->
-                                <div class="filter-section">
-                                    <h4 class="text-sm font-medium text-secondary-800 mb-2">Odometer</h4>
-                                    <div class="space-y-3">
-                                        <div class="flex items-center space-x-2">
-                                            <input type="number" x-model.number="odometerMin" @input.debounce.500ms="applyFilters()"
-                                                :min="0" :max="odometerMax || {{ $filterOptions['odometer_max'] ?? 250000 }}"
-                                                placeholder="Min"
-                                                class="w-1/2 border rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all">
-                                            <input type="number" x-model.number="odometerMax" @input.debounce.500ms="applyFilters()"
-                                                :min="odometerMin || 0" :max="{{ $filterOptions['odometer_max'] ?? 250000 }}"
-                                                placeholder="Max"
-                                                class="w-1/2 border rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all">
-                                        </div>
-                                        <div class="px-2">
-                                            <input type="range" x-model.number="odometerMin" @input.debounce.500ms="applyFilters()"
-                                                :min="0" :max="odometerMax || {{ $filterOptions['odometer_max'] ?? 250000 }}"
-                                                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
-                                            <input type="range" x-model.number="odometerMax" @input.debounce.500ms="applyFilters()"
-                                                :min="odometerMin || 0" :max="{{ $filterOptions['odometer_max'] ?? 250000 }}"
-                                                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-2">
-                                        </div>
-                                        <p class="text-xs text-gray-500 text-center" x-text="`${odometerMin || 0} mi - ${odometerMax || {{ $filterOptions['odometer_max'] ?? 250000 }}} mi`"></p>
-                                    </div>
-                                </div>
-
-                                <!-- 7. Damage Type -->
-                                <div class="filter-section">
-                                    <h4 class="text-sm font-medium text-secondary-800 mb-2 flex justify-between items-center cursor-pointer"
-                                        @click="toggleFilter('damage_type')">
-                                        <span>Damage Type</span>
-                                        <span class="material-icons text-gray-500 text-lg transition-transform" x-bind:class="filtersOpen.damage_type ? 'rotate-180' : ''">expand_less</span>
-                                    </h4>
-                                    <div x-show="filtersOpen.damage_type" class="space-y-2 max-h-40 overflow-y-auto filter-scroll">
-                                        @foreach ($filterOptions['damage_types'] as $damage)
-                                            <label class="flex items-center py-1 cursor-pointer group">
-                                                <input type="checkbox" name="damage_type[]" value="{{ $damage }}"
-                                                    x-model="selectedFilters.damage_type"
-                                                    @change="applyFilters()"
-                                                    class="rounded text-primary-600 focus:ring-primary-500 mr-2 transition-all group-hover:scale-110">
-                                                <span
-                                                    class="text-sm text-secondary-600 group-hover:text-secondary-800 transition-colors">{{ $damage }}</span>
-                                            </label>
-                                        @endforeach
-                                    </div>
-                                </div>
-
-                                <!-- 8. Body Style -->
-                                <div class="filter-section">
-                                    <h4 class="text-sm font-medium text-secondary-800 mb-2 flex justify-between items-center cursor-pointer"
-                                        @click="toggleFilter('body_style')">
-                                        <span>Body Style</span>
-                                        <span class="material-icons text-gray-500 text-lg transition-transform" x-bind:class="filtersOpen.body_style ? 'rotate-180' : ''">expand_less</span>
-                                    </h4>
-                                    <div x-show="filtersOpen.body_style">
-                                        <select name="body_style" x-model="selectedFilters.body_style" @change="applyFilters()"
-                                            class="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all">
-                                            <option value="">All Body Styles</option>
-                                            @foreach ($filterOptions['body_styles'] as $style)
-                                                <option value="{{ $style }}">{{ $style }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <!-- 9. Engine Type -->
-                                <div class="filter-section">
-                                    <h4 class="text-sm font-medium text-secondary-800 mb-2 flex justify-between items-center cursor-pointer"
-                                        @click="toggleFilter('engine_type')">
-                                        <span>Engine Type</span>
-                                        <span class="material-icons text-gray-500 text-lg transition-transform" x-bind:class="filtersOpen.engine_type ? 'rotate-180' : ''">expand_less</span>
-                                    </h4>
-                                    <div x-show="filtersOpen.engine_type">
-                                        <select name="engine_type" x-model="selectedFilters.engine_type" @change="applyFilters()"
-                                            class="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all">
-                                            <option value="">All Engine Types</option>
-                                            @foreach ($filterOptions['engine_types'] as $engine)
-                                                <option value="{{ $engine }}">{{ $engine }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <!-- 10. Cylinders -->
-                                <div class="filter-section">
-                                    <h4 class="text-sm font-medium text-secondary-800 mb-2 flex justify-between items-center cursor-pointer"
-                                        @click="toggleFilter('cylinders')">
-                                        <span>Cylinders</span>
-                                        <span class="material-icons text-gray-500 text-lg transition-transform" x-bind:class="filtersOpen.cylinders ? 'rotate-180' : ''">expand_less</span>
-                                    </h4>
-                                    <div x-show="filtersOpen.cylinders">
-                                        <select name="cylinders" x-model="selectedFilters.cylinders" @change="applyFilters()"
-                                            class="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all">
-                                            <option value="">All</option>
-                                            @foreach ($filterOptions['cylinders'] as $cyl)
-                                                <option value="{{ $cyl }}">{{ $cyl }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <!-- 11. Transmission -->
-                                <div class="filter-section">
-                                    <h4 class="text-sm font-medium text-secondary-800 mb-2 flex justify-between items-center cursor-pointer"
-                                        @click="toggleFilter('transmission')">
-                                        <span>Transmission</span>
-                                        <span class="material-icons text-gray-500 text-lg transition-transform" x-bind:class="filtersOpen.transmission ? 'rotate-180' : ''">expand_less</span>
-                                    </h4>
-                                    <div x-show="filtersOpen.transmission" class="space-y-2">
-                                        <label class="flex items-center py-2 cursor-pointer group">
-                                            <input type="radio" name="transmission" value="Automatic"
-                                                x-model="selectedFilters.transmission"
-                                                @change="applyFilters()"
-                                                class="text-primary-600 focus:ring-primary-500 mr-2">
-                                            <span class="text-sm text-secondary-600 group-hover:text-secondary-800 transition-colors">Automatic</span>
-                                        </label>
-                                        <label class="flex items-center py-2 cursor-pointer group">
-                                            <input type="radio" name="transmission" value="Manual"
-                                                x-model="selectedFilters.transmission"
-                                                @change="applyFilters()"
-                                                class="text-primary-600 focus:ring-primary-500 mr-2">
-                                            <span class="text-sm text-secondary-600 group-hover:text-secondary-800 transition-colors">Manual</span>
-                                        </label>
-                                    </div>
-                                </div>
-
-                                <!-- 12. Drive Train -->
-                                <div class="filter-section">
-                                    <h4 class="text-sm font-medium text-secondary-800 mb-2 flex justify-between items-center cursor-pointer"
-                                        @click="toggleFilter('drive_train')">
-                                        <span>Drive Train</span>
-                                        <span class="material-icons text-gray-500 text-lg transition-transform" x-bind:class="filtersOpen.drive_train ? 'rotate-180' : ''">expand_less</span>
-                                    </h4>
-                                    <div x-show="filtersOpen.drive_train">
-                                        <select name="drive_train" x-model="selectedFilters.drive_train" @change="applyFilters()"
-                                            class="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all">
-                                            <option value="">All Drive Trains</option>
-                                            @foreach ($filterOptions['drive_trains'] as $dt)
-                                                <option value="{{ $dt }}">{{ $dt }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <!-- 13. Fuel Type -->
-                                <div class="filter-section">
-                                    <h4 class="text-sm font-medium text-secondary-800 mb-2 flex justify-between items-center cursor-pointer"
-                                        @click="toggleFilter('fuel_type')">
-                                        <span>Fuel Type</span>
-                                        <span class="material-icons text-gray-500 text-lg transition-transform" x-bind:class="filtersOpen.fuel_type ? 'rotate-180' : ''">expand_less</span>
-                                    </h4>
-                                    <div x-show="filtersOpen.fuel_type">
-                                        <select name="fuel_type" x-model="selectedFilters.fuel_type" @change="applyFilters()"
-                                            class="w-full border rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all">
-                                            <option value="">All Fuel Types</option>
-                                            @foreach ($filterOptions['fuel_types'] as $fuel)
-                                                <option value="{{ $fuel }}">{{ $fuel }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                </div>
-
+            <div class="flex flex-col xl:flex-row gap-6">
+                <!-- Vehicle Finder Panel - Enhanced & Wider -->
+                <aside class="w-full xl:w-96 flex-shrink-0">
+                    <div class="vehicle-finder bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200">
+                        <div class="vehicle-finder-header">
+                            <div class="flex items-center justify-between">
+                                <span>Vehicle Finder</span>
+                                <span class="material-icons text-white/80 text-xl">tune</span>
                             </div>
                         </div>
+                        <div class="vehicle-finder-body">
+                            <!-- Condition -->
+                            <div class="vehicle-finder-row">
+                                <label>Condition</label>
+                                <div class="input-wrap">
+                                    <div class="segmented-control">
+                                        <button type="button" :class="{ 'active': condition === '' }" @click="condition = ''; applyFilters()">All</button>
+                                        <button type="button" :class="{ 'active': condition === 'used' }" @click="condition = 'used'; applyFilters()">Used</button>
+                                        <button type="button" :class="{ 'active': condition === 'salvaged' }" @click="condition = 'salvaged'; applyFilters()">Salvage</button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Types -->
+                            <div class="vehicle-finder-row">
+                                <label>Vehicle Type</label>
+                                <div class="input-wrap">
+                                    <select x-model="selectedFilters.vehicle_type" @change="applyFilters()">
+                                        <option value="">All Types</option>
+                                        @foreach ($filterOptions['vehicle_types'] as $type)
+                                            <option value="{{ $type }}">{{ $type }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- Odometer -->
+                            <div class="vehicle-finder-row">
+                                <label>Odometer Range</label>
+                                <div class="input-wrap">
+                                    <div class="flex justify-between text-xs text-gray-500 mb-2 font-medium">
+                                        <span>0 mi</span>
+                                        <span>250,000+ mi</span>
+                                    </div>
+                                    <input type="range" class="odometer-range w-full" min="0" max="{{ $filterOptions['odometer_max'] ?? 250000 }}"
+                                        x-model.number="odometerMax" @input.debounce.300ms="applyFilters()">
+                                    <p class="text-xs text-blue-600 mt-2 font-semibold" x-text="`Up to ${odometerMax ? odometerMax.toLocaleString() : 0} miles`"></p>
+                                </div>
+                            </div>
+                            
+                            <!-- Year -->
+                            <div class="vehicle-finder-row">
+                                <label>Year Range</label>
+                                <div class="input-wrap">
+                                    <div class="year-selects">
+                                        <select x-model.number="yearFrom" @change="applyFilters()">
+                                            @for($y = date('Y') + 1; $y >= 1990; $y--)
+                                                <option value="{{ $y }}">{{ $y }}</option>
+                                            @endfor
+                                        </select>
+                                        <span class="separator">to</span>
+                                        <select x-model.number="yearTo" @change="applyFilters()">
+                                            @for($y = date('Y') + 1; $y >= 1990; $y--)
+                                                <option value="{{ $y }}">{{ $y }}</option>
+                                            @endfor
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Damage type -->
+                            <div class="vehicle-finder-row">
+                                <label>Damage Type</label>
+                                <div class="input-wrap">
+                                    <select x-model="damageTypeSingle" @change="applyFilters()">
+                                        <option value="">All Damage Types</option>
+                                        @foreach ($filterOptions['damage_types'] as $damage)
+                                            <option value="{{ $damage }}">{{ $damage }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- Make -->
+                            <div class="vehicle-finder-row">
+                                <label>Make</label>
+                                <div class="input-wrap">
+                                    <select x-model="makeSingle" @change="applyFilters()">
+                                        <option value="">All Makes</option>
+                                        @foreach ($filterOptions['makes'] as $make)
+                                            <option value="{{ $make }}">{{ $make }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- Model -->
+                            <div class="vehicle-finder-row">
+                                <label>Model</label>
+                                <div class="input-wrap">
+                                    <select x-model="modelSingle" @change="applyFilters()">
+                                        <option value="">All Models</option>
+                                        @foreach ($filterOptions['models'] as $model)
+                                            <option value="{{ $model }}">{{ $model }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- Location -->
+                            <div class="vehicle-finder-row">
+                                <label>Location</label>
+                                <div class="input-wrap">
+                                    <div class="location-radio">
+                                        <label><input type="radio" name="location_mode" value="location" checked> Location</label>
+                                        <label><input type="radio" name="location_mode" value="state"> State/Province</label>
+                                        <label><input type="radio" name="location_mode" value="zip"> Zip Code</label>
+                                    </div>
+                                    <select x-model="locationSingle" @change="applyFilters()">
+                                        <option value="">All Locations</option>
+                                        @foreach ($filterOptions['locations'] as $location)
+                                            <option value="{{ $location }}">{{ $location }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- OR Divider -->
+                            <div class="or-divider"><span>OR</span></div>
+                            
+                            <!-- VIN/Lot # -->
+                            <div class="vehicle-finder-row">
+                                <label>VIN / Lot Number</label>
+                                <div class="input-wrap">
+                                    <input type="text" x-model="vinLot" placeholder="Enter VIN or lot number"
+                                        @input.debounce.400ms="applyFilters()">
+                                </div>
+                            </div>
+                            
+                            <!-- Search button -->
+                            <button type="button" class="btn-search-vehicle mt-3" @click="applyFilters()">
+                                <span class="flex items-center justify-center gap-2">
+                                    <span class="material-icons text-lg">search</span>
+                                    <span>Search Vehicles</span>
+                                </span>
+                            </button>
+                        </div>
+                    </div>
                 </aside>
 
                 <!-- Vehicle Listings -->
-                <!-- Vehicle Listings -->
-<section class="w-full lg:w-3/4">
+                <section class="flex-1">
                     <!-- Loading Skeleton -->
                     <template x-if="isLoading">
                         <div class="grid grid-cols-1 gap-5">
@@ -695,17 +836,10 @@
                                             <p class="text-xl font-bold text-green-600 price-tag">
                                                 ${{ number_format($listing->current_bid ?? 0) }}
                                             </p>
-                                            @if (Auth::check())
-                                                <a href="{{ route('auction.show', $listing->getSlugOrGenerate()) }}"
-                                                    class="bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg transition-all duration-300 text-sm transform hover:-translate-y-0.5 hover:shadow-md">
-                                                    Bid Now
-                                                </a>
-                                            @else
-                                                <button @click="openModal = true"
-                                                    class="bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg transition-all duration-300 text-sm transform hover:-translate-y-0.5 hover:shadow-md">
-                                                    Bid Now
-                                                </button>
-                                            @endif
+                                            <a href="{{ route('auction.show', $listing->getSlugOrGenerate()) }}"
+                                                class="bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg transition-all duration-300 text-sm transform hover:-translate-y-0.5 hover:shadow-md">
+                                                Bid Now
+                                            </a>
                                         </div>
                                     </div>
                                 </div>
@@ -728,8 +862,8 @@
                     <div class="mt-8 flex justify-center animate-fade-in" id="auctionPagination">
                         @include('partials.auction-pagination', ['auctions' => $auctions])
                     </div>
+                </section>
             </div>
-            </section>
 
             <!-- Include Alpine.js if not already -->
             <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
@@ -739,79 +873,45 @@
                 function filterData() {
                     return {
                         isLoading: false,
-                        filtersOpen: {
-                            location: true,
-                            vehicle_type: false,
-                            make: false,
-                            model: false,
-                            damage_type: false,
-                            body_style: false,
-                            engine_type: false,
-                            cylinders: false,
-                            transmission: false,
-                            drive_train: false,
-                            fuel_type: false,
-                        },
+                        viewMode: 'detail',
+                        activeFilters: false,
                         selectedFilters: {
-                            location: @json(request('location', [])),
                             vehicle_type: '{{ request('vehicle_type', '') }}',
-                            makes: @json(request('makes', [])),
-                            models: @json(request('models', [])),
-                            damage_type: @json(request('damage_type', [])),
-                            body_style: '{{ request('body_style', '') }}',
-                            engine_type: '{{ request('engine_type', '') }}',
-                            cylinders: '{{ request('cylinders', '') }}',
-                            transmission: '{{ request('transmission', '') }}',
-                            drive_train: '{{ request('drive_train', '') }}',
-                            fuel_type: '{{ request('fuel_type', '') }}',
                         },
-                        yearFrom: {{ request('year_from', 1900) }},
+                        condition: '{{ request('condition', '') }}',
+                        makeSingle: @json(is_array(request('makes')) ? (request('makes')[0] ?? '') : (request('makes') ?? '')),
+                        modelSingle: @json(is_array(request('models')) ? (request('models')[0] ?? '') : (request('models') ?? '')),
+                        locationSingle: @json(is_array(request('location')) ? (request('location')[0] ?? '') : (request('location') ?? '')),
+                        damageTypeSingle: @json(is_array(request('damage_type')) ? (request('damage_type')[0] ?? '') : (request('damage_type') ?? '')),
+                        vinLot: '{{ request('search', '') }}',
+                        yearFrom: {{ request('year_from', 1990) }},
                         yearTo: {{ request('year_to', date('Y') + 1) }},
-                        odometerMin: {{ request('odometer_min', 0) }},
+                        odometerMin: 0,
                         odometerMax: {{ request('odometer_max', $filterOptions['odometer_max'] ?? 250000) }},
                         sortBy: '{{ request('sort', 'newest') }}',
-                        makeSearch: '',
-                        modelSearch: '',
                         allMakes: @json($filterOptions['makes']),
                         allModels: @json($filterOptions['models']),
                         
-                        get filteredMakes() {
-                            if (!this.makeSearch) return this.allMakes;
-                            return this.allMakes.filter(make => 
-                                make.toLowerCase().includes(this.makeSearch.toLowerCase())
-                            );
-                        },
-                        
-                        get filteredModels() {
-                            if (!this.modelSearch) return this.allModels;
-                            return this.allModels.filter(model => 
-                                model.toLowerCase().includes(this.modelSearch.toLowerCase())
-                            );
-                        },
-                        
-                        toggleFilter(filterName) {
-                            this.filtersOpen[filterName] = !this.filtersOpen[filterName];
-                        },
-                        
                         initFilters() {
-                            // Initialize from URL params if present
+                            if (typeof localStorage !== 'undefined' && localStorage.getItem('auctionViewMode')) {
+                                this.viewMode = localStorage.getItem('auctionViewMode');
+                            }
+                            this.$watch('viewMode', value => {
+                                this.isLoading = true;
+                                if (typeof localStorage !== 'undefined') localStorage.setItem('auctionViewMode', value);
+                                setTimeout(() => { this.isLoading = false; }, 300);
+                            });
                         },
                         
                         clearAllFilters() {
-                            this.selectedFilters = {
-                                location: [],
-                                vehicle_type: '',
-                                makes: [],
-                                models: [],
-                                damage_type: [],
-                                body_style: '',
-                                engine_type: '',
-                                cylinders: '',
-                                transmission: '',
-                                drive_train: '',
-                                fuel_type: '',
-                            };
-                            this.yearFrom = 1900;
+                            this.selectedFilters.vehicle_type = '';
+                            this.condition = '';
+                            this.makeSingle = '';
+                            this.modelSingle = '';
+                            this.locationSingle = '';
+                            this.damageTypeSingle = '';
+                            this.vinLot = '';
+                            this.yearFrom = 1990;
                             this.yearTo = {{ date('Y') + 1 }};
                             this.odometerMin = 0;
                             this.odometerMax = {{ $filterOptions['odometer_max'] ?? 250000 }};
@@ -821,39 +921,19 @@
                         
                         applyFilters() {
                             this.isLoading = true;
-                            
                             const params = new URLSearchParams();
                             
-                            // Add array filters
-                            if (this.selectedFilters.location.length > 0) {
-                                this.selectedFilters.location.forEach(loc => params.append('location[]', loc));
-                            }
-                            if (this.selectedFilters.makes.length > 0) {
-                                this.selectedFilters.makes.forEach(make => params.append('makes[]', make));
-                            }
-                            if (this.selectedFilters.models.length > 0) {
-                                this.selectedFilters.models.forEach(model => params.append('models[]', model));
-                            }
-                            if (this.selectedFilters.damage_type.length > 0) {
-                                this.selectedFilters.damage_type.forEach(damage => params.append('damage_type[]', damage));
-                            }
-                            
-                            // Add single value filters
+                            if (this.condition) params.append('condition', this.condition);
                             if (this.selectedFilters.vehicle_type) params.append('vehicle_type', this.selectedFilters.vehicle_type);
-                            if (this.selectedFilters.body_style) params.append('body_style', this.selectedFilters.body_style);
-                            if (this.selectedFilters.engine_type) params.append('engine_type', this.selectedFilters.engine_type);
-                            if (this.selectedFilters.cylinders) params.append('cylinders', this.selectedFilters.cylinders);
-                            if (this.selectedFilters.transmission) params.append('transmission', this.selectedFilters.transmission);
-                            if (this.selectedFilters.drive_train) params.append('drive_train', this.selectedFilters.drive_train);
-                            if (this.selectedFilters.fuel_type) params.append('fuel_type', this.selectedFilters.fuel_type);
+                            if (this.makeSingle) params.append('makes[]', this.makeSingle);
+                            if (this.modelSingle) params.append('models[]', this.modelSingle);
+                            if (this.locationSingle) params.append('location[]', this.locationSingle);
+                            if (this.damageTypeSingle) params.append('damage_type[]', this.damageTypeSingle);
+                            if (this.vinLot && this.vinLot.trim()) params.append('search', this.vinLot.trim());
                             
-                            // Add range filters
-                            if (this.yearFrom && this.yearFrom > 1900) params.append('year_from', this.yearFrom);
+                            if (this.yearFrom && this.yearFrom > 1990) params.append('year_from', this.yearFrom);
                             if (this.yearTo && this.yearTo < {{ date('Y') + 1 }}) params.append('year_to', this.yearTo);
-                            if (this.odometerMin && this.odometerMin > 0) params.append('odometer_min', this.odometerMin);
                             if (this.odometerMax && this.odometerMax < {{ $filterOptions['odometer_max'] ?? 250000 }}) params.append('odometer_max', this.odometerMax);
-                            
-                            // Add sort
                             if (this.sortBy) params.append('sort', this.sortBy);
                             
                             // Update URL without reload
@@ -873,10 +953,11 @@
                                     document.getElementById('auctionListings').innerHTML = data.html;
                                     document.getElementById('auctionPagination').innerHTML = data.pagination;
                                     
-                                    // Update results count
-                                    const resultsText = document.querySelector('.results-count');
-                                    if (resultsText) {
-                                        resultsText.textContent = `Showing results 1 - ${data.count} of ${data.count}`;
+                                    // Update results count with typing effect
+                                    const resultsEl = document.querySelector('.results-count');
+                                    if (resultsEl) {
+                                        resultsEl.setAttribute('data-full-text', `Showing results 1 - ${data.count} of ${data.count}`);
+                                        typeResultsCount();
                                     }
                                     
                                     // Update countdown timers after AJAX load
@@ -908,6 +989,32 @@
                         document.getElementById('imageModal').classList.remove('flex');
                     }, 300);
                 }
+
+                function typeResultsCount() {
+                    const el = document.querySelector('.results-count');
+                    const typed = document.getElementById('results-count-typed');
+                    const cursor = document.getElementById('results-count-cursor');
+                    if (!el || !typed || !cursor) return;
+                    const text = el.getAttribute('data-full-text') || '';
+                    typed.textContent = '';
+                    cursor.style.visibility = 'visible';
+                    let i = 0;
+                    const speed = 45;
+                    function tick() {
+                        if (i < text.length) {
+                            typed.textContent += text[i];
+                            i++;
+                            setTimeout(tick, speed);
+                        } else {
+                            cursor.style.visibility = 'hidden';
+                        }
+                    }
+                    tick();
+                }
+
+                document.addEventListener('DOMContentLoaded', function() {
+                    typeResultsCount();
+                });
 
                 // Close modal on ESC key
                 document.addEventListener('keydown', function(event) {

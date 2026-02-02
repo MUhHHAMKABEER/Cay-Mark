@@ -4,23 +4,17 @@ namespace App\Http\Controllers;
 use App\Models\Message;
 use App\Models\Chat;
 use Illuminate\Http\Request;
- use App\Events\NewMessageSent;
+use App\Events\NewMessageSent;
+use App\Http\Requests\MessageStoreRequest;
+use App\Services\MessageOps;
 
 class MessageController extends Controller
 {
 
 
-public function store(Request $request)
+public function store(MessageStoreRequest $request)
 {
-    $message = Message::create([
-        'chat_id' => $request->chat_id,
-        'sender_id' => auth()->id(),
-        'body' => $request->message,
-    ]);
-
-    broadcast(new NewMessageSent($message))->toOthers();
-
-    return response()->json($message);
+    return MessageOps::store($request);
 }
 
 

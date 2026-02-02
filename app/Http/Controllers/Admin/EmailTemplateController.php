@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Http\Requests\AdminEmailTemplateUpdateRequest;
 use Illuminate\Support\Facades\File;
+use App\Services\Admin\AdminEmailTemplateOps;
 
 class EmailTemplateController extends Controller
 {
@@ -65,21 +67,9 @@ class EmailTemplateController extends Controller
     /**
      * Update email template
      */
-    public function update(Request $request, $templateName)
+    public function update(AdminEmailTemplateUpdateRequest $request, $templateName)
     {
-        $request->validate([
-            'content' => 'required|string',
-        ]);
-
-        $templatePath = resource_path("views/emails/{$templateName}.blade.php");
-        
-        if (!File::exists($templatePath)) {
-            return back()->with('error', 'Template not found.');
-        }
-
-        File::put($templatePath, $request->content);
-
-        return back()->with('success', 'Template updated successfully.');
+        return AdminEmailTemplateOps::update($request, $templateName);
     }
 
     /**

@@ -4,9 +4,11 @@
 @php
     // Get top 8 popular auctions (by views/clicks or default to latest)
     $popularAuctions = \App\Models\Listing::with('images')
+        ->withCount(['watchlistedBy as likes_count'])
         ->where('listing_method', 'auction')
         ->where('listing_state', 'active')
         ->where('status', 'approved')
+        ->orderByDesc('likes_count')
         ->orderBy('created_at', 'desc')
         ->take(8)
         ->get();
@@ -18,6 +20,8 @@
         ->where('status', 'approved')
         ->take(12)
         ->get();
+
+    $likedListingIds = Auth::check() ? Auth::user()->watchlist()->pluck('listing_id') : collect();
 @endphp
 
 <style>
@@ -676,13 +680,24 @@
                                         <a href="{{ route('auction.show', $auction->getSlugOrGenerate()) }}" class="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-center py-3 px-4 rounded-xl font-bold transition-all transform hover:scale-105 shadow-lg">
                                             View Details
                                         </a>
-                                        @auth
-                                        <button class="p-3 border-2 border-gray-200 hover:border-blue-500 rounded-xl hover:bg-blue-50 transition-all group">
-                                            <svg class="w-5 h-5 text-gray-600 group-hover:text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-                                            </svg>
-                                        </button>
-                                        @endauth
+                                        @php
+                                            $liked = $likedListingIds->contains($auction->id);
+                                            $likesCount = $auction->likes_count ?? 0;
+                                        @endphp
+                                        <form action="{{ route('listing.watchlist', $auction->id) }}" method="POST">
+                                            @csrf
+                                            <button
+                                                type="submit"
+                                                class="js-like-toggle flex items-center gap-1.5 p-3 border-2 border-gray-200 hover:border-blue-500 rounded-xl hover:bg-blue-50 transition-all {{ $liked ? 'text-red-500' : 'text-gray-600' }}"
+                                                data-url="{{ route('listing.watchlist', $auction->id) }}"
+                                                data-liked="{{ $liked ? '1' : '0' }}"
+                                                data-auth="{{ Auth::check() ? '1' : '0' }}"
+                                                data-unliked-class="text-gray-600"
+                                                aria-label="Like listing">
+                                                <span class="material-icons text-base">{{ $liked ? 'favorite' : 'favorite_border' }}</span>
+                                                <span class="text-xs js-like-count">{{ $likesCount }}</span>
+                                            </button>
+                                        </form>
                                     </div>
                                 </div>
                             </div>
@@ -815,14 +830,14 @@
     </div>
 </section>
 
-<!-- Enhanced Mini Register Form Section -->
+<!-- Enhanced Mini Register Form Section (guests) / Welcome Back (logged in) -->
 <section class="py-20 bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 relative overflow-hidden">
     <div class="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.05"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
-    <!-- Floating shapes -->
     <div class="absolute top-20 left-10 w-40 h-40 bg-white/5 rounded-full blur-3xl"></div>
     <div class="absolute bottom-20 right-10 w-48 h-48 bg-white/5 rounded-full blur-3xl"></div>
-    
+
     <div class="container mx-auto px-4 relative z-10">
+        @guest
         <div class="max-w-3xl mx-auto register-form-modern rounded-3xl p-10 fade-in-up">
             <div class="text-center mb-8">
                 <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl mb-4 shadow-lg glow-blue transform hover:scale-110 transition-transform">
@@ -835,7 +850,6 @@
                 </h2>
                 <p class="text-gray-600 text-lg">Create your account in seconds and start bidding today</p>
             </div>
-            
             <form action="{{ route('register') }}" method="GET" class="space-y-5">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
@@ -869,6 +883,63 @@
                 </button>
             </form>
         </div>
+        @else
+        <!-- Logged-in: Welcome back + quick actions -->
+        <div class="max-w-4xl mx-auto register-form-modern rounded-3xl p-10 md:p-12 fade-in-up">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-8">
+                <div class="flex items-center gap-5">
+                    <div class="flex-shrink-0 w-20 h-20 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center shadow-xl">
+                        <span class="text-3xl font-bold text-white">{{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}</span>
+                    </div>
+                    <div>
+                        <p class="text-white/80 text-sm font-medium uppercase tracking-wider mb-1">Welcome back</p>
+                        <h2 class="text-2xl md:text-3xl font-bold text-white">{{ Auth::user()->name }}</h2>
+                        <p class="text-white/70 text-sm mt-1">{{ Auth::user()->email }}</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 md:flex md:flex-wrap gap-3">
+                    @if(Auth::user()->role === 'buyer')
+                    <a href="{{ route('dashboard.buyer') }}" class="inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-white text-blue-700 rounded-xl font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 6h6a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6z"/></svg>
+                        Dashboard
+                    </a>
+                    <a href="{{ route('Auction.index') }}" class="inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-white/10 hover:bg-white/20 text-white border border-white/30 rounded-xl font-semibold transition-all">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                        Browse Auctions
+                    </a>
+                    <a href="{{ route('buyer.deposit-withdrawal') }}" class="inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-white/10 hover:bg-white/20 text-white border border-white/30 rounded-xl font-semibold transition-all">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                        Wallet
+                    </a>
+                    <a href="{{ route('dashboard.buyer') }}?tab=user" class="inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-white/10 hover:bg-white/20 text-white border border-white/30 rounded-xl font-semibold transition-all">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                        Account
+                    </a>
+                    @elseif(Auth::user()->role === 'seller')
+                    <a href="{{ route('dashboard.seller') }}" class="inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-white text-blue-700 rounded-xl font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6z"/></svg>
+                        Dashboard
+                    </a>
+                    <a href="{{ route('seller.listings.create') }}" class="inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-white/10 hover:bg-white/20 text-white border border-white/30 rounded-xl font-semibold transition-all">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                        Submit Listing
+                    </a>
+                    <a href="{{ route('seller.listings.index') }}" class="inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-white/10 hover:bg-white/20 text-white border border-white/30 rounded-xl font-semibold transition-all">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                        My Listings
+                    </a>
+                    <a href="{{ route('dashboard.seller') }}?tab=user" class="inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-white/10 hover:bg-white/20 text-white border border-white/30 rounded-xl font-semibold transition-all">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                        Account
+                    </a>
+                    @else
+                    <a href="{{ route('dashboard.buyer') }}" class="inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-white text-blue-700 rounded-xl font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all">Dashboard</a>
+                    <a href="{{ route('Auction.index') }}" class="inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-white/10 hover:bg-white/20 text-white border border-white/30 rounded-xl font-semibold transition-all">Browse Auctions</a>
+                    @endif
+                </div>
+            </div>
+        </div>
+        @endguest
     </div>
 </section>
 

@@ -403,7 +403,7 @@
 </style>
 
 <div class="auction-detail-page">
-    <div class="container mx-auto px-4" style="max-width: 80%;">
+    <div class="container mx-auto px-4" style="max-width: 90%;">
         <!-- Back Link -->
         <a href="{{ route('buyer.auctions') }}" class="back-link">
             <span class="material-icons">arrow_back</span>
@@ -491,7 +491,15 @@
                     <div class="info-grid">
                         <div class="info-item">
                             <span class="info-label">Vehicle Type</span>
-                            <span class="info-value">{{ $listing->major_category ?? 'N/A' }}</span>
+                            <span class="info-value">
+                                @if($listing->vehicle_type && stripos($listing->vehicle_type, 'INCOMPLETE') === false)
+                                    {{ $listing->vehicle_type }}
+                                @elseif($listing->major_category)
+                                    {{ $listing->major_category }}
+                                @else
+                                    N/A
+                                @endif
+                            </span>
                         </div>
                         <div class="info-item">
                             <span class="info-label">Year</span>
@@ -505,6 +513,12 @@
                             <span class="info-label">Model</span>
                             <span class="info-value">{{ $listing->model ?? 'N/A' }}</span>
                         </div>
+                        @if($listing->trim)
+                        <div class="info-item">
+                            <span class="info-label">Trim</span>
+                            <span class="info-value">{{ $listing->trim }}</span>
+                        </div>
+                        @endif
                         <div class="info-item">
                             <span class="info-label">Body Style</span>
                             <span class="info-value">{{ $listing->body_style ?? $listing->subcategory ?? 'N/A' }}</span>
@@ -514,21 +528,31 @@
                             <span class="info-value">{{ $listing->color ?? 'N/A' }}</span>
                         </div>
                         <div class="info-item">
-                            <span class="info-label">Engine Type</span>
+                            <span class="info-label">Engine Size</span>
                             <span class="info-value">{{ $listing->engine_type ?? 'N/A' }}</span>
                         </div>
+                        @if($listing->cylinders)
                         <div class="info-item">
                             <span class="info-label">Cylinders</span>
-                            <span class="info-value">{{ $listing->cylinders ?? 'N/A' }}</span>
+                            <span class="info-value">{{ $listing->cylinders }}</span>
                         </div>
+                        @endif
                         <div class="info-item">
                             <span class="info-label">Transmission</span>
-                            <span class="info-value">{{ $listing->transmission ?? 'N/A' }}</span>
+                            <span class="info-value">
+                                @if($listing->transmission)
+                                    {{ ucfirst($listing->transmission) }}
+                                @else
+                                    N/A
+                                @endif
+                            </span>
                         </div>
+                        @if($listing->drive_type)
                         <div class="info-item">
-                            <span class="info-label">Drive</span>
-                            <span class="info-value">{{ $listing->drive ?? $listing->drive_train ?? 'N/A' }}</span>
+                            <span class="info-label">Drive Type</span>
+                            <span class="info-value">{{ $listing->drive_type }}</span>
                         </div>
+                        @endif
                         <div class="info-item">
                             <span class="info-label">Fuel Type</span>
                             <span class="info-value">{{ $listing->fuel_type ?? 'N/A' }}</span>
@@ -793,6 +817,7 @@
             headers: {
                 'X-CSRF-TOKEN': '{{ csrf_token() }}',
                 'Content-Type': 'application/json',
+                'Accept': 'application/json',
             },
         })
         .then(response => response.json())

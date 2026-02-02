@@ -6,6 +6,7 @@ use App\Models\Bid;
 use Carbon\Carbon;
 use App\Models\Listing;
 use Illuminate\Http\Request;
+use App\Http\Requests\BuyerBidStoreRequest;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
@@ -14,6 +15,7 @@ use Illuminate\Support\Str;
 use App\Http\Controllers\Controller;
 use App\Services\DepositService;
 use App\Services\BiddingIncrementService;
+use App\Services\Buyer\AuctionBidOrchestrator;
 
 
 class AuctionController extends Controller
@@ -21,7 +23,9 @@ class AuctionController extends Controller
    public function index(Request $request)
 {
     // Base query: only auction listings
-    $query = Listing::with('images')->where('listing_method', 'auction');
+    $query = Listing::with('images')
+        ->withCount(['watchlistedBy as likes_count'])
+        ->where('listing_method', 'auction');
 
     // If you have a 'status' column, filter approved ones
     if (Schema::hasColumn('listings', 'status')) {
@@ -54,11 +58,28 @@ class AuctionController extends Controller
         'fuel_type' => $toArray($request->input('fuel_type')),
     ];
 
+    // Text search (header search bar)
+    $search = trim((string) $request->input('search', ''));
+
     // Numeric / range filters
     $yearFrom = $request->input('year_from');
     $yearTo   = $request->input('year_to');
     $odoMin   = $request->input('odometer_min');
     $odoMax   = $request->input('odometer_max');
+
+    if ($search !== '') {
+        $query->where(function ($q) use ($search) {
+            $q->where('make', 'like', '%' . $search . '%')
+              ->orWhere('model', 'like', '%' . $search . '%')
+              ->orWhere('year', 'like', '%' . $search . '%')
+              ->orWhere('vin', 'like', '%' . $search . '%')
+              ->orWhere('item_number', 'like', '%' . $search . '%');
+        });
+    }
+
+    if ($request->filled('condition') && in_array($request->input('condition'), ['new', 'used', 'salvaged'])) {
+        $query->where('condition', $request->input('condition'));
+    }
 
     // Apply filters dynamically
     if (! empty($filters['location'])) {
@@ -100,7 +121,10 @@ class AuctionController extends Controller
         $query->whereIn('transmission', $filters['transmission']);
     }
     if (! empty($filters['drive_train'])) {
-        if (Schema::hasColumn('listings', 'drive_train')) {
+        // Check for both drive_train and drive_type columns for backward compatibility
+        if (Schema::hasColumn('listings', 'drive_type')) {
+            $query->whereIn('drive_type', $filters['drive_train']);
+        } elseif (Schema::hasColumn('listings', 'drive_train')) {
             $query->whereIn('drive_train', $filters['drive_train']);
         }
     }
@@ -149,12 +173,17 @@ class AuctionController extends Controller
             break;
     }
 
+    $likedListingIds = collect();
+    if (Auth::check()) {
+        $likedListingIds = Auth::user()->watchlist()->pluck('listing_id');
+    }
+
     // Check if AJAX request
     if ($request->ajax()) {
         $auctions = $query->paginate(20);
         return response()->json([
             'success' => true,
-            'html' => view('partials.auction-listings', compact('auctions'))->render(),
+            'html' => view('partials.auction-listings', compact('auctions', 'likedListingIds'))->render(),
             'pagination' => view('partials.auction-pagination', compact('auctions'))->render(),
             'count' => $auctions->total(),
         ]);
@@ -194,7 +223,7 @@ class AuctionController extends Controller
         'odometer_max' => $baseQuery->max('odometer') ?? 250000,
     ];
 
-    return view('auction', compact('auctions', 'filterOptions'));
+    return view('auction', compact('auctions', 'filterOptions', 'likedListingIds'));
 }
 
 
@@ -317,158 +346,9 @@ private function getBidStatus($listing, $userId = null)
 
 
 
-    public function storeBid(Request $request, Listing $listing)
+    public function storeBid(BuyerBidStoreRequest $request, Listing $listing)
     {
-        $user = Auth::user();
-        
-        // Check if listing is an auction
-        if ($listing->listing_method !== 'auction') {
-            throw ValidationException::withMessages([
-                'amount' => 'This listing is not an auction.',
-            ]);
-        }
-        
-        // SELLER RESTRICTION: Sellers cannot bid (per PDF requirements)
-        if ($user->role === 'seller') {
-            throw ValidationException::withMessages([
-                'amount' => 'Sellers are not allowed to bid on auctions.',
-            ]);
-        }
-        
-        // BUYER MEMBERSHIP REQUIRED
-        if ($user->role !== 'buyer') {
-            throw ValidationException::withMessages([
-                'amount' => 'Buyer membership required to place bids.',
-            ]);
-        }
-
-        // ACCOUNT RESTRICTION: Check if user is restricted from auction participation (per PDF requirements)
-        if ($user->is_restricted) {
-            // Check if restriction has expired
-            if ($user->restriction_ends_at && now()->greaterThan($user->restriction_ends_at)) {
-                // Auto-remove expired restriction
-                $user->update([
-                    'is_restricted' => false,
-                    'restriction_ends_at' => null,
-                    'restriction_reason' => null,
-                ]);
-            } else {
-                throw ValidationException::withMessages([
-                    'amount' => 'Your account is currently restricted from placing bids due to a non-payment default. This restriction will be lifted on ' . $user->restriction_ends_at->format('F d, Y') . '. You can still browse listings, view your account, and contact support.',
-                ]);
-            }
-        }
-        
-        $depositService = new DepositService();
-        $incrementService = new BiddingIncrementService();
-
-        // simple validation
-        $data = $request->validate([
-            'amount' => ['required', 'numeric', 'min:0.01'],
-        ]);
-
-        $amount = (float) $data['amount'];
-
-        // Use DB transaction to avoid race conditions
-        return DB::transaction(function () use ($listing, $user, $amount, $depositService, $incrementService) {
-            // Re-fetch with lock and additional checks
-            $listing = Listing::lockForUpdate()
-                ->where('id', $listing->id)
-                ->where('listing_method', 'auction')
-                ->where('status', 'approved')
-                ->firstOrFail();
-
-            // Check if auction is still active (use auction_end_time if set, otherwise calculate)
-            $auctionEndDate = $listing->auction_end_time 
-                ? Carbon::parse($listing->auction_end_time)
-                : Carbon::parse($listing->auction_start_time ?? $listing->created_at)->addDays($listing->auction_duration);
-                
-            if (now()->greaterThanOrEqualTo($auctionEndDate)) {
-                throw ValidationException::withMessages([
-                    'amount' => 'This auction has ended.',
-                ]);
-            }
-
-            // fetch current highest active bid
-            $highestBid = $listing->bids()->where('status', 'active')->orderByDesc('amount')->first();
-            $current = $highestBid ? (float) $highestBid->amount : (float) ($listing->current_bid ?? 0);
-            $startingPrice = (float) ($listing->starting_price ?? $listing->price ?? 0);
-
-            // Use the higher of starting price or current bid for increment validation
-            $bidBase = max($startingPrice, $current);
-
-            // Validate bid increment using CayMark Increment Table
-            $incrementValidation = $incrementService->validateBidIncrement($bidBase, $amount);
-            if (!$incrementValidation['valid']) {
-                throw ValidationException::withMessages([
-                    'amount' => $incrementValidation['message'],
-                ]);
-            }
-
-            // Ensure bid is at least starting price
-            if ($amount < $startingPrice) {
-                throw ValidationException::withMessages([
-                    'amount' => 'Your bid must be at least the starting price of $' . number_format($startingPrice, 2) . '.',
-                ]);
-            }
-
-            // Check deposit requirement (10% for bids >= $2,000)
-            $depositCheck = $depositService->checkDepositForBid($user, $amount);
-            if (!$depositCheck['has_deposit']) {
-                throw ValidationException::withMessages([
-                    'amount' => 'Insufficient deposit. Required: $' . number_format($depositCheck['required'], 2) . '. Available: $' . number_format($depositCheck['available'], 2) . '. Please add funds to your deposit wallet.',
-                ]);
-            }
-
-            // AUTO-SNIPING PROTECTION: If bid placed < 60 seconds remaining, reset timer to 60 seconds
-            $secondsRemaining = now()->diffInSeconds($auctionEndDate, false);
-            $timerReset = false;
-            if ($secondsRemaining > 0 && $secondsRemaining < 60) {
-                // Reset auction end time to 60 seconds from now (per PDF requirements)
-                $newEndTime = now()->addSeconds(60);
-                $listing->auction_end_time = $newEndTime;
-                $timerReset = true;
-            }
-
-            // create bid
-            $bid = Bid::create([
-                'listing_id' => $listing->id,
-                'user_id' => $user->id,
-                'amount' => $amount,
-                'status' => 'active',
-            ]);
-
-            // Lock deposit for this bid (if required)
-            $requiredDeposit = $depositService->calculateRequiredDeposit($amount);
-            if ($requiredDeposit > 0) {
-                $depositService->lockDepositForBid($user, $bid, $requiredDeposit);
-            }
-
-            // Update listing
-            $listing->current_bid = $amount;
-            $listing->save();
-
-            // Send bid placed notification
-            $notificationService = new \App\Services\NotificationService();
-            $notificationService->bidPlaced($user, $listing);
-
-            // Calculate new end time for response
-            $newEndDate = $timerReset ? $listing->auction_end_time : $auctionEndDate;
-
-            // return JSON for AJAX
-            return response()->json([
-                'success' => true,
-                'bid' => [
-                    'id' => $bid->id,
-                    'amount' => number_format($bid->amount, 2),
-                    'created_at' => $bid->created_at->toDateTimeString(),
-                ],
-                'currentBid' => number_format($amount, 2),
-                'timerReset' => $timerReset,
-                'newEndTime' => $timerReset ? $newEndDate->toDateTimeString() : null,
-                'message' => $timerReset ? 'Bid placed! Timer extended by 60 seconds.' : 'Bid placed successfully!',
-            ]);
-        });
+        return AuctionBidOrchestrator::placeBid($request, $listing);
     }
 
 

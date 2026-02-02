@@ -4,9 +4,11 @@
 @php
     // Get top 8 popular auctions (by views/clicks or default to latest)
     $popularAuctions = \App\Models\Listing::with('images')
+        ->withCount(['watchlistedBy as likes_count'])
         ->where('listing_method', 'auction')
         ->where('listing_state', 'active')
         ->where('status', 'approved')
+        ->orderByDesc('likes_count')
         ->orderBy('created_at', 'desc')
         ->take(8)
         ->get();
@@ -18,6 +20,8 @@
         ->where('status', 'approved')
         ->take(12)
         ->get();
+
+    $likedListingIds = Auth::check() ? Auth::user()->watchlist()->pluck('listing_id') : collect();
 @endphp
 
 <!-- Banner Header with Rotating Images -->
@@ -145,13 +149,24 @@
                                         <a href="{{ route('auction.show', $auction->id) }}" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-center py-2 px-4 rounded-lg font-semibold transition-colors">
                                             View details
                                         </a>
-                                        @auth
-                                        <button class="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                                            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-                                            </svg>
-                                        </button>
-                                        @endauth
+                                        @php
+                                            $liked = $likedListingIds->contains($auction->id);
+                                            $likesCount = $auction->likes_count ?? 0;
+                                        @endphp
+                                        <form action="{{ route('listing.watchlist', $auction->id) }}" method="POST">
+                                            @csrf
+                                            <button
+                                                type="submit"
+                                                class="js-like-toggle flex items-center gap-1.5 p-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors {{ $liked ? 'text-red-500' : 'text-gray-600' }}"
+                                                data-url="{{ route('listing.watchlist', $auction->id) }}"
+                                                data-liked="{{ $liked ? '1' : '0' }}"
+                                                data-auth="{{ Auth::check() ? '1' : '0' }}"
+                                                data-unliked-class="text-gray-600"
+                                                aria-label="Like listing">
+                                                <span class="material-icons text-base">{{ $liked ? 'favorite' : 'favorite_border' }}</span>
+                                                <span class="text-xs js-like-count">{{ $likesCount }}</span>
+                                            </button>
+                                        </form>
                                     </div>
                                 </div>
                             </div>

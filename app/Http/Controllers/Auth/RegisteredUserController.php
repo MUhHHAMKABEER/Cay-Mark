@@ -707,8 +707,9 @@ public function step3(Request $request)
                 'has_business_license' => $request->hasFile('business_license'),
             ]);
         } catch (\Illuminate\Validation\ValidationException $ve) {
+            $errors = $ve->errors();
             Log::error('Validation failed', [
-                'errors' => $ve->errors()->toArray(),
+                'errors' => is_array($errors) ? $errors : $errors->toArray(),
                 'request_data' => $request->except(['id_document', 'business_license']), // Exclude files from log
             ]);
             return back()->withErrors($ve->validator)->withInput();

@@ -22,7 +22,8 @@ protected $fillable = [
     'name','email','password','username','nationality','island',
     'dob','gender','phone','marketing_opt_in','role',
     'id_type','business_license_path','relationship_to_business','registration_complete',
-    'is_restricted','restriction_ends_at','restriction_reason'
+    'is_restricted','restriction_ends_at','restriction_reason',
+    'last_login_ip',
 ];
 
 
@@ -263,14 +264,16 @@ public function watchlist()
     {
         $listingIds = $this->bids()->distinct()->pluck('listing_id');
 
+        $now = now();
+
         return Listing::with(['images', 'bids' => function($query) {
                 $query->where('user_id', $this->id)->latest();
             }])
             ->whereIn('id', $listingIds)
             ->where(function($query) {
                 $query->where(function($q) {
-                    $q->where('status', 'active')
-                      ->orWhere('status', 'pending');
+                    $q->whereIn('status', ['approved', 'active', 'pending'])
+                      ->where('listing_state', 'active');
                 })
                 ->orWhere(function($q) {
                     $q->where('status', 'sold')
@@ -281,6 +284,11 @@ public function watchlist()
                 });
             })
             ->get()
+            ->filter(function($listing) use ($now) {
+                $endDate = $listing->getAuctionEndDate();
+                return !$endDate || $now->lt($endDate);
+            })
+            ->values()
             ->map(function($listing) {
                 $listing->highest_bid = $listing->getHighestBidAmount();
                 $listing->user_highest_bid = $listing->getUserHighestBid($this->id);
@@ -295,14 +303,39 @@ public function watchlist()
      */
     public function getWonAuctions()
     {
-        return $this->invoices()
-            ->where('payment_status', 'paid')
-            ->with(['listing.images', 'bid'])
-            ->latest('paid_at')
+        $listingIds = $this->bids()->distinct()->pluck('listing_id');
+        $now = now();
+
+        return Listing::with([
+                'images',
+                'bids' => function($query) {
+                    $query->where('status', 'active');
+                },
+                'invoices' => function($query) {
+                    $query->where('buyer_id', $this->id);
+                },
+            ])
+            ->whereIn('id', $listingIds)
+            ->where('listing_method', 'auction')
             ->get()
-            ->map(function($invoice) {
-                $invoice->listing->final_price = $invoice->winning_bid_amount;
-                return $invoice;
+            ->filter(function($listing) use ($now) {
+                $endDate = $listing->getAuctionEndDate();
+                if (!$endDate || $now->lt($endDate)) {
+                    return false;
+                }
+
+                $highestBid = $listing->bids->sortByDesc('amount')->first();
+                return $highestBid && $highestBid->user_id === $this->id;
+            })
+            ->values()
+            ->map(function($listing) {
+                $invoice = $listing->invoices->first();
+                $listing->final_price = $invoice->winning_bid_amount
+                    ?? $listing->getUserHighestBid($this->id)
+                    ?? $listing->starting_price
+                    ?? 0;
+                $listing->payment_status = $invoice->payment_status ?? null;
+                return $listing;
             });
     }
 
@@ -312,23 +345,27 @@ public function watchlist()
     public function getLostAuctions()
     {
         $listingIds = $this->bids()->distinct()->pluck('listing_id');
+        $now = now();
 
         return Listing::with(['images', 'bids' => function($query) {
-                $query->where('user_id', $this->id)->latest();
-            }, 'invoices' => function($query) {
-                $query->where('payment_status', 'paid');
+                $query->where('status', 'active');
             }])
             ->whereIn('id', $listingIds)
-            ->where('status', 'sold')
-            ->whereDoesntHave('invoices', function($query) {
-                $query->where('buyer_id', $this->id)
-                      ->where('payment_status', 'paid');
-            })
+            ->where('listing_method', 'auction')
             ->get()
+            ->filter(function($listing) use ($now) {
+                $endDate = $listing->getAuctionEndDate();
+                if (!$endDate || $now->lt($endDate)) {
+                    return false;
+                }
+
+                $highestBid = $listing->bids->sortByDesc('amount')->first();
+                return $highestBid && $highestBid->user_id !== $this->id;
+            })
+            ->values()
             ->map(function($listing) {
                 $listing->user_highest_bid = $listing->getUserHighestBid($this->id);
-                $winningInvoice = $listing->getWinningInvoice();
-                $listing->winning_price = $winningInvoice ? $winningInvoice->winning_bid_amount : 0;
+                $listing->winning_price = $listing->getHighestBidAmount();
                 return $listing;
             });
     }

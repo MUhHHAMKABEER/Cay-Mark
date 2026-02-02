@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Buyer;
 use App\Http\Controllers\Controller;
 use App\Services\DepositService;
 use Illuminate\Http\Request;
+use App\Http\Requests\BuyerDepositWithdrawalRequest;
 use Illuminate\Support\Facades\Auth;
+use App\Services\Buyer\DepositWithdrawalOps;
 
 class DepositWithdrawalController extends Controller
 {
@@ -37,22 +39,8 @@ class DepositWithdrawalController extends Controller
     /**
      * Request withdrawal.
      */
-    public function requestWithdrawal(Request $request)
+    public function requestWithdrawal(BuyerDepositWithdrawalRequest $request)
     {
-        $request->validate([
-            'amount' => 'required|numeric|min:0.01',
-            'notes' => 'nullable|string|max:500',
-        ]);
-
-        $user = Auth::user();
-        $amount = (float) $request->amount;
-
-        try {
-            $withdrawal = $this->depositService->requestWithdrawal($user, $amount, $request->notes);
-
-            return redirect()->back()->with('success', 'Withdrawal request submitted. Pending admin approval.');
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
-        }
+        return DepositWithdrawalOps::requestWithdrawal($request, $this->depositService);
     }
 }

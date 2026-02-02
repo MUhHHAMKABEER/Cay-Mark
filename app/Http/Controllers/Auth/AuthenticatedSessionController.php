@@ -26,6 +26,19 @@ public function store(LoginRequest $request): RedirectResponse
     $request->session()->regenerate();
 
     $user = $request->user();
+
+    // 21. Suspicious Login Detected — in-app notification when login from new IP
+    $currentIp = $request->ip();
+    if ($currentIp && $user->last_login_ip !== null && $user->last_login_ip !== $currentIp) {
+        try {
+            (new \App\Services\NotificationService())->suspiciousLoginDetected($user);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('Suspicious login notification failed: ' . $e->getMessage());
+        }
+    }
+    if ($currentIp) {
+        $user->update(['last_login_ip' => $currentIp]);
+    }
     $role = trim(strtolower($user->role ?? ''));
     
     // Admin users bypass registration check and go directly to admin dashboard

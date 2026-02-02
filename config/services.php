@@ -40,4 +40,10 @@ return [
         'base_url' => env('AUTO_DEV_BASE_URL', 'https://api.auto.dev'),
     ],
 
+    'payment' => [
+        'sandbox' => env('PAYMENT_SANDBOX', true),
+        'stripe_key' => env('STRIPE_KEY'),
+        'stripe_secret' => env('STRIPE_SECRET'),
+    ],
+
 ];

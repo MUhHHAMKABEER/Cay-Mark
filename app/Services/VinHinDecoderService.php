@@ -317,17 +317,23 @@ class VinHinDecoderService
         
         // Map Auto.dev fields to our internal format
         // Based on actual API response structure
+        $rawTrim = $data['trim'] ?? $data['trimLevel'] ?? $data['series'] ?? null;
+        $rawDriveType = $data['drive'] ?? $data['driveType'] ?? $data['driveline'] ?? $data['driveTrain'] ?? null;
+        
+        // Ensure trim doesn't contain drive type data
+        $trim = $this->cleanTrimField($rawTrim, $rawDriveType);
+        
         $mapped = [
             'make' => $data['make'] ?? $data['manufacturer'] ?? null,
             'model' => $data['model'] ?? null,
             'year' => $data['year'] ?? $data['modelYear'] ?? null,
-            'trim' => $data['trim'] ?? $data['trimLevel'] ?? $data['series'] ?? null,
+            'trim' => $trim,
             'engine_size' => $data['engine'] ?? $data['engineSize'] ?? $data['style'] ?? $data['displacement'] ?? null,
             'cylinders' => $this->extractCylinders($data['engine'] ?? $data['style'] ?? null),
-            'drive_type' => $data['drive'] ?? $data['driveType'] ?? $data['driveline'] ?? $data['driveTrain'] ?? null,
-            'fuel_type' => $data['fuelType'] ?? $data['fuel'] ?? $data['fuelSystem'] ?? null,
-            'transmission' => $data['transmission'] ?? $data['transmissionType'] ?? $data['transmissionDesc'] ?? null,
-            'vehicle_type' => $data['body'] ?? $data['type'] ?? $data['vehicleType'] ?? $data['bodyStyle'] ?? $data['category'] ?? null,
+            'drive_type' => $rawDriveType,
+            'fuel_type' => $this->normalizeFuelType($data['fuelType'] ?? $data['fuel'] ?? $data['fuelSystem'] ?? null),
+            'transmission' => $this->normalizeTransmission($data['transmission'] ?? $data['transmissionType'] ?? $data['transmissionDesc'] ?? null),
+            'vehicle_type' => $this->normalizeVehicleType($data['body'] ?? $data['type'] ?? $data['vehicleType'] ?? $data['bodyStyle'] ?? $data['category'] ?? null),
         ];
         
         // Remove null values
@@ -362,7 +368,209 @@ class VinHinDecoderService
     }
 
     /**
+     * Clean trim field to ensure it doesn't contain drive type data.
+     * 
+     * @param string|null $trim
+     * @param string|null $driveType
+     * @return string|null
+     */
+    protected function cleanTrimField(?string $trim, ?string $driveType): ?string
+    {
+        if (empty($trim)) {
+            return null;
+        }
+        
+        // If trim contains drive type patterns, remove them
+        $trimUpper = strtoupper($trim);
+        $drivePatterns = ['FWD', 'RWD', 'AWD', '4WD', '2WD', 'FOUR WHEEL DRIVE', 'TWO WHEEL DRIVE', 
+                         'FRONT WHEEL DRIVE', 'REAR WHEEL DRIVE', 'ALL WHEEL DRIVE'];
+        
+        foreach ($drivePatterns as $pattern) {
+            if (stripos($trimUpper, $pattern) !== false) {
+                // Remove drive type from trim
+                $trim = preg_replace('/\b' . preg_quote($pattern, '/') . '\b/i', '', $trim);
+                $trim = trim(preg_replace('/\s+/', ' ', $trim));
+            }
+        }
+        
+        // If drive type exists and trim is empty or same as drive type, return null for trim
+        if (!empty($driveType) && (empty($trim) || strtoupper(trim($trim)) === strtoupper(trim($driveType)))) {
+            return null;
+        }
+        
+        return !empty($trim) ? trim($trim) : null;
+    }
+
+    /**
+     * Normalize vehicle type to standard categories.
+     * 
+     * @param string|null $vehicleType
+     * @return string|null
+     */
+    protected function normalizeVehicleType(?string $vehicleType): ?string
+    {
+        if (empty($vehicleType)) {
+            return null;
+        }
+        
+        $vehicleTypeUpper = strtoupper(trim($vehicleType));
+        
+        // Handle "Incomplete Vehicle Type" - return null to hide it
+        if (stripos($vehicleTypeUpper, 'INCOMPLETE') !== false) {
+            return null;
+        }
+        
+        // Map specific types to standard categories
+        $mappings = [
+            // Car/Sedan
+            'SEDAN' => 'CAR',
+            'COUPE' => 'CAR',
+            'HATCHBACK' => 'CAR',
+            'CONVERTIBLE' => 'CAR',
+            'WAGON' => 'CAR',
+            'AUTOMOBILE' => 'CAR',
+            
+            // SUV
+            'SUV' => 'SUV',
+            'CROSSOVER' => 'SUV',
+            'SPORT UTILITY VEHICLE' => 'SUV',
+            
+            // Truck
+            'TRUCK' => 'TRUCK',
+            'PICKUP' => 'TRUCK',
+            'PICKUP TRUCK' => 'TRUCK',
+            'CREW CAB PICKUP' => 'TRUCK',
+            'EXTENDED CAB PICKUP' => 'TRUCK',
+            'REGULAR CAB PICKUP' => 'TRUCK',
+            'CAB PICKUP' => 'TRUCK',
+            
+            // Van
+            'VAN' => 'VAN',
+            'MINIVAN' => 'VAN',
+            'CARGO VAN' => 'VAN',
+            'PASSENGER VAN' => 'VAN',
+            
+            // Boat/Marine
+            'BOAT' => 'BOAT',
+            'MARINE' => 'BOAT',
+            'VESSEL' => 'BOAT',
+            'YACHT' => 'BOAT',
+            
+            // Industrial
+            'EQUIPMENT' => 'INDUSTRIAL',
+            'MACHINERY' => 'INDUSTRIAL',
+            'CONSTRUCTION' => 'INDUSTRIAL',
+            'TRACTOR' => 'INDUSTRIAL',
+        ];
+        
+        // Check for exact matches first
+        if (isset($mappings[$vehicleTypeUpper])) {
+            return $mappings[$vehicleTypeUpper];
+        }
+        
+        // Check for partial matches
+        foreach ($mappings as $key => $value) {
+            if (stripos($vehicleTypeUpper, $key) !== false) {
+                return $value;
+            }
+        }
+        
+        // Return original if no mapping found (will be stored as-is)
+        return $vehicleType;
+    }
+
+    /**
+     * Normalize transmission to simple Automatic/Manual.
+     * 
+     * @param string|null $transmission
+     * @return string|null
+     */
+    protected function normalizeTransmission(?string $transmission): ?string
+    {
+        if (empty($transmission)) {
+            return null;
+        }
+        
+        $transmissionUpper = strtoupper(trim($transmission));
+        
+        // Check for automatic patterns
+        if (stripos($transmissionUpper, 'AUTOMATIC') !== false || 
+            stripos($transmissionUpper, 'AUTO') !== false ||
+            stripos($transmissionUpper, 'CVT') !== false ||
+            stripos($transmissionUpper, 'DIRECT DRIVE') !== false ||
+            stripos($transmissionUpper, 'ISPEED') !== false) {
+            return 'AUTOMATIC';
+        }
+        
+        // Check for manual patterns
+        if (stripos($transmissionUpper, 'MANUAL') !== false ||
+            stripos($transmissionUpper, 'STICK') !== false ||
+            stripos($transmissionUpper, 'STANDARD') !== false) {
+            return 'MANUAL';
+        }
+        
+        // Default to original if unclear
+        return $transmission;
+    }
+
+    /**
+     * Normalize fuel type to standard values.
+     * 
+     * @param string|null $fuelType
+     * @return string|null
+     */
+    protected function normalizeFuelType(?string $fuelType): ?string
+    {
+        if (empty($fuelType)) {
+            return null;
+        }
+        
+        $fuelTypeUpper = strtoupper(trim($fuelType));
+        
+        // Map to standard fuel types
+        $mappings = [
+            'PETROL' => 'PETROL',
+            'GASOLINE' => 'PETROL',
+            'GAS' => 'PETROL',
+            'UNLEADED' => 'PETROL',
+            'PREMIUM' => 'PETROL',
+            'REGULAR' => 'PETROL',
+            
+            'DIESEL' => 'DIESEL',
+            
+            'ELECTRIC' => 'ELECTRIC',
+            'EV' => 'ELECTRIC',
+            'BATTERY' => 'ELECTRIC',
+            
+            'HYBRID' => 'HYBRID',
+            'PLUG-IN HYBRID' => 'HYBRID',
+            'PHEV' => 'HYBRID',
+            
+            'NATURAL GAS' => 'GAS',
+            'CNG' => 'GAS',
+            'LPG' => 'GAS',
+            'PROPANE' => 'GAS',
+        ];
+        
+        // Check for exact matches
+        if (isset($mappings[$fuelTypeUpper])) {
+            return $mappings[$fuelTypeUpper];
+        }
+        
+        // Check for partial matches
+        foreach ($mappings as $key => $value) {
+            if (stripos($fuelTypeUpper, $key) !== false) {
+                return $value;
+            }
+        }
+        
+        // Return original if no mapping found
+        return $fuelType;
+    }
+
+    /**
      * Format decoded data to match form fields (ALL CAPS).
+     * Note: Normalization is already done in parseAutoDevResponse, so we just format to ALL CAPS here.
      * 
      * @param array $decodedData
      * @return array
@@ -376,10 +584,10 @@ class VinHinDecoderService
             'trim' => TextFormatter::toAllCaps($decodedData['trim'] ?? null),
             'engine_size' => TextFormatter::toAllCaps($decodedData['engine_size'] ?? $decodedData['engine'] ?? null),
             'cylinders' => TextFormatter::toAllCaps($decodedData['cylinders'] ?? null),
-            'drive_type' => TextFormatter::toAllCaps($decodedData['drive_type'] ?? $decodedData['driveline'] ?? null),
-            'fuel_type' => TextFormatter::toAllCaps($decodedData['fuel_type'] ?? $decodedData['fuel'] ?? null),
+            'drive_type' => TextFormatter::toAllCaps($decodedData['drive_type'] ?? null),
+            'fuel_type' => TextFormatter::toAllCaps($decodedData['fuel_type'] ?? null),
             'transmission' => TextFormatter::toAllCaps($decodedData['transmission'] ?? null),
-            'vehicle_type' => TextFormatter::toAllCaps($decodedData['vehicle_type'] ?? $decodedData['body_style'] ?? null),
+            'vehicle_type' => TextFormatter::toAllCaps($decodedData['vehicle_type'] ?? null),
         ];
     }
 }

@@ -209,65 +209,113 @@ class InvoiceService
     public function processEndedAuctions(): int
     {
         $count = 0;
-        
-        // Find auctions that have ended but don't have invoices yet
-        $endedAuctions = Listing::where('listing_method', 'auction')
+        $now = now();
+
+        Log::info('[processEndedAuctions] Started', ['at' => $now->toDateTimeString()]);
+
+        // Find approved auction listings that have no invoice yet (candidates)
+        $candidates = Listing::where('listing_method', 'auction')
             ->where('status', 'approved')
-            ->whereDoesntHave('invoices') // No invoice generated yet
-            ->get()
-            ->filter(function ($listing) {
-                $endDate = Carbon::parse($listing->created_at)->addDays($listing->auction_duration ?? 30);
-                return now()->greaterThanOrEqualTo($endDate);
-            });
+            ->whereDoesntHave('invoices')
+            ->get();
+
+        Log::info('[processEndedAuctions] Candidates (approved auction, no invoice)', [
+            'count' => $candidates->count(),
+            'listing_ids' => $candidates->pluck('id')->toArray(),
+        ]);
+
+        // Filter to only those that have actually ended (use listing's actual end time)
+        $endedAuctions = $candidates->filter(function ($listing) use ($now) {
+            $endDate = $listing->getAuctionEndDate();
+            $hasEnded = $endDate && $now->greaterThanOrEqualTo($endDate);
+            Log::info('[processEndedAuctions] Listing end check', [
+                'listing_id' => $listing->id,
+                'item_number' => $listing->item_number,
+                'auction_end_time' => $listing->auction_end_time?->toDateTimeString(),
+                'auction_start_time' => $listing->auction_start_time?->toDateTimeString(),
+                'auction_duration_days' => $listing->auction_duration,
+                'computed_end_date' => $endDate?->toDateTimeString(),
+                'now' => $now->toDateTimeString(),
+                'has_ended' => $hasEnded,
+            ]);
+            return $hasEnded;
+        })->values();
+
+        Log::info('[processEndedAuctions] Ended auctions (passed end-date filter)', [
+            'count' => $endedAuctions->count(),
+            'listing_ids' => $endedAuctions->pluck('id')->toArray(),
+        ]);
 
         foreach ($endedAuctions as $listing) {
-            // Find winning bid (highest active bid)
             $winningBid = $listing->bids()
                 ->where('status', 'active')
                 ->orderByDesc('amount')
                 ->first();
 
-            if ($winningBid) {
-                // RESERVE PRICE CHECK: If reserve price is set and winning bid doesn't meet it, don't generate invoice
-                $reservePrice = $listing->reserve_price ? (float) $listing->reserve_price : null;
-                $winningAmount = (float) $winningBid->amount;
-                
-                if ($reservePrice && $winningAmount < $reservePrice) {
-                    // Reserve price not met - don't generate invoice (listing remains approved but unsold)
-                    // Status stays 'approved' - listing will appear in past listings for relisting
-                    
-                    // Send notification to seller that reserve was not met
-                    try {
-                        $notificationService = new \App\Services\NotificationService();
-                        $notificationService->auctionEndedReserveNotMet($listing->seller, $listing, $winningAmount, $reservePrice);
-                    } catch (\Exception $e) {
-                        Log::error('Failed to send no-sale notification for listing ' . $listing->id . ': ' . $e->getMessage());
-                    }
-                    
-                    continue; // Skip invoice generation - auction ended without sale
-                }
-                
+            if (!$winningBid) {
+                Log::warning('[processEndedAuctions] No winning bid (no active bids)', [
+                    'listing_id' => $listing->id,
+                    'item_number' => $listing->item_number,
+                    'total_bids' => $listing->bids()->count(),
+                ]);
+                continue;
+            }
+
+            $reservePrice = $listing->reserve_price ? (float) $listing->reserve_price : null;
+            $winningAmount = (float) $winningBid->amount;
+
+            if ($reservePrice && $winningAmount < $reservePrice) {
+                Log::warning('[processEndedAuctions] Reserve price not met – skipping invoice', [
+                    'listing_id' => $listing->id,
+                    'item_number' => $listing->item_number,
+                    'winning_amount' => $winningAmount,
+                    'reserve_price' => $reservePrice,
+                    'buyer_id' => $winningBid->user_id,
+                ]);
                 try {
-                    $invoice = $this->generateInvoiceForAuctionWin($listing, $winningBid);
-                    
-                    // Send auction ended email to seller
-                    $this->sendAuctionEndedEmail($listing, $winningBid);
-                    
-                    // Send in-app notification to seller
                     $notificationService = new \App\Services\NotificationService();
-                    $notificationService->auctionSold($listing->seller, $listing, $winningAmount);
-                    
-                    $count++;
+                    $notificationService->auctionEndedReserveNotMet($listing->seller, $listing, $winningAmount, $reservePrice);
                 } catch (\Exception $e) {
-                    Log::error('Failed to generate invoice for listing ' . $listing->id . ': ' . $e->getMessage());
+                    Log::error('[processEndedAuctions] Failed to send reserve-not-met notification', [
+                        'listing_id' => $listing->id,
+                        'error' => $e->getMessage(),
+                    ]);
                 }
-            } else {
-                // No bids - auction ended without sale
-                // Status stays 'approved' - listing will appear in past listings for relisting
-                // No invoice generated, so it's clear the auction didn't sell
+                continue;
+            }
+
+            try {
+                $invoice = $this->generateInvoiceForAuctionWin($listing, $winningBid);
+
+                $listing->status = 'sold';
+                $listing->save();
+
+                $this->sendAuctionEndedEmail($listing, $winningBid);
+
+                $notificationService = new \App\Services\NotificationService();
+                $notificationService->auctionSold($listing->seller, $listing, $winningAmount);
+
+                $count++;
+                Log::info('[processEndedAuctions] Invoice generated and listing marked sold', [
+                    'listing_id' => $listing->id,
+                    'invoice_id' => $invoice->id,
+                    'invoice_number' => $invoice->invoice_number,
+                    'buyer_id' => $winningBid->user_id,
+                    'winning_amount' => $winningAmount,
+                ]);
+            } catch (\Exception $e) {
+                Log::error('[processEndedAuctions] Failed to generate invoice', [
+                    'listing_id' => $listing->id,
+                    'item_number' => $listing->item_number,
+                    'winning_bid_id' => $winningBid->id,
+                    'buyer_id' => $winningBid->user_id,
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
             }
         }
 
+        Log::info('[processEndedAuctions] Finished', ['invoices_generated' => $count]);
         return $count;
     }
 

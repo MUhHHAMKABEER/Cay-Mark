@@ -1,4 +1,8 @@
 @forelse($auctions as $listing)
+    @php
+        $likesCount = $listing->likes_count ?? $listing->watchlisted_by_count ?? 0;
+        $liked = isset($likedListingIds) && $likedListingIds->contains($listing->id);
+    @endphp
     <div class="vehicle-card bg-white rounded-xl shadow-sm overflow-hidden flex flex-col md:flex-row animate-slide-down">
         <!-- Image -->
         <div class="md:w-2/5 relative image-container">
@@ -59,9 +63,21 @@
                 <h3 class="text-lg font-semibold text-secondary-800">
                     {{ $listing->year }} {{ $listing->make }} {{ $listing->model }}
                 </h3>
-                <div class="flex space-x-2">
-                    <span
-                        class="material-icons text-gray-400 hover:text-red-500 cursor-pointer transition-colors">favorite_border</span>
+                <div class="flex space-x-2 items-center">
+                    <form action="{{ route('listing.watchlist', $listing->id) }}" method="POST">
+                        @csrf
+                        <button
+                            type="submit"
+                            class="js-like-toggle inline-flex items-center text-sm {{ $liked ? 'text-red-500' : 'text-gray-400' }} hover:text-red-500 transition-colors"
+                            data-url="{{ route('listing.watchlist', $listing->id) }}"
+                            data-liked="{{ $liked ? '1' : '0' }}"
+                            data-auth="{{ Auth::check() ? '1' : '0' }}"
+                            data-unliked-class="text-gray-400"
+                            aria-label="Like listing">
+                            <span class="material-icons">{{ $liked ? 'favorite' : 'favorite_border' }}</span>
+                            <span class="ml-1 text-xs js-like-count">{{ $likesCount }}</span>
+                        </button>
+                    </form>
                     <span
                         class="material-icons text-gray-400 hover:text-primary-500 cursor-pointer transition-colors">share</span>
                 </div>
@@ -135,17 +151,10 @@
                     </p>
                 </div>
                 <div class="mt-3 sm:mt-0 flex space-x-2">
-                    @if (Auth::check())
-                        <a href="{{ route('auction.show', $listing->getSlugOrGenerate()) }}"
-                            class="bg-primary-600 hover:bg-primary-700 text-white font-medium py-2.5 px-6 rounded-lg transition-all duration-300 text-sm transform hover:-translate-y-0.5 hover:shadow-md flex-1 sm:flex-none text-center">
-                            Bid Now
-                        </a>
-                    @else
-                        <button @click="openModal = true"
-                            class="bg-primary-600 hover:bg-primary-700 text-white font-medium py-2.5 px-6 rounded-lg transition-all duration-300 text-sm transform hover:-translate-y-0.5 hover:shadow-md flex-1 sm:flex-none">
-                            Bid Now
-                        </button>
-                    @endif
+                    <a href="{{ route('auction.show', $listing->getSlugOrGenerate()) }}"
+                        class="bg-primary-600 hover:bg-primary-700 text-white font-medium py-2.5 px-6 rounded-lg transition-all duration-300 text-sm transform hover:-translate-y-0.5 hover:shadow-md flex-1 sm:flex-none text-center">
+                        Bid Now
+                    </a>
                     <a href="{{ route('auction.show', $listing->getSlugOrGenerate()) }}"
                         class="border border-gray-300 text-secondary-700 font-medium py-2.5 px-3 rounded-lg hover:bg-gray-50 transition-all duration-300 text-sm transform hover:-translate-y-0.5 hover:shadow-sm">
                         <span class="material-icons text-lg">visibility</span>

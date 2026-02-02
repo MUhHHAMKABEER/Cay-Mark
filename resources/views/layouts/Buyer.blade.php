@@ -10,9 +10,10 @@
     {{-- Tailwind (CDN fallback – you already have Vite compiling too) --}}
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
 
-    {{-- Fonts & Icons --}}
+    {{-- Fonts & Icons (Round required for unified sidebar) --}}
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
     <link rel="stylesheet" href="https://unpkg.com/shepherd.js/dist/css/shepherd.css" />
 
     <style>
@@ -22,11 +23,27 @@
             color: #333;
         }
 
+        /* Main Content Area (match unified sidebar width) */
         .main-content {
-            padding: 2rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            overflow-y: auto;
+            margin-left: 280px; /* Match unified sidebar width */
+            padding: 2.5rem 3rem;
+            min-height: 100vh;
+            width: calc(100% - 280px);
+            background-color: #FDFBF8;
         }
 
-
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 80px;
+                width: calc(100% - 80px);
+                padding: 1rem;
+            }
+        }
     </style>
 
 
@@ -40,10 +57,10 @@
 
 
     {{-- Sidebar --}}
-    @include('partials.buyerSidebar')
+    @include('partials.unifiedSidebar')
 
     {{-- Main Content --}}
-    <main class="main-content" style="margin-left: 230px">
+    <main class="main-content">
         @yield('content')
     </main>
 
@@ -84,7 +101,7 @@
                         },
                     },
                 },
-                { id: 'buyer-escrow', attachTo: { element: '#buyer-tour-escrow', on: 'right' }, text: 'Payment / Escrow tracks payment status for your wins.' },
+                { id: 'buyer-wallet', attachTo: { element: '#buyer-tour-wallet', on: 'right' }, text: 'Wallet / Deposits lets you add funds for bidding or request a withdrawal.' },
                 { id: 'buyer-notifications', attachTo: { element: '#buyer-tour-notifications', on: 'right' }, text: 'Notifications keeps you updated on bids, invoices, and messages.' },
                 { id: 'buyer-logout', attachTo: { element: '#buyer-tour-logout', on: 'right' }, text: 'Log out when you are done.' },
             ];

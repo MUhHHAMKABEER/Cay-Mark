@@ -122,7 +122,6 @@ Route::middleware(['auth',
     
     Route::get('/deposit-withdrawal', [App\Http\Controllers\Buyer\DepositWithdrawalController::class, 'index'])->name('buyer.deposit-withdrawal');
     Route::post('/deposit-withdrawal/request', [App\Http\Controllers\Buyer\DepositWithdrawalController::class, 'requestWithdrawal'])->name('buyer.deposit-withdrawal.request');
-    Route::get('/escrow', [App\Http\Controllers\Buyer\EscrowController::class, 'index'])->name('buyer.escrow');
     Route::get('/profile', [App\Http\Controllers\Buyer\ProfileController::class, 'index'])->name('buyer.profile');
     Route::get('/notifications', [App\Http\Controllers\Buyer\NotificationController::class, 'index'])->name('buyer.notifications');
     Route::get('/support', [App\Http\Controllers\Buyer\SupportController::class, 'index'])->name('buyer.support');
@@ -171,10 +170,6 @@ Route::get('/listing/{id}', [ListingController::class, 'show'])->name('listing.s
 Route::get('/subscription/simulate', [SubscriptionController::class, 'simulate'])->name('subscription.simulate');
 
     Route::get('/AuctionPage',[AuctionController::class, 'index'])->name("Auction.index");
-
-    Route::middleware(['auth'])->group(function () {
-    Route::post('/listing/{id}/watchlist', [ListingController::class, 'addToWatchlist'])->name('listing.watchlist.add');
-});
 
 Route::middleware(['auth'])->group(function () {
     Route::post('/listing/{listing}/watchlist', [WatchlistController::class, 'toggle'])->name('listing.watchlist');

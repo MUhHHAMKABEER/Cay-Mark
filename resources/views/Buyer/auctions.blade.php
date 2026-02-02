@@ -193,11 +193,12 @@
         @if(isset($wonAuctions) && $wonAuctions->count() > 0)
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 @foreach($wonAuctions as $invoice)
+                    @php $listing = $invoice->listing; @endphp
                     <div class="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
                         <div class="h-48 bg-gray-200 overflow-hidden">
-                            @if($invoice->listing->images->first())
-                                <img src="{{ asset('storage/' . $invoice->listing->images->first()->image_path) }}" 
-                                     alt="{{ $invoice->listing->make }} {{ $invoice->listing->model }}" 
+                            @if($listing && $listing->images && $listing->images->first())
+                                <img src="{{ asset('uploads/listings/' . $listing->images->first()->image_path) }}" 
+                                     alt="{{ $listing->year }} {{ $listing->make }} {{ $listing->model }}" 
                                      class="w-full h-full object-cover">
                             @else
                                 <div class="w-full h-full flex items-center justify-center text-gray-400">
@@ -210,10 +211,10 @@
 
                         <div class="p-4">
                             <h3 class="text-lg font-semibold text-gray-900 mb-2">
-                                {{ $invoice->listing->year }} {{ $invoice->listing->make }} {{ $invoice->listing->model }}
+                                {{ $listing ? trim($listing->year . ' ' . $listing->make . ' ' . $listing->model) : ($invoice->item_name ?? 'Item') }}
                             </h3>
                             <p class="text-sm text-gray-600 mb-2">
-                                <span class="font-medium">ITEM NUMBER:</span> {{ $invoice->listing->item_number ?? 'CM' . str_pad($invoice->listing->id, 6, '0', STR_PAD_LEFT) }}
+                                <span class="font-medium">ITEM NUMBER:</span> {{ $invoice->item_id ?? ($listing ? ($listing->item_number ?? 'CM' . str_pad($listing->id, 6, '0', STR_PAD_LEFT)) : '—') }}
                             </p>
                             <p class="text-lg font-bold text-green-600 mb-2">
                                 Final Winning Price: ${{ number_format($invoice->final_price ?? $invoice->winning_bid_amount, 2) }}

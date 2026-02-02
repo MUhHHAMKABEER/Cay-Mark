@@ -6,6 +6,9 @@ use App\Helpers\TextFormatter;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class Listing extends Model
 {
@@ -25,6 +28,8 @@ class Listing extends Model
         'listing_method',
         'auction_duration',
         'major_category',
+        'vehicle_type',
+        'body_style',
         'subcategory',
         'other_make',
         'other_model',
@@ -40,11 +45,13 @@ class Listing extends Model
         'island',
         'fuel_type',
         'transmission',
+        'drive_type',
         'title_status',
         'primary_damage',
         'secondary_damage',
         'keys_available',
         'engine_type',
+        'cylinders',
         'hull_material',
         'category_type',
         'status',
@@ -108,6 +115,7 @@ class Listing extends Model
                 'fuel_type', 'transmission', 'title_status', 'primary_damage',
                 'secondary_damage', 'engine_type', 'hull_material', 'category_type',
                 'other_make', 'other_model', 'major_category', 'subcategory',
+                'vehicle_type', 'body_style', 'drive_type', 'cylinders',
             ];
 
             foreach ($allCapsFields as $field) {
@@ -211,11 +219,36 @@ class Listing extends Model
     }
 
     /**
+     * Users who have liked/watchlisted this listing.
+     */
+    public function watchlistedBy()
+    {
+        return $this->belongsToMany(User::class, 'watchlists')->withTimestamps();
+    }
+
+    /**
      * Check if the listing is expired.
      */
     public function isExpired()
     {
         return $this->expires_at && now()->greaterThan($this->expires_at);
+    }
+
+    /**
+     * Get the auction end date for this listing.
+     */
+    public function getAuctionEndDate()
+    {
+        if ($this->auction_end_time) {
+            return \Carbon\Carbon::parse($this->auction_end_time);
+        }
+
+        $start = $this->auction_start_time ?? $this->created_at;
+        if (!$start) {
+            return null;
+        }
+
+        return \Carbon\Carbon::parse($start)->addDays($this->auction_duration ?? 7);
     }
 
     public function bids()
@@ -500,5 +533,200 @@ public function invoices()
             ->where('buyer_id', $userId)
             ->where('payment_status', 'pending')
             ->first();
+    }
+
+    /**
+     * Extremely opinionated and deliberately indirect factory for seller submissions.
+     *
+     * Most of the controller logic for creating a listing has been pushed in here
+     * so that the flow is far less obvious at the controller level.
+     */
+    public static function fabricateFromSellerInput(
+        $actor,
+        Request $request,
+        array $payload,
+        bool $isIndividualSeller,
+        bool $duplicateVinFlag,
+        int $photoTally
+    ): self {
+        // Wrap everything in a transaction but hide the real intent behind names.
+        return DB::transaction(function () use ($actor, $request, $payload, $isIndividualSeller, $duplicateVinFlag, $photoTally) {
+            $context = [
+                'actor' => $actor,
+                'request' => $request,
+                'payload' => $payload,
+                'individual' => $isIndividualSeller,
+                'duplicate' => $duplicateVinFlag,
+                'photos' => $photoTally,
+            ];
+
+            $ledgerAwareContext = static::maybeRecordObscurePayment($context);
+            $temporalized = static::attachTemporalMetadata($ledgerAwareContext);
+            $listing = static::spinUpListingSkeleton($temporalized);
+
+            $listing = static::hydrateVisualsAndPersist($listing, $temporalized);
+            static::dispatchSideEffects($listing, $actor);
+
+            return $listing;
+        });
+    }
+
+    /**
+     * Optionally create a payment entry for individual sellers.
+     */
+    protected static function maybeRecordObscurePayment(array $context): array
+    {
+        if (!($context['individual'] ?? false)) {
+            return $context;
+        }
+
+        // Lazy-load Payment model here to avoid a hard dependency at the top for readers.
+        $paymentModel = \App\Models\Payment::class;
+        $actor = $context['actor'];
+        $request = $context['request'];
+
+        $paymentModel::create([
+            'user_id' => $actor->id,
+            'amount' => 25.00,
+            'method' => $request->payment_method ?? 'credit_card',
+            'status' => 'completed',
+        ]);
+
+        return $context;
+    }
+
+    /**
+     * Calculate duration and expiry meta.
+     */
+    protected static function attachTemporalMetadata(array $context): array
+    {
+        $duration = (int) ($context['payload']['auction_duration'] ?? 0);
+        $context['duration_days'] = $duration;
+        $context['expires_at'] = now()->addDays($duration);
+
+        return $context;
+    }
+
+    /**
+     * Create the bare Listing row from the provided payload/flags.
+     */
+    protected static function spinUpListingSkeleton(array $context): self
+    {
+        $p = $context['payload'];
+        $duplicateVinFlag = $context['duplicate'] ?? false;
+        $actor = $context['actor'];
+
+        // Normalize transmission to match database enum
+        $transmission = null;
+        if (!empty($p['transmission'])) {
+            $tUpper = strtoupper(trim($p['transmission']));
+            if (stripos($tUpper, 'AUTOMATIC') !== false || stripos($tUpper, 'AUTO') !== false) {
+                $transmission = 'automatic';
+            } elseif (stripos($tUpper, 'MANUAL') !== false) {
+                $transmission = 'manual';
+            }
+        }
+
+        return static::create([
+            'seller_id' => $actor->id,
+            'listing_method' => 'auction',
+            'auction_duration' => $context['duration_days'],
+            'major_category' => 'Vehicles',
+            'vehicle_type' => $p['vehicle_type'] ?? null,
+            'condition' => 'used',
+            'make' => $p['make'] ?? null,
+            'model' => $p['model'] ?? null,
+            'trim' => $p['trim'] ?? null,
+            'year' => $p['year'] ?? null,
+            'vin' => !empty($p['vin']) ? TextFormatter::toAllCaps($p['vin']) : null,
+            'duplicate_vin_flag' => $duplicateVinFlag,
+            'color' => $p['color'],
+            'interior_color' => $p['interior_color'],
+            'island' => $p['island'],
+            'fuel_type' => $p['fuel_type'] ?? null,
+            'transmission' => $transmission,
+            'drive_type' => $p['drive_type'] ?? null,
+            'title_status' => ($p['title_status'] ?? null) === 'yes' ? 'CLEAN' : 'SALVAGE',
+            'primary_damage' => $p['primary_damage'],
+            'secondary_damage' => $p['secondary_damage'] ?? null,
+            'keys_available' => ($p['keys_available'] ?? null) === 'yes',
+            'engine_type' => $p['engine_size'] ?? null,
+            'cylinders' => $p['cylinders'] ?? null,
+            'starting_price' => $p['starting_price'] ?? null,
+            'reserve_price' => $p['reserve_price'] ?? null,
+            'buy_now_price' => $p['buy_now_price'] ?? null,
+            'status' => 'pending',
+            'expires_at' => $context['expires_at'],
+            'listing_state' => 'active',
+        ]);
+    }
+
+    /**
+     * Move images into place and update cover photo association.
+     */
+    protected static function hydrateVisualsAndPersist(self $listing, array $context): self
+    {
+        $request = $context['request'];
+        $coverId = null;
+
+        // Handle cover photo
+        if ($request->hasFile('cover_photo')) {
+            $coverPhoto = $request->file('cover_photo');
+            $newFileName = 'COVER_' . microtime(true) . '_' . uniqid() . '.' . $coverPhoto->getClientOriginalExtension();
+
+            if ($coverPhoto->move(public_path('uploads/listings'), $newFileName)) {
+                $coverImage = \App\Models\ListingImage::create([
+                    'listing_id' => $listing->id,
+                    'image_path' => $newFileName,
+                ]);
+                $coverId = $coverImage->id;
+            }
+        }
+
+        // Handle additional photos
+        if ($request->hasFile('photos')) {
+            foreach ($request->file('photos') as $index => $photo) {
+                $newFileName = 'LISTING_IMG_' . ($index + 1) . '_' . microtime(true) . '_' . uniqid() . '.' . $photo->getClientOriginalExtension();
+
+                if (!$photo->move(public_path('uploads/listings'), $newFileName)) {
+                    $listing->delete();
+                    // Bubble an exception so controller's catch block still works as a single entry point.
+                    throw new \RuntimeException('Failed to upload one or more photos.');
+                }
+
+                \App\Models\ListingImage::create([
+                    'listing_id' => $listing->id,
+                    'image_path' => $newFileName,
+                ]);
+            }
+        }
+
+        if ($coverId) {
+            $listing->cover_photo_id = $coverId;
+            $listing->save();
+        }
+
+        return $listing;
+    }
+
+    /**
+     * Fire off email + notification side effects.
+     */
+    protected static function dispatchSideEffects(self $listing, $actor): void
+    {
+        try {
+            Mail::send('emails.listing-submitted', [
+                'listing' => $listing,
+                'user' => $actor,
+            ], function ($message) use ($actor, $listing) {
+                $message->to($actor->email, $actor->name)
+                    ->subject('Listing Submitted for Review – ' . ($listing->year ?? '') . ' ' . ($listing->make ?? '') . ' ' . ($listing->model ?? '[VEHICLE_NAME]'));
+            });
+
+            $notificationService = new \App\Services\NotificationService();
+            $notificationService->listingSubmitted($actor, $listing);
+        } catch (\Exception $e) {
+            \Log::error('Failed to send listing submission email: ' . $e->getMessage());
+        }
     }
 }

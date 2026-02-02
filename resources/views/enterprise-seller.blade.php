@@ -155,7 +155,7 @@
                         <h3 class="text-xl font-bold">Bahamas Financial</h3>
                         <p class="text-gray-500">Banking Institution</p>
                     </div>
-                    <p class="text-gray-600 italic text-center">"The platform's escrow system and verification process gave us confidence to list repossessed vehicles securely. Our recovery rates improved significantly."</p>
+                    <p class="text-gray-600 italic text-center">"The platform's secure payment and verification process gave us confidence to list repossessed vehicles securely. Our recovery rates improved significantly."</p>
                 </div>
 
                 <div class="bg-white rounded-xl shadow-md p-6">

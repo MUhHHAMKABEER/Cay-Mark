@@ -4,8 +4,12 @@ namespace App\Http\Controllers\Buyer;
 
 use App\Http\Controllers\Controller;
 use App\Services\Buyer\BuyerDashboardService;
+use App\Services\InvoiceService;
+use App\Services\Buyer\BuyerDashboardOps;
 use App\Repositories\Buyer\BuyerRepository;
 use Illuminate\Http\Request;
+use App\Http\Requests\BuyerDashboardUpdateEmailRequest;
+use App\Http\Requests\BuyerDashboardChangePasswordRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
@@ -26,10 +30,18 @@ class BuyerDashboardController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
+        $tab = $request->get('tab', 'dashboard');
+
+        if ($tab === 'auctions') {
+            $invoiceService = new InvoiceService();
+            $invoices = $invoiceService->getBuyerInvoices($user);
+            return view('Buyer.auctions-won', compact('invoices'));
+        }
+
         $dashboardData = $this->dashboardService->getDashboardData($user);
 
         $data = array_merge(
-            ['user' => $user, 'activeTab' => $request->get('tab', 'dashboard')],
+            ['user' => $user, 'activeTab' => $tab],
             $dashboardData
         );
 
@@ -90,35 +102,17 @@ class BuyerDashboardController extends Controller
     /**
      * Update email address
      */
-    public function updateEmail(Request $request)
+    public function updateEmail(BuyerDashboardUpdateEmailRequest $request)
     {
-        $request->validate([
-            'email' => 'required|email|unique:users,email,' . Auth::id(),
-        ]);
-
-        $user = Auth::user();
-        $user->email = $request->email;
-        $user->email_verified_at = null;
-        $user->save();
-
-        return back()->with('success', 'Email address updated successfully.');
+        return BuyerDashboardOps::updateEmail($request);
     }
 
     /**
      * Change password
      */
-    public function changePassword(Request $request)
+    public function changePassword(BuyerDashboardChangePasswordRequest $request)
     {
-        $request->validate([
-            'current_password' => 'required|current_password',
-            'password' => 'required|string|min:8|confirmed',
-        ]);
-
-        $user = Auth::user();
-        $user->password = Hash::make($request->password);
-        $user->save();
-
-        return back()->with('success', 'Password changed successfully.');
+        return BuyerDashboardOps::changePassword($request);
     }
 }
 

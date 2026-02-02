@@ -19,6 +19,19 @@ use App\Models\Listing;
 use App\Models\Payment;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use App\Http\Requests\AdminDisapproveRequest;
+use App\Http\Requests\AdminUpdateUserRequest;
+use App\Http\Requests\AdminResetUserPasswordRequest;
+use App\Http\Requests\AdminToggleUserStatusRequest;
+use App\Http\Requests\AdminUpdateListingRequest;
+use App\Http\Requests\AdminExtendAuctionTimeRequest;
+use App\Http\Requests\AdminUpdatePaymentStatusRequest;
+use App\Http\Requests\AdminUpdateDisputeStatusRequest;
+use App\Http\Requests\AdminRejectListingRequest;
+use App\Http\Requests\AdminUpdatePayoutStatusRequest;
+use App\Http\Requests\AdminResolveDefaultRequest;
+use App\Http\Requests\AdminCloseUnpaidAuctionRequest;
+use App\Services\Admin\AdminActionHub;
 
 class AdminController extends Controller
 {
@@ -258,36 +271,9 @@ class AdminController extends Controller
         return redirect()->back()->with('success', 'Listing approved successfully! Item Number: ' . $listing->item_number);
     }
 
-    public function disapprove(Request $request, $id)
+    public function disapprove(AdminDisapproveRequest $request, $id)
     {
-        $request->validate([
-            'rejection_reason' => 'required|string',
-            'rejection_notes' => 'nullable|string|max:1000',
-        ]);
-
-        $listing = Listing::findOrFail($id);
-        $listing->status = 'rejected';
-        $listing->rejected_at = now();
-        $listing->rejected_by = auth()->id();
-        $listing->rejection_reason = $request->rejection_reason;
-        $listing->rejection_notes = $request->rejection_notes;
-        $listing->save();
-
-        // Send rejection email to seller
-        try {
-            \Mail::send('emails.listing-rejected', [
-                'listing' => $listing,
-                'seller' => $listing->seller,
-                'rejectionReason' => $request->rejection_reason,
-            ], function ($message) use ($listing) {
-                $message->to($listing->seller->email, $listing->seller->name)
-                    ->subject('Listing Rejected – ' . ($listing->year ?? '') . ' ' . ($listing->make ?? '') . ' ' . ($listing->model ?? '[VEHICLE_NAME]'));
-            });
-        } catch (\Exception $e) {
-            \Log::error('Failed to send rejection email: ' . $e->getMessage());
-        }
-
-        return redirect()->back()->with('success', 'Listing rejected successfully.');
+        return AdminActionHub::disapproveListing($request, $id);
     }
 
     /**
@@ -356,71 +342,25 @@ class AdminController extends Controller
     /**
      * Update user
      */
-    public function updateUser(Request $request, $id)
+    public function updateUser(AdminUpdateUserRequest $request, $id)
     {
-        $user = User::findOrFail($id);
-
-        $validated = $request->validate([
-            'name' => 'sometimes|string|max:255',
-            'email' => 'sometimes|email|unique:users,email,' . $id,
-            'phone' => 'sometimes|nullable|string',
-            'role' => 'sometimes|in:buyer,seller',
-            'is_restricted' => 'sometimes|boolean',
-            'restriction_ends_at' => 'sometimes|nullable|date',
-            'restriction_reason' => 'sometimes|nullable|string',
-            'internal_notes' => 'sometimes|nullable|string',
-        ]);
-
-        $user->update($validated);
-
-        return back()->with('success', 'User updated successfully.');
+        return AdminActionHub::updateUserProfile($request, $id);
     }
 
     /**
      * Reset user password
      */
-    public function resetUserPassword(Request $request, $id)
+    public function resetUserPassword(AdminResetUserPasswordRequest $request, $id)
     {
-        $request->validate([
-            'new_password' => 'required|string|min:8|confirmed',
-        ]);
-
-        $user = User::findOrFail($id);
-        $user->password = \Hash::make($request->new_password);
-        $user->save();
-
-        return back()->with('success', 'Password reset successfully.');
+        return AdminActionHub::resetUserPassword($request, $id);
     }
 
     /**
      * Suspend/Reactivate user
      */
-    public function toggleUserStatus(Request $request, $id)
+    public function toggleUserStatus(AdminToggleUserStatusRequest $request, $id)
     {
-        $request->validate([
-            'action' => 'required|in:suspend,reactivate',
-            'reason' => 'required_if:action,suspend|string|max:255',
-        ]);
-    
-        $user = User::findOrFail($id);
-    
-        if ($request->action === 'suspend') {
-            $user->update([
-                'is_restricted' => true,
-                'restriction_reason' => $request->reason,
-                'restriction_ends_at' => null, // or set a date if needed
-            ]);
-        }
-    
-        if ($request->action === 'reactivate') {
-            $user->update([
-                'is_restricted' => false,
-                'restriction_reason' => null,
-                'restriction_ends_at' => null,
-            ]);
-        }
-    
-        return back()->with('success', 'User status updated successfully.');
+        return AdminActionHub::toggleUserStatus($request, $id);
     }
     
 
@@ -592,46 +532,17 @@ class AdminController extends Controller
     /**
      * Edit listing details
      */
-    public function editListing(Request $request, $id)
+    public function editListing(AdminUpdateListingRequest $request, $id)
     {
-        $listing = Listing::findOrFail($id);
-
-        $validated = $request->validate([
-            'make' => 'sometimes|string',
-            'model' => 'sometimes|string',
-            'year' => 'sometimes|string',
-            'color' => 'sometimes|string',
-            'starting_price' => 'sometimes|numeric',
-            'buy_now_price' => 'sometimes|nullable|numeric',
-            'reserve_price' => 'sometimes|nullable|numeric',
-        ]);
-
-        $listing->update($validated);
-
-        return back()->with('success', 'Listing updated successfully.');
+        return AdminActionHub::editListing($request, $id);
     }
 
     /**
      * Extend auction time
      */
-    public function extendAuctionTime(Request $request, $id)
+    public function extendAuctionTime(AdminExtendAuctionTimeRequest $request, $id)
     {
-        $request->validate([
-            'additional_days' => 'required|integer|min:1|max:30',
-        ]);
-
-        $listing = Listing::findOrFail($id);
-        
-        if ($listing->auction_end_time) {
-            $listing->auction_end_time = Carbon::parse($listing->auction_end_time)
-                ->addDays($request->additional_days);
-        } else {
-            $listing->auction_end_time = now()->addDays($listing->auction_duration + $request->additional_days);
-        }
-        
-        $listing->save();
-
-        return back()->with('success', 'Auction time extended successfully.');
+        return AdminActionHub::extendAuction($request, $id);
     }
 
     /**
@@ -829,33 +740,9 @@ class AdminController extends Controller
     /**
      * Update payment status
      */
-    public function updatePaymentStatus(Request $request, $id)
+    public function updatePaymentStatus(AdminUpdatePaymentStatusRequest $request, $id)
     {
-        $payment = Payment::findOrFail($id);
-
-        $request->validate([
-            'status' => 'required|in:pending,completed,failed,pending_release,held',
-        ]);
-
-        $payment->update(['status' => $request->status]);
-
-        // Resend confirmation email if status changed to completed
-        if ($request->status === 'completed' && $payment->invoice) {
-            try {
-                \Mail::send('emails.payment-successful', [
-                    'invoice' => $payment->invoice,
-                    'buyer' => $payment->user,
-                    'payment' => $payment,
-                ], function ($message) use ($payment) {
-                    $message->to($payment->user->email, $payment->user->name)
-                        ->subject('Payment Successful – ' . ($payment->invoice->item_name ?? '[VEHICLE_NAME]'));
-                });
-            } catch (\Exception $e) {
-                \Log::error('Failed to resend payment confirmation email: ' . $e->getMessage());
-            }
-        }
-
-        return back()->with('success', 'Payment status updated successfully.');
+        return AdminActionHub::updatePaymentStatus($request, $id);
     }
 
     /**
@@ -926,22 +813,9 @@ class AdminController extends Controller
     /**
      * Update dispute status
      */
-    public function updateDisputeStatus(Request $request, $id)
+    public function updateDisputeStatus(AdminUpdateDisputeStatusRequest $request, $id)
     {
-        $request->validate([
-            'status' => 'required|in:open,in_progress,escalated,resolved,closed',
-            'admin_decision' => 'nullable|string|max:1000',
-        ]);
-
-        // Placeholder - implement when Dispute model exists
-        // $dispute = Dispute::findOrFail($id);
-        // $dispute->update([
-        //     'status' => $request->status,
-        //     'admin_decision' => $request->admin_decision,
-        //     'resolved_at' => $request->status === 'resolved' ? now() : null,
-        // ]);
-
-        return back()->with('success', 'Dispute status updated successfully.');
+        return AdminActionHub::updateDisputeStatus($request, $id);
     }
 
     /**
@@ -1101,36 +975,9 @@ class AdminController extends Controller
         return back()->with('success', 'Listing approved successfully. Item Number: ' . $listing->item_number);
     }
 
-    public function rejectListing(Request $request, Listing $listing)
+    public function rejectListing(AdminRejectListingRequest $request, Listing $listing)
     {
-        $request->validate([
-            'rejection_reason' => 'required|string',
-            'rejection_notes' => 'nullable|string|max:1000',
-        ]);
-
-        $listing->update([
-            'status' => 'rejected',
-            'rejected_at' => now(),
-            'rejected_by' => auth()->id(),
-            'rejection_reason' => $request->rejection_reason,
-            'rejection_notes' => $request->rejection_notes,
-        ]);
-        
-        // Send rejection email to seller
-        try {
-            \Mail::send('emails.listing-rejected', [
-                'listing' => $listing,
-                'seller' => $listing->seller,
-                'rejectionReason' => $request->rejection_reason,
-            ], function ($message) use ($listing) {
-                $message->to($listing->seller->email, $listing->seller->name)
-                    ->subject('Listing Rejected – ' . ($listing->year ?? '') . ' ' . ($listing->make ?? '') . ' ' . ($listing->model ?? '[VEHICLE_NAME]'));
-            });
-        } catch (\Exception $e) {
-            \Log::error('Failed to send rejection email: ' . $e->getMessage());
-        }
-        
-        return back()->with('success', 'Listing rejected successfully.');
+        return AdminActionHub::rejectListing($request, $listing);
     }
 
     public function releasePayment(Payment $payment)
@@ -1257,40 +1104,9 @@ class AdminController extends Controller
     /**
      * Finance/Admin: Update payout status.
      */
-    public function updatePayoutStatus(Request $request, $payoutId)
+    public function updatePayoutStatus(AdminUpdatePayoutStatusRequest $request, $payoutId)
     {
-        $request->validate([
-            'status' => 'required|in:pending,processing,sent,on_hold,paid_successfully',
-            'transaction_reference' => 'nullable|string|max:255',
-            'date_sent' => 'nullable|date',
-            'finance_notes' => 'nullable|string|max:1000',
-        ]);
-
-        $payout = \App\Models\Payout::findOrFail($payoutId);
-
-        $payout->update([
-            'status' => $request->status,
-            'transaction_reference' => $request->transaction_reference,
-            'date_sent' => $request->date_sent,
-            'finance_notes' => $request->finance_notes,
-        ]);
-
-        // Send notification to seller if status changed to "Sent" or "Paid Successfully"
-        if (in_array($request->status, ['sent', 'paid_successfully'])) {
-            try {
-                \Mail::send('emails.payout-status-updated', [
-                    'payout' => $payout,
-                    'seller' => $payout->seller,
-                ], function ($message) use ($payout) {
-                    $message->to($payout->seller->email, $payout->seller->name)
-                        ->subject('Payout Status Updated - CayMark');
-                });
-            } catch (\Exception $e) {
-                \Log::error('Failed to send payout status email: ' . $e->getMessage());
-            }
-        }
-
-        return back()->with('success', 'Payout status updated successfully.');
+        return AdminActionHub::updatePayoutStatus($request, $payoutId);
     }
 
     /**
@@ -1716,18 +1532,9 @@ class AdminController extends Controller
     /**
      * Admin: Resolve default by relisting (Option A).
      */
-    public function resolveDefaultByRelist(Request $request, $defaultId)
+    public function resolveDefaultByRelist(AdminResolveDefaultRequest $request, $defaultId)
     {
-        $request->validate([
-            'admin_notes' => 'nullable|string|max:1000',
-        ]);
-
-        $default = \App\Models\BuyerDefault::findOrFail($defaultId);
-        $defaultService = new \App\Services\DefaultService();
-        
-        $defaultService->resolveByRelist($default, $request->admin_notes ?? '');
-
-        return back()->with('success', 'Default resolved by relist. Seller can now create a new listing.');
+        return AdminActionHub::resolveDefaultByRelist($request, $defaultId);
     }
 
     /**
@@ -1828,25 +1635,8 @@ class AdminController extends Controller
     /**
      * Admin: Close unpaid auction (mark as closed permanently).
      */
-    public function closeUnpaidAuction(Request $request, $defaultId)
+    public function closeUnpaidAuction(AdminCloseUnpaidAuctionRequest $request, $defaultId)
     {
-        $request->validate([
-            'admin_notes' => 'nullable|string|max:1000',
-        ]);
-
-        $default = \App\Models\BuyerDefault::findOrFail($defaultId);
-        
-        $default->update([
-            'status' => 'resolved',
-            'resolution_type' => 'closed',
-            'admin_notes' => $request->admin_notes ?? 'Auction closed permanently by admin.',
-        ]);
-
-        // Mark listing as closed
-        $default->listing->update([
-            'status' => 'closed',
-        ]);
-
-        return back()->with('success', 'Auction closed permanently.');
+        return AdminActionHub::closeUnpaidAuction($request, $defaultId);
     }
 }

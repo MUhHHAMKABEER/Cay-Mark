@@ -1,9 +1,8 @@
-@extends('layouts.app')
+@extends('layouts.Buyer')
 @section('title', 'Pickup Coordination - CayMark')
 @section('content')
 
-<div class="container mx-auto px-4 py-8">
-    <div class="max-w-4xl mx-auto">
+<div class="max-w-4xl mx-auto">
         <!-- Thread Header -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
             <h1 class="text-2xl font-bold text-gray-900 mb-4">{{ $listing->year }} {{ $listing->make }} {{ $listing->model }}</h1>
@@ -220,10 +219,10 @@
                 Contact CayMark Support
             </a>
         </div>
-    </div>
 </div>
 
-<!-- Change Request Modal -->
+<!-- Change Request Modal (only when seller has submitted pickup details) -->
+@if($thread->latestPickupDetail)
 <div id="changeRequestModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
     <div class="bg-white rounded-xl p-6 max-w-md w-full mx-4">
         <h3 class="text-xl font-bold text-gray-900 mb-4">Request Date / Time Change</h3>
@@ -259,6 +258,7 @@
         </form>
     </div>
 </div>
+@endif
 
 <!-- Third-Party Pickup Modal -->
 <div id="thirdPartyModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

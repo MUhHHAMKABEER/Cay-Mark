@@ -646,6 +646,9 @@
 
     {{-- Scripts --}}
     <script>
+        window.csrfToken = '{{ csrf_token() }}';
+        window.loginUrl = '{{ route('login') }}';
+
         document.addEventListener('DOMContentLoaded', () => {
             // Header scroll effect
             const header = document.getElementById('mainHeader');
@@ -763,6 +766,52 @@
                 }
                 setInterval(() => show(idx + 1), 5000);
             }
+        });
+
+        document.addEventListener('click', (event) => {
+            const btn = event.target.closest('.js-like-toggle');
+            if (!btn) return;
+            event.preventDefault();
+
+            if (btn.dataset.auth !== '1') {
+                window.location.href = window.loginUrl;
+                return;
+            }
+
+            if (btn.dataset.loading === '1') return;
+            btn.dataset.loading = '1';
+
+            fetch(btn.dataset.url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': window.csrfToken,
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                const liked = !!data.in_watchlist;
+                const icon = btn.querySelector('.material-icons');
+                const countEl = btn.querySelector('.js-like-count');
+                const unlikedClass = btn.dataset.unlikedClass || 'text-gray-400';
+
+                if (icon) {
+                    icon.textContent = liked ? 'favorite' : 'favorite_border';
+                }
+
+                btn.classList.remove('text-red-500');
+                btn.classList.remove(unlikedClass);
+                btn.classList.add(liked ? 'text-red-500' : unlikedClass);
+
+                if (countEl && typeof data.likes_count !== 'undefined') {
+                    countEl.textContent = data.likes_count;
+                }
+            })
+            .catch(() => {})
+            .finally(() => {
+                btn.dataset.loading = '0';
+            });
         });
     </script>
 

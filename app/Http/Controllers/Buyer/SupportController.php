@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Buyer;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Http\Requests\BuyerSupportStoreRequest;
 use Illuminate\Support\Facades\Auth;
+use App\Services\SupportOps;
 
 class SupportController extends Controller
 {
@@ -28,16 +30,9 @@ class SupportController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(BuyerSupportStoreRequest $request)
     {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'message' => 'required|string|min:10',
-        ]);
-
-        // TODO: Create SupportTicket model and store ticket
-        // For now, just return success message
-        return back()->with('success', 'Support ticket submitted successfully. We will respond soon.');
+        return SupportOps::buyerStore($request);
     }
 
     /**

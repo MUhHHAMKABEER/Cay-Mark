@@ -3,6 +3,13 @@
 @section('title', 'Buyer Dashboard - CayMark')
 
 @section('content')
+<style>
+.notifications-scrollbar { max-height: 65vh; overflow-y: scroll !important; overflow-x: hidden; }
+.notifications-scrollbar::-webkit-scrollbar { width: 12px; }
+.notifications-scrollbar::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 6px; }
+.notifications-scrollbar::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 6px; }
+.notifications-scrollbar::-webkit-scrollbar-thumb:hover { background: #64748b; }
+</style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <div class="w-full h-full bg-gray-50" style="min-height: calc(100vh - 0px); padding: 0;">
     <div class="w-full h-full px-3 sm:px-4 lg:px-6 py-3">
@@ -313,7 +320,7 @@
                                 <div class="group bg-white rounded-2xl border-2 border-gray-200 overflow-hidden shadow-sm hover:shadow-xl hover:border-blue-300 transition-all duration-300">
                                     <div class="relative h-52 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
                                         @if($listing->images->first())
-                                            <img src="{{ asset('storage/' . $listing->images->first()->image_path) }}" alt="{{ $listing->make }} {{ $listing->model }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                                            <img src="{{ str_contains($listing->images->first()->image_path, '/') ? asset($listing->images->first()->image_path) : asset('uploads/listings/' . $listing->images->first()->image_path) }}" alt="{{ $listing->make }} {{ $listing->model }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                                         @else
                                             <div class="w-full h-full flex items-center justify-center text-gray-400">
                                                 <span class="material-icons-round text-6xl">directions_car</span>
@@ -374,11 +381,14 @@
                 <div id="auction-section-won" class="auction-section hidden">
                     @if($wonAuctions->count() > 0)
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            @foreach($wonAuctions as $invoice)
+                            @foreach($wonAuctions as $listing)
+                                @php
+                                    $statusText = ($listing->payment_status ?? null) === 'paid' ? 'Purchase Complete' : 'Payment Pending';
+                                @endphp
                                 <div class="group bg-white rounded-2xl border-2 border-emerald-200 overflow-hidden shadow-sm hover:shadow-xl hover:border-emerald-300 transition-all duration-300">
                                     <div class="relative h-52 bg-gradient-to-br from-emerald-50 to-green-100 overflow-hidden">
-                                        @if($invoice->listing && $invoice->listing->images->first())
-                                            <img src="{{ asset('storage/' . $invoice->listing->images->first()->image_path) }}" alt="" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                                        @if($listing->images->first())
+                                            <img src="{{ str_contains($listing->images->first()->image_path, '/') ? asset($listing->images->first()->image_path) : asset('uploads/listings/' . $listing->images->first()->image_path) }}" alt="" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                                         @else
                                             <div class="w-full h-full flex items-center justify-center text-gray-400">
                                                 <span class="material-icons-round text-6xl">directions_car</span>
@@ -389,15 +399,15 @@
                                         </div>
                                     </div>
                                     <div class="p-5">
-                                        <h3 class="text-lg font-bold text-gray-900 mb-1.5 line-clamp-1">{{ $invoice->listing->year ?? '' }} {{ $invoice->listing->make ?? '' }} {{ $invoice->listing->model ?? 'Item' }}</h3>
-                                        <p class="text-xs text-gray-500 mb-3 font-mono">ITEM #{{ $invoice->listing->item_number ?? $invoice->item_id ?? '—' }}</p>
+                                        <h3 class="text-lg font-bold text-gray-900 mb-1.5 line-clamp-1">{{ $listing->year ?? '' }} {{ $listing->make ?? '' }} {{ $listing->model ?? 'Item' }}</h3>
+                                        <p class="text-xs text-gray-500 mb-3 font-mono">ITEM #{{ $listing->item_number ?? '—' }}</p>
                                         <div class="flex items-baseline gap-2 mb-4">
                                             <span class="text-xs text-gray-500 font-medium">Final Price</span>
-                                            <span class="text-2xl font-bold text-emerald-600">${{ number_format($invoice->winning_bid_amount ?? 0, 0) }}</span>
+                                            <span class="text-2xl font-bold text-emerald-600">${{ number_format($listing->final_price ?? 0, 0) }}</span>
                                         </div>
                                         <div class="flex items-center gap-2 text-xs text-emerald-600 font-semibold">
                                             <span class="material-icons-round text-sm">check_circle</span>
-                                            <span>Purchase Complete</span>
+                                            <span>{{ $statusText }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -409,7 +419,7 @@
                                 <span class="material-icons-round text-emerald-600 text-4xl">celebration</span>
                             </div>
                             <h3 class="text-lg font-bold text-gray-900 mb-2">No Won Auctions Yet</h3>
-                            <p class="text-gray-500 text-sm max-w-sm mx-auto">Auctions you've won will appear here after payment is completed.</p>
+                            <p class="text-gray-500 text-sm max-w-sm mx-auto">Auctions you've won will appear here after the auction ends.</p>
                         </div>
                     @endif
                 </div>
@@ -421,7 +431,7 @@
                                 <div class="group bg-white rounded-2xl border-2 border-gray-200 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 opacity-75">
                                     <div class="relative h-52 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
                                         @if($listing->images->first())
-                                            <img src="{{ asset('storage/' . $listing->images->first()->image_path) }}" alt="{{ $listing->make }} {{ $listing->model }}" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-300">
+                                            <img src="{{ str_contains($listing->images->first()->image_path, '/') ? asset($listing->images->first()->image_path) : asset('uploads/listings/' . $listing->images->first()->image_path) }}" alt="{{ $listing->make }} {{ $listing->model }}" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-300">
                                         @else
                                             <div class="w-full h-full flex items-center justify-center text-gray-400">
                                                 <span class="material-icons-round text-6xl">directions_car</span>
@@ -491,7 +501,7 @@
                             <div class="group bg-white rounded-2xl border-2 border-amber-200 overflow-hidden shadow-sm hover:shadow-xl hover:border-amber-300 transition-all duration-300">
                                 <div class="relative h-52 bg-gradient-to-br from-amber-50 to-orange-100 overflow-hidden">
                                     @if($listing->images->first())
-                                        <img src="{{ asset('storage/' . $listing->images->first()->image_path) }}" alt="{{ $listing->make }} {{ $listing->model }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                                        <img src="{{ str_contains($listing->images->first()->image_path, '/') ? asset($listing->images->first()->image_path) : asset('uploads/listings/' . $listing->images->first()->image_path) }}" alt="{{ $listing->make }} {{ $listing->model }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                                     @else
                                         <div class="w-full h-full flex items-center justify-center text-gray-400">
                                             <span class="material-icons-round text-6xl">directions_car</span>
@@ -551,9 +561,9 @@
             </div>
 
             <!-- NOTIFICATIONS TAB -->
-            <div id="content-notifications" class="tab-content hidden p-6">
+            <div id="content-notifications" class="tab-content hidden p-6 flex flex-col" style="min-height: 0;">
                 <!-- Header -->
-                <div class="mb-8">
+                <div class="mb-6 flex-shrink-0">
                     <div class="flex items-center justify-between mb-1">
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center shadow-lg shadow-purple-500/20">
@@ -566,18 +576,25 @@
                         </div>
                         @if($notifications->count() > 0)
                             @php $unreadCount = $notifications->whereNull('read_at')->count(); @endphp
-                            @if($unreadCount > 0)
-                                <div class="unread-count-display flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-50 border border-blue-200">
-                                    <span class="w-2 h-2 bg-blue-600 rounded-full animate-pulse"></span>
-                                    <span class="text-sm font-semibold text-blue-700">{{ $unreadCount }} unread</span>
-                                </div>
-                            @endif
+                            <div class="flex items-center gap-3">
+                                @if($unreadCount > 0)
+                                    <div class="unread-count-display flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-50 border border-blue-200">
+                                        <span class="w-2 h-2 bg-blue-600 rounded-full animate-pulse"></span>
+                                        <span class="text-sm font-semibold text-blue-700">{{ $unreadCount }} unread</span>
+                                    </div>
+                                    <button type="button" id="read-all-notifications-btn" onclick="markAllNotificationsAsRead()"
+                                        class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow-sm transition-all duration-200">
+                                        <span class="material-icons-round text-lg">done_all</span>
+                                        Read All
+                                    </button>
+                                @endif
+                            </div>
                         @endif
                     </div>
                 </div>
 
                 <!-- Filter Buttons -->
-                <div class="mb-6 flex items-center gap-3" x-data="{ currentFilter: 'all' }" x-init="window.notificationFilter = currentFilter">
+                <div class="mb-4 flex items-center gap-3 flex-shrink-0" x-data="{ currentFilter: 'all' }" x-init="window.notificationFilter = currentFilter">
                     <button @click="currentFilter = 'all'; window.notificationFilter = 'all'; filterNotifications('all')" 
                             :class="currentFilter === 'all' ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
                             class="px-5 py-2.5 rounded-lg font-semibold text-sm transition-all">
@@ -603,7 +620,8 @@
                         });
                     @endphp
                     
-                    <div class="notifications-container space-y-6">
+                    <div class="notifications-scroll-wrapper notifications-scrollbar pr-2 border border-gray-200 rounded-xl flex-1 min-h-0" style="max-height: 55vh; overflow-y: scroll; overflow-x: hidden;">
+                    <div class="notifications-container space-y-6 py-1">
                         @foreach($groupedNotifications as $month => $monthNotifications)
                             <div class="notification-month-group" data-month="{{ $month }}">
                                 <!-- Month Header -->
@@ -679,6 +697,7 @@
                             </div>
                         @endforeach
                     </div>
+                    </div>
                 @else
                     <div class="bg-white rounded-2xl border-2 border-dashed border-gray-200 p-12 text-center">
                         <div class="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
@@ -701,7 +720,7 @@
                                 <div class="flex items-center space-x-4">
                                     <div class="h-20 w-20 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
                                         @if($thread->listing && $thread->listing->images->first())
-                                            <img src="{{ asset('storage/' . $thread->listing->images->first()->image_path) }}" alt="" class="w-full h-full object-cover">
+                                            <img src="{{ str_contains($thread->listing->images->first()->image_path, '/') ? asset($thread->listing->images->first()->image_path) : asset('uploads/listings/' . $thread->listing->images->first()->image_path) }}" alt="" class="w-full h-full object-cover">
                                         @endif
                                     </div>
                                     <div class="flex-1">
@@ -1028,6 +1047,65 @@ function markNotificationAsRead(notificationId, element) {
     })
     .catch(error => {
         console.error('Error marking notification as read:', error);
+    });
+}
+
+// Mark all notifications as read
+function markAllNotificationsAsRead() {
+    const btn = document.getElementById('read-all-notifications-btn');
+    if (btn) btn.disabled = true;
+    
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || 
+                      document.querySelector('input[name="_token"]')?.value || '';
+    
+    fetch('/buyer/notifications/mark-all-read', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.querySelectorAll('.notification-card[data-is-unread="true"]').forEach(card => {
+                card.classList.remove('bg-blue-50', 'bg-amber-50', 'bg-emerald-50', 'bg-purple-50', 'border-blue-200', 'border-amber-200', 'border-emerald-200', 'border-purple-200', 'shadow-sm', 'cursor-pointer');
+                card.classList.add('border-gray-200');
+                card.dataset.isUnread = 'false';
+                card.setAttribute('data-read-status', 'read');
+                card.removeAttribute('onclick');
+                const unreadDot = card.querySelector('.unread-dot');
+                if (unreadDot) unreadDot.remove();
+                const iconContainer = card.querySelector('.flex-shrink-0.w-12');
+                if (iconContainer) {
+                    iconContainer.classList.remove('bg-blue-50', 'bg-amber-50', 'bg-emerald-50', 'bg-purple-50', 'border-blue-200', 'border-amber-200', 'border-emerald-200', 'border-purple-200');
+                    iconContainer.classList.add('bg-gray-100', 'border-gray-200');
+                }
+                const icon = card.querySelector('.material-icons-round');
+                if (icon) {
+                    icon.classList.remove('text-blue-600', 'text-amber-600', 'text-emerald-600', 'text-purple-600');
+                    icon.classList.add('text-gray-400');
+                }
+                const text = card.querySelector('.font-semibold');
+                if (text) {
+                    text.classList.remove('text-gray-900');
+                    text.classList.add('text-gray-700');
+                }
+            });
+            const unreadDisplay = document.querySelector('.unread-count-display');
+            if (unreadDisplay) unreadDisplay.style.display = 'none';
+            if (btn) {
+                btn.style.display = 'none';
+                btn.disabled = false;
+            }
+            updateUnreadCount();
+        }
+    })
+    .catch(error => {
+        console.error('Error marking all as read:', error);
+        if (btn) btn.disabled = false;
     });
 }
 

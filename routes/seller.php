@@ -52,10 +52,10 @@ Route::prefix('seller')->name('seller.')->middleware(['auth'])->group(function (
     // Support
     Route::post('support/submit', [SupportController::class, 'store'])->name('support.submit');
     
-    // Chat
-    Route::get('Seller_Chat', [chatController::class, 'chat'])->name('chat');
-    Route::get('Seller_Chat/{chatId?}', [chatController::class, 'chat'])->name('chat.show');
-    Route::post('Seller_Chat/{chat}/message', [chatController::class, 'sendMessage'])->name('chat.message');
+    // Messaging Center
+    Route::get('messaging', [chatController::class, 'chat'])->name('chat');
+    Route::get('messaging/{chatId?}', [chatController::class, 'chat'])->name('chat.show');
+    Route::post('messaging/{chat}/message', [chatController::class, 'sendMessage'])->name('chat.message');
 });
 
 

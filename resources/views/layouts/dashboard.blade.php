@@ -151,7 +151,12 @@
 
         .unified-sidebar .user-profile .user-role {
             font-size: 0.85rem;
-            color: rgba(255, 255, 255, 0.7);
+            color: #1e3a8a;
+            background: #eef2ff;
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            display: inline-flex;
+            border: 1px solid rgba(67, 97, 238, 0.2);
         }
 
         .unified-sidebar .logout-section {

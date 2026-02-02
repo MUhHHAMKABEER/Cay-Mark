@@ -460,7 +460,15 @@
                             <h2 class="h5 card-title mb-3">Vehicle Information</h2>
                             <dl class="row small">
                                 <dt class="col-sm-5 text-muted">Vehicle Type</dt>
-                                <dd class="col-sm-7">{{ $vehicle->vehicle_type ?? 'AUTOMOBILE' }}</dd>
+                                <dd class="col-sm-7">
+                                    @if($vehicle->vehicle_type && stripos($vehicle->vehicle_type, 'INCOMPLETE') === false)
+                                        {{ $vehicle->vehicle_type }}
+                                    @elseif($vehicle->major_category)
+                                        {{ $vehicle->major_category }}
+                                    @else
+                                        AUTOMOBILE
+                                    @endif
+                                </dd>
 
                                 <dt class="col-sm-5 text-muted">Year</dt>
                                 <dd class="col-sm-7">{{ $vehicle->year ?? '—' }}</dd>
@@ -471,26 +479,41 @@
                                 <dt class="col-sm-5 text-muted">Model</dt>
                                 <dd class="col-sm-7">{{ $vehicle->model ?? '—' }}</dd>
 
+                                @if($vehicle->trim)
+                                <dt class="col-sm-5 text-muted">Trim</dt>
+                                <dd class="col-sm-7">{{ $vehicle->trim }}</dd>
+                                @endif
+
                                 <dt class="col-sm-5 text-muted">Body Style</dt>
-                                <dd class="col-sm-7">{{ $vehicle->body_style ?? 'Sedan' }}</dd>
+                                <dd class="col-sm-7">{{ $vehicle->body_style ?? $vehicle->subcategory ?? 'Sedan' }}</dd>
 
                                 <dt class="col-sm-5 text-muted">Color</dt>
                                 <dd class="col-sm-7">{{ $vehicle->color ?? 'White' }}</dd>
 
-                                <dt class="col-sm-5 text-muted">Engine Type</dt>
-                                <dd class="col-sm-7">{{ $vehicle->engine ?? '—' }}</dd>
+                                <dt class="col-sm-5 text-muted">Engine Size</dt>
+                                <dd class="col-sm-7">{{ $vehicle->engine_type ?? '—' }}</dd>
 
+                                @if($vehicle->cylinders)
                                 <dt class="col-sm-5 text-muted">Cylinders</dt>
-                                <dd class="col-sm-7">{{ $vehicle->cylinders ?? '—' }}</dd>
+                                <dd class="col-sm-7">{{ $vehicle->cylinders }}</dd>
+                                @endif
 
                                 <dt class="col-sm-5 text-muted">Transmission</dt>
-                                <dd class="col-sm-7">{{ $vehicle->transmission ?? 'Automatic' }}</dd>
+                                <dd class="col-sm-7">
+                                    @if($vehicle->transmission)
+                                        {{ ucfirst($vehicle->transmission) }}
+                                    @else
+                                        Automatic
+                                    @endif
+                                </dd>
 
-                                <dt class="col-sm-5 text-muted">Drive</dt>
-                                <dd class="col-sm-7">{{ $vehicle->drive ?? 'All Wheel Drive' }}</dd>
+                                @if($vehicle->drive_type)
+                                <dt class="col-sm-5 text-muted">Drive Type</dt>
+                                <dd class="col-sm-7">{{ $vehicle->drive_type }}</dd>
+                                @endif
 
-                                <dt class="col-sm-5 text-muted">Fuel</dt>
-                                <dd class="col-sm-7">{{ $vehicle->fuel ?? 'Gasoline' }}</dd>
+                                <dt class="col-sm-5 text-muted">Fuel Type</dt>
+                                <dd class="col-sm-7">{{ $vehicle->fuel_type ?? 'Gasoline' }}</dd>
                             </dl>
                         </div>
                     </div>

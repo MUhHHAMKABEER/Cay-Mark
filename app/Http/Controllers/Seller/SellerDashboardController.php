@@ -8,6 +8,10 @@ use App\Repositories\Seller\SellerRepository;
 use App\Models\Listing;
 use App\Models\SellerPayoutMethod;
 use Illuminate\Http\Request;
+use App\Services\Seller\SellerDashboardOps;
+use App\Http\Requests\SellerDashboardUpdatePayoutRequest;
+use App\Http\Requests\SellerDashboardChangePasswordRequest;
+use App\Http\Requests\SellerDashboardConfirmPickupRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
@@ -45,82 +49,25 @@ class SellerDashboardController extends Controller
     /**
      * Update payout settings
      */
-    public function updatePayout(Request $request)
+    public function updatePayout(SellerDashboardUpdatePayoutRequest $request)
     {
-        $request->validate([
-            'bank_name' => 'required|string|max:255',
-            'account_holder_name' => 'required|string|max:255',
-            'account_number' => 'required|string|max:255',
-            'routing_number' => 'nullable|string|max:255',
-            'swift_number' => 'nullable|string|max:255',
-            'country' => 'required|string|max:255',
-        ]);
-
-        $user = Auth::user();
-
-        // Deactivate existing payout methods
-        SellerPayoutMethod::where('user_id', $user->id)
-            ->update(['is_active' => false]);
-
-        // Use repository to save payout method
-        $this->repository->savePayoutMethod($user, [
-            'bank_name' => $request->bank_name,
-            'account_holder_name' => $request->account_holder_name,
-            'account_number' => $request->account_number,
-            'routing_number' => $request->routing_number,
-            'swift_number' => $request->swift_number,
-            'is_active' => true,
-        ]);
-
-        return back()->with('success', 'Payout settings updated successfully.');
+        return SellerDashboardOps::updatePayout($request, $this->repository);
     }
 
     /**
      * Change password
      */
-    public function changePassword(Request $request)
+    public function changePassword(SellerDashboardChangePasswordRequest $request)
     {
-        $request->validate([
-            'current_password' => 'required|current_password',
-            'password' => 'required|string|min:8|confirmed',
-        ]);
-
-        $user = Auth::user();
-        $user->password = Hash::make($request->password);
-        $user->save();
-
-        return back()->with('success', 'Password changed successfully.');
+        return SellerDashboardOps::changePassword($request);
     }
 
     /**
      * Confirm pickup with PIN
      */
-    public function confirmPickup(Request $request, $listingId)
+    public function confirmPickup(SellerDashboardConfirmPickupRequest $request, $listingId)
     {
-        $request->validate([
-            'pickup_pin' => 'required|string',
-        ]);
-
-        $user = Auth::user();
-        $listing = $this->repository->getListingById($user, $listingId);
-
-        if (!$listing) {
-            return back()->withErrors(['pickup_pin' => 'Listing not found.']);
-        }
-
-        if ($listing->pickup_pin !== $request->pickup_pin) {
-            return back()->withErrors(['pickup_pin' => 'Invalid pickup PIN.']);
-        }
-
-        $listing->pickup_confirmed = true;
-        $listing->pickup_confirmed_at = now();
-        $listing->pickup_confirmed_by = $user->id;
-        $listing->save();
-
-        // Trigger payout processing
-        // This would typically be handled by a service or event
-
-        return back()->with('success', 'Pickup confirmed successfully. Payment processing has begun.');
+        return SellerDashboardOps::confirmPickup($request, $listingId, $this->repository);
     }
 }
 

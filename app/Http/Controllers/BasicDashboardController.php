@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Http\Requests\BasicDashboardUpdateEmailRequest;
+use App\Http\Requests\BasicDashboardChangePasswordRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use App\Services\BasicDashboardOps;
 
 class BasicDashboardController extends Controller
 {
@@ -30,47 +33,17 @@ class BasicDashboardController extends Controller
     /**
      * Update email address (allowed in basic dashboard)
      */
-    public function updateEmail(Request $request)
+    public function updateEmail(BasicDashboardUpdateEmailRequest $request)
     {
-        $request->validate([
-            'email' => 'required|email|unique:users,email,' . Auth::id(),
-        ]);
-
-        $user = Auth::user();
-        $user->email = $request->email;
-        $user->email_verified_at = null; // Require re-verification
-        $user->save();
-
-        return back()->with('success', 'Email address updated successfully. Please verify your new email.');
+        return BasicDashboardOps::updateEmail($request);
     }
 
     /**
      * Change password (allowed in basic dashboard)
      */
-    public function changePassword(Request $request)
+    public function changePassword(BasicDashboardChangePasswordRequest $request)
     {
-        $request->validate([
-            'current_password' => 'required|current_password',
-            'password' => 'required|string|min:8|confirmed',
-        ]);
-
-        $user = Auth::user();
-        $user->password = \Hash::make($request->password);
-        $user->save();
-
-        // Send password changed email
-        try {
-            \Mail::send('emails.password-changed', [
-                'user' => $user,
-            ], function ($message) use ($user) {
-                $message->to($user->email, $user->name)
-                    ->subject('Password Changed Successfully');
-            });
-        } catch (\Exception $e) {
-            \Log::error('Failed to send password changed email: ' . $e->getMessage());
-        }
-
-        return back()->with('success', 'Password changed successfully.');
+        return BasicDashboardOps::changePassword($request);
     }
 }
 

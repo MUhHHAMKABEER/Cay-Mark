@@ -61,7 +61,7 @@
                                 <span class="absolute top-0 right-0 w-4 h-4 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">{{ $user->unreadNotifications()->count() }}</span>
                             @endif
                         </a>
-                        <a href="{{ route('buyer.escrow') }}" class="flex items-center space-x-2 px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg transition-colors">
+                        <a href="{{ route('buyer.deposit-withdrawal') }}" class="flex items-center space-x-2 px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg transition-colors">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
                             </svg>
@@ -80,7 +80,7 @@
                             <div x-show="open" @click.away="open = false" x-cloak class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
                                 <a href="{{ route('dashboard.buyer') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Buyer Dashboard</a>
                                 <a href="{{ route('buyer.messaging-center') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Messages / Notifications</a>
-                                <a href="{{ route('buyer.escrow') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Wallet / Deposits</a>
+                                <a href="{{ route('buyer.deposit-withdrawal') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Wallet / Deposits</a>
                                 <a href="{{ route('dashboard.buyer') }}?tab=user" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Account Settings</a>
                                 <hr class="my-2">
                                 <form method="POST" action="{{ route('logout') }}">
