@@ -410,6 +410,16 @@
             Back to results
         </a>
 
+        @if(($listing->condition ?? '') === 'salvaged')
+        <!-- Salvaged vehicle warning -->
+        <div class="mb-6 p-4 rounded-xl bg-amber-100 border-2 border-amber-400 text-amber-900 flex items-start gap-3">
+            <span class="material-icons text-amber-600 flex-shrink-0" style="font-size: 28px;">warning</span>
+            <div>
+                <strong class="font-bold">Salvaged vehicle.</strong> This vehicle has been declared a total loss by an insurance company or has significant damage (typically 75% or more). It may not be suitable for road use.
+            </div>
+        </div>
+        @endif
+
         <!-- Main Title -->
         <h1 class="text-4xl font-bold mb-6 text-gray-900">
             {{ $listing->year ?? '' }} {{ $listing->make ?? '' }} {{ $listing->model ?? '' }} {{ $listing->trim ?? '' }}
@@ -566,9 +576,15 @@
                             <span class="info-value">{{ $listing->keys_available ? 'Yes' : 'No' }}</span>
                         </div>
                         <div class="info-item">
-                            <span class="info-label">VIN</span>
-                            <span class="info-value">{{ $listing->vin ? substr($listing->vin, 0, 8) . '******' : 'N/A' }}</span>
+                            <span class="info-label">Title status</span>
+                            <span class="info-value">{{ ($listing->title_status ?? '') === 'CLEAN' ? 'Has title' : (($listing->title_status ?? '') === 'SALVAGE' ? 'No title' : 'N/A') }}</span>
                         </div>
+                        @auth
+                        <div class="info-item">
+                            <span class="info-label">VIN</span>
+                            <span class="info-value">{{ $listing->vin ? substr($listing->vin, 0, 4) . '•••••••' . substr($listing->vin, -3) : 'N/A' }}</span>
+                        </div>
+                        @endauth
                     </div>
                 </div>
 

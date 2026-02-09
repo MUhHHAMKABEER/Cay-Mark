@@ -154,9 +154,9 @@
 <section class="py-12 px-4 bg-gray-50">
     <div class="container mx-auto max-w-7xl">
         <div class="grid lg:grid-cols-3 gap-8">
-            <!-- Left and Middle Columns - FAQ Categories -->
-            <div class="lg:col-span-2 space-y-6">
-                <!-- Registration & Membership FAQ -->
+            <!-- Left and Middle Columns - Two items per row -->
+            <div class="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Registration & Membership -->
                 <div class="faq-card faq-category">
                     <div class="flex items-center mb-4">
                         <div class="faq-icon">
@@ -178,7 +178,7 @@
                     </a>
                 </div>
 
-                <!-- Payments & Deposits FAQ -->
+                <!-- Payments & Deposits -->
                 <div class="faq-card faq-category">
                     <div class="flex items-center mb-4">
                         <div class="faq-icon">
@@ -200,7 +200,7 @@
                     </a>
                 </div>
 
-                <!-- Auction FAQ -->
+                <!-- Auction -->
                 <div class="faq-card faq-category">
                     <div class="flex items-center mb-4">
                         <div class="faq-icon">
@@ -222,7 +222,7 @@
                     </a>
                 </div>
 
-                <!-- Vehicle Condition & Damage FAQ -->
+                <!-- Vehicle Condition & Damage -->
                 <div class="faq-card faq-category">
                     <div class="flex items-center mb-4">
                         <div class="faq-icon">
@@ -243,7 +243,7 @@
                     </a>
                 </div>
 
-                <!-- Pickup & Post-Sale FAQ -->
+                <!-- Pickup & Post-Sale -->
                 <div class="faq-card faq-category">
                     <div class="flex items-center mb-4">
                         <div class="faq-icon">
@@ -318,7 +318,7 @@
     <div class="container mx-auto max-w-7xl">
         <!-- Registration & Membership -->
         <div id="registration-membership" class="mb-12">
-            <h2 class="text-3xl font-bold text-gray-900 mb-6">Registration & Membership FAQ</h2>
+            <h2 class="text-3xl font-bold text-gray-900 mb-6">Registration & Membership</h2>
             <div class="space-y-6">
                 <div class="faq-card">
                     <h3 class="text-lg font-bold text-gray-900 mb-2">1. How do I create a CayMark account?</h3>
@@ -402,7 +402,7 @@
 
         <!-- Payments & Deposits -->
         <div id="payments-deposits" class="mb-12">
-            <h2 class="text-3xl font-bold text-gray-900 mb-6">Payments & Deposits FAQ</h2>
+            <h2 class="text-3xl font-bold text-gray-900 mb-6">Payments & Deposits</h2>
             <div class="space-y-6">
                 <div class="faq-card">
                     <h3 class="text-lg font-bold text-gray-900 mb-2">1. What payment methods does CayMark accept?</h3>
@@ -451,7 +451,7 @@
 
         <!-- Auction -->
         <div id="auction" class="mb-12">
-            <h2 class="text-3xl font-bold text-gray-900 mb-6">Auction FAQ</h2>
+            <h2 class="text-3xl font-bold text-gray-900 mb-6">Auction</h2>
             <div class="space-y-6">
                 <div class="faq-card">
                     <h3 class="text-lg font-bold text-gray-900 mb-2">1. Who can participate in auctions?</h3>
@@ -518,7 +518,7 @@
 
         <!-- Vehicle Condition & Damage -->
         <div id="vehicle-condition" class="mb-12">
-            <h2 class="text-3xl font-bold text-gray-900 mb-6">Vehicle Condition & Damage FAQ</h2>
+            <h2 class="text-3xl font-bold text-gray-900 mb-6">Vehicle Condition & Damage</h2>
             <div class="space-y-6">
                 <div class="faq-card">
                     <h3 class="text-lg font-bold text-gray-900 mb-2">1. Can I inspect the vehicle before bidding?</h3>
@@ -549,7 +549,7 @@
 
         <!-- Pickup & Post-Sale -->
         <div id="pickup-post-sale" class="mb-12">
-            <h2 class="text-3xl font-bold text-gray-900 mb-6">Pickup & Post-Sale FAQ</h2>
+            <h2 class="text-3xl font-bold text-gray-900 mb-6">Pickup & Post-Sale</h2>
             <div class="space-y-6">
                 <div class="faq-card">
                     <h3 class="text-lg font-bold text-gray-900 mb-2">1. When can I pick up my vehicle?</h3>

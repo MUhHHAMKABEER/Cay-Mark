@@ -93,7 +93,7 @@
 </head>
 <body>
     <div class="header">
-        <div class="logo">CayMark</div>
+        <div class="logo"><img src="{{ $invoiceLogoUrl ?? asset(config('logos.invoice', 'Logos/1.png')) }}" alt="CayMark" style="max-height: 48px; width: auto;" /></div>
         <div style="color: #64748b; font-size: 14px;">Island Exchange & Auction House</div>
         <div class="invoice-title">Auction Invoice</div>
     </div>

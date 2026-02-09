@@ -407,17 +407,10 @@
 </style>
 
 <aside class="unified-sidebar">
-    <div class="logo">
-        <div class="logo-dots">
-            <div class="logo-dot blue"></div>
-            <div class="logo-dot yellow"></div>
-            <div class="logo-dot red"></div>
-            <div class="logo-dot green"></div>
-        </div>
-        <h1>
-            <span>CayMark</span>
-        </h1>
-    </div>
+    <a href="{{ route('welcome') }}" class="logo flex items-center justify-center gap-2 no-underline">
+        <img src="{{ asset(config('logos.sidebar', 'Logos/1.png')) }}" alt="CayMark" class="h-10 w-auto max-w-full object-contain" />
+        <h1 class="m-0 text-lg font-bold text-gray-900"><span>CayMark</span></h1>
+    </a>
 
     <a href="{{ route('profile.edit') }}" class="user-profile">
         <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAlZcArzLDu2ar9LMEKLq0Pc00JlKrypvY4o2sWPG7w2mqW-aQNk4bjM2otcK9rpP0L9Y9D6ufd1Hfl8VqG5QxQ70E70W2J9cIesp7CPnk60kNw55FYTZCqay0QTWJtOhG1fSzhpJ9qlyLUFFNstRlPZb2dYFbdpSXxaPvgx3J5yySMRc6c-OZWtIFKK4nU_k4AqY0bECTu42n9S1JfRLaYSB8-anFeAj3KHcMIrFKs8m09OiQcCxnEKa6nxdnCOjWXAmxG1d3hg68"

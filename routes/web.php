@@ -93,6 +93,12 @@ Route::get('/rules-policies', function () {
     return view('rules-policies');
 })->name('rules-policies');
 
+// Tow Provider directory and signup (public)
+Route::get('/tow-providers', [App\Http\Controllers\TowProviderController::class, 'index'])->name('tow-provider.index');
+Route::get('/tow-providers/signup', [App\Http\Controllers\TowProviderSignupController::class, 'create'])->name('tow-provider.signup');
+Route::post('/tow-providers/signup', [App\Http\Controllers\TowProviderSignupController::class, 'store'])->name('tow-provider.signup.store');
+Route::get('/tow-providers/signup/thanks', [App\Http\Controllers\TowProviderSignupController::class, 'thanks'])->name('tow-provider.signup.thanks');
+
 
 
 Route::middleware(['auth',

@@ -130,20 +130,19 @@ class InvoiceService
         // Generate PDF using dompdf if available, otherwise create HTML file
         try {
             // Try to use dompdf if installed
+            $invoiceLogoUrl = url(config('logos.invoice', 'Logos/1.png'));
+            $viewData = [
+                'invoice' => $invoice->load(['buyer', 'seller']),
+                'buyer' => $invoice->buyer,
+                'seller' => $invoice->seller,
+                'invoiceLogoUrl' => $invoiceLogoUrl,
+            ];
             if (class_exists('\Barryvdh\DomPDF\Facade\Pdf')) {
-                $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('invoices.auction-invoice', [
-                    'invoice' => $invoice->load(['buyer', 'seller']),
-                    'buyer' => $invoice->buyer,
-                    'seller' => $invoice->seller,
-                ]);
+                $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('invoices.auction-invoice', $viewData);
                 $pdf->save($filepath);
             } else {
                 // Fallback: Generate HTML and save (can be converted to PDF later)
-                $html = view('invoices.auction-invoice', [
-                    'invoice' => $invoice->load(['buyer', 'seller']),
-                    'buyer' => $invoice->buyer,
-                    'seller' => $invoice->seller,
-                ])->render();
+                $html = view('invoices.auction-invoice', $viewData)->render();
                 
                 // Save as HTML for now (install dompdf: composer require barryvdh/laravel-dompdf)
                 file_put_contents(str_replace('.PDF', '.html', $filepath), $html);

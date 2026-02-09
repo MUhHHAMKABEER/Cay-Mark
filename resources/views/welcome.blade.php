@@ -624,13 +624,6 @@
                                         $secondsRemaining = $isExpired ? 0 : $now->diffInSeconds($endDate, false);
                                     @endphp
                                     @if(!$isExpired)
-                                    <!-- Live Badge - Only show if auction is active -->
-                                    <div class="absolute top-3 right-3 bg-gradient-to-r from-red-500 to-red-600 text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center" 
-                                         id="live-badge-{{ $auction->id }}" 
-                                         data-end-time="{{ $endDate->toIso8601String() }}">
-                                        <span class="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></span>
-                                        LIVE
-                                    </div>
                                     <!-- Modern Countdown Timer -->
                                     <div class="absolute bottom-3 left-3 bg-gradient-to-br from-blue-600/95 to-indigo-700/95 backdrop-blur-md text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-2xl border border-white/20" 
                                          id="countdown-home-{{ $auction->id }}" 
@@ -830,7 +823,7 @@
     </div>
 </section>
 
-<!-- Enhanced Mini Register Form Section (guests) / Welcome Back (logged in) -->
+<!-- Enhanced Mini Register Form Section (guests) / Welcome Back (logged in) - Registration left, content right -->
 <section class="py-20 bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 relative overflow-hidden">
     <div class="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.05"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
     <div class="absolute top-20 left-10 w-40 h-40 bg-white/5 rounded-full blur-3xl"></div>
@@ -838,18 +831,10 @@
 
     <div class="container mx-auto px-4 relative z-10">
         @guest
-        <div class="max-w-3xl mx-auto register-form-modern rounded-3xl p-10 fade-in-up">
-            <div class="text-center mb-8">
-                <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl mb-4 shadow-lg glow-blue transform hover:scale-110 transition-transform">
-                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
-                    </svg>
-                </div>
-                <h2 class="text-4xl font-extrabold text-gray-900 font-heading mb-3">
-                    <span class="gradient-text">Register a New Account for FREE!</span>
-                </h2>
-                <p class="text-gray-600 text-lg">Create your account in seconds and start bidding today</p>
-            </div>
+        <div class="max-w-5xl mx-auto register-form-modern rounded-3xl p-10 fade-in-up">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+                <!-- Left: Registration form -->
+                <div class="order-2 lg:order-1">
             <form action="{{ route('register') }}" method="GET" class="space-y-5">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
@@ -878,10 +863,24 @@
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                         </svg>
-                        REGISTER NOW
+                        Register now
                     </span>
                 </button>
             </form>
+                </div>
+                <!-- Right: Text/content -->
+                <div class="order-1 lg:order-2 text-center lg:text-left">
+                    <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl mb-4 shadow-lg glow-blue transform hover:scale-110 transition-transform">
+                        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                        </svg>
+                    </div>
+                    <h2 class="text-4xl font-extrabold text-gray-900 font-heading mb-3">
+                        <span class="gradient-text">Register a new account for free</span>
+                    </h2>
+                    <p class="text-gray-600 text-lg">Create your account in seconds and start bidding today. Join buyers and sellers across The Bahamas on CayMark.</p>
+                </div>
+            </div>
         </div>
         @else
         <!-- Logged-in: Welcome back + quick actions -->
@@ -940,98 +939,6 @@
             </div>
         </div>
         @endguest
-    </div>
-</section>
-
-<!-- Enhanced 4 Photo Highlights Section -->
-<section class="py-20 bg-white relative overflow-hidden">
-    <!-- Decorative background elements -->
-    <div class="absolute top-0 left-0 w-full h-full">
-        <div class="absolute top-20 left-10 w-64 h-64 bg-blue-50 rounded-full opacity-30 blur-3xl"></div>
-        <div class="absolute bottom-20 right-10 w-72 h-72 bg-indigo-50 rounded-full opacity-30 blur-3xl"></div>
-    </div>
-    
-    <div class="container mx-auto px-4 relative z-10">
-        <div class="text-center mb-16 fade-in-up">
-            <h2 class="text-4xl md:text-5xl font-extrabold text-gray-900 font-heading section-title mb-4 inline-block">
-                <span class="gradient-text">Why Use CayMark?</span>
-            </h2>
-            <p class="text-gray-600 text-lg mt-6">Experience the future of vehicle trading in The Bahamas</p>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <!-- Highlight 1 -->
-            <div class="highlight-card bg-white rounded-2xl overflow-hidden shadow-lg border border-gray-100">
-                <div class="relative overflow-hidden">
-                    <img src="{{ asset('images/highlight-1.jpg') }}" alt="Secure Platform" class="w-full h-56 object-cover transform hover:scale-110 transition-transform duration-500">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-                    <div class="absolute bottom-4 left-4 right-4">
-                        <div class="inline-flex items-center justify-center w-12 h-12 bg-white/90 backdrop-blur-sm rounded-xl mb-2">
-                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-                            </svg>
-                        </div>
-                    </div>
-                </div>
-                <div class="p-6">
-                    <h3 class="text-2xl font-bold text-gray-900 mb-3">Secure Platform</h3>
-                    <p class="text-gray-600 leading-relaxed">Your transactions are protected with industry-leading security and encryption</p>
-                </div>
-            </div>
-            <!-- Highlight 2 -->
-            <div class="highlight-card bg-white rounded-2xl overflow-hidden shadow-lg border border-gray-100">
-                <div class="relative overflow-hidden">
-                    <img src="{{ asset('images/highlight-2.jpg') }}" alt="Wide Selection" class="w-full h-56 object-cover transform hover:scale-110 transition-transform duration-500">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-                    <div class="absolute bottom-4 left-4 right-4">
-                        <div class="inline-flex items-center justify-center w-12 h-12 bg-white/90 backdrop-blur-sm rounded-xl mb-2">
-                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-                            </svg>
-                        </div>
-                    </div>
-                </div>
-                <div class="p-6">
-                    <h3 class="text-2xl font-bold text-gray-900 mb-3">Wide Selection</h3>
-                    <p class="text-gray-600 leading-relaxed">Browse thousands of vehicles from across The Bahamas islands</p>
-                </div>
-            </div>
-            <!-- Highlight 3 -->
-            <div class="highlight-card bg-white rounded-2xl overflow-hidden shadow-lg border border-gray-100">
-                <div class="relative overflow-hidden">
-                    <img src="{{ asset('images/highlight-3.jpg') }}" alt="Easy Process" class="w-full h-56 object-cover transform hover:scale-110 transition-transform duration-500">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-                    <div class="absolute bottom-4 left-4 right-4">
-                        <div class="inline-flex items-center justify-center w-12 h-12 bg-white/90 backdrop-blur-sm rounded-xl mb-2">
-                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                            </svg>
-                        </div>
-                    </div>
-                </div>
-                <div class="p-6">
-                    <h3 class="text-2xl font-bold text-gray-900 mb-3">Easy Process</h3>
-                    <p class="text-gray-600 leading-relaxed">Simple bidding and buying process from start to finish</p>
-                </div>
-            </div>
-            <!-- Highlight 4 -->
-            <div class="highlight-card bg-white rounded-2xl overflow-hidden shadow-lg border border-gray-100">
-                <div class="relative overflow-hidden">
-                    <img src="{{ asset('images/highlight-4.jpg') }}" alt="Island-Wide" class="w-full h-56 object-cover transform hover:scale-110 transition-transform duration-500">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-                    <div class="absolute bottom-4 left-4 right-4">
-                        <div class="inline-flex items-center justify-center w-12 h-12 bg-white/90 backdrop-blur-sm rounded-xl mb-2">
-                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                        </div>
-                    </div>
-                </div>
-                <div class="p-6">
-                    <h3 class="text-2xl font-bold text-gray-900 mb-3">Island-Wide</h3>
-                    <p class="text-gray-600 leading-relaxed">Connect with sellers and buyers across every island</p>
-                </div>
-            </div>
-        </div>
     </div>
 </section>
 

@@ -492,19 +492,34 @@
                 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-4">
                     <div>
                         <label class="form-label">TITLE STATUS <span class="text-red-500">*</span></label>
-                        <select name="title_status" required class="form-input">
+                        <select name="title_status" required class="form-input" id="title_status_select">
                             <option value="">Select Title Status</option>
-                            <option value="yes">YES (Clean Title)</option>
-                            <option value="no">NO (Salvage Title)</option>
+                            <option value="yes">Has Title</option>
+                            <option value="no">No Title</option>
                         </select>
+                        <div id="no-title-modal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" style="display: none;">
+                            <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6">
+                                <h3 class="text-lg font-bold text-gray-900 mb-3">No Title</h3>
+                                <p class="text-gray-700 text-sm mb-4">No Title means the vehicle does not have an ownership title.</p>
+                                <p class="text-gray-700 text-sm font-semibold mb-2">This option may only be selected if:</p>
+                                <ul class="list-disc list-inside text-gray-700 text-sm space-y-1 mb-4">
+                                    <li>Vehicle is sold strictly for parts, export, or salvage</li>
+                                    <li>Vehicle is abandoned, imported, or from a salvage lot</li>
+                                    <li>Vehicle cannot be registered for road use</li>
+                                    <li>Title was never issued</li>
+                                </ul>
+                                <p class="text-amber-700 text-sm font-medium mb-4">Please note: Do not select No Title if the title is lost, stolen, damaged, or being withheld.</p>
+                                <button type="button" onclick="document.getElementById('no-title-modal').style.display='none'; document.getElementById('no-title-modal').classList.add('hidden');" class="w-full py-2 bg-blue-600 text-white rounded-lg font-semibold">I understand</button>
+                            </div>
+                        </div>
                     </div>
                     <div>
                         <label class="form-label">ISLAND LOCATION <span class="text-red-500">*</span></label>
                         <select name="island" required class="form-input">
                             <option value="">Select Island</option>
-                            <option value="GRAND_CAYMAN">Grand Cayman</option>
-                            <option value="CAYMAN_BRAC">Cayman Brac</option>
-                            <option value="LITTLE_CAYMAN">Little Cayman</option>
+                            @foreach(config('islands.list', []) as $island)
+                                <option value="{{ $island }}" {{ old('island') === $island ? 'selected' : '' }}>{{ $island }}</option>
+                            @endforeach
                         </select>
                     </div>
                     <div>
@@ -566,6 +581,17 @@
                             <option value="MODERATE">Moderate</option>
                             <option value="SEVERE">Severe</option>
                         </select>
+                    </div>
+                    <div>
+                        <label class="form-label">IS THIS VEHICLE SALVAGED? <span class="text-red-500">*</span></label>
+                        <select name="is_salvaged" required class="form-input" id="is_salvaged_select">
+                            <option value="">Select</option>
+                            <option value="0">No</option>
+                            <option value="1">Yes</option>
+                        </select>
+                        <div id="salvage-notice" class="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800 hidden">
+                            <strong>Salvaged vehicle:</strong> A salvaged vehicle is one that has been declared a total loss by an insurance company or has significant damage (typically 75% or more).
+                        </div>
                     </div>
                     <div class="col-span-2 md:col-span-3 lg:col-span-4">
                         <label class="form-label">ADDITIONAL NOTES</label>
@@ -1103,8 +1129,10 @@
             const interiorColor = document.querySelector('select[name="interior_color"]')?.value;
             const primaryDamage = document.querySelector('select[name="primary_damage"]')?.value;
             const keysAvailable = document.querySelector('select[name="keys_available"]')?.value;
+            const isSalvaged = document.querySelector('select[name="is_salvaged"]')?.value;
             
             if (!validateField('title_status', titleStatus, section)) isValid = false;
+            if (!validateField('is_salvaged', isSalvaged, section)) isValid = false;
             if (!validateField('island', island, section)) isValid = false;
             if (!validateField('color', color, section)) isValid = false;
             if (!validateField('interior_color', interiorColor, section)) isValid = false;
@@ -1140,6 +1168,19 @@
         }
     }
     
+    // No Title modal: show when user selects "No Title"
+    document.getElementById('title_status_select')?.addEventListener('change', function() {
+        if (this.value === 'no') {
+            const modal = document.getElementById('no-title-modal');
+            if (modal) { modal.style.display = 'flex'; modal.classList.remove('hidden'); }
+        }
+    });
+    // Salvage notice: show when user selects "Yes" for salvaged
+    document.getElementById('is_salvaged_select')?.addEventListener('change', function() {
+        const notice = document.getElementById('salvage-notice');
+        if (notice) notice.classList.toggle('hidden', this.value !== '1');
+    });
+
     // Real-time validation on input change
     document.addEventListener('DOMContentLoaded', function() {
         try {

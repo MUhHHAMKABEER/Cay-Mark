@@ -2,17 +2,6 @@
 
 namespace App\Http\Controllers;
 
-// namespace App\Http\Controllers;
-
-// use App\Models\Listing;
-// use Illuminate\Http\Request;
-
-// class AdminController extends Controller
-// {
-//
-
-//}
-
 
 use App\Models\User;
 use App\Models\Listing;
@@ -35,15 +24,7 @@ use App\Services\Admin\AdminActionHub;
 
 class AdminController extends Controller
 {
-    // public function __construct()
-    // {
-    //     $this->middleware('auth');
-    //     // $this->middleware('admin');
-    // }
-
-    /**
-     * Admin Dashboard - Overview (Default)
-     */
+  
     public function dashboard(Request $request)
     {
         // Check if analytics view requested

@@ -311,7 +311,7 @@
             <!-- Logo -->
             <div class="flex items-center">
                 <a href="{{ url('/') }}" class="flex items-center transition-transform hover:scale-105 duration-300">
-                    <img alt="Caymark logo" class="h-20" src="{{ asset('img/Caymark Logo-01.png') }}" />
+                    <img alt="CayMark logo" class="h-20" src="{{ asset(config('logos.header', 'Logos/1.png')) }}" />
                 </a>
             </div>
 
@@ -445,9 +445,7 @@
                 <!-- Company Info Column -->
                 <div class="footer-column">
                     <div class="flex items-center space-x-3 mb-6">
-                        <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-                            <span class="text-white font-bold text-xl">CM</span>
-                        </div>
+                        <img src="{{ asset(config('logos.footer', 'Logos/2.png')) }}" alt="CayMark" class="h-12 w-auto" />
                         <h3 class="text-2xl font-extrabold text-white font-heading">CayMark</h3>
                     </div>
                     <p class="mb-6 leading-relaxed text-gray-300 text-base">

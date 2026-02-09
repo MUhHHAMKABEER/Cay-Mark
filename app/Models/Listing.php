@@ -633,7 +633,7 @@ public function invoices()
             'auction_duration' => $context['duration_days'],
             'major_category' => 'Vehicles',
             'vehicle_type' => $p['vehicle_type'] ?? null,
-            'condition' => 'used',
+            'condition' => (!empty($p['is_salvaged']) && (string)$p['is_salvaged'] === '1') ? 'salvaged' : 'used',
             'make' => $p['make'] ?? null,
             'model' => $p['model'] ?? null,
             'trim' => $p['trim'] ?? null,

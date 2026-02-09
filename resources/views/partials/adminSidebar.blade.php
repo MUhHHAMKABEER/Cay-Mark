@@ -262,15 +262,10 @@
 
 <aside class="unified-sidebar">
     <!-- Logo -->
-    <div class="logo">
-        <div class="logo-dots">
-            <div class="logo-dot blue"></div>
-            <div class="logo-dot yellow"></div>
-            <div class="logo-dot red"></div>
-            <div class="logo-dot green"></div>
-        </div>
-        <h1>Admin</h1>
-    </div>
+    <a href="{{ url('/') }}" class="logo flex items-center justify-center gap-2 no-underline">
+        <img src="{{ asset(config('logos.admin_sidebar', 'Logos/1.png')) }}" alt="CayMark" class="h-10 w-auto max-w-full object-contain" />
+        <h1 class="m-0 text-lg font-bold text-gray-900">Admin</h1>
+    </a>
 
     <!-- User Profile -->
     <a href="{{ route('profile.edit') }}" class="user-profile">

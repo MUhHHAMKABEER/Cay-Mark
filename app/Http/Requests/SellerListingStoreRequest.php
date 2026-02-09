@@ -47,6 +47,7 @@ class SellerListingStoreRequest extends FormRequest
             'interior_color' => 'required|string',
             'primary_damage' => 'required|string',
             'keys_available' => 'required|in:yes,no',
+            'is_salvaged' => 'required|in:0,1',
             'secondary_damage' => 'nullable|string',
             'additional_notes' => 'nullable|string',
 
