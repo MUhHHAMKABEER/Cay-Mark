@@ -56,6 +56,8 @@ class AuctionController extends Controller
         'transmission' => $toArray($request->input('transmission')),
         'drive_train' => $toArray($request->input('drive_train')),
         'fuel_type' => $toArray($request->input('fuel_type')),
+        'colors' => $toArray($request->input('colors')),
+        'title_condition' => $toArray($request->input('title_condition')),
     ];
 
     // Text search (header search bar)
@@ -67,13 +69,12 @@ class AuctionController extends Controller
     $odoMin   = $request->input('odometer_min');
     $odoMax   = $request->input('odometer_max');
 
+    // Text search: make/model/year only (no VIN/lot on finder per requirements)
     if ($search !== '') {
         $query->where(function ($q) use ($search) {
             $q->where('make', 'like', '%' . $search . '%')
               ->orWhere('model', 'like', '%' . $search . '%')
-              ->orWhere('year', 'like', '%' . $search . '%')
-              ->orWhere('vin', 'like', '%' . $search . '%')
-              ->orWhere('item_number', 'like', '%' . $search . '%');
+              ->orWhere('year', 'like', '%' . $search . '%');
         });
     }
 
@@ -132,6 +133,12 @@ class AuctionController extends Controller
         if (Schema::hasColumn('listings', 'fuel_type')) {
             $query->whereIn('fuel_type', $filters['fuel_type']);
         }
+    }
+    if (! empty($filters['colors'])) {
+        $query->whereIn('color', $filters['colors']);
+    }
+    if (! empty($filters['title_condition'])) {
+        $query->whereIn('title_status', $filters['title_condition']);
     }
 
     // Year range
@@ -199,19 +206,20 @@ class AuctionController extends Controller
         ->where('listing_state', 'active')
         ->where('status', 'approved');
 
+    // Location: all islands from config (buyer finds by island)
     $filterOptions = [
-        'locations' => $baseQuery->select('island')->distinct()->pluck('island')->filter()->sort()->values(),
+        'locations' => collect(config('islands.list', [])),
         'vehicle_types' => $baseQuery->select('major_category')->distinct()->pluck('major_category')->filter()->sort()->values(),
         'makes' => $baseQuery->select('make')->distinct()->pluck('make')->filter()->sort()->values(),
         'models' => $baseQuery->select('model')->distinct()->pluck('model')->filter()->sort()->values(),
         'damage_types' => collect([
-            'All Over', 'Front End', 'Rear End', 'Side', 'Mechanical', 
-            'Minor Dents/Scratches', 'Flood', 'Fire', 'Vandalism', 
-            'Interior', 'Undercarriage', 'Normal Wear', 'Engine', 
+            'All Over', 'Front End', 'Rear End', 'Side', 'Mechanical',
+            'Minor Dents/Scratches', 'Flood', 'Fire', 'Vandalism',
+            'Interior', 'Undercarriage', 'Normal Wear', 'Engine',
             'Transmission', 'None (No Reported Damage)'
         ]),
         'body_styles' => collect([
-            'Sedan', 'SUV', 'Truck', 'Coupe', 'Hatchback', 
+            'Sedan', 'SUV', 'Truck', 'Coupe', 'Hatchback',
             'Van', 'Crossover', 'Convertible', 'Wagon', 'Other'
         ]),
         'engine_types' => $baseQuery->select('engine_type')->distinct()->pluck('engine_type')->filter()->sort()->values(),
@@ -219,6 +227,11 @@ class AuctionController extends Controller
         'transmissions' => $baseQuery->select('transmission')->distinct()->pluck('transmission')->filter()->sort()->values(),
         'drive_trains' => collect(['FWD', 'RWD', 'AWD', '4WD']),
         'fuel_types' => $baseQuery->select('fuel_type')->distinct()->pluck('fuel_type')->filter()->sort()->values(),
+        'colors' => $baseQuery->select('color')->distinct()->pluck('color')->filter()->sort()->values(),
+        'title_options' => [
+            'CLEAN' => 'Has Title',
+            'SALVAGE' => 'No Title',
+        ],
         'years' => $baseQuery->select('year')->distinct()->pluck('year')->filter()->sortDesc()->values(),
         'odometer_max' => $baseQuery->max('odometer') ?? 250000,
     ];

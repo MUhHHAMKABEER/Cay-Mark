@@ -582,7 +582,11 @@
                         @auth
                         <div class="info-item">
                             <span class="info-label">VIN</span>
-                            <span class="info-value">{{ $listing->vin ? substr($listing->vin, 0, 4) . '•••••••' . substr($listing->vin, -3) : 'N/A' }}</span>
+                            @php
+                                $vin = $listing->vin ?? '';
+                                $vinMasked = $vin ? (strlen($vin) > 7 ? substr($vin, 0, 4) . '•••••••' . substr($vin, -3) : substr($vin, 0, 4) . '•••••••') : 'N/A';
+                            @endphp
+                            <span class="info-value">{{ $vinMasked }}</span>
                         </div>
                         @endauth
                     </div>

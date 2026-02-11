@@ -228,21 +228,8 @@
                             </form>
                         </div>
 
-                        <!-- ID + Password row -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2 border-t border-gray-100">
-                            <!-- ID -->
-                            <div class="group">
-                                <label class="flex items-center gap-2 text-sm font-semibold text-gray-600 mb-2">
-                                    <span class="material-icons-round text-gray-400 text-lg">tag</span>
-                                    Account ID
-                                </label>
-                                <div class="flex items-center gap-3 rounded-xl bg-slate-50/80 border border-gray-200 px-4 py-3.5">
-                                    <span class="text-gray-500 font-mono text-sm">#</span>
-                                    <span class="text-gray-900 font-semibold">{{ $user->id }}</span>
-                                </div>
-                                <p class="text-xs text-gray-400 mt-1.5">Your unique account identifier</p>
-                            </div>
-
+                        <!-- Password row -->
+                        <div class="pt-2 border-t border-gray-100">
                             <!-- Password -->
                             <div class="group">
                                 <label class="flex items-center gap-2 text-sm font-semibold text-gray-600 mb-2">

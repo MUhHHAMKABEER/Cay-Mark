@@ -89,6 +89,10 @@ Route::get('/help-center', function () {
     return view('help-center');
 })->name('help-center');
 
+Route::get('/video-guide', function () {
+    return view('video-guide');
+})->name('video-guide');
+
 Route::get('/rules-policies', function () {
     return view('rules-policies');
 })->name('rules-policies');

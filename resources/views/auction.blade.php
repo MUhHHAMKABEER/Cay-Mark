@@ -577,6 +577,18 @@
                             </div>
                         </div>
                         <div class="vehicle-finder-body">
+                            <!-- Title -->
+                            <div class="vehicle-finder-row">
+                                <label>Title</label>
+                                <div class="input-wrap">
+                                    <div class="segmented-control">
+                                        <button type="button" :class="{ 'active': titleCondition === '' }" @click="titleCondition = ''; applyFilters()">All</button>
+                                        <button type="button" :class="{ 'active': titleCondition === 'CLEAN' }" @click="titleCondition = 'CLEAN'; applyFilters()">Has Title</button>
+                                        <button type="button" :class="{ 'active': titleCondition === 'SALVAGE' }" @click="titleCondition = 'SALVAGE'; applyFilters()">No Title</button>
+                                    </div>
+                                </div>
+                            </div>
+
                             <!-- Condition -->
                             <div class="vehicle-finder-row">
                                 <label>Condition</label>
@@ -584,7 +596,7 @@
                                     <div class="segmented-control">
                                         <button type="button" :class="{ 'active': condition === '' }" @click="condition = ''; applyFilters()">All</button>
                                         <button type="button" :class="{ 'active': condition === 'used' }" @click="condition = 'used'; applyFilters()">Used</button>
-                                        <button type="button" :class="{ 'active': condition === 'salvaged' }" @click="condition = 'salvaged'; applyFilters()">Salvage</button>
+                                        <button type="button" :class="{ 'active': condition === 'salvaged' }" @click="condition = 'salvaged'; applyFilters()">Salvaged</button>
                                     </div>
                                 </div>
                             </div>
@@ -636,72 +648,83 @@
                                 </div>
                             </div>
                             
-                            <!-- Damage type -->
-                            <div class="vehicle-finder-row">
-                                <label>Damage Type</label>
-                                <div class="input-wrap">
-                                    <select x-model="damageTypeSingle" @change="applyFilters()">
-                                        <option value="">All Damage Types</option>
-                                        @foreach ($filterOptions['damage_types'] as $damage)
-                                            <option value="{{ $damage }}">{{ $damage }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
-                            
-                            <!-- Make -->
-                            <div class="vehicle-finder-row">
-                                <label>Make</label>
-                                <div class="input-wrap">
-                                    <select x-model="makeSingle" @change="applyFilters()">
-                                        <option value="">All Makes</option>
-                                        @foreach ($filterOptions['makes'] as $make)
-                                            <option value="{{ $make }}">{{ $make }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
-                            
-                            <!-- Model -->
-                            <div class="vehicle-finder-row">
-                                <label>Model</label>
-                                <div class="input-wrap">
-                                    <select x-model="modelSingle" @change="applyFilters()">
-                                        <option value="">All Models</option>
-                                        @foreach ($filterOptions['models'] as $model)
-                                            <option value="{{ $model }}">{{ $model }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
-                            
-                            <!-- Location -->
+                            <!-- Location (all islands) -->
                             <div class="vehicle-finder-row">
                                 <label>Location</label>
                                 <div class="input-wrap">
-                                    <div class="location-radio">
-                                        <label><input type="radio" name="location_mode" value="location" checked> Location</label>
-                                        <label><input type="radio" name="location_mode" value="state"> State/Province</label>
-                                        <label><input type="radio" name="location_mode" value="zip"> Zip Code</label>
-                                    </div>
                                     <select x-model="locationSingle" @change="applyFilters()">
-                                        <option value="">All Locations</option>
-                                        @foreach ($filterOptions['locations'] as $location)
+                                        <option value="">All islands</option>
+                                        @foreach ($filterOptions['locations'] ?? [] as $location)
                                             <option value="{{ $location }}">{{ $location }}</option>
                                         @endforeach
                                     </select>
                                 </div>
                             </div>
                             
-                            <!-- OR Divider -->
-                            <div class="or-divider"><span>OR</span></div>
-                            
-                            <!-- VIN/Lot # -->
+                            <!-- Make (searchable: input + datalist) -->
                             <div class="vehicle-finder-row">
-                                <label>VIN / Lot Number</label>
+                                <label>Make</label>
                                 <div class="input-wrap">
-                                    <input type="text" x-model="vinLot" placeholder="Enter VIN or lot number"
-                                        @input.debounce.400ms="applyFilters()">
+                                    <input type="text" list="make-list" x-model="makeSingle" @input.debounce.300ms="applyFilters()"
+                                        placeholder="Type or select make" class="w-full">
+                                    <datalist id="make-list">
+                                        @foreach ($filterOptions['makes'] as $make)
+                                            <option value="{{ $make }}">
+                                        @endforeach
+                                    </datalist>
+                                </div>
+                            </div>
+                            
+                            <!-- Model (searchable) -->
+                            <div class="vehicle-finder-row">
+                                <label>Model</label>
+                                <div class="input-wrap">
+                                    <input type="text" list="model-list" x-model="modelSingle" @input.debounce.300ms="applyFilters()"
+                                        placeholder="Type or select model" class="w-full">
+                                    <datalist id="model-list">
+                                        @foreach ($filterOptions['models'] as $model)
+                                            <option value="{{ $model }}">
+                                        @endforeach
+                                    </datalist>
+                                </div>
+                            </div>
+                            
+                            <!-- Fuel Type (multi-select) -->
+                            <div class="vehicle-finder-row">
+                                <label>Fuel Type</label>
+                                <div class="input-wrap">
+                                    <select multiple x-model="fuelTypeMulti" @change="applyFilters()" class="h-24">
+                                        @foreach ($filterOptions['fuel_types'] ?? [] as $fuel)
+                                            <option value="{{ $fuel }}">{{ $fuel }}</option>
+                                        @endforeach
+                                    </select>
+                                    <p class="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Color (multi-select) -->
+                            <div class="vehicle-finder-row">
+                                <label>Color</label>
+                                <div class="input-wrap">
+                                    <select multiple x-model="colorMulti" @change="applyFilters()" class="h-24">
+                                        @foreach ($filterOptions['colors'] ?? [] as $color)
+                                            <option value="{{ $color }}">{{ $color }}</option>
+                                        @endforeach
+                                    </select>
+                                    <p class="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Damage Type (multi-select) -->
+                            <div class="vehicle-finder-row">
+                                <label>Damage Type</label>
+                                <div class="input-wrap">
+                                    <select multiple x-model="damageTypeMulti" @change="applyFilters()" class="h-24">
+                                        @foreach ($filterOptions['damage_types'] ?? [] as $damage)
+                                            <option value="{{ $damage }}">{{ $damage }}</option>
+                                        @endforeach
+                                    </select>
+                                    <p class="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple</p>
                                 </div>
                             </div>
                             
@@ -878,12 +901,14 @@
                         selectedFilters: {
                             vehicle_type: '{{ request('vehicle_type', '') }}',
                         },
+                        titleCondition: '{{ request('title_condition') ? (is_array(request('title_condition')) ? request('title_condition')[0] : request('title_condition')) : '' }}',
                         condition: '{{ request('condition', '') }}',
                         makeSingle: @json(is_array(request('makes')) ? (request('makes')[0] ?? '') : (request('makes') ?? '')),
                         modelSingle: @json(is_array(request('models')) ? (request('models')[0] ?? '') : (request('models') ?? '')),
                         locationSingle: @json(is_array(request('location')) ? (request('location')[0] ?? '') : (request('location') ?? '')),
-                        damageTypeSingle: @json(is_array(request('damage_type')) ? (request('damage_type')[0] ?? '') : (request('damage_type') ?? '')),
-                        vinLot: '{{ request('search', '') }}',
+                        fuelTypeMulti: @json(request('fuel_type', [])),
+                        colorMulti: @json(request('colors', [])),
+                        damageTypeMulti: @json(request('damage_type', [])),
                         yearFrom: {{ request('year_from', 1990) }},
                         yearTo: {{ request('year_to', date('Y') + 1) }},
                         odometerMin: 0,
@@ -905,12 +930,14 @@
                         
                         clearAllFilters() {
                             this.selectedFilters.vehicle_type = '';
+                            this.titleCondition = '';
                             this.condition = '';
                             this.makeSingle = '';
                             this.modelSingle = '';
                             this.locationSingle = '';
-                            this.damageTypeSingle = '';
-                            this.vinLot = '';
+                            this.fuelTypeMulti = [];
+                            this.colorMulti = [];
+                            this.damageTypeMulti = [];
                             this.yearFrom = 1990;
                             this.yearTo = {{ date('Y') + 1 }};
                             this.odometerMin = 0;
@@ -923,13 +950,15 @@
                             this.isLoading = true;
                             const params = new URLSearchParams();
                             
+                            if (this.titleCondition) params.append('title_condition[]', this.titleCondition);
                             if (this.condition) params.append('condition', this.condition);
                             if (this.selectedFilters.vehicle_type) params.append('vehicle_type', this.selectedFilters.vehicle_type);
-                            if (this.makeSingle) params.append('makes[]', this.makeSingle);
-                            if (this.modelSingle) params.append('models[]', this.modelSingle);
+                            if (this.makeSingle && this.makeSingle.trim()) params.append('makes[]', this.makeSingle.trim());
+                            if (this.modelSingle && this.modelSingle.trim()) params.append('models[]', this.modelSingle.trim());
                             if (this.locationSingle) params.append('location[]', this.locationSingle);
-                            if (this.damageTypeSingle) params.append('damage_type[]', this.damageTypeSingle);
-                            if (this.vinLot && this.vinLot.trim()) params.append('search', this.vinLot.trim());
+                            (this.fuelTypeMulti || []).forEach(v => { if (v) params.append('fuel_type[]', v); });
+                            (this.colorMulti || []).forEach(v => { if (v) params.append('colors[]', v); });
+                            (this.damageTypeMulti || []).forEach(v => { if (v) params.append('damage_type[]', v); });
                             
                             if (this.yearFrom && this.yearFrom > 1990) params.append('year_from', this.yearFrom);
                             if (this.yearTo && this.yearTo < {{ date('Y') + 1 }}) params.append('year_to', this.yearTo);

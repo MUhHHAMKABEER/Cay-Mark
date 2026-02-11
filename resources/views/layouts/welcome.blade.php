@@ -304,7 +304,7 @@
 <body class="bg-gray-50" x-data="{ mobileMenuOpen: false, howItWorksOpen: false, servicesOpen: false }">
     {{-- Unified Header Component --}}
     @include('partials.unified-header')
-    
+
     {{-- Legacy Header (commented out - using unified header above) --}}
     {{-- <header class="header-nav sticky top-0 z-50" id="mainHeader">
         <div class="container px-4 py-3 flex justify-between items-center">
@@ -375,7 +375,7 @@
         </div>
 
         {{-- Main Menu (second header) --}}
- 
+
 
         {{-- Mobile menu (alpine) --}}
         <div x-show="mobileMenuOpen" x-transition class="mobile-menu md:hidden bg-white py-4 px-4 shadow-lg">
@@ -399,7 +399,7 @@
                     <a href="#" class="block pl-4 py-2 text-gray-600 hover:text-blue-600 transition-colors">How to Buy</a>
                     <a href="#" class="block pl-4 py-2 text-gray-600 hover:text-blue-600 transition-colors">How to Sell</a>
                     <a href="#" class="block pl-4 py-2 text-gray-600 hover:text-blue-600 transition-colors">Bidding 101</a>
-                    <a href="#" class="block pl-4 py-2 text-gray-600 hover:text-blue-600 transition-colors">Video Guides</a>
+                    <a href="{{ route('video-guide') }}" class="block pl-4 py-2 text-gray-600 hover:text-blue-600 transition-colors">Video guides</a>
                 </div>
 
                 <!-- Services & Support Mobile -->
@@ -436,17 +436,18 @@
     <footer class="relative bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 pt-20 pb-8 mt-20 overflow-hidden">
         <!-- Background Pattern -->
         <div class="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.03"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-40"></div>
-        
+
         <!-- Top Border Gradient -->
         <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent"></div>
-        
+
         <div class="container relative z-10">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-16">
                 <!-- Company Info Column -->
                 <div class="footer-column">
-                    <div class="flex items-center space-x-3 mb-6">
-                        <img src="{{ asset(config('logos.footer', 'Logos/2.png')) }}" alt="CayMark" class="h-12 w-auto" />
-                        <h3 class="text-2xl font-extrabold text-white font-heading">CayMark</h3>
+                    <div class="mb-6">
+                        <a href="{{ route('welcome') }}" class="inline-block">
+                            <img src="{{ asset('Logos/2.png') }}" alt="CayMark" class="h-16 md:h-20 w-auto object-contain" />
+                        </a>
                     </div>
                     <p class="mb-6 leading-relaxed text-gray-300 text-base">
                         The Bahamas' premier digital trading center for vehicles and marine vessels. Transforming how the islands buy, sell, and trade.

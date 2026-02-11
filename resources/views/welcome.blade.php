@@ -13,14 +13,6 @@
         ->take(8)
         ->get();
     
-    // Get marketplace items for vehicle finder
-    $marketplaceItems = \App\Models\Listing::with('images')
-        ->where('listing_method', 'buy_now')
-        ->where('listing_state', 'active')
-        ->where('status', 'approved')
-        ->take(12)
-        ->get();
-
     $likedListingIds = Auth::check() ? Auth::user()->watchlist()->pluck('listing_id') : collect();
 @endphp
 
@@ -745,7 +737,7 @@
                 </div>
                 <div class="relative">
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Make</label>
-                    <select name="make" class="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white">
+                    <select name="makes[]" class="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white">
                         <option value="">All Makes</option>
                     </select>
                 </div>
@@ -785,41 +777,7 @@
                 </div>
             </form>
         </div>
-        
-        <!-- Enhanced Results Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            @forelse($marketplaceItems->take(8) as $item)
-                <div class="vehicle-card bg-white rounded-2xl overflow-hidden shadow-lg border border-gray-100">
-                    <div class="relative group overflow-hidden">
-                        @php
-                            $img = $item->images->first();
-                            $imgUrl = $img ? (str_contains($img->image_path, '/') ? asset($img->image_path) : asset('uploads/listings/' . $img->image_path)) : asset('images/placeholder-car.png');
-                        @endphp
-                        <img src="{{ $imgUrl }}" alt="{{ $item->make }} {{ $item->model }}" class="w-full h-48 object-cover transform group-hover:scale-110 transition-transform duration-500">
-                        <div class="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-bold text-gray-900 shadow-lg">
-                            BUY NOW
-                        </div>
-                    </div>
-                    <div class="p-5">
-                        <h3 class="font-bold text-xl text-gray-900 mb-2 line-clamp-1">{{ $item->year }} {{ $item->make }} {{ $item->model }}</h3>
-                        <div class="mb-4">
-                            <p class="text-xs text-gray-500 mb-1">Price</p>
-                            <p class="text-2xl font-bold gradient-text">${{ number_format($item->price ?? $item->buy_now_price ?? 0, 2) }}</p>
-                        </div>
-                        <a href="{{ route('listing.show', $item->id) }}" class="block w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-center py-3 px-4 rounded-xl font-bold transition-all transform hover:scale-105 shadow-lg">
-                            View Details
-                        </a>
-                    </div>
-                </div>
-            @empty
-                <div class="col-span-full text-center py-16">
-                    <svg class="w-24 h-24 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    <p class="text-gray-600 text-lg">No vehicles found. Check back soon!</p>
-                </div>
-            @endforelse
-        </div>
+        <p class="text-center text-gray-500 text-sm">Results will appear on the Auctions page when you search.</p>
     </div>
 </section>
 
