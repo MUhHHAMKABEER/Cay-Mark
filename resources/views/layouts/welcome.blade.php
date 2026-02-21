@@ -4,6 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    @include('partials.noindex-meta')
     <title>@yield('title', 'CayMark Island Exchange & Auction House')</title>
 
     <!-- Tailwind (CDN for quick use; replace with Vite/build in production) -->

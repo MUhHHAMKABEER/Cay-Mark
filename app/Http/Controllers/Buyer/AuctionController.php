@@ -82,18 +82,30 @@ class AuctionController extends Controller
         $query->where('condition', $request->input('condition'));
     }
 
-    // Apply filters dynamically
+    // Apply filters dynamically (case-insensitive for location/make/model so all results show)
     if (! empty($filters['location'])) {
-        $query->whereIn('island', $filters['location']);
+        $query->where(function ($q) use ($filters) {
+            foreach ($filters['location'] as $loc) {
+                $q->orWhereRaw('LOWER(TRIM(island)) = ?', [strtolower(trim($loc))]);
+            }
+        });
     }
     if (! empty($filters['vehicle_type'])) {
         $query->whereIn('major_category', $filters['vehicle_type']);
     }
     if (! empty($filters['makes'])) {
-        $query->whereIn('make', $filters['makes']);
+        $query->where(function ($q) use ($filters) {
+            foreach ($filters['makes'] as $make) {
+                $q->orWhereRaw('LOWER(TRIM(make)) = ?', [strtolower(trim($make))]);
+            }
+        });
     }
     if (! empty($filters['models'])) {
-        $query->whereIn('model', $filters['models']);
+        $query->where(function ($q) use ($filters) {
+            foreach ($filters['models'] as $model) {
+                $q->orWhereRaw('LOWER(TRIM(model)) = ?', [strtolower(trim($model))]);
+            }
+        });
     }
     if (! empty($filters['damage_type'])) {
         $query->where(function($q) use ($filters) {
@@ -162,17 +174,17 @@ class AuctionController extends Controller
     // Only show ACTIVE auctions
     $query->where('listing_state', 'active');
 
-    // Sorting
+    // Sorting: Newest to Oldest, Oldest to Newest, Price: Low to High, Price: High to Low
     $sortBy = $request->input('sort', 'newest');
     switch ($sortBy) {
+        case 'oldest':
+            $query->orderBy('created_at', 'asc');
+            break;
         case 'price_low':
             $query->orderBy('starting_price', 'asc');
             break;
         case 'price_high':
             $query->orderBy('starting_price', 'desc');
-            break;
-        case 'ending_soon':
-            $query->orderBy('auction_end_time', 'asc');
             break;
         case 'newest':
         default:

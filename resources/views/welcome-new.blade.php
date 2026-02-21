@@ -136,7 +136,7 @@
                                 </div>
                                 <div class="p-4">
                                     <h3 class="font-bold text-lg text-gray-900 mb-1">{{ $auction->year }} {{ $auction->make }} {{ $auction->model }}</h3>
-                                    <p class="text-sm text-gray-600 mb-2">Lot #{{ $auction->item_number ?? $auction->id }}</p>
+                                    <p class="text-sm text-gray-600 mb-2">Island #{{ $auction->item_number ?? $auction->id }}</p>
                                     @php
                                         $highestBid = $auction->bids()->where('status', 'active')->orderByDesc('amount')->first();
                                         $currentBid = $highestBid ? (float)$highestBid->amount : (float)($auction->starting_price ?? 0);

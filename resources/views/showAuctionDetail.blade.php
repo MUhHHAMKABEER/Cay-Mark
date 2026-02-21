@@ -360,7 +360,7 @@
                     <div class="card bg-info bg-opacity-10 border-info mb-4">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                <p class="small mb-0">Buy this lot now before it goes to the auction!</p>
+                                <p class="small mb-0">Buy this item now before it goes to the auction!</p>
                                 <span class="material-icons text-primary">sell</span>
                             </div>
                             @if($vehicle->buy_now_price)
@@ -422,7 +422,7 @@
                                         <dt class="col-sm-6 text-muted">VIN#</dt>
                                         <dd class="col-sm-6">{{ $vehicle->vin ?? '—' }}</dd>
 
-                                        <dt class="col-sm-6 text-muted">Lot#</dt>
+                                        <dt class="col-sm-6 text-muted">Island #</dt>
                                         <dd class="col-sm-6 text-primary">{{ $vehicle->lot_number ?? '—' }}</dd>
 
                                         <dt class="col-sm-6 text-muted">Title Status</dt>

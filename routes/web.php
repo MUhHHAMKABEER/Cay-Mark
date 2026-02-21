@@ -1,5 +1,12 @@
 <?php
 
+// Staging / noindex site: block all crawlers via robots.txt
+Route::get('robots.txt', function () {
+    if (request()->getHost() === 'kaymark.360webcoders.com' || config('app.noindex')) {
+        return response("User-agent: *\nDisallow: /", 200, ['Content-Type' => 'text/plain']);
+    }
+    return response()->file(public_path('robots.txt'));
+});
 
 use App\Models\Listing;
 use App\Models\Package;

@@ -459,7 +459,7 @@
 
     <div class="bg-gray-50 text-gray-800" x-data="filterData()" x-init="initFilters()">
 
-        <main class="w-full px-4 py-6">
+        <main class="w-full max-w-5xl mx-auto px-4 py-6">
 
             <!-- Page Header -->
             <div class="mb-6 animate-fade-in">
@@ -516,7 +516,7 @@
                                 <button type="button"
                                     @click="sortOpen = !sortOpen"
                                     class="inline-flex items-center justify-between gap-2 rounded-xl border border-gray-200 bg-white py-2.5 pl-4 pr-10 text-sm font-medium text-gray-800 shadow-sm transition hover:border-gray-300 hover:bg-gray-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none cursor-pointer min-w-[180px]">
-                                    <span x-text="sortBy === 'newest' ? 'Newest First' : sortBy === 'price_low' ? 'Price: Low to High' : sortBy === 'price_high' ? 'Price: High to Low' : 'Ending Soonest'">Newest First</span>
+                                    <span x-text="sortBy === 'newest' ? 'Newest to Oldest' : sortBy === 'oldest' ? 'Oldest to Newest' : sortBy === 'price_low' ? 'Price: Low to High' : 'Price: High to Low'">Newest to Oldest</span>
                                     <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 transition transform" :class="sortOpen && 'rotate-180'">
                                         <span class="material-icons text-xl">expand_more</span>
                                     </span>
@@ -535,8 +535,15 @@
                                         @click="sortBy = 'newest'; applyFilters(); sortOpen = false"
                                         :class="sortBy === 'newest' ? 'bg-blue-50 text-blue-700' : 'text-gray-800 hover:bg-gray-50'"
                                         class="flex w-full items-center justify-between px-4 py-2.5 text-left text-sm font-medium transition">
-                                        <span>Newest First</span>
+                                        <span>Newest to Oldest</span>
                                         <span x-show="sortBy === 'newest'" class="material-icons text-lg text-blue-600">check</span>
+                                    </button>
+                                    <button type="button"
+                                        @click="sortBy = 'oldest'; applyFilters(); sortOpen = false"
+                                        :class="sortBy === 'oldest' ? 'bg-blue-50 text-blue-700' : 'text-gray-800 hover:bg-gray-50'"
+                                        class="flex w-full items-center justify-between px-4 py-2.5 text-left text-sm font-medium transition">
+                                        <span>Oldest to Newest</span>
+                                        <span x-show="sortBy === 'oldest'" class="material-icons text-lg text-blue-600">check</span>
                                     </button>
                                     <button type="button"
                                         @click="sortBy = 'price_low'; applyFilters(); sortOpen = false"
@@ -552,13 +559,6 @@
                                         <span>Price: High to Low</span>
                                         <span x-show="sortBy === 'price_high'" class="material-icons text-lg text-blue-600">check</span>
                                     </button>
-                                    <button type="button"
-                                        @click="sortBy = 'ending_soon'; applyFilters(); sortOpen = false"
-                                        :class="sortBy === 'ending_soon' ? 'bg-blue-50 text-blue-700' : 'text-gray-800 hover:bg-gray-50'"
-                                        class="flex w-full items-center justify-between px-4 py-2.5 text-left text-sm font-medium transition">
-                                        <span>Ending Soonest</span>
-                                        <span x-show="sortBy === 'ending_soon'" class="material-icons text-lg text-blue-600">check</span>
-                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -567,8 +567,8 @@
             </div>
 
             <div class="flex flex-col xl:flex-row gap-6">
-                <!-- Vehicle Finder Panel - Enhanced & Wider -->
-                <aside class="w-full xl:w-96 flex-shrink-0">
+                <!-- Vehicle Finder Panel - narrower to match auction layout -->
+                <aside class="w-full xl:w-72 flex-shrink-0">
                     <div class="vehicle-finder bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200">
                         <div class="vehicle-finder-header">
                             <div class="flex items-center justify-between">
@@ -765,9 +765,9 @@
                         </div>
                     </template>
 
-                    <!-- Grid View -->
+                    <!-- Grid View: at least 4 listings visible on desktop -->
                     <div x-show="viewMode === 'grid'"
-                        class="grid-view grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5" x-cloak>
+                        class="grid-view grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" x-cloak>
                         @forelse($auctions as $listing)
                             <div
                                 class="vehicle-card bg-white rounded-xl shadow-sm overflow-hidden flex flex-col h-full animate-bounce-in">

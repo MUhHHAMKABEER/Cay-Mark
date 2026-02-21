@@ -22,6 +22,9 @@
         $recentlyFinished = \App\Models\Listing::where('seller_id', $user->id)->where('listing_state', 'ended')->where('updated_at', '>=', now()->subDays(30))->count();
         $sellerHeaderStats = ['active_auctions' => $activeListings, 'recently_finished' => $recentlyFinished];
     }
+    // Notification bar: for registered users only (buyers, sellers, or users who haven't selected role yet)
+    $showNotificationBar = !$isGuest;
+    $unreadNotificationCount = $user ? $user->unreadNotifications()->count() : 0;
 @endphp
 
 <!-- Top Header Bar (white for all users, same as normal dashboard) -->
@@ -37,14 +40,14 @@
                     </a>
                 </div>
 
-                <!-- Search Bar (centered in header) -->
-                <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-xl px-4 pointer-events-none">
+                <!-- Search Bar (centered; on small screens hidden so Register/Login stay visible) -->
+                <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-xl px-4 pointer-events-none hidden sm:block">
                     <div class="pointer-events-auto">
                         <form action="{{ route('Auction.index') }}" method="GET" class="relative buyer-search-form" id="buyer-header-search">
                             <input 
                                 type="text" 
                                 name="search"
-                                placeholder="Search for vehicles by make, model, VIN, lot..." 
+                                placeholder="Search for vehicles by make, model, island..." 
                                 class="w-full px-4 py-2.5 pl-12 pr-24 rounded-full border border-gray-300 bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 value="{{ request('search') }}"
                                 id="buyer-header-search-input"
@@ -64,14 +67,14 @@
                     </div>
                 </div>
 
-                <!-- Right Actions -->
-                <div class="flex items-center space-x-3 flex-shrink-0">
+                <!-- Right Actions (always visible for guests: z-index and min-width so they are never hidden) -->
+                <div class="flex items-center space-x-2 sm:space-x-3 flex-shrink-0 relative z-10 min-w-0">
                     @if($isGuest)
-                        <!-- Guest Mode: Register & Login -->
-                        <a href="{{ route('register') }}" class="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg transition-colors">
+                        <!-- Guest Mode: Register & Login (ensure always visible on all screen sizes) -->
+                        <a href="{{ route('register') }}" class="guest-btn px-3 py-2 sm:px-4 sm:py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm sm:text-base font-semibold rounded-lg transition-colors whitespace-nowrap">
                             REGISTER
                         </a>
-                        <a href="{{ route('login') }}" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors">
+                        <a href="{{ route('login') }}" class="guest-btn px-3 py-2 sm:px-4 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm sm:text-base font-semibold rounded-lg transition-colors whitespace-nowrap">
                             LOGIN
                         </a>
                     @elseif($isBuyer)
@@ -173,16 +176,15 @@
     <div class="bg-gray-50 border-t border-gray-200">
         <div class="container mx-auto px-4">
             <nav class="flex items-center justify-between">
-                <!-- Main Menu -->
-                <div class="flex items-center space-x-8">
+                <!-- Main Menu: Home, Auction, Getting Started, Services & Support, Contact Us (no Help) -->
+                <div class="flex items-center space-x-6 lg:space-x-8 flex-wrap">
                     <a href="{{ route('welcome') }}" class="py-3 px-2 font-medium transition-colors text-gray-700 hover:text-blue-600 {{ request()->routeIs('welcome') ? 'text-blue-600 border-b-2 border-blue-600' : '' }}">Home</a>
-                    <a href="{{ route('Auction.index') }}" class="py-3 px-2 font-medium transition-colors text-gray-700 hover:text-blue-600 {{ request()->routeIs('Auction.index') ? 'text-blue-600 border-b-2 border-blue-600' : '' }}">Auctions</a>
-                    <a href="{{ route('buyer-guide') }}" class="py-3 px-2 font-medium transition-colors text-gray-700 hover:text-blue-600">Getting started</a>
-                    
+                    <a href="{{ route('Auction.index') }}" class="py-3 px-2 font-medium transition-colors text-gray-700 hover:text-blue-600 {{ request()->routeIs('Auction.index') ? 'text-blue-600 border-b-2 border-blue-600' : '' }}">Auction</a>
+                    <a href="{{ route('buyer-guide') }}" class="py-3 px-2 font-medium transition-colors text-gray-700 hover:text-blue-600 {{ request()->routeIs('buyer-guide') ? 'text-blue-600 border-b-2 border-blue-600' : '' }}">Getting Started</a>
                     <!-- Services & Support Dropdown -->
                     <div class="relative" x-data="{ open: false }">
                         <button type="button" @click="open = !open" @click.away="open = false" class="py-3 px-2 font-medium transition-colors flex items-center text-gray-700 hover:text-blue-600">
-                            Services & support
+                            Services & Support
                             <svg class="w-4 h-4 ml-1 transition-transform" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                             </svg>
@@ -208,33 +210,41 @@
                             </a>
                         </div>
                     </div>
-                    
-                    <a href="{{ route('help-center') }}" class="py-3 px-2 font-medium transition-colors text-gray-700 hover:text-blue-600">Help</a>
+                    <a href="{{ route('contact') }}" class="py-3 px-2 font-medium transition-colors text-gray-700 hover:text-blue-600 {{ request()->routeIs('contact') ? 'text-blue-600 border-b-2 border-blue-600' : '' }}">Contact Us</a>
                 </div>
 
-                <!-- Right side of nav (notification area) -->
-                <div class="flex items-center">
-                    @if($isBuyer || $isSeller)
-                        <div class="text-sm text-gray-600">
-                            <span class="inline-flex items-center">
-                                <span class="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></span>
-                                Live auctions available
-                            </span>
-                        </div>
-                    @endif
-                </div>
             </nav>
         </div>
     </div>
-    <!-- Notification bar under main menu -->
-    <div class="border-t border-gray-200 bg-amber-50">
+    <!-- Notification bar: green, white text, registered users only (notification center) -->
+    @if($showNotificationBar)
+    <div class="border-t border-green-700 bg-green-600">
         <div class="container mx-auto px-4 py-2">
-            <div class="flex items-center justify-center gap-2 text-sm text-amber-800">
-                <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse flex-shrink-0"></span>
-                <span>Live auctions available now — browse and bid on vehicles across The Bahamas</span>
+            <div class="flex items-center justify-center gap-2 text-sm text-white flex-wrap">
+                <span class="w-2 h-2 bg-white rounded-full animate-pulse flex-shrink-0"></span>
+                @if($isBuyer)
+                    <a href="{{ route('buyer.messaging-center') }}" class="hover:underline font-medium">
+                        @if($unreadNotificationCount > 0)
+                            <span>{{ $unreadNotificationCount }} new notification{{ $unreadNotificationCount !== 1 ? 's' : '' }} — bid confirmations, outbid alerts, new bids on watched listings, payment required, new listings to checkout</span>
+                        @else
+                            <span>Notification center — bid confirmations &amp; updates, alerts on watched/owned listings, payment required, new listings to checkout</span>
+                        @endif
+                    </a>
+                @elseif($isSeller)
+                    <a href="{{ route('dashboard.seller') }}" class="hover:underline font-medium">
+                        @if($unreadNotificationCount > 0)
+                            <span>{{ $unreadNotificationCount }} new notification{{ $unreadNotificationCount !== 1 ? 's' : '' }} — new bids, listing activity, payment required, reminder to create listings</span>
+                        @else
+                            <span>Notification center — new bids on your listings, listing status updates, payment required, create new listing</span>
+                        @endif
+                    </a>
+                @else
+                    <span>Notification center — incomplete registration reminders, account activity, and updates</span>
+                @endif
             </div>
         </div>
     </div>
+    @endif
 </div>
 
 <style>

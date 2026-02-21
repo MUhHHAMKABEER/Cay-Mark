@@ -59,6 +59,15 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Noindex (staging / duplicate site)
+    |--------------------------------------------------------------------------
+    | When true, or when host is kaymark.360webcoders.com, adds noindex,nofollow
+    | so search engines do not index this copy and affect main site SEO.
+    */
+    'noindex' => env('NOINDEX', false),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

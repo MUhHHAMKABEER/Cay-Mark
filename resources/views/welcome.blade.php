@@ -2,18 +2,16 @@
 
 @section('content')
 @php
-    // Get top 8 popular auctions (by views/clicks or default to latest)
+    // Popular auctions: active only, do not show ended auctions on front page. End time must be in the future.
+    $now = now()->format('Y-m-d H:i:s');
     $popularAuctions = \App\Models\Listing::with('images')
-        ->withCount(['watchlistedBy as likes_count'])
         ->where('listing_method', 'auction')
         ->where('listing_state', 'active')
         ->where('status', 'approved')
-        ->orderByDesc('likes_count')
+        ->whereRaw("COALESCE(auction_end_time, DATE_ADD(COALESCE(auction_start_time, created_at), INTERVAL COALESCE(auction_duration, 7) DAY)) > ?", [$now])
         ->orderBy('created_at', 'desc')
-        ->take(8)
+        ->take(10)
         ->get();
-    
-    $likedListingIds = Auth::check() ? Auth::user()->watchlist()->pluck('listing_id') : collect();
 @endphp
 
 <style>
@@ -429,8 +427,8 @@
     }
 </style>
 
-<!-- Enhanced Hero Banner Section -->
-<section class="relative h-[600px] overflow-hidden" x-data="{ currentSlide: 0, slides: 3 }">
+<!-- Enhanced Hero Banner Section (same feel as newsletter: viewport-relative height + py-20 padding) -->
+<section class="relative min-h-[55vh] py-20 overflow-hidden flex items-center" x-data="{ currentSlide: 0, slides: 3 }">
     <!-- Floating Shapes -->
     <div class="floating-shape floating-shape-1"></div>
     <div class="floating-shape floating-shape-2"></div>
@@ -575,7 +573,6 @@
                 <h2 class="text-4xl md:text-5xl font-extrabold text-gray-900 font-heading section-title mb-4">
                     <span class="gradient-text">Popular Car Auctions</span>
                 </h2>
-                <p class="text-gray-600 text-lg mt-4">Discover the most sought-after vehicles</p>
             </div>
             <a href="{{ route('Auction.index') }}" class="mt-4 md:mt-0 inline-flex items-center bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-3 px-6 rounded-xl transition-all transform hover:scale-105 shadow-lg group glow-blue">
                 View All
@@ -585,125 +582,56 @@
             </a>
         </div>
         
-        <!-- Enhanced Carousel Container -->
-        <div class="relative" x-data="{ currentIndex: 0, itemsPerView: 4, totalItems: {{ $popularAuctions->count() }} }">
-            <div class="overflow-hidden rounded-2xl">
-                <div class="flex transition-transform duration-700 ease-out" :style="`transform: translateX(-${currentIndex * (100 / itemsPerView)}%)`">
-                    @foreach($popularAuctions as $auction)
-                        <div class="w-full md:w-1/2 lg:w-1/4 flex-shrink-0 px-3">
-                            <div class="auction-card bg-white rounded-2xl overflow-hidden shadow-lg">
-                                <div class="relative group">
-                                    @php
-                                        $img = $auction->images->first();
-                                        $imgUrl = $img ? (str_contains($img->image_path, '/') ? asset($img->image_path) : asset('uploads/listings/' . $img->image_path)) : asset('images/placeholder-car.png');
-                                    @endphp
-                                    <div class="overflow-hidden">
-                                        <img src="{{ $imgUrl }}" alt="{{ $auction->make }} {{ $auction->model }}" class="w-full h-56 object-cover transform group-hover:scale-110 transition-transform duration-500">
-                                    </div>
-                                    <!-- Enhanced Countdown Timer -->
-                                    @php
-                                        // Calculate end date from database
-                                        if ($auction->auction_end_time) {
-                                            $endDate = \Carbon\Carbon::parse($auction->auction_end_time);
-                                        } elseif ($auction->auction_start_time) {
-                                            $endDate = \Carbon\Carbon::parse($auction->auction_start_time)->addDays($auction->auction_duration ?? 7);
-                                        } else {
-                                            $endDate = \Carbon\Carbon::parse($auction->created_at)->addDays($auction->auction_duration ?? 7);
-                                        }
-                                        
-                                        $now = \Carbon\Carbon::now();
-                                        $isExpired = $now->greaterThanOrEqualTo($endDate);
-                                        $secondsRemaining = $isExpired ? 0 : $now->diffInSeconds($endDate, false);
-                                    @endphp
-                                    @if(!$isExpired)
-                                    <!-- Modern Countdown Timer -->
-                                    <div class="absolute bottom-3 left-3 bg-gradient-to-br from-blue-600/95 to-indigo-700/95 backdrop-blur-md text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-2xl border border-white/20" 
-                                         id="countdown-home-{{ $auction->id }}" 
-                                         data-end-time="{{ $endDate->toIso8601String() }}">
-                                        <div class="flex items-center space-x-1.5">
-                                            <span class="bg-white/20 backdrop-blur-sm px-2.5 py-1 rounded-lg font-mono text-xs" id="days-{{ $auction->id }}">00</span>
-                                            <span class="text-white/70">:</span>
-                                            <span class="bg-white/20 backdrop-blur-sm px-2.5 py-1 rounded-lg font-mono text-xs" id="hours-{{ $auction->id }}">00</span>
-                                            <span class="text-white/70">:</span>
-                                            <span class="bg-white/20 backdrop-blur-sm px-2.5 py-1 rounded-lg font-mono text-xs" id="minutes-{{ $auction->id }}">00</span>
-                                            <span class="text-white/70">:</span>
-                                            <span class="bg-white/20 backdrop-blur-sm px-2.5 py-1 rounded-lg font-mono text-xs" id="seconds-{{ $auction->id }}">00</span>
-                                        </div>
-                                    </div>
-                                    @else
-                                    <div class="absolute bottom-3 left-3 bg-gray-500/90 backdrop-blur-md text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-xl border border-gray-400/30">
-                                        Auction Ended
-                                    </div>
-                                    @endif
-                                </div>
-                                <div class="p-5">
-                                    <h3 class="font-bold text-xl text-gray-900 mb-2 line-clamp-1">{{ $auction->year }} {{ $auction->make }} {{ $auction->model }}</h3>
-                                    <p class="text-sm text-gray-500 mb-3 flex items-center">
-                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
-                                        </svg>
-                                        Lot #{{ $auction->item_number ?? $auction->id }}
-                                    </p>
-                                    @php
-                                        $highestBid = $auction->bids()->where('status', 'active')->orderByDesc('amount')->first();
-                                        $currentBid = $highestBid ? (float)$highestBid->amount : (float)($auction->starting_price ?? 0);
-                                    @endphp
-                                    <div class="mb-4">
-                                        <p class="text-xs text-gray-500 mb-1">Current Bid</p>
-                                        <p class="text-2xl font-bold text-green-600">
-                                            {{ $currentBid > 0 ? '$' . number_format($currentBid, 2) : 'Start Bidding' }}
-                                        </p>
-                                    </div>
-                                    <p class="text-sm text-gray-600 mb-4 flex items-center">
-                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                        </svg>
-                                        {{ strtoupper($auction->island ?? 'N/A') }}
-                                    </p>
-                                    <div class="flex gap-2">
-                                        <a href="{{ route('auction.show', $auction->getSlugOrGenerate()) }}" class="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-center py-3 px-4 rounded-xl font-bold transition-all transform hover:scale-105 shadow-lg">
-                                            View Details
-                                        </a>
-                                        @php
-                                            $liked = $likedListingIds->contains($auction->id);
-                                            $likesCount = $auction->likes_count ?? 0;
-                                        @endphp
-                                        <form action="{{ route('listing.watchlist', $auction->id) }}" method="POST">
-                                            @csrf
-                                            <button
-                                                type="submit"
-                                                class="js-like-toggle flex items-center gap-1.5 p-3 border-2 border-gray-200 hover:border-blue-500 rounded-xl hover:bg-blue-50 transition-all {{ $liked ? 'text-red-500' : 'text-gray-600' }}"
-                                                data-url="{{ route('listing.watchlist', $auction->id) }}"
-                                                data-liked="{{ $liked ? '1' : '0' }}"
-                                                data-auth="{{ Auth::check() ? '1' : '0' }}"
-                                                data-unliked-class="text-gray-600"
-                                                aria-label="Like listing">
-                                                <span class="material-icons text-base">{{ $liked ? 'favorite' : 'favorite_border' }}</span>
-                                                <span class="text-xs js-like-count">{{ $likesCount }}</span>
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
+        <!-- Grid: 5 cards per row on xl, smaller cards, whole card clickable -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+            @foreach($popularAuctions as $auction)
+                @php
+                    $img = $auction->images->first();
+                    if ($img && !empty($img->image_path)) {
+                        $imgUrl = (str_contains($img->image_path, '/') || str_contains($img->image_path, '\\'))
+                            ? asset(ltrim(str_replace('\\', '/', $img->image_path), '/'))
+                            : asset('uploads/listings/' . $img->image_path);
+                    } else {
+                        $imgUrl = asset('images/placeholder-car.png');
+                    }
+                    $endDate = $auction->getAuctionEndDate();
+                    $isExpired = $endDate && \Carbon\Carbon::now()->greaterThanOrEqualTo($endDate);
+                    $highestBid = $auction->bids()->where('status', 'active')->orderByDesc('amount')->first();
+                    $currentBid = $highestBid ? (float)$highestBid->amount : (float)($auction->starting_price ?? 0);
+                @endphp
+                <a href="{{ route('auction.show', $auction->getSlugOrGenerate()) }}" class="auction-card block bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl border border-gray-100 transition-all duration-300 hover:scale-[1.02] group cursor-pointer">
+                    <div class="relative aspect-[4/3] overflow-hidden bg-gray-100">
+                        <img src="{{ $imgUrl }}" alt="{{ $auction->year }} {{ $auction->make }} {{ $auction->model }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" onerror="this.src='{{ asset('images/placeholder-car.png') }}'">
+                        @if($endDate && !$isExpired)
+                        <div class="absolute bottom-2 left-2 bg-gradient-to-br from-blue-600/95 to-indigo-700/95 backdrop-blur-md text-white px-2.5 py-1.5 rounded-lg text-xs font-bold shadow-lg border border-white/20"
+                             id="countdown-home-{{ $auction->id }}"
+                             data-end-time="{{ $endDate->toIso8601String() }}">
+                            <div class="flex items-center space-x-1">
+                                <span class="bg-white/20 px-1.5 py-0.5 rounded font-mono" id="days-{{ $auction->id }}">00</span><span class="text-white/70">:</span>
+                                <span class="bg-white/20 px-1.5 py-0.5 rounded font-mono" id="hours-{{ $auction->id }}">00</span><span class="text-white/70">:</span>
+                                <span class="bg-white/20 px-1.5 py-0.5 rounded font-mono" id="minutes-{{ $auction->id }}">00</span><span class="text-white/70">:</span>
+                                <span class="bg-white/20 px-1.5 py-0.5 rounded font-mono" id="seconds-{{ $auction->id }}">00</span>
                             </div>
                         </div>
-                    @endforeach
-                </div>
-            </div>
-            
-            <!-- Enhanced Navigation Arrows -->
-            @if($popularAuctions->count() > 4)
-            <button @click="if (currentIndex > 0) currentIndex--" :disabled="currentIndex === 0" :class="currentIndex === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:scale-110 hover:text-blue-600'" class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-6 bg-white shadow-2xl rounded-full p-4 hover:bg-blue-50 transition-all z-10 border-2 border-gray-200 hover:border-blue-500">
-                <svg class="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/>
-                </svg>
-            </button>
-            <button @click="if (currentIndex < Math.floor((totalItems - itemsPerView) / 1)) currentIndex++" :disabled="currentIndex >= Math.floor((totalItems - itemsPerView) / 1)" :class="currentIndex >= Math.floor((totalItems - itemsPerView) / 1) ? 'opacity-30 cursor-not-allowed' : 'hover:scale-110 hover:text-blue-600'" class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-6 bg-white shadow-2xl rounded-full p-4 hover:bg-blue-50 transition-all z-10 border-2 border-gray-200 hover:border-blue-500">
-                <svg class="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
-                </svg>
-            </button>
-            @endif
+                        @endif
+                    </div>
+                    <div class="p-3">
+                        <h3 class="font-bold text-sm text-gray-900 line-clamp-1 mb-1">{{ $auction->year }} {{ $auction->make }} {{ $auction->model }}</h3>
+                        <p class="text-xs text-gray-500 flex items-center gap-1 mb-2">
+                            <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/></svg>
+                            {{ strtoupper($auction->island ?? 'N/A') }}
+                        </p>
+                        <div class="space-y-1">
+                            <p class="text-xs text-gray-500">Current bid</p>
+                            <p class="text-lg font-bold text-green-600">{{ $currentBid > 0 ? '$' . number_format($currentBid, 0) : 'Start Bidding' }}</p>
+                            @if(!empty($auction->buy_now_price) && (float)$auction->buy_now_price > 0)
+                                <p class="text-xs text-gray-500">Buy Now</p>
+                                <p class="text-sm font-semibold text-blue-600">${{ number_format((float)$auction->buy_now_price, 0) }}</p>
+                            @endif
+                        </div>
+                    </div>
+                </a>
+            @endforeach
         </div>
     </div>
 </section>
