@@ -1,61 +1,209 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# CayMark — Island Exchange & Auction House
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+**The Bahamas' premier digital vehicle auction and marketplace.** CayMark connects buyers and sellers across the islands for cars, boats, and equipment—with live auctions, buy-now listings, and secure payments.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## About
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+CayMark is a full-stack web application for:
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- **Buyers:** Browse and bid on auctions, buy now listings, manage watchlist, deposit/withdraw funds, pay for won items, and coordinate pickup.
+- **Sellers:** Create auction or buy-now listings (with VIN/HIN decoder), manage payouts, and handle post-sale pickup.
+- **Admins:** Approve listings, manage users, payouts, disputes, revenue tracking, and email templates.
+- **Public:** Fee calculator, help center, video guides, tow provider directory, and contact.
 
-## Learning Laravel
+Listings are organized by **island** (Bahamas) and support vehicles, marine vessels, and equipment.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+---
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+## Tech Stack
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+| Layer        | Technology |
+|-------------|------------|
+| Backend     | **Laravel 12**, PHP 8.2+ |
+| Frontend    | **Blade**, **Tailwind CSS**, **Alpine.js**, **Vite** |
+| PDF         | barryvdh/laravel-dompdf |
+| Real-time   | Pusher (optional) |
+| Database    | MySQL / MariaDB or SQLite (dev) |
 
-## Laravel Sponsors
+---
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## Requirements
 
-### Premium Partners
+- **PHP** 8.2+
+- **Composer** 2.x
+- **Node.js** 18+ (for Vite / frontend assets)
+- **MySQL** 5.7+ / **MariaDB** 10.3+ or **SQLite** (development)
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+---
 
-## Contributing
+## Installation
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 1. Clone and install PHP dependencies
 
-## Code of Conduct
+```bash
+git clone https://github.com/your-username/Cay-Mark.git
+cd Cay-Mark
+composer install
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### 2. Environment and key
 
-## Security Vulnerabilities
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### 3. Configure environment
+
+Edit `.env`:
+
+- **Database:** Set `DB_CONNECTION`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` (or keep `DB_CONNECTION=sqlite` and ensure `database/database.sqlite` exists).
+- **App:** Set `APP_NAME`, `APP_URL`, and optionally `NOINDEX=true` for staging so search engines don’t index the site.
+
+```env
+APP_NAME="CayMark"
+APP_URL=http://localhost
+
+# Database (MySQL example)
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=caymark
+DB_USERNAME=root
+DB_PASSWORD=
+```
+
+### 4. Database
+
+```bash
+php artisan migrate
+# Optional: seed data
+# php artisan db:seed
+```
+
+### 5. Frontend assets
+
+```bash
+npm install
+npm run build
+```
+
+For development with hot reload:
+
+```bash
+npm run dev
+```
+
+### 6. Storage and cache
+
+```bash
+php artisan storage:link
+php artisan config:clear
+php artisan cache:clear
+```
+
+### 7. Run the app
+
+```bash
+php artisan serve
+```
+
+Open `http://localhost:8000` (or your `APP_URL`).
+
+---
+
+## Project structure (high level)
+
+```
+app/
+├── Http/Controllers/
+│   ├── Buyer/          # Auctions, bids, marketplace, payments, deposits, messaging
+│   ├── Seller/          # Listings, payouts, dashboard
+│   ├── Admin/           # Email templates, etc.
+│   └── Auth/            # Registration (multi-step), login, password
+├── Models/              # User, Listing, Bid, Invoice, Payout, Chat, etc.
+├── Services/            # Bidding, deposits, relisting
+config/
+├── islands.php          # Bahamas islands list (listing location & tow providers)
+database/
+├── migrations/          # users, listings, bids, invoices, payouts, chats, etc.
+resources/
+├── views/
+│   ├── layouts/        # welcome, dashboard, guest, admin, Buyer, Seller
+│   ├── partials/       # unified-header, noindex-meta, auction-listings
+│   ├── Buyer/          # Dashboard, auction detail, payment, messaging
+│   ├── Seller/         # Dashboard, submit listing
+│   └── admin/          # Admin panels
+routes/
+├── web.php             # Public, auth, admin, auction, marketplace
+├── buyer.php           # Buyer dashboard, messaging, support
+├── seller.php          # Seller dashboard, listings, payouts
+└── auth.php            # Login, registration, password reset
+```
+
+---
+
+## Features overview
+
+### Public
+
+- Homepage with hero, popular auctions (active only), vehicle finder
+- **Auctions** — Browse with filters (island, make, model, etc.), sort (newest/oldest, price)
+- **Marketplace** — Buy-now listings
+- **Getting Started**, **Services & Support**, **Contact Us**
+- Fee calculator, help center, video guides, rules & policies
+- Tow provider directory and signup
+- Staging / noindex: set `NOINDEX=true` or host `kaymark.360webcoders.com` for `noindex,nofollow` and `robots.txt` disallow
+
+### Buyers (auth)
+
+- Bid on auctions, watchlist, buy now
+- Dashboard: overview, bids, saved items, notifications
+- Wallet: deposits and withdrawals
+- Payment checkout (single/multiple), invoices
+- Post-auction: messaging, pickup details, PIN confirmation, third-party pickup
+- Messaging center, support
+
+### Sellers (auth)
+
+- Payout method setup (required before listing)
+- Create listing: auction or buy now, VIN/HIN decoder, vehicle details, images
+- Dashboard: active listings, recently finished, payouts
+- Post-sale: pickup PIN, confirm pickup
+
+### Admin
+
+- Dashboard and analytics
+- User management (suspend, ban, reset password)
+- Listing review (approve/reject), extend auction
+- Payouts, payments, withdrawals
+- Buyer defaults, second-chance purchases, unpaid auctions
+- Invoice log, email templates
+- Disputes, notifications (placeholders where applicable)
+
+---
+
+
+
+## Staging / SEO
+
+To avoid indexing a staging or duplicate site (e.g. **kaymark.360webcoders.com**):
+
+- **Automatic:** If the request host is `kaymark.360webcoders.com`, the app adds `<meta name="robots" content="noindex, nofollow">` and serves `robots.txt` with `Disallow: /`.
+- **Manual:** Set `NOINDEX=true` in `.env` on any server to enable the same behavior.
+
+Production main site should **not** use this host and should **not** set `NOINDEX=true`.
+
+---
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Proprietary / All rights reserved (or specify your license).
+
+---
+
+## Support
+
+For support or feature requests, open an issue or contact the project maintainers.
