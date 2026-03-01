@@ -196,17 +196,11 @@
                             <a href="{{ route('video-guide') }}" class="block px-5 py-3.5 text-sm text-gray-800 hover:bg-gray-50 transition-colors">
                                 Video guides
                             </a>
-                            <a href="{{ route('help-center') }}#registration-membership" class="block px-5 py-3.5 text-sm text-gray-800 hover:bg-gray-50 transition-colors">
-                                Registration & Membership FAQ
-                            </a>
                             <a href="{{ route('policy') }}" class="block px-5 py-3.5 text-sm text-gray-800 hover:bg-gray-50 transition-colors">
                                 Policy
                             </a>
-                            <a href="{{ route('tow-provider.signup') }}" class="block px-5 py-3.5 text-sm text-gray-800 hover:bg-gray-50 transition-colors">
-                                Tow Provider Sign Up
-                            </a>
-                            <a href="{{ route('contact') }}" class="block px-5 py-3.5 text-sm text-gray-800 hover:bg-gray-50 transition-colors">
-                                Contact Us
+                            <a href="{{ route('tow-provider.index') }}" class="block px-5 py-3.5 text-sm text-gray-800 hover:bg-gray-50 transition-colors">
+                                Tow Provider Support
                             </a>
                         </div>
                     </div>
