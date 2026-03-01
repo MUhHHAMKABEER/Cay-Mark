@@ -238,6 +238,31 @@ class SellerDashboardService
     }
 
     /**
+     * Get pending payouts for seller (pending, processing)
+     */
+    public function getPendingPayouts(User $user): Collection
+    {
+        return \App\Models\Payout::with(['listing', 'invoice'])
+            ->where('seller_id', $user->id)
+            ->whereIn('status', ['pending', 'processing'])
+            ->orderByDesc('payout_generated_at')
+            ->get();
+    }
+
+    /**
+     * Get completed payouts for seller
+     */
+    public function getCompletedPayouts(User $user): Collection
+    {
+        return \App\Models\Payout::with(['listing', 'invoice'])
+            ->where('seller_id', $user->id)
+            ->where('status', 'completed')
+            ->orderByDesc('payout_processed_at')
+            ->take(20)
+            ->get();
+    }
+
+    /**
      * Get all dashboard data
      */
     public function getDashboardData(User $user): array
@@ -251,6 +276,8 @@ class SellerDashboardService
             'messagingThreads' => $this->getMessagingThreads($user),
             'payoutMethod' => $this->getPayoutMethod($user),
             'documents' => $this->getDocuments($user),
+            'pendingPayouts' => $this->getPendingPayouts($user),
+            'completedPayouts' => $this->getCompletedPayouts($user),
             'revenueChartData' => $this->getRevenueChartData($user),
             'listingStatusChartData' => $this->getListingStatusChartData($user),
             'auctionPerformanceData' => $this->getAuctionPerformanceData($user),

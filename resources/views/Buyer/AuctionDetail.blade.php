@@ -467,8 +467,8 @@
                     
                     <div class="info-grid mb-6">
                         <div class="info-item">
-                            <span class="info-label">Location</span>
-                            <span class="info-value">{{ $listing->island ?? 'N/A' }}</span>
+                            <span class="info-label">Location (Island)</span>
+                            <span class="info-value">{{ $listing->island ?? 'New Providence' }}</span>
                         </div>
                         @if($listing->item_number)
                         <div class="info-item">
@@ -577,7 +577,15 @@
                         </div>
                         <div class="info-item">
                             <span class="info-label">Title status</span>
-                            <span class="info-value">{{ ($listing->title_status ?? '') === 'CLEAN' ? 'Has title' : (($listing->title_status ?? '') === 'SALVAGE' ? 'No title' : 'N/A') }}</span>
+                            <span class="info-value">
+                                @if(($listing->title_status ?? '') === 'CLEAN')
+                                    Yes
+                                @elseif(($listing->title_status ?? '') === 'SALVAGE')
+                                    No
+                                @else
+                                    {{ $listing->title_status ?? 'N/A' }}
+                                @endif
+                            </span>
                         </div>
                         @auth
                         <div class="info-item">
@@ -712,9 +720,27 @@
                     @endif
 
                     <!-- Bid Increment -->
-                    <div class="mb-4">
-                        <span class="info-label">Bid Increment</span>
-                        <span class="info-value">${{ number_format($incrementAmount, 0) }}</span>
+                    <div class="flex justify-between items-center mb-4">
+                        <div class="info-item">
+                            <span class="info-label">Bid Increment</span>
+                            <span class="info-value">${{ number_format($incrementAmount, 0) }}</span>
+                        </div>
+                        <div class="info-item text-right">
+                            <span class="info-label">Security Deposit</span>
+                            @php
+                                $requiredDeposit = 0;
+                                if ($currentBid >= 2000) {
+                                    $requiredDeposit = $currentBid * 0.10;
+                                }
+                            @endphp
+                            <span class="info-value text-blue-600 font-bold">
+                                @if($requiredDeposit > 0)
+                                    ${{ number_format($requiredDeposit, 0) }} (10%)
+                                @else
+                                    No Deposit Required
+                                @endif
+                            </span>
+                        </div>
                     </div>
 
                     <!-- Place Your Bid -->
@@ -787,11 +813,10 @@
                     </div>
                     @endif
 
-                    @if($listing->notes || $listing->description)
                     <div class="notes-section">
-                        <div class="damage-label">Additional Notes (Optional)</div>
+                        <div class="damage-label">Seller Notes</div>
                         <div class="damage-value" style="color: #475569;">
-                            {{ $listing->notes ?? $listing->description ?? 'No additional notes provided.' }}
+                            {{ $listing->rejection_notes ?? $listing->notes ?? $listing->description ?? 'No additional notes provided by seller.' }}
                         </div>
                     </div>
                     @else

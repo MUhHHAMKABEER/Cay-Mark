@@ -13,12 +13,19 @@
         <div class="bg-white rounded-xl shadow-sm h-full" style="min-height: calc(100vh - 60px);">
             <!-- DASHBOARD TAB (Main Overview with Charts) -->
             <div id="content-dashboard" class="tab-content p-4" style="display: none; height: 100%; overflow-y: auto;">
-                <!-- Header Section -->
+                <!-- Header Section: Business vs Casual Seller -->
                 <div class="mb-4">
-                    <h2 class="text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 bg-clip-text text-transparent mb-1">
-                        Dashboard Overview
-                    </h2>
-                    <p class="text-gray-600 text-sm">Real-time insights into your sales performance and auction analytics</p>
+                    <div class="flex flex-wrap items-center gap-3 mb-2">
+                        <h2 class="text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 bg-clip-text text-transparent">
+                            {{ $user->business_license_path ? 'Business Seller' : 'Seller' }} Dashboard
+                        </h2>
+                        @if($user->business_license_path)
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800">Business Account</span>
+                        @else
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">Individual Seller</span>
+                        @endif
+                    </div>
+                    <p class="text-gray-600 text-sm">{{ $user->business_license_path ? 'Manage your business listings, payouts, and buyer coordination.' : 'Real-time insights into your sales performance and auction analytics.' }}</p>
                 </div>
 
                 <!-- Top Stats Cards Row (Horizontal) -->
@@ -104,8 +111,8 @@
                             <span class="text-amber-700 text-xs font-medium">Pending Payout</span>
                             <span class="material-icons-round text-amber-600 text-lg">account_balance_wallet</span>
                         </div>
-                        <p class="text-xl font-bold text-amber-900">${{ number_format(($auctionSummary['total_sales_revenue'] ?? 0) * 0.96, 0) }}</p>
-                        <p class="text-xs text-amber-600 mt-0.5">After 4% commission</p>
+                        <p class="text-xl font-bold text-amber-900">${{ number_format(collect($pendingPayouts ?? [])->sum('net_payout'), 0) }}</p>
+                        <p class="text-xs text-amber-600 mt-0.5">{{ count($pendingPayouts ?? []) }} payout(s) pending</p>
                     </div>
                 </div>
 
@@ -141,6 +148,54 @@
                         <div class="h-64">
                             <canvas id="listingStatusChart"></canvas>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Pending vs Completed Payouts Section -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+                    <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-4">
+                        <h3 class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                            <span class="material-icons-round text-amber-600">schedule</span>
+                            Pending Payouts
+                        </h3>
+                        @if(isset($pendingPayouts) && $pendingPayouts->count() > 0)
+                            <div class="space-y-2 max-h-48 overflow-y-auto">
+                                @foreach($pendingPayouts as $payout)
+                                    <div class="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
+                                        <div>
+                                            <p class="font-medium text-gray-900 text-sm">{{ $payout->item_title ?? 'Sale #' . $payout->payout_number }}</p>
+                                            <p class="text-xs text-gray-500">{{ $payout->payout_generated_at?->format('M j, Y') }}</p>
+                                        </div>
+                                        <span class="font-bold text-amber-700">${{ number_format($payout->net_payout, 2) }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                            <p class="text-sm text-amber-700 mt-2 font-medium">Total: ${{ number_format($pendingPayouts->sum('net_payout'), 2) }}</p>
+                        @else
+                            <p class="text-gray-500 text-sm">No pending payouts.</p>
+                        @endif
+                    </div>
+                    <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-4">
+                        <h3 class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                            <span class="material-icons-round text-green-600">check_circle</span>
+                            Completed Payouts
+                        </h3>
+                        @if(isset($completedPayouts) && $completedPayouts->count() > 0)
+                            <div class="space-y-2 max-h-48 overflow-y-auto">
+                                @foreach($completedPayouts as $payout)
+                                    <div class="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
+                                        <div>
+                                            <p class="font-medium text-gray-900 text-sm">{{ $payout->item_title ?? 'Sale #' . $payout->payout_number }}</p>
+                                            <p class="text-xs text-gray-500">{{ $payout->payout_processed_at?->format('M j, Y') }}</p>
+                                        </div>
+                                        <span class="font-bold text-green-700">${{ number_format($payout->net_payout, 2) }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                            <a href="{{ route('seller.payouts') }}" class="text-sm text-blue-600 hover:underline mt-2 inline-block">View all payouts →</a>
+                        @else
+                            <p class="text-gray-500 text-sm">No completed payouts yet.</p>
+                        @endif
                     </div>
                 </div>
 
@@ -212,6 +267,15 @@
                     <p class="text-sm text-gray-500 mt-1">Visible only; cannot be edited</p>
                 </div>
 
+                <!-- Phone Number -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                    <div class="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3">
+                        <span class="text-gray-900">{{ $user->phone ?? '—' }}</span>
+                    </div>
+                    <p class="text-sm text-gray-500 mt-1">Registered phone number</p>
+                </div>
+
                 <!-- Account Type -->
                 <div class="mb-6">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Account Type</label>
@@ -232,9 +296,9 @@
                     <p class="text-sm text-gray-500 mt-2">Password is not displayed.</p>
                 </div>
 
-                <!-- Verification Documents -->
+                <!-- Uploaded Documents -->
                 <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-4">Verification Documents</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-4">Uploaded Documents</label>
                     @if($documents->count() > 0)
                         <div class="space-y-4">
                             @foreach($documents as $document)
@@ -571,11 +635,20 @@
                 @if($notifications->count() > 0)
                     <div class="space-y-4">
                         @foreach($notifications as $notification)
-                            <div class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition duration-200">
+                            @php
+                                $nData = is_array($notification->data) ? $notification->data : [];
+                                $nLink = $nData['link'] ?? null;
+                            @endphp
+                            <div class="seller-notification-card bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition duration-200 {{ $nLink ? 'cursor-pointer' : '' }}"
+                                 data-link="{{ $nLink ?? '' }}"
+                                 @if($nLink) onclick="if (this.dataset.link) window.location.href=this.dataset.link" @endif>
                                 <div class="flex items-start justify-between">
                                     <div class="flex-1">
-                                        <p class="text-gray-900 font-medium">{{ $notification->data['message'] ?? ($notification->data['title'] ?? 'Notification') }}</p>
+                                        <p class="text-gray-900 font-medium">{{ $nData['message'] ?? ($nData['title'] ?? 'Notification') }}</p>
                                         <p class="text-sm text-gray-500 mt-1">{{ $notification->created_at->diffForHumans() }}</p>
+                                        @if($nLink)
+                                            <p class="text-sm text-blue-600 font-medium mt-2">View details →</p>
+                                        @endif
                                     </div>
                                     @if(!$notification->read_at)
                                         <span class="ml-4 w-2 h-2 bg-blue-600 rounded-full"></span>
@@ -743,25 +816,37 @@
                                class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Account Number *</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Account Number {{ $payoutMethod ? '' : '*' }}</label>
+                        @if($payoutMethod)
+                            <p class="text-xs text-gray-500 mb-1">Currently: ****{{ substr($payoutMethod->account_number, -4) }}</p>
+                        @endif
                         <input type="text" 
                                name="account_number" 
-                               value="{{ $payoutMethod ? '****' . substr($payoutMethod->account_number, -4) : '' }}"
-                               required
+                               value=""
+                               placeholder="{{ $payoutMethod ? 'Leave blank to keep current' : 'Required' }}"
+                               {{ !$payoutMethod ? 'required' : '' }}
                                class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Routing / Transfer Number</label>
+                        @if($payoutMethod && $payoutMethod->routing_number)
+                            <p class="text-xs text-gray-500 mb-1">Currently: ****{{ substr($payoutMethod->routing_number, -4) }}</p>
+                        @endif
                         <input type="text" 
                                name="routing_number" 
-                               value="{{ $payoutMethod && $payoutMethod->routing_number ? '****' . substr($payoutMethod->routing_number, -4) : '' }}"
+                               value=""
+                               placeholder="{{ $payoutMethod ? 'Leave blank to keep current' : 'Optional' }}"
                                class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">SWIFT Number</label>
+                        @if($payoutMethod && $payoutMethod->swift_number)
+                            <p class="text-xs text-gray-500 mb-1">Currently: ****{{ substr($payoutMethod->swift_number, -4) }}</p>
+                        @endif
                         <input type="text" 
                                name="swift_number" 
-                               value="{{ $payoutMethod && $payoutMethod->swift_number ? '****' . substr($payoutMethod->swift_number, -4) : '' }}"
+                               value=""
+                               placeholder="{{ $payoutMethod ? 'Leave blank to keep current' : 'Optional' }}"
                                class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     </div>
                     <div>

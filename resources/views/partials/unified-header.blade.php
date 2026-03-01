@@ -36,7 +36,7 @@
                 <!-- Logo -->
                 <div class="flex items-center flex-shrink-0">
                     <a href="{{ route('welcome') }}" class="flex items-center min-h-[2.5rem] md:min-h-[3rem]">
-                        <img src="{{ asset('Logos/2.png') }}" alt="CayMark" class="h-14 md:h-16 w-auto max-w-[240px] object-contain" width="160" height="64" loading="eager" />
+                        <img src="{{ asset(config('logos.header', 'Logos/Caymark Logo.png')) }}" alt="CayMark" class="h-16 md:h-20 w-auto max-w-[280px] object-contain" width="200" height="80" loading="eager" />
                     </a>
                 </div>
 
@@ -48,13 +48,10 @@
                                 type="text" 
                                 name="search"
                                 placeholder="Search for vehicles by make, model, island..." 
-                                class="w-full px-4 py-2.5 pl-12 pr-24 rounded-full border border-gray-300 bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                class="w-full px-4 py-2.5 pl-4 pr-24 rounded-full border border-gray-300 bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 value="{{ request('search') }}"
                                 id="buyer-header-search-input"
                             >
-                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none search-icon-left">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                            </span>
                             <button type="button" class="absolute right-12 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1 clear-search-btn" aria-label="Clear search" style="display: none;">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                             </button>
@@ -202,8 +199,11 @@
                             <a href="{{ route('help-center') }}#registration-membership" class="block px-5 py-3.5 text-sm text-gray-800 hover:bg-gray-50 transition-colors">
                                 Registration & Membership FAQ
                             </a>
-                            <a href="{{ route('rules-policies') }}" class="block px-5 py-3.5 text-sm text-gray-800 hover:bg-gray-50 transition-colors">
-                                Rules & Policies
+                            <a href="{{ route('policy') }}" class="block px-5 py-3.5 text-sm text-gray-800 hover:bg-gray-50 transition-colors">
+                                Policy
+                            </a>
+                            <a href="{{ route('tow-provider.signup') }}" class="block px-5 py-3.5 text-sm text-gray-800 hover:bg-gray-50 transition-colors">
+                                Tow Provider Sign Up
                             </a>
                             <a href="{{ route('contact') }}" class="block px-5 py-3.5 text-sm text-gray-800 hover:bg-gray-50 transition-colors">
                                 Contact Us

@@ -190,6 +190,14 @@ class BuyerDashboardService
     }
 
     /**
+     * Get documents for buyer (ID, etc.)
+     */
+    public function getDocuments(User $user): \Illuminate\Support\Collection
+    {
+        return $user->documents()->orderBy('created_at', 'desc')->get();
+    }
+
+    /**
      * Get all dashboard data
      */
     public function getDashboardData(User $user): array
@@ -201,6 +209,7 @@ class BuyerDashboardService
             'savedItems' => $this->getSavedItems($user),
             'notifications' => $this->getNotifications($user),
             'messagingThreads' => $this->getMessagingThreads($user),
+            'documents' => $this->getDocuments($user),
             'biddingActivityData' => $this->getBiddingActivityData($user),
             'spendingTrendsData' => $this->getSpendingTrendsData($user),
             'winLossRatioData' => $this->getWinLossRatioData($user),

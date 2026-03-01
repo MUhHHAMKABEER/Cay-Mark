@@ -203,12 +203,33 @@ class ListingController extends Controller
     }
 
 
-    public function showListing()
+    public function showListing(Request $request)
     {
-        // Fetch only listings for the logged-in seller
-        $products = Listing::where('listing_method', 'buy_now')->with('images')->get();
-        // dd($products);
-        return view('Seller.Listing.index', compact('products'));
+        $user = $request->user();
+        $query = Listing::where('seller_id', $user->id)->with('images');
+
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('make', 'like', '%' . $request->search . '%')
+                    ->orWhere('model', 'like', '%' . $request->search . '%')
+                    ->orWhere('year', 'like', '%' . $request->search . '%')
+                    ->orWhere('item_number', 'like', '%' . $request->search . '%');
+            });
+        }
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        if ($request->filled('listing_method')) {
+            $query->where('listing_method', $request->listing_method);
+        }
+
+        $listings = $query->orderByDesc('created_at')->paginate(12);
+        $counts = [
+            'total' => Listing::where('seller_id', $user->id)->count(),
+            'active' => Listing::where('seller_id', $user->id)->whereIn('status', ['active', 'pending'])->count(),
+            'sold' => Listing::where('seller_id', $user->id)->where('status', 'sold')->count(),
+        ];
+        return view('Seller.Listing.index', compact('listings', 'counts'));
     }
 
   public function showAuctionLisitng(Request $request)
@@ -232,24 +253,17 @@ class ListingController extends Controller
 }
 
 
+    /**
+     * Dedicated Buy Now page: show listing with fixed price and purchase CTA.
+     * Guests see "Log in / Register to purchase"; buyers see "Purchase now" button.
+     */
     public function buyNowGuest(Request $request, $listingId)
     {
-        // Store the listing ID or object in session
-        $listing = Listing::find($listingId);
-        $request->session()->put('selected_listing', [
-            'id' => $listing->id,
-            'make' => $listing->make,
-            'model' => $listing->model,
-            'price' => $listing->price,
-            'location' => $listing->location,
-            'image' => $listing->image ?? 'https://via.placeholder.com/80',
-        ]);
-
-        // Debug session right here
-        // dd($request->session()->get('selected_listing')); // <- This will show session and stop execution
-
-        // Normally, redirect to registration page
-        return redirect()->route('register', ['role' => 'buyer']);
+        $listing = Listing::with('images')->findOrFail($listingId);
+        if ($listing->listing_method !== 'buy_now') {
+            return redirect()->route('listing.show', $listing)->with('info', 'This listing is not a Buy Now item.');
+        }
+        return view('buy-now', compact('listing'));
     }
 
     public function showBuyerDashboard(Request $request)

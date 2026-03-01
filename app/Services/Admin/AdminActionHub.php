@@ -2,6 +2,7 @@
 
 namespace App\Services\Admin;
 
+use App\Models\AdminActivityLog;
 use App\Models\Listing;
 use App\Models\User;
 use App\Models\Payment;
@@ -20,6 +21,11 @@ class AdminActionHub
         $listing->rejection_reason = $request->rejection_reason;
         $listing->rejection_notes = $request->rejection_notes;
         $listing->save();
+
+        AdminActivityLog::log('listing.rejected', 'listing', (int) $listing->id, null, [
+            'rejection_reason' => $request->rejection_reason,
+            'rejection_notes' => $request->rejection_notes,
+        ]);
 
         // Send rejection email to seller
         try {
@@ -43,7 +49,10 @@ class AdminActionHub
     {
         $user = User::findOrFail($id);
         $validated = $request->validated();
+        $old = $user->only(array_keys($validated));
         $user->update($validated);
+
+        AdminActivityLog::log('user.updated', 'user', (int) $id, $old, $validated);
 
         return back()->with('success', 'User updated successfully.');
     }
@@ -54,6 +63,8 @@ class AdminActionHub
         $user = User::findOrFail($id);
         $user->password = \Hash::make($request->new_password);
         $user->save();
+
+        AdminActivityLog::log('user.password_reset', 'user', (int) $id);
 
         return back()->with('success', 'Password reset successfully.');
     }
@@ -69,12 +80,14 @@ class AdminActionHub
                 'restriction_reason' => $request->reason,
                 'restriction_ends_at' => now()->addDays(30),
             ]);
+            AdminActivityLog::log('user.suspended', 'user', (int) $user->id, null, ['reason' => $request->reason]);
         } else {
             $user->update([
                 'is_restricted' => false,
                 'restriction_reason' => null,
                 'restriction_ends_at' => null,
             ]);
+            AdminActivityLog::log('user.reactivated', 'user', (int) $user->id);
         }
 
         return back()->with('success', 'User status updated successfully.');
@@ -84,7 +97,10 @@ class AdminActionHub
     {
         $listing = Listing::findOrFail($id);
         $validated = $request->validated();
+        $old = $listing->only(array_keys($validated));
         $listing->update($validated);
+
+        AdminActivityLog::log('listing.admin_edit', 'listing', (int) $id, $old, $validated);
 
         return back()->with('success', 'Listing updated successfully.');
     }
@@ -103,6 +119,10 @@ class AdminActionHub
 
         $listing->save();
 
+        AdminActivityLog::log('auction.extended', 'listing', (int) $listing->id, null, [
+            'additional_days' => $request->additional_days,
+        ]);
+
         return back()->with('success', 'Auction time extended successfully.');
     }
 
@@ -110,7 +130,10 @@ class AdminActionHub
     {
         $payment = Payment::findOrFail($id);
         $request->validated();
+        $oldStatus = $payment->status;
         $payment->update(['status' => $request->status]);
+
+        AdminActivityLog::log('payment.status_updated', 'payment', (int) $payment->id, ['status' => $oldStatus], ['status' => $request->status]);
 
         if ($request->status === 'completed' && $payment->invoice) {
             try {
@@ -149,6 +172,11 @@ class AdminActionHub
             'rejection_notes' => $request->rejection_notes,
         ]);
 
+        AdminActivityLog::log('listing.rejected', 'listing', (int) $listing->id, null, [
+            'rejection_reason' => $request->rejection_reason,
+            'rejection_notes' => $request->rejection_notes,
+        ]);
+
         try {
             \Mail::send('emails.listing-rejected', [
                 'listing' => $listing,
@@ -170,12 +198,15 @@ class AdminActionHub
         $request->validated();
         $payout = \App\Models\Payout::findOrFail($payoutId);
 
+        $oldStatus = $payout->status;
         $payout->update([
             'status' => $request->status,
             'transaction_reference' => $request->transaction_reference,
             'date_sent' => $request->date_sent,
             'finance_notes' => $request->finance_notes,
         ]);
+
+        AdminActivityLog::log('payout.status_updated', 'payout', (int) $payout->id, ['status' => $oldStatus], ['status' => $request->status]);
 
         if (in_array($request->status, ['sent', 'paid_successfully'])) {
             try {
@@ -201,6 +232,8 @@ class AdminActionHub
         $defaultService = new \App\Services\DefaultService();
         $defaultService->resolveByRelist($default, $request->admin_notes ?? '');
 
+        AdminActivityLog::log('buyer_default.resolve_relist', 'buyer_default', (int) $defaultId, null, ['admin_notes' => $request->admin_notes ?? '']);
+
         return back()->with('success', 'Default resolved by relisting.');
     }
 
@@ -217,6 +250,8 @@ class AdminActionHub
         $default->listing->update([
             'status' => 'closed',
         ]);
+
+        AdminActivityLog::log('buyer_default.closed', 'buyer_default', (int) $defaultId, null, ['admin_notes' => $request->admin_notes ?? '']);
 
         return back()->with('success', 'Auction closed successfully.');
     }

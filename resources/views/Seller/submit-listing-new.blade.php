@@ -364,6 +364,10 @@
                 <div class="step-number">3</div>
                 <span>Auction Settings</span>
             </div>
+            <div class="step-item" id="step-indicator-4">
+                <div class="step-number">4</div>
+                <span>Payment</span>
+            </div>
         </div>
         
         <!-- Error Messages Display -->
@@ -405,15 +409,29 @@
                     </div>
                 </div>
                 
+                <!-- Reader type: Automobile (VIN) vs Marine (HIN) -->
+                <div class="mb-3">
+                    <label class="form-label">IDENTIFIER TYPE <span class="text-red-500">*</span></label>
+                    <div class="flex flex-wrap gap-4">
+                        <label class="inline-flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="vin_hin_type" value="vin" checked class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                            <span>Automobile → VIN reader</span>
+                        </label>
+                        <label class="inline-flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="vin_hin_type" value="hin" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                            <span>Marine → HIN reader</span>
+                        </label>
+                    </div>
+                </div>
                 <!-- VIN/HIN Input -->
                 <div class="mb-4">
-                    <label class="form-label">VIN / HIN Number</label>
+                    <label class="form-label" id="vin_hin_label">VIN Number</label>
                     <div class="flex flex-col sm:flex-row gap-3">
                         <input type="text" 
                                id="vin_hin" 
                                name="vin" 
                                class="form-input flex-1 uppercase" 
-                               placeholder="Enter VIN or HIN (17 characters)"
+                               placeholder="Enter VIN (17 characters)"
                                maxlength="17">
                         <button type="button" 
                                 id="searchVinBtn" 
@@ -536,7 +554,10 @@
                             <option value="BROWN">Brown</option>
                             <option value="YELLOW">Yellow</option>
                             <option value="ORANGE">Orange</option>
-                            <option value="OTHER">Other</option>
+                            <option value="BEIGE">Beige</option>
+                            <option value="GOLD">Gold</option>
+                            <option value="BRONZE">Bronze</option>
+                            <option value="MAROON">Maroon</option>
                         </select>
                     </div>
                     <div>
@@ -544,25 +565,87 @@
                         <select name="interior_color" required class="form-input">
                             <option value="">Select Color</option>
                             <option value="BLACK">Black</option>
+                            <option value="WHITE">White</option>
+                            <option value="SILVER">Silver</option>
                             <option value="GRAY">Gray</option>
-                            <option value="BEIGE">Beige</option>
+                            <option value="RED">Red</option>
+                            <option value="BLUE">Blue</option>
+                            <option value="GREEN">Green</option>
                             <option value="BROWN">Brown</option>
-                            <option value="OTHER">Other</option>
+                            <option value="YELLOW">Yellow</option>
+                            <option value="ORANGE">Orange</option>
+                            <option value="BEIGE">Beige</option>
+                            <option value="GOLD">Gold</option>
+                            <option value="BRONZE">Bronze</option>
+                            <option value="MAROON">Maroon</option>
                         </select>
                     </div>
-                    <div>
-                        <label class="form-label">PRIMARY DAMAGE <span class="text-red-500">*</span></label>
-                        <select name="primary_damage" required class="form-input">
-                            <option value="">Select Damage Type</option>
-                            <option value="NONE">None</option>
-                            <option value="FRONT_END">Front End</option>
-                            <option value="REAR_END">Rear End</option>
-                            <option value="SIDE">Side</option>
-                            <option value="FLOOD">Flood</option>
-                            <option value="FIRE">Fire</option>
-                            <option value="VANDALISM">Vandalism</option>
-                            <option value="OTHER">Other</option>
-                        </select>
+                    <!-- Primary and Secondary Damage side by side, same options -->
+                    <div class="col-span-2 md:col-span-3 lg:col-span-4 grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
+                        <div>
+                            <label class="form-label">PRIMARY DAMAGE <span class="text-red-500">*</span></label>
+                            <select name="primary_damage" required class="form-input">
+                                <option value="">Select Damage Type</option>
+                                <option value="NONE">None</option>
+                                <option value="FRONT_END">Front End</option>
+                                <option value="REAR_END">Rear End</option>
+                                <option value="SIDE">Side</option>
+                                <option value="LEFT_SIDE">Left Side</option>
+                                <option value="RIGHT_SIDE">Right Side</option>
+                                <option value="FRONT_LEFT">Front Left</option>
+                                <option value="FRONT_RIGHT">Front Right</option>
+                                <option value="REAR_LEFT">Rear Left</option>
+                                <option value="REAR_RIGHT">Rear Right</option>
+                                <option value="ALL_OVER">All Over</option>
+                                <option value="FLOOD">Flood</option>
+                                <option value="FIRE">Fire</option>
+                                <option value="HAIL">Hail</option>
+                                <option value="MECHANICAL">Mechanical</option>
+                                <option value="ENGINE">Engine</option>
+                                <option value="TRANSMISSION">Transmission</option>
+                                <option value="ROLLOVER">Rollover</option>
+                                <option value="THEFT_RECOVERY">Theft Recovery</option>
+                                <option value="VANDALISM">Vandalism</option>
+                                <option value="STRIPPED">Stripped</option>
+                                <option value="BURN">Burn</option>
+                                <option value="MINOR_DENTS">Minor Dents</option>
+                                <option value="MAJOR_DENTS">Major Dents</option>
+                                <option value="DISABLED">Disabled</option>
+                                <option value="NORMAL_WEAR">Normal Wear</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label">SECONDARY DAMAGE</label>
+                            <select name="secondary_damage" class="form-input">
+                                <option value="">Select (Optional)</option>
+                                <option value="NONE">None</option>
+                                <option value="FRONT_END">Front End</option>
+                                <option value="REAR_END">Rear End</option>
+                                <option value="SIDE">Side</option>
+                                <option value="LEFT_SIDE">Left Side</option>
+                                <option value="RIGHT_SIDE">Right Side</option>
+                                <option value="FRONT_LEFT">Front Left</option>
+                                <option value="FRONT_RIGHT">Front Right</option>
+                                <option value="REAR_LEFT">Rear Left</option>
+                                <option value="REAR_RIGHT">Rear Right</option>
+                                <option value="ALL_OVER">All Over</option>
+                                <option value="FLOOD">Flood</option>
+                                <option value="FIRE">Fire</option>
+                                <option value="HAIL">Hail</option>
+                                <option value="MECHANICAL">Mechanical</option>
+                                <option value="ENGINE">Engine</option>
+                                <option value="TRANSMISSION">Transmission</option>
+                                <option value="ROLLOVER">Rollover</option>
+                                <option value="THEFT_RECOVERY">Theft Recovery</option>
+                                <option value="VANDALISM">Vandalism</option>
+                                <option value="STRIPPED">Stripped</option>
+                                <option value="BURN">Burn</option>
+                                <option value="MINOR_DENTS">Minor Dents</option>
+                                <option value="MAJOR_DENTS">Major Dents</option>
+                                <option value="DISABLED">Disabled</option>
+                                <option value="NORMAL_WEAR">Normal Wear</option>
+                            </select>
+                        </div>
                     </div>
                     <div>
                         <label class="form-label">HAS KEYS <span class="text-red-500">*</span></label>
@@ -570,16 +653,6 @@
                             <option value="">Select</option>
                             <option value="yes">YES</option>
                             <option value="no">NO</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="form-label">SECONDARY DAMAGE</label>
-                        <select name="secondary_damage" class="form-input">
-                            <option value="">Select (Optional)</option>
-                            <option value="NONE">None</option>
-                            <option value="MINOR">Minor</option>
-                            <option value="MODERATE">Moderate</option>
-                            <option value="SEVERE">Severe</option>
                         </select>
                     </div>
                     <div>
@@ -715,6 +788,26 @@
                     </div>
                 </div>
 
+                <div class="flex flex-col sm:flex-row gap-4 justify-between">
+                    <button type="button" onclick="showSection(2)" class="btn-secondary">
+                        <i class="fas fa-arrow-left mr-2"></i> Back
+                    </button>
+                    <button type="button" onclick="showSection(4)" class="btn-primary">
+                        Continue to Payment <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- SECTION 4: PAYMENT -->
+            <div id="section4" class="form-section" style="display: none;">
+                <div class="section-header">
+                    <div class="section-icon">4</div>
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-900">Payment & Review</h2>
+                        <p class="text-xs text-gray-600">Payment details and final confirmation</p>
+                    </div>
+                </div>
+
                 <!-- Payment (Individual Sellers only) -->
                 @if($user->activeSubscription?->package?->price == 25.00)
                 <div class="mb-4 warning-box">
@@ -731,6 +824,10 @@
                         </select>
                     </div>
                 </div>
+                @else
+                <div class="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                    <p class="text-sm text-gray-700">No listing fee applies to your account. Review and submit below.</p>
+                </div>
                 @endif
 
                 <!-- Final Acknowledgment -->
@@ -742,7 +839,7 @@
                 </div>
 
                 <div class="flex flex-col sm:flex-row gap-4 justify-between">
-                    <button type="button" onclick="showSection(2)" class="btn-secondary">
+                    <button type="button" onclick="showSection(3)" class="btn-secondary">
                         <i class="fas fa-arrow-left mr-2"></i> Back
                     </button>
                     <button type="submit" class="btn-success">
@@ -1387,28 +1484,34 @@
         document.getElementById('section1').style.display = 'none';
         document.getElementById('section2').style.display = 'none';
         document.getElementById('section3').style.display = 'none';
+        if (document.getElementById('section4')) document.getElementById('section4').style.display = 'none';
         
         // Remove error highlighting
         document.getElementById('section1').style.border = '';
         document.getElementById('section2').style.border = '';
         document.getElementById('section3').style.border = '';
+        if (document.getElementById('section4')) document.getElementById('section4').style.border = '';
         
         // Show selected section with animation
         const section = document.getElementById('section' + sectionNum);
-        section.style.display = 'block';
-        section.classList.add('animate-slide-in');
+        if (section) {
+            section.style.display = 'block';
+            section.classList.add('animate-slide-in');
+        }
         
-        // Update step indicators
-        for (let i = 1; i <= 3; i++) {
+        // Update step indicators (1-4)
+        for (let i = 1; i <= 4; i++) {
             const indicator = document.getElementById('step-indicator-' + i);
-            if (i < sectionNum) {
-                indicator.classList.remove('active');
-                indicator.classList.add('completed');
-            } else if (i === sectionNum) {
-                indicator.classList.remove('completed');
-                indicator.classList.add('active');
-            } else {
-                indicator.classList.remove('active', 'completed');
+            if (indicator) {
+                if (i < sectionNum) {
+                    indicator.classList.remove('active');
+                    indicator.classList.add('completed');
+                } else if (i === sectionNum) {
+                    indicator.classList.remove('completed');
+                    indicator.classList.add('active');
+                } else {
+                    indicator.classList.remove('active', 'completed');
+                }
             }
         }
         
@@ -1436,11 +1539,29 @@
         @endif
     });
 
+    // VIN/HIN type selector: update label and placeholder
+    document.querySelectorAll('input[name="vin_hin_type"]').forEach(function(radio) {
+        radio.addEventListener('change', function() {
+            const label = document.getElementById('vin_hin_label');
+            const input = document.getElementById('vin_hin');
+            if (this.value === 'hin') {
+                if (label) label.textContent = 'HIN Number';
+                if (input) input.placeholder = 'Enter HIN (12 characters)';
+                if (input) input.maxLength = 12;
+            } else {
+                if (label) label.textContent = 'VIN Number';
+                if (input) input.placeholder = 'Enter VIN (17 characters)';
+                if (input) input.maxLength = 17;
+            }
+        });
+    });
+
     // VIN/HIN Decoder
     document.getElementById('searchVinBtn').addEventListener('click', function() {
         const vinHin = document.getElementById('vin_hin').value.trim().toUpperCase();
+        const readerType = document.querySelector('input[name="vin_hin_type"]:checked')?.value || 'vin';
         if (!vinHin) {
-            alert('Please enter a VIN or HIN');
+            alert(readerType === 'hin' ? 'Please enter a HIN' : 'Please enter a VIN');
             return;
         }
 
@@ -1448,13 +1569,14 @@
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Searching...';
 
+        const readerType = document.querySelector('input[name="vin_hin_type"]:checked')?.value || 'vin';
         fetch('{{ route("seller.listings.decode-vin-hin") }}', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
             },
-            body: JSON.stringify({ vin_hin: vinHin })
+            body: JSON.stringify({ vin_hin: vinHin, reader_type: readerType })
         })
         .then(response => response.json())
         .then(data => {

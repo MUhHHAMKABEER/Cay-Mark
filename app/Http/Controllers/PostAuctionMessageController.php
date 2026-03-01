@@ -166,4 +166,19 @@ class PostAuctionMessageController extends Controller
     {
         return PostAuctionOps::confirmPickupWithPin($request, $threadId);
     }
+
+    /**
+     * Seller: Update contact phone (optional, for coordination once buyer has provided theirs).
+     */
+    public function updateSellerPhone(Request $request, $threadId)
+    {
+        $user = Auth::user();
+        $thread = PostAuctionThread::findOrFail($threadId);
+        if ($user->id !== $thread->seller_id) {
+            abort(403, 'Only the seller can update contact phone.');
+        }
+        $request->validate(['seller_contact_phone' => 'nullable|string|max:32']);
+        $thread->update(['seller_contact_phone' => $request->seller_contact_phone ?: null]);
+        return back()->with('success', 'Contact number updated.');
+    }
 }

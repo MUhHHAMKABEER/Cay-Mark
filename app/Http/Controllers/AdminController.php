@@ -20,6 +20,7 @@ use App\Http\Requests\AdminRejectListingRequest;
 use App\Http\Requests\AdminUpdatePayoutStatusRequest;
 use App\Http\Requests\AdminResolveDefaultRequest;
 use App\Http\Requests\AdminCloseUnpaidAuctionRequest;
+use App\Models\AdminActivityLog;
 use App\Services\Admin\AdminActionHub;
 
 class AdminController extends Controller
@@ -908,7 +909,9 @@ class AdminController extends Controller
             'is_restricted' => true,
             'restriction_reason' => 'Account banned by admin',
         ]);
-        
+
+        AdminActivityLog::log('user.banned', 'user', (int) $user->id);
+
         return back()->with('success', 'User banned successfully.');
     }
 
@@ -952,7 +955,9 @@ class AdminController extends Controller
         } catch (\Exception $e) {
             \Log::error('Failed to send approval email: ' . $e->getMessage());
         }
-        
+
+        AdminActivityLog::log('listing.approved', 'listing', (int) $listing->id, null, ['item_number' => $listing->item_number]);
+
         return back()->with('success', 'Listing approved successfully. Item Number: ' . $listing->item_number);
     }
 
@@ -963,15 +968,21 @@ class AdminController extends Controller
 
     public function releasePayment(Payment $payment)
     {
+        $oldStatus = $payment->status;
         $payment->update(['status' => 'completed']);
-        
+
+        AdminActivityLog::log('payment.released', 'payment', (int) $payment->id, ['status' => $oldStatus], ['status' => 'completed']);
+
         return back()->with('success', 'Payment released successfully.');
     }
 
     public function holdPayment(Payment $payment)
     {
+        $oldStatus = $payment->status;
         $payment->update(['status' => 'held']);
-        
+
+        AdminActivityLog::log('payment.held', 'payment', (int) $payment->id, ['status' => $oldStatus], ['status' => 'held']);
+
         return back()->with('success', 'Payment held successfully.');
     }
 

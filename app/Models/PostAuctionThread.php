@@ -14,6 +14,7 @@ class PostAuctionThread extends Model
         'listing_id',
         'buyer_id',
         'seller_id',
+        'seller_contact_phone',
         'is_unlocked',
         'unlocked_at',
         'pickup_confirmed',

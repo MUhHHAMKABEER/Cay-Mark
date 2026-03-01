@@ -32,7 +32,7 @@ class SellerDashboardController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        $activeTab = $request->get('tab', 'user');
+        $activeTab = $request->get('tab', 'dashboard');
 
         // Get all data using service
         $dashboardData = $this->dashboardService->getDashboardData($user);

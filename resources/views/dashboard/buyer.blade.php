@@ -194,6 +194,18 @@
                                 <p class="text-xs text-gray-400 mt-1.5">Display name on your account</p>
                             </div>
 
+                            <!-- Phone Number -->
+                            <div class="group">
+                                <label class="flex items-center gap-2 text-sm font-semibold text-gray-600 mb-2">
+                                    <span class="material-icons-round text-gray-400 text-lg group-focus-within:text-blue-600 transition-colors">phone</span>
+                                    Phone Number
+                                </label>
+                                <div class="flex items-center gap-3 rounded-xl bg-slate-50/80 border border-gray-200 px-4 py-3.5">
+                                    <span class="text-gray-900 font-medium">{{ $user->phone ?? '—' }}</span>
+                                </div>
+                                <p class="text-xs text-gray-400 mt-1.5">Registered phone number</p>
+                            </div>
+
                             <!-- Account Type -->
                             <div class="group">
                                 <label class="flex items-center gap-2 text-sm font-semibold text-gray-600 mb-2">
@@ -204,6 +216,33 @@
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-semibold bg-blue-100 text-blue-800">Buyer</span>
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- Uploaded Documents -->
+                        <div class="pt-2 border-t border-gray-100">
+                            <label class="flex items-center gap-2 text-sm font-semibold text-gray-600 mb-3">
+                                <span class="material-icons-round text-gray-400 text-lg">folder_open</span>
+                                Uploaded Documents
+                            </label>
+                            @if(isset($documents) && $documents->count() > 0)
+                                <div class="space-y-3">
+                                    @foreach($documents as $doc)
+                                        <div class="flex items-center justify-between rounded-xl bg-slate-50/80 border border-gray-200 px-4 py-3">
+                                            <span class="text-gray-900 font-medium">{{ ucfirst(str_replace('_', ' ', $doc->doc_type ?? 'Document')) }}</span>
+                                            @if($doc->path ?? null)
+                                                <a href="{{ asset('storage/' . $doc->path) }}" target="_blank" rel="noopener" class="text-blue-600 hover:text-blue-800 text-sm font-medium">View</a>
+                                            @else
+                                                <span class="text-gray-400 text-sm">—</span>
+                                            @endif
+                                        </div>
+                                    @endforeach
+                                </div>
+                                <p class="text-xs text-gray-400 mt-2">Documents uploaded during registration. To update, contact support.</p>
+                            @else
+                                <div class="rounded-xl border-2 border-dashed border-gray-200 bg-gray-50/50 p-6 text-center">
+                                    <p class="text-gray-500 text-sm">No documents uploaded yet.</p>
+                                </div>
+                            @endif
                         </div>
 
                         <!-- Email (editable) -->
@@ -626,6 +665,8 @@
                                 $msg = $d['message'] ?? $d['title'] ?? 'Notification';
                                 $type = $d['type'] ?? 'info';
                                 $isUnread = !$notification->read_at;
+                                $link = $d['link'] ?? null;
+                                $actionLabel = $d['action_label'] ?? 'View details';
                                 
                                 // Icon mapping based on type
                                 $iconMap = [
@@ -634,6 +675,7 @@
                                     'win' => 'celebration',
                                     'payment' => 'payment',
                                     'auction' => 'schedule',
+                                    'suspicious_login' => 'security',
                                     'default' => 'notifications'
                                 ];
                                 $icon = $iconMap[$type] ?? $iconMap['default'];
@@ -644,6 +686,7 @@
                                     'outbid' => ['bg' => 'bg-amber-50', 'border' => 'border-amber-200', 'icon' => 'text-amber-600', 'dot' => 'bg-amber-600'],
                                     'win' => ['bg' => 'bg-emerald-50', 'border' => 'border-emerald-200', 'icon' => 'text-emerald-600', 'dot' => 'bg-emerald-600'],
                                     'payment' => ['bg' => 'bg-purple-50', 'border' => 'border-purple-200', 'icon' => 'text-purple-600', 'dot' => 'bg-purple-600'],
+                                    'suspicious_login' => ['bg' => 'bg-red-50', 'border' => 'border-red-200', 'icon' => 'text-red-600', 'dot' => 'bg-red-600'],
                                     'default' => ['bg' => 'bg-gray-50', 'border' => 'border-gray-200', 'icon' => 'text-gray-600', 'dot' => 'bg-gray-600']
                                 ];
                                 $colors = $colorMap[$type] ?? $colorMap['default'];
@@ -652,7 +695,8 @@
                                  data-notification-id="{{ $notification->id }}"
                                  data-is-unread="{{ $isUnread ? 'true' : 'false' }}"
                                  data-read-status="{{ $isUnread ? 'unread' : 'read' }}"
-                                 @if($isUnread) onclick="markNotificationAsRead('{{ $notification->id }}', this)" @endif>
+                                 data-link="{{ $link ?? '' }}"
+                                 onclick="handleNotificationClick(this)">
                                 <div class="flex items-start gap-4">
                                     <!-- Icon -->
                                     <div class="flex-shrink-0 w-12 h-12 rounded-xl {{ $isUnread ? $colors['bg'] : 'bg-gray-100' }} flex items-center justify-center border-2 {{ $isUnread ? $colors['border'] : 'border-gray-200' }}">
@@ -662,13 +706,21 @@
                                     <!-- Content -->
                                     <div class="flex-1 min-w-0">
                                         <div class="flex items-start justify-between gap-3">
-                                    <div class="flex-1">
+                                            <div class="flex-1">
                                                 <p class="text-gray-900 font-semibold leading-snug {{ $isUnread ? 'text-gray-900' : 'text-gray-700' }}">{{ $msg }}</p>
-                                                <div class="flex items-center gap-2 mt-2">
+                                                <div class="flex items-center gap-2 mt-2 flex-wrap">
                                                     <span class="text-xs text-gray-500 font-medium">{{ $notification->created_at->format('M d, Y') }}</span>
                                                     <span class="text-gray-300">•</span>
                                                     <span class="text-xs text-gray-500">{{ $notification->created_at->diffForHumans() }}</span>
                                                 </div>
+                                                @if($link)
+                                                    <div class="mt-3">
+                                                        <span class="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 group-hover:text-blue-800">
+                                                            {{ $actionLabel }}
+                                                            <span class="material-icons-round text-lg">arrow_forward</span>
+                                                        </span>
+                                                    </div>
+                                                @endif
                                             </div>
                                             @if($isUnread)
                                                 <div class="flex-shrink-0 unread-dot">
@@ -957,6 +1009,31 @@ function initializeCharts() {
     var ctx3 = document.getElementById('biddingActivityChart');
     if (ctx3) {
         new Chart(ctx3, { type: 'line', data: { labels: bidData.labels || [], datasets: [{ label: 'Bid Count', data: bidData.counts || [], borderColor: 'rgb(59, 130, 246)', backgroundColor: 'rgba(59, 130, 246, 0.1)', tension: 0.4, fill: true, yAxisID: 'y' }, { label: 'Bid Amount ($)', data: bidData.amounts || [], borderColor: 'rgb(16, 185, 129)', backgroundColor: 'rgba(16, 185, 129, 0.1)', tension: 0.4, fill: true, yAxisID: 'y1' }] }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, plugins: { legend: { position: 'top' } }, scales: { y: { type: 'linear', position: 'left', beginAtZero: true, title: { display: true, text: 'Bid Count' }, grid: { drawOnChartArea: true } }, y1: { type: 'linear', position: 'right', beginAtZero: true, title: { display: true, text: 'Amount ($)' }, grid: { drawOnChartArea: false }, ticks: { callback: function(v) { return '$' + v; } } }, x: { grid: { display: false } } } } });
+    }
+}
+
+// Handle notification click: mark as read (if unread) and optionally navigate to link
+function handleNotificationClick(element) {
+    var card = element.closest ? element.closest('.notification-card') : element;
+    if (!card) return;
+    var notificationId = card.dataset.notificationId;
+    var link = (card.dataset.link || '').trim();
+    var isUnread = card.dataset.isUnread === 'true';
+    if (link) {
+        if (isUnread) {
+            var csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || document.querySelector('input[name="_token"]')?.value || '';
+            fetch('/buyer/notifications/' + notificationId + '/mark-read', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+                body: JSON.stringify({})
+            }).then(function() { window.location.href = link; }).catch(function() { window.location.href = link; });
+        } else {
+            window.location.href = link;
+        }
+        return;
+    }
+    if (isUnread) {
+        markNotificationAsRead(notificationId, card);
     }
 }
 

@@ -23,6 +23,7 @@
         $dashboardRoute = 'admin.dashboard';
     } elseif ($role === 'seller') {
         $menuItems = [
+            ['route' => 'welcome', 'icon' => 'home', 'label' => 'Home'],
             ['route' => 'dashboard.seller', 'icon' => 'dashboard', 'label' => 'Dashboard', 'tab' => 'dashboard'],
             ['route' => 'dashboard.seller', 'icon' => 'person', 'label' => 'User', 'tab' => 'user'],
             ['route' => 'seller.listings.create', 'icon' => 'add_box', 'label' => 'Submission'],
@@ -408,7 +409,7 @@
 
 <aside class="unified-sidebar">
     <a href="{{ route('welcome') }}" class="logo flex items-center justify-center gap-2 no-underline">
-        <img src="{{ asset(config('logos.sidebar', 'Logos/1.png')) }}" alt="CayMark" class="h-10 w-auto max-w-full object-contain" />
+        <img src="{{ asset(config('logos.sidebar', 'Logos/Caymark Logo.png')) }}" alt="CayMark" class="h-14 w-auto max-w-full object-contain" />
         <h1 class="m-0 text-lg font-bold text-gray-900"><span>CayMark</span></h1>
     </a>
 

@@ -22,11 +22,18 @@
             </div>
         </div>
 
-        <!-- Security Notice -->
-        <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded">
-            <p class="text-sm text-red-800">
-                <strong>Important:</strong> Exchanging phone numbers, meeting outside of CayMark, or attempting any transaction outside the platform is prohibited.
-            </p>
+        <!-- Messaging & Pickup Restrictions (visible and clear) -->
+        <div class="bg-amber-50 border-2 border-amber-300 rounded-xl p-5 mb-6">
+            <h3 class="text-base font-bold text-amber-900 mb-2 flex items-center gap-2">
+                <span class="material-icons-round text-amber-700">info</span>
+                Messaging & Pickup Rules
+            </h3>
+            <ul class="text-sm text-amber-900 space-y-1 list-disc list-inside">
+                <li>All coordination must stay on this thread. Do not move to external chat or email.</li>
+                <li>Pickup <strong>date</strong>, <strong>time</strong>, and <strong>location</strong> must be provided by the seller and agreed here.</li>
+                <li>Exchanging phone numbers or meeting outside of CayMark for this transaction is prohibited.</li>
+                <li>Attempting any payment or transaction outside the platform is prohibited.</li>
+            </ul>
         </div>
 
         <!-- Buyer: Pickup PIN Display -->
@@ -94,11 +101,35 @@
             </div>
         @endif
 
+        <!-- Seller: Your contact number (optional, for coordination once buyer has shared theirs) -->
+        @if($isSeller)
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-2">Your Contact Number (Optional)</h2>
+                <p class="text-sm text-gray-600 mb-4">You may add a phone number here for pickup coordination once the buyer has provided theirs. Only the buyer for this thread can see it.</p>
+                <form action="{{ route('post-auction.seller-phone', $thread->id) }}" method="POST" class="flex flex-wrap items-end gap-3">
+                    @csrf
+                    <div class="flex-1 min-w-[200px]">
+                        <input type="tel" name="seller_contact_phone" value="{{ old('seller_contact_phone', $thread->seller_contact_phone) }}" 
+                               placeholder="e.g. (242) 555-1234" class="w-full rounded-lg border-gray-300">
+                    </div>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium">Save</button>
+                </form>
+            </div>
+        @endif
+
+        <!-- Buyer: Seller contact number (when set) -->
+        @if($isBuyer && $thread->seller_contact_phone)
+            <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+                <p class="text-sm font-semibold text-blue-900 mb-1">Seller contact number for this pickup</p>
+                <p class="text-blue-800 font-mono">{{ $thread->seller_contact_phone }}</p>
+            </div>
+        @endif
+
         <!-- Seller: Send Pickup Details Form -->
         @if($isSeller && (!$thread->latestPickupDetail || $thread->latestPickupDetail->status === 'change_requested'))
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
                 <h2 class="text-xl font-bold text-gray-900 mb-4">Send Pickup Details</h2>
-                
+                <p class="text-sm text-gray-600 mb-4">Provide <strong>pickup date</strong>, <strong>time</strong>, and <strong>location</strong> so the buyer can confirm.</p>
                 <form action="{{ route('post-auction.send-pickup-details', $thread->id) }}" method="POST">
                     @csrf
                     

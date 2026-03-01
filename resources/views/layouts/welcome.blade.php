@@ -306,79 +306,6 @@
     {{-- Unified Header Component --}}
     @include('partials.unified-header')
 
-    {{-- Legacy Header (commented out - using unified header above) --}}
-    {{-- <header class="header-nav sticky top-0 z-50" id="mainHeader">
-        <div class="container px-4 py-3 flex justify-between items-center">
-            <!-- Logo -->
-            <div class="flex items-center">
-                <a href="{{ url('/') }}" class="flex items-center transition-transform hover:scale-105 duration-300">
-                    <img alt="CayMark logo" class="h-20" src="{{ asset(config('logos.header', 'Logos/1.png')) }}" />
-                </a>
-            </div>
-
-            <!-- User Actions -->
-            <div class="hidden md:flex items-center space-x-6">
-                <div class="search-container relative max-w-md w-full">
-                    <input type="text" placeholder="Search cars, boats, or equipment..."
-                        class="w-full rounded-full border border-gray-300 bg-white px-4 py-2 pr-12 text-sm text-gray-700 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 transition-all duration-300">
-                    <button
-                        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-blue-600 transition-colors duration-300">
-                        <span class="material-icons">search</span>
-                    </button>
-                </div>
-
-                @guest
-                <!-- Guest: Show Login & Register -->
-                <a href="{{ route('login') }}"
-                    class="nav-link text-white hover:text-blue-300 transition-colors flex items-center">
-                    <span class="material-icons mr-1">person_outline</span> Login
-                </a>
-
-                <a href="{{ route('register') }}"
-                    class="bg-gradient-to-r from-blue-600 to-blue-800 text-white font-bold py-2 px-6 rounded-full hover:from-blue-700 hover:to-blue-900 transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105">
-                    Register
-                </a>
-                @else
-                <!-- Authenticated Buyer: Show Dropdown -->
-                <div class="relative">
-                    <button id="userMenuBtn"
-                        class="flex items-center bg-gradient-to-r from-blue-600 to-blue-800 text-white font-semibold px-5 py-2 rounded-full shadow-md hover:shadow-lg hover:from-blue-700 hover:to-blue-900 transition-all duration-300 transform hover:scale-105">
-                        <span class="material-icons mr-2">account_circle</span>
-                        {{ Auth::user()->name }}
-                        <span class="material-icons ml-2 text-sm transition-transform duration-300">expand_more</span>
-                    </button>
-
-                    <!-- Dropdown -->
-                    <div id="userMenuDropdown"
-                        class="user-dropdown absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg overflow-hidden border border-gray-100 z-50">
-                        <a href="{{ route('dashboard.buyer') }}"
-                            class="block px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all duration-300 flex items-center">
-                            <span class="material-icons mr-2 text-sm">dashboard</span>
-                            Dashboard
-                        </a>
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <button type="submit"
-                                class="w-full text-left block px-4 py-3 text-gray-700 hover:bg-red-50 hover:text-red-600 transition-all duration-300 flex items-center">
-                                <span class="material-icons mr-2 text-sm">logout</span>
-                                Logout
-                            </button>
-                        </form>
-                    </div>
-                </div>
-                @endguest
-            </div>
-
-            <!-- Mobile Menu Button -->
-            <button @click="mobileMenuOpen = !mobileMenuOpen" class="md:hidden text-white transition-transform duration-300 hover:scale-110">
-                <span class="material-icons text-3xl">menu</span>
-            </button>
-        </div>
-
-        {{-- Main Menu (second header) --}}
-
-
-        {{-- Mobile menu (alpine) --}}
         <div x-show="mobileMenuOpen" x-transition class="mobile-menu md:hidden bg-white py-4 px-4 shadow-lg">
             <div class="flex flex-col space-y-4">
                 <a href="{{ url('/') }}"
@@ -426,7 +353,7 @@
                 </div>
             </div>
         </div>
-    </header> --}}
+    </header> 
 
     {{-- Main content area (each page will fill this) --}}
     <main>
@@ -447,7 +374,7 @@
                 <div class="footer-column">
                     <div class="mb-6">
                         <a href="{{ route('welcome') }}" class="inline-block">
-                            <img src="{{ asset('Logos/2.png') }}" alt="CayMark" class="h-16 md:h-20 w-auto object-contain" />
+                            <img src="{{ asset(config('logos.footer', 'Logos/Caymark Logo.png')) }}" alt="CayMark" class="h-20 md:h-24 w-auto object-contain" />
                         </a>
                     </div>
                     <p class="mb-6 leading-relaxed text-gray-300 text-base">

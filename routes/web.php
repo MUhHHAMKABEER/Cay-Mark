@@ -100,9 +100,9 @@ Route::get('/video-guide', function () {
     return view('video-guide');
 })->name('video-guide');
 
-Route::get('/rules-policies', function () {
-    return view('rules-policies');
-})->name('rules-policies');
+Route::get('/policy', function () {
+    return view('policy');
+})->name('policy');
 
 // Tow Provider directory and signup (public)
 Route::get('/tow-providers', [App\Http\Controllers\TowProviderController::class, 'index'])->name('tow-provider.index');
@@ -131,6 +131,7 @@ Route::middleware(['auth',
     Route::post('/post-auction/change-request/{changeRequestId}/respond', [App\Http\Controllers\PostAuctionMessageController::class, 'respondToChangeRequest'])->name('post-auction.respond-change');
     Route::post('/post-auction/thread/{threadId}/authorize-third-party', [App\Http\Controllers\PostAuctionMessageController::class, 'authorizeThirdPartyPickup'])->name('post-auction.authorize-third-party');
     Route::post('/post-auction/thread/{threadId}/confirm-pickup', [App\Http\Controllers\PostAuctionMessageController::class, 'confirmPickupWithPin'])->name('post-auction.confirm-pickup');
+    Route::post('/post-auction/thread/{threadId}/seller-phone', [App\Http\Controllers\PostAuctionMessageController::class, 'updateSellerPhone'])->name('post-auction.seller-phone');
     
     // Payment Checkout (Path A: Single item, Path B: Multiple items)
     Route::get('/payment/checkout/{invoiceId}', [App\Http\Controllers\Buyer\PaymentController::class, 'checkoutSingle'])->name('buyer.payment.checkout-single');
@@ -225,8 +226,8 @@ Route::get('/listings/models/{make}', [ListingController::class, 'getModels'])->
 
 
 
-// Admin Routes
-Route::prefix('admin')->group(function () {
+// Admin Routes (auth + role=admin required)
+Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
     Route::get('/users', [AdminController::class, 'userManagement'])->name('admin.users');
     Route::get('/memberships', [AdminController::class, 'membershipManagement'])->name('admin.memberships');
