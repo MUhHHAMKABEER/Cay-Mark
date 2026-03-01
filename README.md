@@ -185,20 +185,7 @@ routes/
 
 ---
 
-## Environment variables (main)
 
-| Variable     | Description |
-|-------------|-------------|
-| `APP_NAME`  | Application name (e.g. CayMark) |
-| `APP_URL`   | Base URL |
-| `APP_KEY`   | Generated with `php artisan key:generate` |
-| `NOINDEX`   | Set to `true` to add noindex meta and block crawlers (e.g. staging) |
-| `DB_*`      | Database connection and credentials |
-| `SESSION_DRIVER` | e.g. `database` |
-| `QUEUE_CONNECTION` | e.g. `database` (for jobs) |
-| `MAIL_*`    | Mail configuration (e.g. for notifications) |
-
----
 
 ## Staging / SEO
 
