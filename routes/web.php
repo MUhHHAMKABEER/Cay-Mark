@@ -34,6 +34,7 @@ use App\Http\Controllers\Buyer\MarketplaceController;
 use App\Http\Controllers\Buyer\BuyerMessageController;
 use App\Http\Controllers\Buyer\NotificationController;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\Auth\TwoFactorController;
 
 
 
@@ -225,8 +226,15 @@ Route::post('/finish-registration/complete', [RegisteredUserController::class, '
 Route::get('/listings/models/{make}', [ListingController::class, 'getModels'])->name('seller.listings.getModels');
 
 
+// Admin 2FA (auth only – no admin middleware so admin can complete 2FA before accessing panel)
+Route::middleware('auth')->prefix('admin')->group(function () {
+    Route::get('2fa/challenge', [TwoFactorController::class, 'showChallenge'])->name('admin.2fa.challenge');
+    Route::post('2fa/verify', [TwoFactorController::class, 'verifyChallenge'])->name('admin.2fa.verify');
+    Route::get('2fa/setup', [TwoFactorController::class, 'showSetup'])->name('admin.2fa.setup');
+    Route::post('2fa/confirm', [TwoFactorController::class, 'confirmSetup'])->name('admin.2fa.confirm');
+});
 
-// Admin Routes (auth + role=admin required)
+// Admin Routes (auth + role=admin required, 2FA verified)
 Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
     Route::get('/users', [AdminController::class, 'userManagement'])->name('admin.users');

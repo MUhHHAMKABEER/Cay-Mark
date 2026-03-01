@@ -19,7 +19,7 @@
     .hero-gradient-overlay {
         background: linear-gradient(135deg, rgba(0, 0, 0, 0.75) 0%, rgba(30, 58, 138, 0.65) 50%, rgba(0, 0, 0, 0.5) 100%);
     }
-    
+
     .glass-card {
         background: rgba(255, 255, 255, 0.95);
         backdrop-filter: blur(20px);
@@ -27,13 +27,13 @@
         border: 1px solid rgba(255, 255, 255, 0.3);
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
     }
-    
+
     .auction-card {
         transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         border: 1px solid rgba(229, 231, 235, 0.8);
         position: relative;
     }
-    
+
     .auction-card::before {
         content: '';
         position: absolute;
@@ -47,28 +47,28 @@
         z-index: 0;
         border-radius: 1rem;
     }
-    
+
     .auction-card:hover::before {
         opacity: 1;
     }
-    
+
     .auction-card:hover {
         transform: translateY(-12px) scale(1.03);
         box-shadow: 0 25px 50px rgba(59, 130, 246, 0.25);
         border-color: rgba(59, 130, 246, 0.5);
     }
-    
+
     .countdown-badge {
         background: linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(30, 58, 138, 0.9) 100%);
         backdrop-filter: blur(10px);
         border: 1px solid rgba(255, 255, 255, 0.2);
     }
-    
+
     .section-title {
         position: relative;
         display: inline-block;
     }
-    
+
     .section-title::after {
         content: '';
         position: absolute;
@@ -81,19 +81,19 @@
         border-radius: 3px;
         animation: title-underline 3s ease-in-out infinite;
     }
-    
+
     @keyframes title-underline {
         0%, 100% { width: 80px; }
         50% { width: 120px; }
     }
-    
+
     .highlight-card {
         transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         position: relative;
         overflow: hidden;
         border: 2px solid transparent;
     }
-    
+
     .highlight-card::before {
         content: '';
         position: absolute;
@@ -105,11 +105,11 @@
         transition: left 0.6s;
         z-index: 1;
     }
-    
+
     .highlight-card:hover::before {
         left: 100%;
     }
-    
+
     .highlight-card::after {
         content: '';
         position: absolute;
@@ -120,23 +120,23 @@
         transition: opacity 0.5s;
         z-index: -1;
     }
-    
+
     .highlight-card:hover::after {
         opacity: 1;
     }
-    
+
     .highlight-card:hover {
         transform: translateY(-16px) scale(1.02);
         box-shadow: 0 30px 60px rgba(59, 130, 246, 0.3);
         border-color: transparent;
     }
-    
+
     .btn-modern {
         position: relative;
         overflow: hidden;
         transition: all 0.3s ease;
     }
-    
+
     .btn-modern::before {
         content: '';
         position: absolute;
@@ -149,17 +149,17 @@
         transform: translate(-50%, -50%);
         transition: width 0.6s, height 0.6s;
     }
-    
+
     .btn-modern:hover::before {
         width: 300px;
         height: 300px;
     }
-    
+
     .btn-modern:hover {
         transform: translateY(-2px);
         box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
     }
-    
+
     .search-box-modern {
         background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(249, 250, 251, 0.98) 100%);
         box-shadow: 0 15px 50px rgba(0, 0, 0, 0.1);
@@ -167,7 +167,7 @@
         position: relative;
         overflow: hidden;
     }
-    
+
     .search-box-modern::before {
         content: '';
         position: absolute;
@@ -178,18 +178,18 @@
         background: linear-gradient(45deg, transparent, rgba(59, 130, 246, 0.05), transparent);
         animation: search-shimmer 3s infinite;
     }
-    
+
     @keyframes search-shimmer {
         0% { transform: translate(-50%, -50%) rotate(0deg); }
         100% { transform: translate(-50%, -50%) rotate(360deg); }
     }
-    
+
     .vehicle-card {
         transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         position: relative;
         overflow: hidden;
     }
-    
+
     .vehicle-card::after {
         content: '';
         position: absolute;
@@ -202,16 +202,16 @@
         transition: opacity 0.4s;
         z-index: 1;
     }
-    
+
     .vehicle-card:hover::after {
         opacity: 1;
     }
-    
+
     .vehicle-card:hover {
         transform: translateY(-10px) scale(1.02);
         box-shadow: 0 25px 50px rgba(59, 130, 246, 0.2);
     }
-    
+
     .register-form-modern {
         background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(249, 250, 251, 0.98) 100%);
         box-shadow: 0 25px 70px rgba(0, 0, 0, 0.2);
@@ -219,7 +219,7 @@
         position: relative;
         overflow: hidden;
     }
-    
+
     .register-form-modern::before {
         content: '';
         position: absolute;
@@ -235,33 +235,33 @@
         z-index: -1;
         animation: border-glow 3s ease infinite;
     }
-    
+
     @keyframes border-glow {
         0%, 100% { background-position: 0% 50%; }
         50% { background-position: 100% 50%; }
     }
-    
+
     .register-form-modern:hover::before {
         opacity: 0.3;
     }
-    
+
     .newsletter-modern {
         background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(249, 250, 251, 0.98) 100%);
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
         border: 2px solid rgba(255, 255, 255, 0.3);
     }
-    
+
     .info-card-modern {
         background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(249, 250, 251, 0.98) 100%);
         box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
         border: 2px solid rgba(229, 231, 235, 0.5);
         position: relative;
     }
-    
+
     .pulse-dot {
         animation: pulse-dot 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
     }
-    
+
     @keyframes pulse-dot {
         0%, 100% {
             opacity: 1;
@@ -272,7 +272,7 @@
             transform: scale(1.2);
         }
     }
-    
+
     .gradient-text {
         background: linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #1e40af 100%);
         -webkit-background-clip: text;
@@ -281,20 +281,20 @@
         animation: gradient-shift 3s ease infinite;
         background-size: 200% 200%;
     }
-    
+
     @keyframes gradient-shift {
         0%, 100% { background-position: 0% 50%; }
         50% { background-position: 100% 50%; }
     }
-    
+
     .section-bg-pattern {
-        background-image: 
+        background-image:
             radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.05) 0%, transparent 50%),
             radial-gradient(circle at 80% 80%, rgba(37, 99, 235, 0.05) 0%, transparent 50%),
             radial-gradient(circle at 50% 20%, rgba(30, 64, 175, 0.03) 0%, transparent 50%);
         position: relative;
     }
-    
+
     /* Floating Elements */
     .floating-shape {
         position: absolute;
@@ -302,7 +302,7 @@
         opacity: 0.1;
         animation: float 20s infinite ease-in-out;
     }
-    
+
     @keyframes float {
         0%, 100% {
             transform: translate(0, 0) rotate(0deg);
@@ -317,7 +317,7 @@
             transform: translate(20px, 30px) rotate(270deg);
         }
     }
-    
+
     .floating-shape-1 {
         width: 200px;
         height: 200px;
@@ -326,7 +326,7 @@
         left: 5%;
         animation-delay: 0s;
     }
-    
+
     .floating-shape-2 {
         width: 150px;
         height: 150px;
@@ -335,7 +335,7 @@
         right: 10%;
         animation-delay: 2s;
     }
-    
+
     .floating-shape-3 {
         width: 100px;
         height: 100px;
@@ -344,7 +344,7 @@
         left: 15%;
         animation-delay: 4s;
     }
-    
+
     /* Animated Background Particles */
     .particle {
         position: absolute;
@@ -354,7 +354,7 @@
         border-radius: 50%;
         animation: particle-float 15s infinite ease-in-out;
     }
-    
+
     @keyframes particle-float {
         0%, 100% {
             transform: translateY(0) translateX(0);
@@ -371,12 +371,12 @@
             opacity: 0;
         }
     }
-    
+
     /* Text Animations */
     .fade-in-up {
         animation: fadeInUp 0.8s ease-out;
     }
-    
+
     @keyframes fadeInUp {
         from {
             opacity: 0;
@@ -387,40 +387,40 @@
             transform: translateY(0);
         }
     }
-    
+
     .fade-in-delay-1 {
         animation: fadeInUp 0.8s ease-out 0.2s both;
     }
-    
+
     .fade-in-delay-2 {
         animation: fadeInUp 0.8s ease-out 0.4s both;
     }
-    
+
     .fade-in-delay-3 {
         animation: fadeInUp 0.8s ease-out 0.6s both;
     }
-    
+
     /* Glow Effects */
     .glow-blue {
         box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
     }
-    
+
     .glow-blue:hover {
         box-shadow: 0 0 30px rgba(59, 130, 246, 0.8);
     }
-    
+
     /* Section Dividers */
     .section-divider {
         height: 1px;
         background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.3), transparent);
         margin: 60px 0;
     }
-    
+
     /* Enhanced Card Hover */
     .card-lift {
         transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    
+
     .card-lift:hover {
         transform: translateY(-8px);
         box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
@@ -433,14 +433,14 @@
     <div class="floating-shape floating-shape-1"></div>
     <div class="floating-shape floating-shape-2"></div>
     <div class="floating-shape floating-shape-3"></div>
-    
+
     <!-- Animated Particles -->
     <div class="particle" style="left: 10%; animation-delay: 0s;"></div>
     <div class="particle" style="left: 30%; animation-delay: 2s;"></div>
     <div class="particle" style="left: 50%; animation-delay: 4s;"></div>
     <div class="particle" style="left: 70%; animation-delay: 6s;"></div>
     <div class="particle" style="left: 90%; animation-delay: 8s;"></div>
-    
+
     <div class="absolute inset-0">
         <!-- Slide 1 -->
         <div x-show="currentSlide === 0" x-transition:enter="transition ease-out duration-700" x-transition:enter-start="opacity-0 scale-110" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-700" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-110" class="absolute inset-0 bg-cover bg-center" style="background-image: url('{{ asset('images/banner-1.jpg') }}');">
@@ -455,7 +455,7 @@
             <div class="absolute inset-0 hero-gradient-overlay"></div>
         </div>
     </div>
-    
+
     <!-- Enhanced Banner Content -->
     <div class="relative z-10 h-full flex items-center">
         <div class="container mx-auto px-4">
@@ -486,7 +486,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Enhanced Carousel Controls -->
     <button @click="currentSlide = (currentSlide - 1 + slides) % slides" class="absolute left-6 top-1/2 -translate-y-1/2 z-20 bg-white/90 backdrop-blur-md text-gray-800 hover:text-blue-600 p-4 rounded-full transition-all hover:scale-110 shadow-2xl border-2 border-white/50 hover:border-blue-500">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -498,14 +498,14 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
         </svg>
     </button>
-    
+
     <!-- Carousel Indicators -->
     <div class="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex space-x-2">
         <button @click="currentSlide = 0" :class="currentSlide === 0 ? 'bg-white w-8' : 'bg-white/40 w-2'" class="h-2 rounded-full transition-all duration-300"></button>
         <button @click="currentSlide = 1" :class="currentSlide === 1 ? 'bg-white w-8' : 'bg-white/40 w-2'" class="h-2 rounded-full transition-all duration-300"></button>
         <button @click="currentSlide = 2" :class="currentSlide === 2 ? 'bg-white w-8' : 'bg-white/40 w-2'" class="h-2 rounded-full transition-all duration-300"></button>
     </div>
-    
+
     <!-- Auto-rotate script -->
     <script>
         setInterval(() => {
@@ -514,7 +514,7 @@
                 if (component) component.currentSlide = (component.currentSlide + 1) % component.slides;
             }
         }, 6000);
-        
+
         // Countdown Timer Function for Homepage
         function updateHomepageCountdowns() {
             document.querySelectorAll('[id^="countdown-home-"]').forEach(element => {
@@ -522,7 +522,7 @@
                 const endTime = new Date(element.getAttribute('data-end-time'));
                 const now = new Date();
                 const diff = Math.max(0, Math.floor((endTime - now) / 1000));
-                
+
                 // Hide LIVE badge if expired
                 const liveBadge = document.getElementById('live-badge-' + listingId);
                 if (liveBadge) {
@@ -532,29 +532,29 @@
                         liveBadge.style.display = 'flex';
                     }
                 }
-                
+
                 if (diff <= 0) {
                     element.innerHTML = '<div class="bg-gray-500/90 backdrop-blur-md text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-xl border border-gray-400/30">Auction Ended</div>';
                     return;
                 }
-                
+
                 const days = Math.floor(diff / 86400);
                 const hours = Math.floor((diff % 86400) / 3600);
                 const minutes = Math.floor((diff % 3600) / 60);
                 const seconds = diff % 60;
-                
+
                 const daysEl = document.getElementById('days-' + listingId);
                 const hoursEl = document.getElementById('hours-' + listingId);
                 const minutesEl = document.getElementById('minutes-' + listingId);
                 const secondsEl = document.getElementById('seconds-' + listingId);
-                
+
                 if (daysEl) daysEl.textContent = String(days).padStart(2, '0');
                 if (hoursEl) hoursEl.textContent = String(hours).padStart(2, '0');
                 if (minutesEl) minutesEl.textContent = String(minutes).padStart(2, '0');
                 if (secondsEl) secondsEl.textContent = String(seconds).padStart(2, '0');
             });
         }
-        
+
         // Update countdown timers every second
         setInterval(updateHomepageCountdowns, 1000);
         updateHomepageCountdowns(); // Initial call
@@ -566,7 +566,7 @@
     <!-- Floating decorative elements -->
     <div class="absolute top-20 right-10 w-32 h-32 bg-blue-100 rounded-full opacity-20 blur-3xl"></div>
     <div class="absolute bottom-20 left-10 w-40 h-40 bg-indigo-100 rounded-full opacity-20 blur-3xl"></div>
-    
+
     <div class="container mx-auto px-4 relative z-10">
         <div class="flex flex-col md:flex-row justify-between items-center mb-12 fade-in-up">
             <div>
@@ -581,7 +581,7 @@
                 </svg>
             </a>
         </div>
-        
+
         <!-- Grid: 5 cards per row on xl, smaller cards, whole card clickable -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
             @foreach($popularAuctions as $auction)
@@ -641,7 +641,7 @@
     <!-- Decorative elements -->
     <div class="absolute top-10 left-20 w-24 h-24 bg-blue-200 rounded-full opacity-10 blur-2xl"></div>
     <div class="absolute bottom-10 right-20 w-32 h-32 bg-indigo-200 rounded-full opacity-10 blur-2xl"></div>
-    
+
     <div class="container mx-auto px-4 relative z-10">
         <div class="text-center mb-12 fade-in-up">
             <h2 class="text-4xl md:text-5xl font-extrabold text-gray-900 font-heading section-title mb-4 inline-block">
@@ -649,7 +649,7 @@
             </h2>
             <p class="text-gray-600 text-lg mt-6">Find your perfect vehicle with our advanced search</p>
         </div>
-        
+
         <!-- Enhanced Search Filters -->
         <div class="search-box-modern rounded-2xl p-8 mb-12">
             <form action="{{ route('Auction.index') }}" method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -716,7 +716,7 @@
     <div class="absolute bottom-20 right-10 w-48 h-48 bg-white/5 rounded-full blur-3xl"></div>
 
     <div class="container mx-auto px-4 relative z-10">
-        @guest
+
         <div class="max-w-5xl mx-auto register-form-modern rounded-3xl p-10 fade-in-up">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
                 <!-- Left: Registration form -->
@@ -768,63 +768,7 @@
                 </div>
             </div>
         </div>
-        @else
-        <!-- Logged-in: Welcome back + quick actions -->
-        <div class="max-w-4xl mx-auto register-form-modern rounded-3xl p-10 md:p-12 fade-in-up">
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-8">
-                <div class="flex items-center gap-5">
-                    <div class="flex-shrink-0 w-20 h-20 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center shadow-xl">
-                        <span class="text-3xl font-bold text-white">{{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}</span>
-                    </div>
-                    <div>
-                        <p class="text-white/80 text-sm font-medium uppercase tracking-wider mb-1">Welcome back</p>
-                        <h2 class="text-2xl md:text-3xl font-bold text-white">{{ Auth::user()->name }}</h2>
-                        <p class="text-white/70 text-sm mt-1">{{ Auth::user()->email }}</p>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 md:flex md:flex-wrap gap-3">
-                    @if(Auth::user()->role === 'buyer')
-                    <a href="{{ route('dashboard.buyer') }}" class="inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-white text-blue-700 rounded-xl font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 6h6a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6z"/></svg>
-                        Dashboard
-                    </a>
-                    <a href="{{ route('Auction.index') }}" class="inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-white/10 hover:bg-white/20 text-white border border-white/30 rounded-xl font-semibold transition-all">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                        Browse Auctions
-                    </a>
-                    <a href="{{ route('buyer.deposit-withdrawal') }}" class="inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-white/10 hover:bg-white/20 text-white border border-white/30 rounded-xl font-semibold transition-all">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                        Wallet
-                    </a>
-                    <a href="{{ route('dashboard.buyer') }}?tab=user" class="inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-white/10 hover:bg-white/20 text-white border border-white/30 rounded-xl font-semibold transition-all">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                        Account
-                    </a>
-                    @elseif(Auth::user()->role === 'seller')
-                    <a href="{{ route('dashboard.seller') }}" class="inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-white text-blue-700 rounded-xl font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6z"/></svg>
-                        Dashboard
-                    </a>
-                    <a href="{{ route('seller.listings.create') }}" class="inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-white/10 hover:bg-white/20 text-white border border-white/30 rounded-xl font-semibold transition-all">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
-                        Submit Listing
-                    </a>
-                    <a href="{{ route('seller.listings.index') }}" class="inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-white/10 hover:bg-white/20 text-white border border-white/30 rounded-xl font-semibold transition-all">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-                        My Listings
-                    </a>
-                    <a href="{{ route('dashboard.seller') }}?tab=user" class="inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-white/10 hover:bg-white/20 text-white border border-white/30 rounded-xl font-semibold transition-all">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                        Account
-                    </a>
-                    @else
-                    <a href="{{ route('dashboard.buyer') }}" class="inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-white text-blue-700 rounded-xl font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all">Dashboard</a>
-                    <a href="{{ route('Auction.index') }}" class="inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-white/10 hover:bg-white/20 text-white border border-white/30 rounded-xl font-semibold transition-all">Browse Auctions</a>
-                    @endif
-                </div>
-            </div>
-        </div>
-        @endguest
+
     </div>
 </section>
 
@@ -833,7 +777,7 @@
     <!-- Decorative elements -->
     <div class="absolute top-10 right-20 w-40 h-40 bg-blue-100 rounded-full opacity-20 blur-3xl"></div>
     <div class="absolute bottom-10 left-20 w-36 h-36 bg-indigo-100 rounded-full opacity-20 blur-3xl"></div>
-    
+
     <div class="container mx-auto px-4 relative z-10">
         <div class="max-w-5xl mx-auto">
             <div class="text-center mb-12 fade-in-up">
@@ -866,7 +810,7 @@
     <!-- Floating decorative shapes -->
     <div class="absolute top-10 left-10 w-48 h-48 bg-white/5 rounded-full blur-3xl"></div>
     <div class="absolute bottom-10 right-10 w-56 h-56 bg-white/5 rounded-full blur-3xl"></div>
-    
+
     <div class="container mx-auto px-4 relative z-10">
         <div class="max-w-5xl mx-auto">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">

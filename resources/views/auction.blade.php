@@ -459,7 +459,7 @@
 
     <div class="bg-gray-50 text-gray-800" x-data="filterData()" x-init="initFilters()">
 
-        <main class="w-full max-w-5xl mx-auto px-4 py-6">
+        <main class="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
             <!-- Page Header -->
             <div class="mb-6 animate-fade-in">
@@ -765,9 +765,9 @@
                         </div>
                     </template>
 
-                    <!-- Grid View: at least 4 listings visible on desktop -->
+                    <!-- Grid View: use full width – 4–5 columns on large screens -->
                     <div x-show="viewMode === 'grid'"
-                        class="grid-view grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" x-cloak>
+                        class="grid-view grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4" x-cloak>
                         @forelse($auctions as $listing)
                             <div
                                 class="vehicle-card bg-white rounded-xl shadow-sm overflow-hidden flex flex-col h-full animate-bounce-in">

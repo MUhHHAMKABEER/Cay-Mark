@@ -41,9 +41,12 @@ public function store(LoginRequest $request): RedirectResponse
     }
     $role = trim(strtolower($user->role ?? ''));
     
-    // Admin users bypass registration check and go directly to admin dashboard
+    // Admin users must complete 2FA (setup or challenge) before accessing dashboard
     if ($role === 'admin') {
-        return redirect()->route('admin.dashboard');
+        if (!$user->hasTwoFactorEnabled()) {
+            return redirect()->route('admin.2fa.setup');
+        }
+        return redirect()->route('admin.2fa.challenge');
     }
     
     // For other users, check if registration is complete

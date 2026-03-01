@@ -24,6 +24,7 @@ protected $fillable = [
     'id_type','business_license_path','relationship_to_business','registration_complete',
     'is_restricted','restriction_ends_at','restriction_reason',
     'last_login_ip',
+    'two_factor_secret','two_factor_confirmed_at',
 ];
 
 
@@ -35,6 +36,7 @@ protected $fillable = [
     protected $hidden = [
         'password',
         'remember_token',
+        'two_factor_secret',
     ];
 
     /**
@@ -49,7 +51,16 @@ protected $fillable = [
         'registration_complete' => 'boolean',
         'is_restricted' => 'boolean',
         'restriction_ends_at' => 'datetime',
+        'two_factor_confirmed_at' => 'datetime',
     ];
+
+    /**
+     * Whether the user has two-factor authentication enabled (admin 2FA).
+     */
+    public function hasTwoFactorEnabled(): bool
+    {
+        return !empty($this->two_factor_secret) && $this->two_factor_confirmed_at !== null;
+    }
 
 
     const ROLE_BUYER = 'buyer';
