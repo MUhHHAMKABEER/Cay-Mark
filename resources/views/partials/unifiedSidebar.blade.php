@@ -25,7 +25,7 @@
         $menuItems = [
             ['route' => 'welcome', 'icon' => 'home', 'label' => 'Home'],
             ['route' => 'dashboard.seller', 'icon' => 'dashboard', 'label' => 'Dashboard', 'tab' => 'dashboard'],
-            ['route' => 'dashboard.seller', 'icon' => 'person', 'label' => 'User', 'tab' => 'user'],
+            ['route' => 'dashboard.seller', 'icon' => 'person', 'label' => 'Account settings', 'tab' => 'user'],
             ['route' => 'seller.listings.create', 'icon' => 'add_box', 'label' => 'Submission'],
             ['route' => 'dashboard.seller', 'icon' => 'gavel', 'label' => 'Auctions', 'tab' => 'auctions'],
             ['route' => 'dashboard.seller', 'icon' => 'notifications', 'label' => 'Notifications', 'tab' => 'notifications'],
@@ -39,7 +39,7 @@
         $menuItems = [
             ['route' => 'welcome', 'icon' => 'home', 'label' => 'Home'],
             ['route' => 'dashboard.buyer', 'icon' => 'dashboard', 'label' => 'Dashboard', 'tab' => 'dashboard'],
-            ['route' => 'dashboard.buyer', 'icon' => 'person', 'label' => 'User', 'tab' => 'user'],
+            ['route' => 'dashboard.buyer', 'icon' => 'person', 'label' => 'Account settings', 'tab' => 'user'],
             ['route' => 'dashboard.buyer', 'icon' => 'gavel', 'label' => 'Auctions', 'tab' => 'auctions'],
             ['route' => 'dashboard.buyer', 'icon' => 'bookmark', 'label' => 'Saved Items', 'tab' => 'saved'],
             ['route' => 'dashboard.buyer', 'icon' => 'notifications', 'label' => 'Notifications', 'tab' => 'notifications'],

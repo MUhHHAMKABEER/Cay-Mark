@@ -3,6 +3,7 @@
     $isGuest = !$user;
     $isBuyer = $user && $user->role === 'buyer';
     $isSeller = $user && $user->role === 'seller';
+    $registrationComplete = $user && $user->isRegistrationComplete();
     $buyerHeaderStats = null;
     if ($isBuyer && $user) {
         $wallet = \App\Models\UserWallet::getOrCreateForUser($user->id);
@@ -123,7 +124,7 @@
                                 <span class="text-gray-600">Active</span>
                                 <span class="font-semibold text-gray-900">{{ $sellerHeaderStats['active_auctions'] }}</span>
                             </a>
-                            <a href="{{ route('seller.listings.index') }}" class="flex flex-col items-center rounded-lg bg-gray-100 hover:bg-gray-200 px-3 py-2 min-w-[80px] transition-colors text-sm">
+                            <a href="{{ route('dashboard.seller', ['tab' => 'auctions']) }}" class="flex flex-col items-center rounded-lg bg-gray-100 hover:bg-gray-200 px-3 py-2 min-w-[80px] transition-colors text-sm">
                                 <span class="text-gray-600">Recently finished</span>
                                 <span class="font-semibold text-gray-900">{{ $sellerHeaderStats['recently_finished'] }}</span>
                             </a>
@@ -154,8 +155,23 @@
                                 <a href="{{ route('Auction.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Auctions</a>
                                 <a href="{{ route('seller.listings.create') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Submit listing</a>
                                 <a href="{{ route('seller.payouts') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Payouts</a>
-                                <a href="{{ route('seller.listings.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My listings</a>
+                                <a href="{{ route('dashboard.seller', ['tab' => 'auctions']) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My listings</a>
                                 <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Account settings</a>
+                                <hr class="my-2">
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">Logout</button>
+                                </form>
+                            </div>
+                        </div>
+                    @else
+                        <!-- Logged in but registration incomplete: user icon + dropdown (Complete registration, Logout) -->
+                        <div class="relative" x-data="{ open: false }">
+                            <button type="button" @click="open = !open" class="w-10 h-10 rounded-full bg-blue-500 hover:bg-blue-600 flex items-center justify-center text-white font-semibold text-lg transition-colors flex-shrink-0" title="Account">
+                                {{ strtoupper(substr($user->name ?? 'U', 0, 1)) }}
+                            </button>
+                            <div x-show="open" @click.away="open = false" x-cloak class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
+                                <a href="{{ route('finish.registration') }}" class="block px-4 py-2 text-sm text-blue-600 font-medium hover:bg-blue-50">Complete registration</a>
                                 <hr class="my-2">
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf

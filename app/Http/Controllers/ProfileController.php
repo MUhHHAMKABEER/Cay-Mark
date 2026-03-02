@@ -14,13 +14,24 @@ use Illuminate\View\View;
 class ProfileController extends Controller
 {
     /**
-     * Display the user's profile form.
+     * Redirect to role-based dashboard profile tab (no standalone /profile page).
      */
-    public function edit(Request $request): View
+    public function edit(Request $request): RedirectResponse
     {
-        return view('profile.edit', [
-            'user' => $request->user(),
-        ]);
+        $user = $request->user();
+        $role = strtolower(trim($user->role ?? ''));
+
+        if ($role === 'seller') {
+            return redirect()->route('dashboard.seller', ['tab' => 'user']);
+        }
+        if ($role === 'buyer') {
+            return redirect()->route('dashboard.buyer', ['tab' => 'user']);
+        }
+        if ($role === 'admin') {
+            return redirect()->route('admin.dashboard');
+        }
+
+        return redirect()->route('dashboard.default');
     }
 
     /**

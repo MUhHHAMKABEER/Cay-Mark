@@ -259,9 +259,9 @@ class RegisteredUserController extends Controller
             // Send Email #1: Complete Your Registration
             $this->sendRegistrationStep1Email($user);
 
-            // Redirect straight to Finish Registration (no in-between dashboard step)
-            return redirect()->route('finish.registration')
-                ->with('success', 'Account created! Now choose your membership to continue.');
+            // Redirect to home page; header will show user icon with "Complete registration" and "Logout"
+            return redirect()->route('welcome')
+                ->with('success', 'Account created! Complete your registration from the menu to continue.');
 
         } catch (\Illuminate\Database\QueryException $e) {
             DB::rollBack();

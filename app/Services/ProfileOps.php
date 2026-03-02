@@ -14,7 +14,15 @@ class ProfileOps
 
         $request->user()->save();
 
-        return \Illuminate\Support\Facades\Redirect::route('profile.edit')->with('status', 'profile-updated');
+        $user = $request->user();
+        $role = strtolower(trim($user->role ?? ''));
+        if ($role === 'seller') {
+            return \Illuminate\Support\Facades\Redirect::route('dashboard.seller', ['tab' => 'user'])->with('status', 'profile-updated');
+        }
+        if ($role === 'buyer') {
+            return \Illuminate\Support\Facades\Redirect::route('dashboard.buyer', ['tab' => 'user'])->with('status', 'profile-updated');
+        }
+        return \Illuminate\Support\Facades\Redirect::route('dashboard.default')->with('status', 'profile-updated');
     }
 
     public static function destroy($request)
