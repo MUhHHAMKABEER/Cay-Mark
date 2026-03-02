@@ -31,7 +31,6 @@
             ['route' => 'dashboard.seller', 'icon' => 'notifications', 'label' => 'Notifications', 'tab' => 'notifications'],
             ['route' => 'seller.chat', 'icon' => 'mail', 'label' => 'Messaging Center'],
             ['route' => 'dashboard.seller', 'icon' => 'support_agent', 'label' => 'Customer Support', 'tab' => 'support'],
-            ['route' => 'seller.listings.index', 'icon' => 'directions_car', 'label' => 'My Listings'],
         ];
         $roleLabel = $user->business_license_path ? 'Business Seller' : 'Individual Seller';
         $dashboardRoute = 'dashboard.seller';
