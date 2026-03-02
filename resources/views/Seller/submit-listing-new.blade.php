@@ -673,9 +673,9 @@
                 </div>
 
                 <div class="flex justify-end">
-                    <button type="button" onclick="showSection(2)" class="btn-primary">
+                    <button type="button" id="btn-continue-to-photos" onclick="typeof showSection === 'function' && showSection(2)" class="btn-primary">
                         Continue to Photos <i class="fas fa-arrow-right ml-2"></i>
-                </button>
+                    </button>
                 </div>
             </div>
 
@@ -927,6 +927,42 @@
 </style>
 
 <script>
+    // Section navigation - define first so "Continue to Photos" etc. always work
+    function showSection(sectionNum) {
+        var ids = ['section1', 'section2', 'section3', 'section4'];
+        for (var i = 0; i < ids.length; i++) {
+            var el = document.getElementById(ids[i]);
+            if (el) {
+                el.style.display = 'none';
+                el.style.border = '';
+                el.style.borderRadius = '';
+            }
+        }
+        var section = document.getElementById('section' + sectionNum);
+        if (section) {
+            section.style.display = 'block';
+            section.classList.add('animate-slide-in');
+            setTimeout(function() {
+                try {
+                    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                } catch (e) {}
+            }, 50);
+        }
+        for (var j = 1; j <= 4; j++) {
+            var ind = document.getElementById('step-indicator-' + j);
+            if (!ind) continue;
+            if (j < sectionNum) {
+                ind.classList.remove('active');
+                ind.classList.add('completed');
+            } else if (j === sectionNum) {
+                ind.classList.remove('completed');
+                ind.classList.add('active');
+            } else {
+                ind.classList.remove('active', 'completed');
+            }
+        }
+    }
+
     // Global error handler for runtime JavaScript errors
     window.addEventListener('error', function(e) {
         console.error('JavaScript Runtime Error:', {
@@ -1479,45 +1515,16 @@
         }
     });
 
-    function showSection(sectionNum) {
-        // Hide all sections
-        document.getElementById('section1').style.display = 'none';
-        document.getElementById('section2').style.display = 'none';
-        document.getElementById('section3').style.display = 'none';
-        if (document.getElementById('section4')) document.getElementById('section4').style.display = 'none';
-        
-        // Remove error highlighting
-        document.getElementById('section1').style.border = '';
-        document.getElementById('section2').style.border = '';
-        document.getElementById('section3').style.border = '';
-        if (document.getElementById('section4')) document.getElementById('section4').style.border = '';
-        
-        // Show selected section with animation
-        const section = document.getElementById('section' + sectionNum);
-        if (section) {
-            section.style.display = 'block';
-            section.classList.add('animate-slide-in');
+    // Ensure section buttons work even if inline onclick is blocked
+    document.addEventListener('DOMContentLoaded', function() {
+        var btnPhotos = document.getElementById('btn-continue-to-photos');
+        if (btnPhotos) {
+            btnPhotos.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (typeof showSection === 'function') showSection(2);
+            });
         }
-        
-        // Update step indicators (1-4)
-        for (let i = 1; i <= 4; i++) {
-            const indicator = document.getElementById('step-indicator-' + i);
-            if (indicator) {
-                if (i < sectionNum) {
-                    indicator.classList.remove('active');
-                    indicator.classList.add('completed');
-                } else if (i === sectionNum) {
-                    indicator.classList.remove('completed');
-                    indicator.classList.add('active');
-                } else {
-                    indicator.classList.remove('active', 'completed');
-                }
-            }
-        }
-        
-        // Scroll to top
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    });
 
     // Auto-scroll to error section on page load
     document.addEventListener('DOMContentLoaded', function() {
@@ -1557,7 +1564,9 @@
     });
 
     // VIN/HIN Decoder
-    document.getElementById('searchVinBtn').addEventListener('click', function() {
+    var searchVinBtn = document.getElementById('searchVinBtn');
+    if (searchVinBtn) {
+    searchVinBtn.addEventListener('click', function() {
         const vinHin = document.getElementById('vin_hin').value.trim().toUpperCase();
         const readerType = document.querySelector('input[name="vin_hin_type"]:checked')?.value || 'vin';
         if (!vinHin) {
@@ -1604,9 +1613,12 @@
             btn.innerHTML = '<i class="fas fa-search mr-2"></i>Search';
         });
     });
+    }
 
     // Photo preview and validation
-    document.querySelector('input[name="cover_photo"]').addEventListener('change', function(e) {
+    var coverPhotoInput = document.querySelector('input[name="cover_photo"]');
+    if (coverPhotoInput) {
+    coverPhotoInput.addEventListener('change', function(e) {
         if (e.target.files[0]) {
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -1616,8 +1628,10 @@
             reader.readAsDataURL(e.target.files[0]);
         }
     });
-
-    document.querySelector('input[name="photos[]"]').addEventListener('change', function(e) {
+    }
+    var photosInputEl = document.querySelector('input[name="photos[]"]');
+    if (photosInputEl) {
+    photosInputEl.addEventListener('change', function(e) {
         const files = e.target.files;
         const count = files.length;
         document.getElementById('photoCount').textContent = count + ' photo' + (count !== 1 ? 's' : '') + ' selected';
@@ -1652,6 +1666,7 @@
             reader.readAsDataURL(file);
         });
     });
+    }
 
     // Auto-uppercase all text inputs
     document.querySelectorAll('input[type="text"], textarea').forEach(input => {

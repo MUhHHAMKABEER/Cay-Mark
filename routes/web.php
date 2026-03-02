@@ -58,6 +58,7 @@ Route::middleware('auth')->group(function () {
 Route::get('/dashboard/seller', [App\Http\Controllers\Seller\SellerDashboardController::class, 'index'])->middleware(['auth'])->name('dashboard.seller');
 Route::post('/dashboard/seller/update-payout', [App\Http\Controllers\Seller\SellerDashboardController::class, 'updatePayout'])->middleware(['auth'])->name('seller-dashboard.update-payout');
 Route::post('/dashboard/seller/change-password', [App\Http\Controllers\Seller\SellerDashboardController::class, 'changePassword'])->middleware(['auth'])->name('seller-dashboard.change-password');
+Route::post('/dashboard/seller/update-phone', [App\Http\Controllers\Seller\SellerDashboardController::class, 'updatePhone'])->middleware(['auth'])->name('seller-dashboard.update-phone');
 Route::post('/dashboard/seller/confirm-pickup/{listingId}', [App\Http\Controllers\Seller\SellerDashboardController::class, 'confirmPickup'])->middleware(['auth'])->name('seller-dashboard.confirm-pickup');
 
 Route::get('/dashboard/admin', function () {

@@ -12,6 +12,7 @@ use App\Services\Seller\SellerDashboardOps;
 use App\Http\Requests\SellerDashboardUpdatePayoutRequest;
 use App\Http\Requests\SellerDashboardChangePasswordRequest;
 use App\Http\Requests\SellerDashboardConfirmPickupRequest;
+use App\Http\Requests\SellerDashboardUpdatePhoneRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
@@ -60,6 +61,17 @@ class SellerDashboardController extends Controller
     public function changePassword(SellerDashboardChangePasswordRequest $request)
     {
         return SellerDashboardOps::changePassword($request);
+    }
+
+    /**
+     * Update phone number
+     */
+    public function updatePhone(SellerDashboardUpdatePhoneRequest $request)
+    {
+        $request->user()->update([
+            'phone' => $request->input('phone') ?: null,
+        ]);
+        return back()->with('success', 'Phone number updated successfully.');
     }
 
     /**
