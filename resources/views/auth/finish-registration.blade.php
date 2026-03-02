@@ -2,6 +2,25 @@
 @section('title', 'Select Your Membership - CayMark')
 @section('content')
 
+<style>
+    /* Show radio as selected when its label contains the checked input (peer-checked doesn't work on nested elements) */
+    label:has(input[name="role"]:checked) .role-radio-indicator {
+        border-color: #063466 !important;
+        background-color: #063466 !important;
+    }
+    label:has(input[name="role"]:checked) .role-radio-check {
+        opacity: 1 !important;
+    }
+    /* Membership package radio selected state (cards are rendered by JS) */
+    label:has(input[name="package_id"]:checked) .package-radio-indicator {
+        border-color: #063466 !important;
+        background-color: #063466 !important;
+    }
+    label:has(input[name="package_id"]:checked) .package-radio-check {
+        opacity: 1 !important;
+    }
+</style>
+
 <div class="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 py-12 px-4 relative">
     <!-- Professional Background Pattern -->
     <div class="absolute inset-0 opacity-5">
@@ -118,8 +137,8 @@
                         <label class="relative cursor-pointer group h-full flex">
                             <input type="radio" name="role" value="buyer" class="sr-only peer" required onchange="loadPackages('buyer')">
                             <div class="relative p-8 border-2 border-gray-300 rounded-2xl transition-all duration-300 group-hover:border-[#2563eb] group-hover:shadow-xl peer-checked:border-[#063466] peer-checked:bg-gradient-to-br peer-checked:from-blue-50 peer-checked:to-indigo-50 peer-checked:shadow-2xl transform peer-checked:scale-105 h-full w-full flex flex-col">
-                                <div class="absolute top-4 right-4 w-6 h-6 border-2 border-gray-400 rounded-full peer-checked:border-[#063466] peer-checked:bg-[#063466] transition-all duration-300">
-                                    <svg class="w-full h-full text-white opacity-0 peer-checked:opacity-100 transition-opacity duration-300" fill="currentColor" viewBox="0 0 20 20">
+                                <div class="role-radio-indicator absolute top-4 right-4 w-6 h-6 border-2 border-gray-400 rounded-full transition-all duration-300">
+                                    <svg class="role-radio-check w-full h-full text-white opacity-0 transition-opacity duration-300" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                                     </svg>
                                 </div>
@@ -145,8 +164,8 @@
                         <label class="relative cursor-pointer group h-full flex">
                             <input type="radio" name="role" value="seller" class="sr-only peer" required onchange="loadPackages('seller')">
                             <div class="relative p-8 border-2 border-gray-300 rounded-2xl transition-all duration-300 group-hover:border-green-500 group-hover:shadow-xl peer-checked:border-[#063466] peer-checked:bg-gradient-to-br peer-checked:from-green-50 peer-checked:to-emerald-50 peer-checked:shadow-2xl transform peer-checked:scale-105 h-full w-full flex flex-col">
-                                <div class="absolute top-4 right-4 w-6 h-6 border-2 border-gray-400 rounded-full peer-checked:border-[#063466] peer-checked:bg-[#063466] transition-all duration-300">
-                                    <svg class="w-full h-full text-white opacity-0 peer-checked:opacity-100 transition-opacity duration-300" fill="currentColor" viewBox="0 0 20 20">
+                                <div class="role-radio-indicator absolute top-4 right-4 w-6 h-6 border-2 border-gray-400 rounded-full transition-all duration-300">
+                                    <svg class="role-radio-check w-full h-full text-white opacity-0 transition-opacity duration-300" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                                     </svg>
                                 </div>
@@ -384,22 +403,22 @@
 
         label.innerHTML = `
             <div class="package-card relative bg-white border-2 border-gray-300 rounded-2xl p-8 transition-all duration-500 hover:border-[#063466] hover:shadow-xl transform h-full flex flex-col">
-                <div class="absolute top-6 right-6 w-8 h-8 border-2 border-gray-400 rounded-full transition-all duration-300 group-hover:border-[#063466]">
-                    <svg class="w-full h-full text-[#063466] opacity-0 transition-opacity duration-300" fill="currentColor" viewBox="0 0 20 20">
+                <div class="package-radio-indicator absolute top-6 right-6 w-8 h-8 border-2 border-gray-400 rounded-full transition-all duration-300 group-hover:border-[#063466]">
+                    <svg class="package-radio-check w-full h-full text-white opacity-0 transition-opacity duration-300" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                     </svg>
                 </div>
                 
-                <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-                    <div class="flex-1">
-                        <div class="flex items-center mb-3">
-                            <h3 class="text-2xl md:text-3xl font-bold text-gray-900 mr-3">${escapeHtml(pkg.title || 'Package')}</h3>
-                            ${isFree ? '<span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-bold border border-green-300">FREE</span>' : ''}
-                            ${isBusinessSeller ? '<span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-xs font-bold border border-purple-300">PREMIUM</span>' : ''}
+                <div class="flex flex-col md:flex-row md:items-start md:justify-between mb-6 gap-4">
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-2xl md:text-3xl font-bold text-gray-900 mb-2">${escapeHtml(pkg.title || 'Package')}</h3>
+                        <div class="flex flex-wrap items-center gap-2 mb-2">
+                            ${isFree ? '<span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-bold border border-green-300 shrink-0">FREE</span>' : ''}
+                            ${isBusinessSeller ? '<span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-xs font-bold border border-purple-300 shrink-0">PREMIUM</span>' : ''}
                         </div>
                         ${pkg.description ? `<p class="text-gray-600 text-lg">${escapeHtml(pkg.description)}</p>` : ''}
                     </div>
-                    <div class="mt-4 md:mt-0 md:ml-6">
+                    <div class="mt-0 md:ml-4 pr-14 shrink-0 text-left md:text-right">
                         <div class="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#063466] to-[#1e3a8a]">
                             ${price}
                         </div>

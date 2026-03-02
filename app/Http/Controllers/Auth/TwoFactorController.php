@@ -12,12 +12,8 @@ use PragmaRX\Google2FA\Google2FA;
 class TwoFactorController extends Controller
 {
     /**
-     * Only for admin users.
+     * Auth middleware is applied to these routes in web.php (admin 2FA group).
      */
-    public function __construct()
-    {
-        $this->middleware('auth');
-    }
 
     /**
      * Show 2FA challenge (enter code) – required after login for admin.

@@ -813,10 +813,11 @@
                     </div>
                     @endif
 
+                    @if($listing->rejection_notes || $listing->notes || $listing->description)
                     <div class="notes-section">
                         <div class="damage-label">Seller Notes</div>
                         <div class="damage-value" style="color: #475569;">
-                            {{ $listing->rejection_notes ?? $listing->notes ?? $listing->description ?? 'No additional notes provided by seller.' }}
+                            {{ $listing->rejection_notes ?? $listing->notes ?? $listing->description }}
                         </div>
                     </div>
                     @else

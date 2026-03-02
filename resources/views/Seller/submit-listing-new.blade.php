@@ -1578,7 +1578,6 @@
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Searching...';
 
-        const readerType = document.querySelector('input[name="vin_hin_type"]:checked')?.value || 'vin';
         fetch('{{ route("seller.listings.decode-vin-hin") }}', {
             method: 'POST',
             headers: {
