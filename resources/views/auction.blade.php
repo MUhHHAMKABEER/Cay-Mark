@@ -457,9 +457,9 @@
         }
     </style>
 
-    <div class="bg-gray-50 text-gray-800" x-data="filterData()" x-init="initFilters()">
+    <div class="bg-gray-50 text-gray-800 w-full" x-data="filterData()" x-init="initFilters()">
 
-        <main class="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <main class="w-full px-4 sm:px-6 lg:px-10 xl:px-12 2xl:px-16 py-6">
 
             <!-- Page Header -->
             <div class="mb-6 animate-fade-in">
@@ -566,9 +566,9 @@
                 </div>
             </div>
 
-            <div class="flex flex-col xl:flex-row gap-6">
-                <!-- Vehicle Finder Panel - narrower to match auction layout -->
-                <aside class="w-full xl:w-72 flex-shrink-0">
+            <div class="flex flex-col xl:flex-row xl:gap-8 2xl:gap-10">
+                <!-- Vehicle Finder Panel -->
+                <aside class="w-full xl:w-80 flex-shrink-0">
                     <div class="vehicle-finder bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200">
                         <div class="vehicle-finder-header">
                             <div class="flex items-center justify-between">
@@ -740,7 +740,7 @@
                 </aside>
 
                 <!-- Vehicle Listings -->
-                <section class="flex-1">
+                <section class="flex-1 min-w-0">
                     <!-- Loading Skeleton -->
                     <template x-if="isLoading">
                         <div class="grid grid-cols-1 gap-5">
@@ -765,9 +765,9 @@
                         </div>
                     </template>
 
-                    <!-- Grid View: use full width – 4–5 columns on large screens -->
+                    <!-- Grid View: spread out – more columns on large screens -->
                     <div x-show="viewMode === 'grid'"
-                        class="grid-view grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4" x-cloak>
+                        class="grid-view grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5 lg:gap-6" x-cloak>
                         @forelse($auctions as $listing)
                             <div
                                 class="vehicle-card bg-white rounded-xl shadow-sm overflow-hidden flex flex-col h-full animate-bounce-in">
@@ -837,7 +837,16 @@
                                     <div class="grid grid-cols-2 gap-2 mb-4">
                                         <div class="flex items-center text-sm text-gray-600">
                                             <span class="material-icons text-gray-400 text-sm mr-1">speed</span>
-                                            <span>{{ $listing->odometer ? number_format($listing->odometer) . ' mi' : 'N/A' }}</span>
+                                            <span>
+                                            @if($listing->odometer)
+                                                {{ number_format($listing->odometer) }} mi
+                                                @if($listing->odometer_estimated)
+                                                    <span class="text-amber-600 font-medium">(Est.)</span>
+                                                @endif
+                                            @else
+                                                N/A
+                                            @endif
+                                        </span>
                                         </div>
                                         <div class="flex items-center text-sm text-gray-600">
                                             <span class="material-icons text-gray-400 text-sm mr-1">location_on</span>

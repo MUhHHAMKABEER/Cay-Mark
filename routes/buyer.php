@@ -16,7 +16,7 @@ use App\Http\Controllers\chatController;
 |
 */
 
-Route::prefix('buyer')->name('buyer.')->middleware(['auth'])->group(function () {
+Route::prefix('buyer')->name('buyer.')->middleware(['auth', 'buyer'])->group(function () {
     
     // Separate Dashboard Pages
     Route::get('/user', [BuyerDashboardController::class, 'user'])->name('user');
@@ -48,7 +48,7 @@ Route::prefix('buyer')->name('buyer.')->middleware(['auth'])->group(function () 
 });
 
 // Legacy routes (for backward compatibility)
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'buyer'])->group(function () {
     Route::get('/dashboard/buyer', [BuyerDashboardController::class, 'index'])->name('dashboard.buyer');
     Route::post('/dashboard/buyer/update-email', [BuyerDashboardController::class, 'updateEmail'])->name('buyer-dashboard.update-email');
     Route::post('/dashboard/buyer/change-password', [BuyerDashboardController::class, 'changePassword'])->name('buyer-dashboard.change-password');

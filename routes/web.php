@@ -55,11 +55,11 @@ Route::middleware('auth')->group(function () {
 
 
 // Legacy dashboard routes (for backward compatibility)
-Route::get('/dashboard/seller', [App\Http\Controllers\Seller\SellerDashboardController::class, 'index'])->middleware(['auth'])->name('dashboard.seller');
-Route::post('/dashboard/seller/update-payout', [App\Http\Controllers\Seller\SellerDashboardController::class, 'updatePayout'])->middleware(['auth'])->name('seller-dashboard.update-payout');
-Route::post('/dashboard/seller/change-password', [App\Http\Controllers\Seller\SellerDashboardController::class, 'changePassword'])->middleware(['auth'])->name('seller-dashboard.change-password');
-Route::post('/dashboard/seller/update-phone', [App\Http\Controllers\Seller\SellerDashboardController::class, 'updatePhone'])->middleware(['auth'])->name('seller-dashboard.update-phone');
-Route::post('/dashboard/seller/confirm-pickup/{listingId}', [App\Http\Controllers\Seller\SellerDashboardController::class, 'confirmPickup'])->middleware(['auth'])->name('seller-dashboard.confirm-pickup');
+Route::get('/dashboard/seller', [App\Http\Controllers\Seller\SellerDashboardController::class, 'index'])->middleware(['auth', 'seller'])->name('dashboard.seller');
+Route::post('/dashboard/seller/update-payout', [App\Http\Controllers\Seller\SellerDashboardController::class, 'updatePayout'])->middleware(['auth', 'seller'])->name('seller-dashboard.update-payout');
+Route::post('/dashboard/seller/change-password', [App\Http\Controllers\Seller\SellerDashboardController::class, 'changePassword'])->middleware(['auth', 'seller'])->name('seller-dashboard.change-password');
+Route::post('/dashboard/seller/update-phone', [App\Http\Controllers\Seller\SellerDashboardController::class, 'updatePhone'])->middleware(['auth', 'seller'])->name('seller-dashboard.update-phone');
+Route::post('/dashboard/seller/confirm-pickup/{listingId}', [App\Http\Controllers\Seller\SellerDashboardController::class, 'confirmPickup'])->middleware(['auth', 'seller'])->name('seller-dashboard.confirm-pickup');
 
 Route::get('/dashboard/admin', function () {
     return view('dashboard.admin');
@@ -114,9 +114,7 @@ Route::get('/tow-providers/signup/thanks', [App\Http\Controllers\TowProviderSign
 
 
 
-Route::middleware(['auth',
-// 'is_buyer'
-])->prefix('buyer')->group(function () {
+Route::middleware(['auth', 'buyer'])->prefix('buyer')->group(function () {
     Route::get('/marketplace', [MarketplaceController::class, 'index'])->name('buyer.marketplace');
     Route::get('/auctions', [AuctionController::class, 'index'])->name('buyer.auctions');
     Route::get('/bids', [App\Http\Controllers\Buyer\BidController::class, 'index'])->name('buyer.bids');
@@ -224,7 +222,7 @@ Route::get('/finish-registration/complete', [RegisteredUserController::class, 's
 Route::post('/finish-registration/complete', [RegisteredUserController::class, 'completeRegistration'])->middleware('auth')->name('finish.registration.complete');
 
 
-Route::get('/listings/models/{make}', [ListingController::class, 'getModels'])->name('seller.listings.getModels');
+Route::get('/listings/models/{make}', [ListingController::class, 'getModels'])->middleware(['auth', 'seller'])->name('seller.listings.getModels');
 
 
 // Admin 2FA (auth only – no admin middleware so admin can complete 2FA before accessing panel)

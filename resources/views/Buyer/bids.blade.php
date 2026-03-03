@@ -90,16 +90,18 @@
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                     @forelse($userBids as $index => $bid)
+                        @if($bid->listing)
                         @php
-                            $isHighestBid = ($bid->listing->current_bid ?? $bid->amount) == $bid->amount;
+                            $listing = $bid->listing;
+                            $isHighestBid = ($listing->current_bid ?? $bid->amount) == $bid->amount;
                         @endphp
                         <tr class="hover:bg-gray-50 transition-colors">
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $index+1 }}</td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center">
                                     <div class="flex-shrink-0 h-10 w-10 bg-gray-200 rounded-lg overflow-hidden">
-                                        @if($bid->listing->images->first())
-                                            <img class="h-10 w-10 object-cover" src="{{ asset('uploads/listings/' . $bid->listing->images->first()->image_path) }}" alt="{{ $bid->listing->make }}">
+                                        @if($listing->images && $listing->images->first())
+                                            <img class="h-10 w-10 object-cover" src="{{ asset('storage/' . $listing->images->first()->image_path) }}" alt="{{ $listing->make }}">
                                         @else
                                             <div class="h-10 w-10 flex items-center justify-center bg-gray-100">
                                                 <i class="fas fa-car text-gray-400"></i>
@@ -107,8 +109,8 @@
                                         @endif
                                     </div>
                                     <div class="ml-4">
-                                        <div class="text-sm font-medium text-gray-900">{{ $bid->listing->make }} {{ $bid->listing->model }}</div>
-                                        <div class="text-sm text-gray-500">{{ $bid->listing->year }}</div>
+                                        <div class="text-sm font-medium text-gray-900">{{ $listing->make }} {{ $listing->model }}</div>
+                                        <div class="text-sm text-gray-500">{{ $listing->year }}</div>
                                     </div>
                                 </div>
                             </td>
@@ -116,7 +118,7 @@
                                 ${{ number_format($bid->amount) }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                ${{ number_format($bid->listing->current_bid ?? $bid->amount) }}
+                                ${{ number_format($listing->current_bid ?? $bid->amount) }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 @if($isHighestBid)
@@ -133,16 +135,22 @@
                                 {{ $bid->created_at->format('d M, Y h:i A') }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <a href="{{ route('auction.dashboard', [
-                                    'id' => $bid->listing->id,
-                                    'slug' => Str::slug($bid->listing->year . ' ' . $bid->listing->make . ' ' . $bid->listing->model)
-                                ]) }}">
+                                <a href="{{ route('auction.show', ['listing' => $listing->slug ?? $listing->id]) }}" class="text-blue-600 hover:text-blue-800">
                                     View Auction
                                 </a>
-
-
                             </td>
                         </tr>
+                        @else
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $index+1 }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" colspan="2">Listing no longer available</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-blue-600">${{ number_format($bid->amount) }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">—</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">—</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ $bid->created_at->format('d M, Y h:i A') }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400">—</td>
+                        </tr>
+                        @endif
                     @empty
                         <tr>
                             <td colspan="7" class="px-6 py-12 text-center">
@@ -188,13 +196,15 @@
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                     @forelse($buyNowItems as $index => $purchase)
+                        @if($purchase->listing)
+                        @php $listing = $purchase->listing; @endphp
                         <tr class="hover:bg-gray-50 transition-colors">
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $index+1 }}</td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center">
                                     <div class="flex-shrink-0 h-10 w-10 bg-gray-200 rounded-lg overflow-hidden">
-                                        @if($purchase->listing->images->first())
-                                            <img class="h-10 w-10 object-cover" src="{{ asset('uploads/listings/' . $purchase->listing->images->first()->image_path) }}" alt="{{ $purchase->listing->make }}">
+                                        @if($listing->images && $listing->images->first())
+                                            <img class="h-10 w-10 object-cover" src="{{ asset('storage/' . $listing->images->first()->image_path) }}" alt="{{ $listing->make }}">
                                         @else
                                             <div class="h-10 w-10 flex items-center justify-center bg-gray-100">
                                                 <i class="fas fa-car text-gray-400"></i>
@@ -202,34 +212,32 @@
                                         @endif
                                     </div>
                                     <div class="ml-4">
-                                        <div class="text-sm font-medium text-gray-900">{{ $purchase->listing->make }} {{ $purchase->listing->model }}</div>
-                                        <div class="text-sm text-gray-500">{{ $purchase->listing->year }}</div>
+                                        <div class="text-sm font-medium text-gray-900">{{ $listing->make }} {{ $listing->model }}</div>
+                                        <div class="text-sm text-gray-500">{{ $listing->year }}</div>
                                     </div>
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">
-                                ${{ number_format($purchase->listing->price) }}
+                                ${{ number_format($listing->price) }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                 {{ $purchase->created_at->format('d M, Y h:i A') }}
                             </td>
-                            {{-- <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <a href="{{ route('listing.show', $purchase->listing->id) }}"
-                                   class="text-green-600 hover:text-green-900 px-3 py-1.5 rounded-md bg-green-50 hover:bg-green-100 transition-colors text-sm">
-                                    View Vehicle
-                                </a>
-                            </td> --}}
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <a href="{{ route('listing.show', [
-                                        'id' => $purchase->listing->id,
-                                        'slug' => Str::slug($purchase->listing->year . ' ' . $purchase->listing->make . ' ' . $purchase->listing->model)
-                                    ]) }}"
-                                class="text-green-600 hover:text-green-900 px-3 py-1.5 rounded-md bg-green-50 hover:bg-green-100 transition-colors text-sm">
+                                <a href="{{ route('auction.show', ['listing' => $listing->slug ?? $listing->id]) }}" class="text-green-600 hover:text-green-900 px-3 py-1.5 rounded-md bg-green-50 hover:bg-green-100 transition-colors text-sm">
                                     View Vehicle
                                 </a>
                             </td>
-
                         </tr>
+                        @else
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $index+1 }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" colspan="2">Listing no longer available</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">—</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ $purchase->created_at->format('d M, Y h:i A') }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400">—</td>
+                        </tr>
+                        @endif
                     @empty
                         <tr>
                             <td colspan="5" class="px-6 py-12 text-center">

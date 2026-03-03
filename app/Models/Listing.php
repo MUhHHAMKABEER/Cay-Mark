@@ -69,6 +69,8 @@ class Listing extends Model
         'reserve_price',
         'buy_now_price',
         'odometer',
+        'odometer_estimated',
+        'view_count',
         'bought',
         'rejected_at',
         'rejected_by',
@@ -86,6 +88,7 @@ class Listing extends Model
         'pickup_pin_generated_at' => 'datetime',
         'pickup_confirmed_at' => 'datetime',
         'pickup_confirmed' => 'boolean',
+        'odometer_estimated' => 'boolean',
         'rejected_at' => 'datetime',
     ];
 
@@ -655,6 +658,8 @@ public function invoices()
             'starting_price' => $p['starting_price'] ?? null,
             'reserve_price' => $p['reserve_price'] ?? null,
             'buy_now_price' => $p['buy_now_price'] ?? null,
+            'odometer' => isset($p['odometer']) && $p['odometer'] !== '' ? (int) $p['odometer'] : null,
+            'odometer_estimated' => !empty($p['odometer_estimated']),
             'status' => 'pending',
             'expires_at' => $context['expires_at'],
             'listing_state' => 'active',

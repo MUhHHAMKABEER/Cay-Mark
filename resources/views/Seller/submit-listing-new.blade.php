@@ -666,6 +666,18 @@
                             <strong>Salvaged vehicle:</strong> A salvaged vehicle is one that has been declared a total loss by an insurance company or has significant damage (typically 75% or more).
                         </div>
                     </div>
+                    <div>
+                        <label class="form-label">ODOMETER (miles)</label>
+                        <input type="number" name="odometer" class="form-input" min="0" max="9999999" step="1" placeholder="e.g. 45000" value="{{ old('odometer') }}">
+                        <p class="text-xs text-gray-500 mt-1">Leave blank if unknown. Enter current mileage reading.</p>
+                    </div>
+                    <div class="col-span-2 md:col-span-3 lg:col-span-4 flex flex-wrap items-center gap-x-4 gap-y-1">
+                        <label class="inline-flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" name="odometer_estimated" value="1" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500" {{ old('odometer_estimated') ? 'checked' : '' }}>
+                            <span class="form-label mb-0">Estimated reading</span>
+                        </label>
+                        <p class="text-xs text-gray-500">Check if odometer is not actual (e.g. exempt or estimated).</p>
+                    </div>
                     <div class="col-span-2 md:col-span-3 lg:col-span-4">
                         <label class="form-label">ADDITIONAL NOTES</label>
                         <textarea name="additional_notes" rows="2" class="form-input uppercase" style="text-transform: uppercase;" placeholder="Enter any additional notes..."></textarea>

@@ -266,6 +266,12 @@ public function show(Listing $listing)
     // Eager-load bids (with user) and images relation
     $auctionListing = $listing->load('bids.user', 'images');
 
+    // Increment view count (clicks/views) when listing is viewed
+    if (Schema::hasColumn('listings', 'view_count')) {
+        $listing->increment('view_count');
+        $auctionListing->view_count = ($auctionListing->view_count ?? 0) + 1;
+    }
+
     // ✅ Auction timing check - Use auction_end_time if set, otherwise calculate
     if ($auctionListing->auction_end_time) {
         $endDate = Carbon::parse($auctionListing->auction_end_time);

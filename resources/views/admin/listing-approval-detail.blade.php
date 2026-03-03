@@ -100,6 +100,19 @@
                             <p class="text-gray-900 font-semibold">{{ $listing->keys_available ? 'Yes' : 'No' }}</p>
                         </div>
                         <div>
+                            <label class="text-sm font-medium text-gray-500">Odometer</label>
+                            <p class="text-gray-900 font-semibold">
+                                @if($listing->odometer)
+                                    {{ number_format($listing->odometer) }} mi
+                                    @if($listing->odometer_estimated ?? false)
+                                        <span class="text-amber-600 font-medium">(Estimated)</span>
+                                    @endif
+                                @else
+                                    N/A
+                                @endif
+                            </p>
+                        </div>
+                        <div>
                             <label class="text-sm font-medium text-gray-500">Fuel Type</label>
                             <p class="text-gray-900 font-semibold">{{ $listing->fuel_type ?? 'N/A' }}</p>
                         </div>

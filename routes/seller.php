@@ -16,7 +16,7 @@ use App\Http\Controllers\chatController;
 |
 */
 
-Route::prefix('seller')->name('seller.')->middleware(['auth'])->group(function () {
+Route::prefix('seller')->name('seller.')->middleware(['auth', 'seller'])->group(function () {
     
     // Dashboard
     Route::get('/dashboard', [App\Http\Controllers\Seller\SellerDashboardController::class, 'index'])
@@ -44,6 +44,7 @@ Route::prefix('seller')->name('seller.')->middleware(['auth'])->group(function (
     Route::post('submit-listings', [ListingController::class, 'store'])->name('listings.store');
     Route::get('listings/success/{id}', [ListingController::class, 'success'])->name('listings.success');
     Route::get('listings', [ListingController::class, 'showListing'])->name('listings.index');
+    Route::get('listings/{id}', [ListingController::class, 'show'])->name('listings.show');
     Route::get('Auction', [ListingController::class, 'showAuctionLisitng'])->name('Auction.index');
     
     // VIN/HIN Decoder endpoint

@@ -8,8 +8,16 @@ use Illuminate\Support\Facades\Auth;
 
 class BidController extends Controller
 {
-public function bids()
-{
+    /**
+     * Route buyer.bids uses index(); delegate to bids().
+     */
+    public function index()
+    {
+        return $this->bids();
+    }
+
+    public function bids()
+    {
     $user = Auth::user();
 
     $userBids = $user->bids; // you can use this later if needed

@@ -48,6 +48,8 @@ class SellerListingStoreRequest extends FormRequest
             'primary_damage' => 'required|string',
             'keys_available' => 'required|in:yes,no',
             'is_salvaged' => 'required|in:0,1',
+            'odometer' => 'nullable|integer|min:0|max:9999999',
+            'odometer_estimated' => 'nullable|boolean',
             'secondary_damage' => 'nullable|string',
             'additional_notes' => 'nullable|string',
 
@@ -81,6 +83,9 @@ class SellerListingStoreRequest extends FormRequest
             'primary_damage.required' => 'Please select the primary damage type for your vehicle.',
             'keys_available.required' => 'Please indicate if keys are available for your vehicle.',
             'keys_available.in' => 'Invalid selection. Please choose Yes or No for keys availability.',
+            'odometer.integer' => 'Odometer must be a whole number (miles).',
+            'odometer.min' => 'Odometer cannot be negative.',
+            'odometer.max' => 'Odometer value is too high. Please enter a valid reading.',
 
             // Section 2 - Photos
             'cover_photo.required' => 'Cover photo is required. Please upload a cover image for your listing.',

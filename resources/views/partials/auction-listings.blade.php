@@ -89,7 +89,14 @@
                     <div>
                         <p class="text-xs text-gray-500">Odometer</p>
                         <p class="text-sm font-medium">
-                            {{ $listing->odometer ? number_format($listing->odometer) . ' miles' : 'N/A' }}
+                            @if($listing->odometer)
+                                {{ number_format($listing->odometer) }} miles
+                                @if($listing->odometer_estimated)
+                                    <span class="text-amber-600 font-medium">(Est.)</span>
+                                @endif
+                            @else
+                                N/A
+                            @endif
                         </p>
                     </div>
                 </div>

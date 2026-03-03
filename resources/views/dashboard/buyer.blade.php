@@ -23,8 +23,8 @@
                     <p class="text-gray-600 text-sm">Real-time insights into your bidding activity and purchase analytics</p>
         </div>
 
-                <!-- Top Stats Cards -->
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+                <!-- Top Stats Cards (limited: all paid purchases, current bids, watchlist, pending payment; one row only) -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
                     <div class="bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 rounded-xl shadow-xl p-4 text-white transform hover:scale-105 transition-all duration-300 relative overflow-hidden">
                         <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
                         <div class="relative z-10">
@@ -32,21 +32,9 @@
                                 <span class="material-icons-round text-3xl opacity-80">payments</span>
                                 <span class="text-xs font-semibold bg-white/20 px-2 py-0.5 rounded-full">Spent</span>
                             </div>
-                            <p class="text-blue-100 text-xs font-medium mb-1">Total Spent</p>
+                            <p class="text-blue-100 text-xs font-medium mb-1">All Paid Purchases</p>
                             <p class="text-3xl font-bold mb-0.5">${{ number_format($summary['total_spent'] ?? 0, 0) }}</p>
-                            <p class="text-xs text-blue-100 opacity-75">All paid purchases</p>
-                        </div>
-                    </div>
-                    <div class="bg-gradient-to-br from-emerald-600 via-green-600 to-teal-700 rounded-xl shadow-xl p-4 text-white transform hover:scale-105 transition-all duration-300 relative overflow-hidden" style="background: linear-gradient(to bottom right, #059669, #16a34a, #0f766e);">
-                        <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
-                        <div class="relative z-10">
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="material-icons-round text-3xl text-white" style="opacity: 0.95;">check_circle</span>
-                                <span class="text-xs font-semibold bg-white/25 px-2 py-0.5 rounded-full text-white">Won</span>
-                            </div>
-                            <p class="text-xs font-medium mb-1 text-white">Items Won</p>
-                            <p class="text-3xl font-bold mb-0.5 text-white">{{ $summary['items_won'] ?? 0 }}</p>
-                            <p class="text-xs text-white" style="opacity: 0.95;">{{ $winLossRatioData['winRate'] ?? 0 }}% win rate</p>
+                            <p class="text-xs text-blue-100 opacity-75">Total spent</p>
                         </div>
                     </div>
                     <div class="bg-gradient-to-br from-purple-500 via-pink-500 to-rose-600 rounded-xl shadow-xl p-4 text-white transform hover:scale-105 transition-all duration-300 relative overflow-hidden">
@@ -56,7 +44,7 @@
                                 <span class="material-icons-round text-3xl opacity-80">gavel</span>
                                 <span class="text-xs font-semibold bg-white/20 px-2 py-0.5 rounded-full">Active</span>
                             </div>
-                            <p class="text-purple-100 text-xs font-medium mb-1">Active Bids</p>
+                            <p class="text-purple-100 text-xs font-medium mb-1">Current Bids</p>
                             <p class="text-3xl font-bold mb-0.5">{{ $summary['active_bids_count'] ?? 0 }}</p>
                             <p class="text-xs text-purple-100 opacity-75">Currently bidding</p>
                         </div>
@@ -68,85 +56,39 @@
                                 <span class="material-icons-round text-3xl text-white" style="opacity: 0.95;">bookmark</span>
                                 <span class="text-xs font-semibold bg-white/25 px-2 py-0.5 rounded-full text-white">Saved</span>
                             </div>
-                            <p class="text-xs font-medium mb-1 text-white">Saved Items</p>
+                            <p class="text-xs font-medium mb-1 text-white">Watchlist</p>
                             <p class="text-3xl font-bold mb-0.5 text-white">{{ $summary['saved_items_count'] ?? 0 }}</p>
-                            <p class="text-xs text-white" style="opacity: 0.95;">Watchlist</p>
-            </div>
+                            <p class="text-xs text-white" style="opacity: 0.95;">Saved items</p>
+                        </div>
+                    </div>
+                    <div class="bg-gradient-to-br from-amber-500 via-orange-500 to-amber-600 rounded-xl shadow-xl p-4 text-white transform hover:scale-105 transition-all duration-300 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
+                        <div class="relative z-10">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="material-icons-round text-3xl text-white" style="opacity: 0.95;">schedule</span>
+                                <span class="text-xs font-semibold bg-white/25 px-2 py-0.5 rounded-full text-white">Pending</span>
+                            </div>
+                            <p class="text-xs font-medium mb-1 text-white">Pending Payment</p>
+                            <p class="text-3xl font-bold mb-0.5 text-white">${{ number_format($summary['pending_payment_amount'] ?? 0, 0) }}</p>
+                            <p class="text-xs text-white" style="opacity: 0.95;">{{ $summary['pending_payment_count'] ?? 0 }} invoice(s)</p>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Secondary Stats -->
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg shadow-md border border-blue-200 p-4 hover:shadow-lg transition-all duration-300">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-blue-700 text-xs font-medium">Avg. Purchase</span>
-                            <span class="material-icons-round text-blue-600 text-lg">trending_up</span>
-                        </div>
-                        <p class="text-xl font-bold text-blue-900">${{ number_format($avgPurchase['average'] ?? 0, 0) }}</p>
-                        <p class="text-xs text-blue-600 mt-0.5">Based on {{ $avgPurchase['count'] ?? 0 }} purchases</p>
-                    </div>
-                    <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-lg shadow-md border border-green-200 p-4 hover:shadow-lg transition-all duration-300">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-green-700 text-xs font-medium">Win Rate</span>
-                            <span class="material-icons-round text-green-600 text-lg">percent</span>
-                        </div>
-                        <p class="text-xl font-bold text-green-900">{{ $winLossRatioData['winRate'] ?? 0 }}%</p>
-                        <p class="text-xs text-green-600 mt-0.5">{{ $winLossRatioData['won'] ?? 0 }} won / {{ $winLossRatioData['total'] ?? 0 }} total</p>
-                    </div>
-                    <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg shadow-md border border-purple-200 p-4 hover:shadow-lg transition-all duration-300">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-purple-700 text-xs font-medium">Highest Purchase</span>
-                            <span class="material-icons-round text-purple-600 text-lg">arrow_upward</span>
-                        </div>
-                        <p class="text-xl font-bold text-purple-900">${{ number_format($avgPurchase['highest'] ?? 0, 0) }}</p>
-                        <p class="text-xs text-purple-600 mt-0.5">Best deal</p>
-                    </div>
-                    <div class="bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg shadow-md border border-amber-200 p-4 hover:shadow-lg transition-all duration-300">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-amber-700 text-xs font-medium">Pending Payment</span>
-                            <span class="material-icons-round text-amber-600 text-lg">schedule</span>
-                        </div>
-                        <p class="text-xl font-bold text-amber-900">${{ number_format($summary['pending_payment_amount'] ?? 0, 0) }}</p>
-                        <p class="text-xs text-amber-600 mt-0.5">{{ $summary['pending_payment_count'] ?? 0 }} invoice(s)</p>
-                    </div>
-        </div>
-
-                <!-- Charts Row -->
-                <div class="grid grid-cols-1 xl:grid-cols-3 gap-4 mb-4">
-                    <div class="xl:col-span-2 bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-lg border border-gray-200 p-4">
-                        <div class="flex items-center justify-between mb-3">
-                            <div>
-                                <h3 class="text-lg font-bold text-gray-900">Spending Trend</h3>
-                                <p class="text-xs text-gray-500">Last 6 months</p>
-                            </div>
-                            <div class="bg-blue-100 rounded-lg p-1.5"><span class="material-icons-round text-blue-600 text-lg">show_chart</span></div>
-                        </div>
-                        <div class="h-64"><canvas id="spendingTrendsChart"></canvas></div>
-                    </div>
+                <!-- Win / Loss only (client: keep this; optional average wins shown in subtitle) -->
+                <div class="max-w-md">
                     <div class="bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-lg border border-gray-200 p-4">
                         <div class="flex items-center justify-between mb-3">
                             <div>
                                 <h3 class="text-lg font-bold text-gray-900">Win / Loss</h3>
-                                <p class="text-xs text-gray-500">Auction results</p>
+                                <p class="text-xs text-gray-500">Auction results · Avg wins: {{ $winLossRatioData['won'] ?? 0 }} of {{ $winLossRatioData['total'] ?? 0 }} ({{ $winLossRatioData['winRate'] ?? 0 }}% win rate)</p>
                             </div>
                             <div class="bg-purple-100 rounded-lg p-1.5"><span class="material-icons-round text-purple-600 text-lg">pie_chart</span></div>
                         </div>
                         <div class="h-64"><canvas id="winLossChart"></canvas></div>
                     </div>
                 </div>
-                <div class="grid grid-cols-1">
-                    <div class="bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-lg border border-gray-200 p-4">
-                        <div class="flex items-center justify-between mb-3">
-                            <div>
-                                <h3 class="text-lg font-bold text-gray-900">Bidding Activity</h3>
-                                <p class="text-xs text-gray-500">Last 30 days</p>
-                            </div>
-                            <div class="bg-green-100 rounded-lg p-1.5"><span class="material-icons-round text-green-600 text-lg">bar_chart</span></div>
-                        </div>
-                        <div class="h-72"><canvas id="biddingActivityChart"></canvas></div>
-                    </div>
-                    </div>
-                </div>
+            </div>
 
             <!-- USER TAB -->
             <div id="content-user" class="tab-content hidden p-6">

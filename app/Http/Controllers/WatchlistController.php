@@ -63,7 +63,7 @@ class WatchlistController extends Controller
     public function index()
     {
         $watchlistItems = auth()->user()->watchlist()->with('images')->get();
-        return view('watchlist.index', compact('watchlistItems'));
+        return view('Buyer.watchlist', compact('watchlistItems'));
     }
 }
 

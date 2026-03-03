@@ -83,7 +83,7 @@ class RegisteredUserController extends Controller
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'password' => ['required', 'confirmed', Password::defaults()],
+            'password' => ['required', 'confirmed', 'max:15', Password::defaults()],
             'agree_terms' => 'required|accepted',
         ], [
             'agree_terms.accepted' => 'You must agree to CayMark\'s Terms and Privacy Policy to create an account.',

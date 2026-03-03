@@ -139,7 +139,7 @@ class ListingController extends Controller
      */
     private function detectErrorSection($errors)
     {
-        $section1Fields = ['title_status', 'island', 'color', 'interior_color', 'primary_damage', 'keys_available', 'vin', 'make', 'model', 'year'];
+        $section1Fields = ['title_status', 'island', 'color', 'interior_color', 'primary_damage', 'keys_available', 'odometer', 'odometer_estimated', 'vin', 'make', 'model', 'year'];
         $section2Fields = ['cover_photo', 'photos'];
         $section3Fields = ['auction_duration', 'starting_price', 'reserve_price', 'buy_now_price', 'payment_method'];
         
@@ -230,6 +230,37 @@ class ListingController extends Controller
             'sold' => Listing::where('seller_id', $user->id)->where('status', 'sold')->count(),
         ];
         return view('Seller.Listing.index', compact('listings', 'counts'));
+    }
+
+    /**
+     * Seller view: single listing preview with full vehicle details and analytics.
+     */
+    public function show($id)
+    {
+        $user = Auth::user();
+        $listing = Listing::with('images')->where('seller_id', $user->id)->findOrFail($id);
+
+        $totalBids = $listing->bids()->count();
+        $viewCount = $listing->view_count ?? 0;
+
+        $endDate = $listing->auction_end_time
+            ? \Carbon\Carbon::parse($listing->auction_end_time)
+            : \Carbon\Carbon::parse($listing->auction_start_time ?? $listing->created_at)->addDays($listing->auction_duration ?? 7);
+        $isExpired = $endDate->isPast();
+        $timeRemaining = !$isExpired ? now()->diff($endDate) : null;
+
+        $highestBid = $listing->bids()->where('status', 'active')->orderByDesc('amount')->first();
+        $currentBid = $highestBid ? (float) $highestBid->amount : (float) ($listing->starting_price ?? $listing->price ?? 0);
+
+        return view('Seller.Listing.show', compact(
+            'listing',
+            'totalBids',
+            'viewCount',
+            'endDate',
+            'isExpired',
+            'timeRemaining',
+            'currentBid'
+        ));
     }
 
   public function showAuctionLisitng(Request $request)

@@ -30,12 +30,14 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
 
-        // Strong password policy: min 8, mixed case, numbers
+        // Registration password: 8–15 chars, one uppercase, one number, one special character
         Password::defaults(function () {
             return Password::min(8)
+                ->max(15)
                 ->letters()
                 ->mixedCase()
-                ->numbers();
+                ->numbers()
+                ->symbols();
         });
     }
 }

@@ -131,6 +131,7 @@ class RelistingService
                 'category_type' => $originalListing->category_type,
                 'price' => $originalListing->price,
                 'odometer' => $originalListing->odometer,
+                'odometer_estimated' => $originalListing->odometer_estimated ?? false,
                 'status' => 'pending', // Needs admin approval again
                 'expires_at' => now()->addDays($originalListing->auction_duration ?? 30),
                 'listing_state' => 'active',

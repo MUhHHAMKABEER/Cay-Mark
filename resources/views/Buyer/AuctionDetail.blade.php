@@ -569,7 +569,16 @@
                         </div>
                         <div class="info-item">
                             <span class="info-label">Odometer</span>
-                            <span class="info-value">{{ $listing->odometer ? number_format($listing->odometer) . ' mi' : 'N/A' }}</span>
+                            <span class="info-value">
+                                @if($listing->odometer)
+                                    {{ number_format($listing->odometer) }} mi
+                                    @if($listing->odometer_estimated)
+                                        <span class="text-amber-600 font-medium">(Estimated)</span>
+                                    @endif
+                                @else
+                                    N/A
+                                @endif
+                            </span>
                         </div>
                         <div class="info-item">
                             <span class="info-label">Has Key</span>

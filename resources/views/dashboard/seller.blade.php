@@ -13,11 +13,11 @@
         <div class="bg-white rounded-xl shadow-sm h-full" style="min-height: calc(100vh - 60px);">
             <!-- DASHBOARD TAB (Main Overview with Charts) -->
             <div id="content-dashboard" class="tab-content p-4" style="display: none; height: 100%; overflow-y: auto;">
-                <!-- Header Section: Business vs Casual Seller -->
+                <!-- Header Section: Business vs Individual Seller -->
                 <div class="mb-4">
                     <div class="flex flex-wrap items-center gap-3 mb-2">
                         <h2 class="text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 bg-clip-text text-transparent">
-                            {{ $user->business_license_path ? 'Business Seller' : 'Seller' }} Dashboard
+                            {{ $user->business_license_path ? 'Business Seller' : 'Individual Seller' }} Dashboard
                         </h2>
                         @if($user->business_license_path)
                             <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800">Business Account</span>
@@ -25,9 +25,80 @@
                             <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">Individual Seller</span>
                         @endif
                     </div>
-                    <p class="text-gray-600 text-sm">{{ $user->business_license_path ? 'Manage your business listings, payouts, and buyer coordination.' : 'Real-time insights into your sales performance and auction analytics.' }}</p>
+                    <p class="text-gray-600 text-sm">{{ $user->business_license_path ? 'Manage your business listings, payouts, and buyer coordination.' : 'Your sales summary and listing status at a glance.' }}</p>
                 </div>
 
+                @if(!$user->business_license_path)
+                {{-- INDIVIDUAL SELLER: Only Total Revenue, Active Auction, Pending Payout, Items Sold, Status Overview --}}
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+                    <div class="bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 rounded-xl shadow-xl p-4 text-white transform hover:scale-105 transition-all duration-300 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
+                        <div class="relative z-10">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="material-icons-round text-3xl opacity-80">attach_money</span>
+                                <span class="text-xs font-semibold bg-white/20 px-2 py-0.5 rounded-full">Revenue</span>
+                            </div>
+                            <p class="text-blue-100 text-xs font-medium mb-1">Total Revenue</p>
+                            <p class="text-3xl font-bold mb-0.5">${{ number_format($auctionSummary['total_sales_revenue'] ?? 0, 0) }}</p>
+                            <p class="text-xs text-blue-100 opacity-75">All time earnings</p>
+                        </div>
+                    </div>
+                    <div class="bg-gradient-to-br from-purple-500 via-pink-500 to-rose-600 rounded-xl shadow-xl p-4 text-white transform hover:scale-105 transition-all duration-300 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
+                        <div class="relative z-10">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="material-icons-round text-3xl opacity-80">gavel</span>
+                                <span class="text-xs font-semibold bg-white/20 px-2 py-0.5 rounded-full">Active</span>
+                            </div>
+                            <p class="text-purple-100 text-xs font-medium mb-1">Active Auctions</p>
+                            <p class="text-3xl font-bold mb-0.5">{{ $auctionSummary['current_count'] ?? 0 }}</p>
+                            <p class="text-xs text-purple-100 opacity-75">Currently live</p>
+                        </div>
+                    </div>
+                    <div class="bg-gradient-to-br from-amber-500 via-orange-500 to-red-600 rounded-xl shadow-xl p-4 text-white transform hover:scale-105 transition-all duration-300 relative overflow-hidden" style="background: linear-gradient(to bottom right, #f59e0b, #f97316, #dc2626);">
+                        <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
+                        <div class="relative z-10">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="material-icons-round text-3xl opacity-80 text-white">account_balance_wallet</span>
+                                <span class="text-xs font-semibold bg-white/20 px-2 py-0.5 rounded-full text-white">Payout</span>
+                            </div>
+                            <p class="text-white text-xs font-medium mb-1">Pending Payout</p>
+                            <p class="text-3xl font-bold mb-0.5 text-white">${{ number_format(collect($pendingPayouts ?? [])->sum('net_payout'), 0) }}</p>
+                            <p class="text-xs text-white opacity-90">{{ count($pendingPayouts ?? []) }} pending</p>
+                        </div>
+                    </div>
+                    <div class="bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 rounded-xl shadow-xl p-4 text-white transform hover:scale-105 transition-all duration-300 relative overflow-hidden" style="background: linear-gradient(to bottom right, #10b981, #059669, #0d9488);">
+                        <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
+                        <div class="relative z-10">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="material-icons-round text-3xl opacity-80 text-white">check_circle</span>
+                                <span class="text-xs font-semibold bg-white/20 px-2 py-0.5 rounded-full text-white">Sold</span>
+                            </div>
+                            <p class="text-white text-xs font-medium mb-1">Items Sold</p>
+                            <p class="text-3xl font-bold mb-0.5 text-white">{{ $auctionSummary['total_items_sold'] ?? 0 }}</p>
+                            <p class="text-xs text-white opacity-90">Total sold</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- Status Overview (Individual Seller only) -->
+                <div class="max-w-md">
+                    <div class="bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-lg border border-gray-200 p-4 hover:shadow-xl transition-all duration-300">
+                        <div class="flex items-center justify-between mb-3">
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-900">Status Overview</h3>
+                                <p class="text-xs text-gray-500">Listing distribution</p>
+                            </div>
+                            <div class="bg-purple-100 rounded-lg p-1.5">
+                                <span class="material-icons-round text-purple-600 text-lg">pie_chart</span>
+                            </div>
+                        </div>
+                        <div class="h-64">
+                            <canvas id="listingStatusChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                @else
+                {{-- BUSINESS SELLER: Full dashboard (existing) --}}
                 <!-- Top Stats Cards Row (Horizontal) -->
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
                     <div class="bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 rounded-xl shadow-xl p-4 text-white transform hover:scale-105 transition-all duration-300 relative overflow-hidden">
@@ -233,6 +304,7 @@
                         </div>
                     </div>
                 </div>
+                @endif
             </div>
 
             <!-- USER TAB -->
@@ -638,40 +710,102 @@
                 </div>
             </div>
 
-            <!-- NOTIFICATIONS TAB -->
+            <!-- NOTIFICATIONS TAB (same UI/layout as buyer notifications) -->
             <div id="content-notifications" class="tab-content hidden p-6">
-                <h2 class="text-xl font-bold text-gray-900 mb-6">Notifications</h2>
-
-                @if($notifications->count() > 0)
-                    <div class="space-y-4">
-                        @foreach($notifications as $notification)
-                            @php
-                                $nData = is_array($notification->data) ? $notification->data : [];
-                                $nLink = $nData['link'] ?? null;
-                            @endphp
-                            <div class="seller-notification-card bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition duration-200 {{ $nLink ? 'cursor-pointer' : '' }}"
-                                 data-link="{{ $nLink ?? '' }}"
-                                 @if($nLink) onclick="if (this.dataset.link) window.location.href=this.dataset.link" @endif>
-                                <div class="flex items-start justify-between">
-                                    <div class="flex-1">
-                                        <p class="text-gray-900 font-medium">{{ $nData['message'] ?? ($nData['title'] ?? 'Notification') }}</p>
-                                        <p class="text-sm text-gray-500 mt-1">{{ $notification->created_at->diffForHumans() }}</p>
-                                        @if($nLink)
-                                            <p class="text-sm text-blue-600 font-medium mt-2">View details →</p>
-                                        @endif
-                                    </div>
-                                    @if(!$notification->read_at)
-                                        <span class="ml-4 w-2 h-2 bg-blue-600 rounded-full"></span>
-                                    @endif
-                                </div>
+                <!-- Header -->
+                <div class="bg-white shadow-sm mb-6 rounded-lg p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h2 class="text-3xl font-bold text-gray-900">Notifications</h2>
+                            <p class="text-gray-600 mt-2">All system alerts and updates</p>
+                        </div>
+                        @if($notifications->count() > 0)
+                            <div class="text-sm text-gray-500">
+                                {{ $notifications->whereNull('read_at')->count() }} unread
                             </div>
-                        @endforeach
+                        @endif
                     </div>
-                @else
-                    <div class="text-center py-12 bg-gray-50 rounded-lg">
-                        <p class="text-gray-500 text-lg">No notifications at this time.</p>
-                    </div>
-                @endif
+                </div>
+
+                <!-- Notifications List -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    @if($notifications->count() > 0)
+                        <div class="space-y-4">
+                            @foreach($notifications as $notification)
+                                @php
+                                    $nData = is_array($notification->data) ? $notification->data : [];
+                                    $message = $nData['message'] ?? $nData['title'] ?? 'Notification';
+                                    $type = $nData['type'] ?? 'info';
+                                    $nLink = $nData['link'] ?? null;
+                                @endphp
+                                <div class="seller-notification-card bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition duration-200 {{ !$notification->read_at ? 'bg-blue-50 border-blue-200' : '' }} {{ $nLink ? 'cursor-pointer' : '' }}"
+                                     data-link="{{ $nLink ?? '' }}"
+                                     @if($nLink) onclick="if (this.dataset.link) window.location.href=this.dataset.link" @endif>
+                                    <div class="flex items-start justify-between">
+                                        <div class="flex-1">
+                                            <div class="flex items-center space-x-2 mb-1">
+                                                @if($type === 'bid')
+                                                    <svg class="w-5 h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                @elseif($type === 'outbid')
+                                                    <svg class="w-5 h-5 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                                    </svg>
+                                                @elseif($type === 'win' || $type === 'sale')
+                                                    <svg class="w-5 h-5 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                                                    </svg>
+                                                @elseif($type === 'payment')
+                                                    <svg class="w-5 h-5 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                @elseif($type === 'listing')
+                                                    <svg class="w-5 h-5 text-indigo-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                    </svg>
+                                                @else
+                                                    <svg class="w-5 h-5 text-gray-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                @endif
+                                                <p class="text-gray-900 font-medium">{{ $message }}</p>
+                                            </div>
+                                            <p class="text-sm text-gray-500 mt-1">
+                                                <span>{{ $notification->created_at->format('M d, Y h:i A') }}</span>
+                                                <span class="mx-2">•</span>
+                                                <span>{{ $notification->created_at->diffForHumans() }}</span>
+                                            </p>
+                                            @if($nLink)
+                                                <p class="text-sm text-blue-600 font-medium mt-2">View details →</p>
+                                            @endif
+                                        </div>
+                                        <div class="flex items-center space-x-3 ml-4">
+                                            @if(!$notification->read_at)
+                                                <span class="w-3 h-3 bg-blue-600 rounded-full flex-shrink-0" title="Unread"></span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="text-center py-12 bg-gray-50 rounded-lg">
+                            <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                            </svg>
+                            <p class="text-gray-500 text-lg font-medium mb-2">No notifications at this time.</p>
+                            <p class="text-gray-400 text-sm">You'll receive notifications for:</p>
+                            <ul class="text-gray-400 text-sm mt-2 space-y-1">
+                                <li>• Listing approval or rejection</li>
+                                <li>• New bids on your listings</li>
+                                <li>• Auction results and sales</li>
+                                <li>• Payment and payout updates</li>
+                                <li>• Pickup coordination messages</li>
+                            </ul>
+                        </div>
+                    @endif
+                </div>
             </div>
 
             <!-- MESSAGING CENTER TAB -->
