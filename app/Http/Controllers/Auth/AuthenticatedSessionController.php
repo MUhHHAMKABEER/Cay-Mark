@@ -1,84 +1,124 @@
 <?php
 
-namespace App\Http\Controllers\Auth;
+return [
 
-use App\Http\Controllers\Controller;
-use App\Http\Requests\Auth\LoginRequest;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\View\View;
+    /*
+    |--------------------------------------------------------------------------
+    | Authentication Defaults
+    |--------------------------------------------------------------------------
+    |
+    | This option defines the default authentication "guard" and password
+    | reset "broker" for your application. You may change these values
+    | as required, but they're a perfect start for most applications.
+    |
+    */
 
-class AuthenticatedSessionController extends Controller
-{
-    /**
-     * Display the login view.
-     */
-    public function create(): View
-    {
-        return view('auth.login');
-    }
+    'defaults' => [
+        'guard' => env('AUTH_GUARD', 'web'),
+        'passwords' => env('AUTH_PASSWORD_BROKER', 'users'),
+    ],
 
-public function store(LoginRequest $request): RedirectResponse
-{
-    $request->authenticate();
+    /*
+    |--------------------------------------------------------------------------
+    | Authentication Guards
+    |--------------------------------------------------------------------------
+    |
+    | Next, you may define every authentication guard for your application.
+    | Of course, a great default configuration has been defined for you
+    | which utilizes session storage plus the Eloquent user provider.
+    |
+    | All authentication guards have a user provider, which defines how the
+    | users are actually retrieved out of your database or other storage
+    | system used by the application. Typically, Eloquent is utilized.
+    |
+    | Supported: "session"
+    |
+    */
 
-    $request->session()->regenerate();
+    'guards' => [
+        'web' => [
+            'driver' => 'session',
+            'provider' => 'users',
+        ],
+    ],
 
-    $user = $request->user();
+    /*
+    |--------------------------------------------------------------------------
+    | User Providers
+    |--------------------------------------------------------------------------
+    |
+    | All authentication guards have a user provider, which defines how the
+    | users are actually retrieved out of your database or other storage
+    | system used by the application. Typically, Eloquent is utilized.
+    |
+    | If you have multiple user tables or models you may configure multiple
+    | providers to represent the model / table. These providers may then
+    | be assigned to any extra authentication guards you have defined.
+    |
+    | Supported: "database", "eloquent"
+    |
+    */
 
-    // 21. Suspicious Login Detected — in-app notification when login from new IP
-    $currentIp = $request->ip();
-    if ($currentIp && $user->last_login_ip !== null && $user->last_login_ip !== $currentIp) {
-        try {
-            (new \App\Services\NotificationService())->suspiciousLoginDetected($user);
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::warning('Suspicious login notification failed: ' . $e->getMessage());
-        }
-    }
-    if ($currentIp) {
-        $user->update(['last_login_ip' => $currentIp]);
-    }
-    $role = trim(strtolower($user->role ?? ''));
-    
-    // Admin: skip 2FA, go straight to dashboard
-    if ($role === 'admin') {
-        return redirect()->route('admin.dashboard');
-    }
-    
-    // For other users, check if registration is complete
-    if (!$user->isRegistrationComplete() || empty($user->role)) {
-        return redirect()->route('dashboard.default');
-    }
+    'providers' => [
+        'users' => [
+            'driver' => 'eloquent',
+            'model' => env('AUTH_MODEL', App\Models\User::class),
+        ],
 
-    // Redirect based on role (first-time users go to dashboard for guided tour)
-    if ($role === 'seller') {
-        return redirect()->route('dashboard.seller');
-    } elseif ($role === 'buyer') {
-        $showTour = (int) ($user->first_login ?? 1) === 0;
-        if ($showTour) {
-            return redirect()->route('dashboard.buyer'); // first login: show tour on dashboard
-        }
-        return redirect()->route('welcome');
-    }
+        // 'users' => [
+        //     'driver' => 'database',
+        //     'table' => 'users',
+        // ],
+    ],
 
-    // fallback in case role is invalid
-    return redirect()->route('dashboard.default');
-}
+    /*
+    |--------------------------------------------------------------------------
+    | Resetting Passwords
+    |--------------------------------------------------------------------------
+    |
+    | These configuration options specify the behavior of Laravel's password
+    | reset functionality, including the table utilized for token storage
+    | and the user provider that is invoked to actually retrieve users.
+    |
+    | The expiry time is the number of minutes that each reset token will be
+    | considered valid. This security feature keeps tokens short-lived so
+    | they have less time to be guessed. You may change this as needed.
+    |
+    | The throttle setting is the number of seconds a user must wait before
+    | generating more password reset tokens. This prevents the user from
+    | quickly generating a very large amount of password reset tokens.
+    |
+    */
 
+    'passwords' => [
+        'users' => [
+            'provider' => 'users',
+            'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
+            'expire' => 60,
+            'throttle' => 60,
+        ],
+    ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Password Confirmation Timeout
+    |--------------------------------------------------------------------------
+    |
+    | Here you may define the number of seconds before a password confirmation
+    | window expires and users are asked to re-enter their password via the
+    | confirmation screen. By default, the timeout lasts for three hours.
+    |
+    */
 
-    /**
-     * Destroy an authenticated session.
-     */
-    public function destroy(Request $request): RedirectResponse
-    {
-        Auth::guard('web')->logout();
+    'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
-        $request->session()->invalidate();
+    /*
+    |--------------------------------------------------------------------------
+    | Admin Emails (override role for redirect & access)
+    |--------------------------------------------------------------------------
+    | Comma-separated emails that should always be treated as admin for login
+    | redirect and admin panel access. Use when role in DB is wrong or missing.
+    */
+    'admin_emails' => array_filter(array_map('trim', explode(',', env('ADMIN_EMAILS', '')))),
 
-        $request->session()->regenerateToken();
-
-        return redirect('/');
-    }
-}
+];

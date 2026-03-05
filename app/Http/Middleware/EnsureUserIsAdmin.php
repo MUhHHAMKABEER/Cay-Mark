@@ -18,7 +18,11 @@ class EnsureUserIsAdmin
             return redirect()->route('login');
         }
 
-        if (strtolower(trim($request->user()->role ?? '')) !== 'admin') {
+        $user = $request->user();
+        $role = strtolower(trim($user->role ?? ''));
+        $adminEmails = config('auth.admin_emails', []);
+        $isAdminByEmail = !empty($adminEmails) && in_array(strtolower(trim($user->email ?? '')), array_map('strtolower', $adminEmails), true);
+        if ($role !== 'admin' && !$isAdminByEmail) {
             abort(403, 'Access denied. Administrator only.');
         }
 

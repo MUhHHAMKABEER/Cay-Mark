@@ -112,4 +112,13 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Admin Emails (override role for redirect & access)
+    |--------------------------------------------------------------------------
+    | Comma-separated emails that should always be treated as admin for login
+    | redirect and admin panel access. Use when role in DB is wrong or missing.
+    */
+    'admin_emails' => array_filter(array_map('trim', explode(',', env('ADMIN_EMAILS', '')))),
+
 ];

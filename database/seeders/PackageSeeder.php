@@ -4,13 +4,16 @@ namespace Database\Seeders;
 
 use App\Models\Package;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Schema;
 
 class PackageSeeder extends Seeder
 {
     public function run()
     {
-        // Clear existing packages (optional - comment out if you want to keep old data)
+        // Clear existing packages (MySQL: disable FK checks so truncate works when subscriptions references packages)
+        Schema::disableForeignKeyConstraints();
         Package::truncate();
+        Schema::enableForeignKeyConstraints();
 
         // BUYER MEMBERSHIP - Only one option
         Package::create([

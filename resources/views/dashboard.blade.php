@@ -7,7 +7,7 @@
 @if(!$registrationComplete || empty($role))
     <script>window.location="{{ route('dashboard.default') }}";</script>
 @elseif($role === 'admin')
-    <script>window.location="{{ route('dashboard.admin') }}";</script>
+    <script>window.location="{{ route('admin.dashboard') }}";</script>
 @elseif($role === 'seller')
     <script>window.location="{{ route('dashboard.seller') }}";</script>
 @elseif($role === 'buyer')

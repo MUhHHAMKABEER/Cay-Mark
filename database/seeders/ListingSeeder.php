@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Listing;
 use App\Models\ListingImage;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\File;
@@ -56,34 +57,38 @@ class ListingSeeder extends Seeder
     }
 
     /**
-     * Car listing definitions: 5 for seller 3, 5 for seller 10.
+     * Car listing definitions (seller_id resolved at runtime from UsersTableSeeder seller).
      */
     protected function carDefinitions(): array
     {
         return [
-            // Seller 3 (seller@gmail.com)
-            ['seller_id' => 3, 'year' => '2022', 'make' => 'TOYOTA', 'model' => 'CAMRY', 'trim' => 'XLE', 'color' => 'SILVER', 'odometer' => 18500, 'price' => 24500, 'listing_method' => 'buy_now'],
-            ['seller_id' => 3, 'year' => '2020', 'make' => 'HONDA', 'model' => 'CIVIC', 'trim' => 'SPORT', 'color' => 'BLUE', 'odometer' => 32000, 'price' => 19800, 'listing_method' => 'auction', 'starting_price' => 15000, 'reserve_price' => 18500, 'auction_duration' => 72],
-            ['seller_id' => 3, 'year' => '2021', 'make' => 'FORD', 'model' => 'F-150', 'trim' => 'XLT', 'color' => 'BLACK', 'odometer' => 22000, 'price' => 38500, 'listing_method' => 'buy_now'],
-            ['seller_id' => 3, 'year' => '2019', 'make' => 'NISSAN', 'model' => 'ALTIMA', 'trim' => 'SR', 'color' => 'WHITE', 'odometer' => 41000, 'price' => 16900, 'listing_method' => 'buy_now'],
-            ['seller_id' => 3, 'year' => '2023', 'make' => 'CHEVROLET', 'model' => 'MALIBU', 'trim' => 'PREMIER', 'color' => 'RED', 'odometer' => 8500, 'price' => 26900, 'listing_method' => 'auction', 'starting_price' => 22000, 'reserve_price' => 25500, 'auction_duration' => 48],
-            // Seller 10 (Aimee Grant - voxolyf@mailinator.com)
-            ['seller_id' => 10, 'year' => '2021', 'make' => 'MAZDA', 'model' => 'CX-5', 'trim' => 'GRAND TOURING', 'color' => 'GRAY', 'odometer' => 28000, 'price' => 27900, 'listing_method' => 'buy_now'],
-            ['seller_id' => 10, 'year' => '2020', 'make' => 'HYUNDAI', 'model' => 'TUCSON', 'trim' => 'SEL', 'color' => 'GREEN', 'odometer' => 35000, 'price' => 22900, 'listing_method' => 'auction', 'starting_price' => 18000, 'reserve_price' => 21500, 'auction_duration' => 72],
-            ['seller_id' => 10, 'year' => '2022', 'make' => 'KIA', 'model' => 'SORENTO', 'trim' => 'SX', 'color' => 'PEARL WHITE', 'odometer' => 19500, 'price' => 34500, 'listing_method' => 'buy_now'],
-            ['seller_id' => 10, 'year' => '2018', 'make' => 'SUBARU', 'model' => 'OUTBACK', 'trim' => 'LIMITED', 'color' => 'NAVY', 'odometer' => 52000, 'price' => 24900, 'listing_method' => 'buy_now'],
-            ['seller_id' => 10, 'year' => '2023', 'make' => 'VOLKSWAGEN', 'model' => 'TIGUAN', 'trim' => 'SE', 'color' => 'SILVER', 'odometer' => 12000, 'price' => 31900, 'listing_method' => 'auction', 'starting_price' => 28000, 'reserve_price' => 30500, 'auction_duration' => 48],
+            ['year' => '2022', 'make' => 'TOYOTA', 'model' => 'CAMRY', 'trim' => 'XLE', 'color' => 'SILVER', 'odometer' => 18500, 'price' => 24500, 'listing_method' => 'buy_now'],
+            ['year' => '2020', 'make' => 'HONDA', 'model' => 'CIVIC', 'trim' => 'SPORT', 'color' => 'BLUE', 'odometer' => 32000, 'price' => 19800, 'listing_method' => 'auction', 'starting_price' => 15000, 'reserve_price' => 18500, 'auction_duration' => 72],
+            ['year' => '2021', 'make' => 'FORD', 'model' => 'F-150', 'trim' => 'XLT', 'color' => 'BLACK', 'odometer' => 22000, 'price' => 38500, 'listing_method' => 'buy_now'],
+            ['year' => '2019', 'make' => 'NISSAN', 'model' => 'ALTIMA', 'trim' => 'SR', 'color' => 'WHITE', 'odometer' => 41000, 'price' => 16900, 'listing_method' => 'buy_now'],
+            ['year' => '2023', 'make' => 'CHEVROLET', 'model' => 'MALIBU', 'trim' => 'PREMIER', 'color' => 'RED', 'odometer' => 8500, 'price' => 26900, 'listing_method' => 'auction', 'starting_price' => 22000, 'reserve_price' => 25500, 'auction_duration' => 48],
+            ['year' => '2021', 'make' => 'MAZDA', 'model' => 'CX-5', 'trim' => 'GRAND TOURING', 'color' => 'GRAY', 'odometer' => 28000, 'price' => 27900, 'listing_method' => 'buy_now'],
+            ['year' => '2020', 'make' => 'HYUNDAI', 'model' => 'TUCSON', 'trim' => 'SEL', 'color' => 'GREEN', 'odometer' => 35000, 'price' => 22900, 'listing_method' => 'auction', 'starting_price' => 18000, 'reserve_price' => 21500, 'auction_duration' => 72],
+            ['year' => '2022', 'make' => 'KIA', 'model' => 'SORENTO', 'trim' => 'SX', 'color' => 'PEARL WHITE', 'odometer' => 19500, 'price' => 34500, 'listing_method' => 'buy_now'],
+            ['year' => '2018', 'make' => 'SUBARU', 'model' => 'OUTBACK', 'trim' => 'LIMITED', 'color' => 'NAVY', 'odometer' => 52000, 'price' => 24900, 'listing_method' => 'buy_now'],
+            ['year' => '2023', 'make' => 'VOLKSWAGEN', 'model' => 'TIGUAN', 'trim' => 'SE', 'color' => 'SILVER', 'odometer' => 12000, 'price' => 31900, 'listing_method' => 'auction', 'starting_price' => 28000, 'reserve_price' => 30500, 'auction_duration' => 48],
         ];
     }
 
     public function run(): void
     {
+        $seller = User::where('email', 'seller@gmail.com')->first();
+        if (!$seller) {
+            $this->command?->warn('ListingSeeder: seller@gmail.com not found. Run UsersTableSeeder first.');
+            return;
+        }
+
         $definitions = $this->carDefinitions();
         $urlIndex = 0;
 
         foreach ($definitions as $def) {
             $listing = Listing::create([
-                'seller_id'           => $def['seller_id'],
+                'seller_id'           => $seller->id,
                 'listing_method'      => $def['listing_method'],
                 'auction_duration'    => $def['auction_duration'] ?? null,
                 'major_category'      => 'VEHICLES',
