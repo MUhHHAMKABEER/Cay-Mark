@@ -38,24 +38,39 @@
             </div>
         </div>
 
-        <!-- Email Address -->
+        <!-- Email Address (verification code sent to current email first) -->
         <div class="mb-6">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Registered Email Address</label>
-            <form method="POST" action="{{ route('buyer.user.update-email') }}" class="flex items-center space-x-3">
-                @csrf
-                <div class="flex-1">
-                    <input type="email" 
-                           name="email" 
-                           value="{{ $user->email }}" 
-                           class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                           required>
-                </div>
-                <button type="submit" 
-                        class="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition duration-200">
-                    Update Email
-                </button>
-            </form>
-            <p class="text-sm text-gray-500 mt-2">Email is visible only and can be edited.</p>
+            @php $emailChangePending = session('email_change_pending') || (new \App\Services\EmailChangeVerificationService())->hasPendingChange($user); @endphp
+            @if($emailChangePending)
+                @php $pendingNew = session('email_change_new') ?? (new \App\Services\EmailChangeVerificationService())->getPendingNewEmail($user); @endphp
+                <form method="POST" action="{{ route('buyer.user.update-email') }}" class="space-y-3">
+                    @csrf
+                    <input type="hidden" name="email" value="{{ $pendingNew }}">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Verify email change</label>
+                    <p class="text-sm text-gray-600 mb-2">We sent a verification code to <strong>{{ $user->email }}</strong>. Enter it below to confirm the change to <strong>{{ $pendingNew }}</strong>.</p>
+                    <div class="flex flex-wrap items-end gap-3">
+                        <div class="flex-1 min-w-[140px] max-w-[200px]">
+                            <input type="text" name="code" value="{{ old('code') }}" placeholder="000000" maxlength="6" pattern="[0-9]*" inputmode="numeric" required
+                                class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 font-mono text-lg text-center tracking-widest focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            @error('code')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
+                        </div>
+                        <button type="submit" class="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition duration-200">Confirm change</button>
+                    </div>
+                    <p class="text-sm text-gray-500">Code expires in 15 minutes.</p>
+                </form>
+            @else
+                <form method="POST" action="{{ route('buyer.user.update-email') }}" class="flex flex-wrap items-end gap-3">
+                    @csrf
+                    <label class="block text-sm font-medium text-gray-700 mb-2 w-full">Registered Email Address</label>
+                    <div class="flex-1 min-w-[200px]">
+                        <input type="email" name="email" value="{{ old('email', $user->email) }}" required
+                            class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        @error('email')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
+                    </div>
+                    <button type="submit" class="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition duration-200">Send verification code</button>
+                </form>
+                <p class="text-sm text-gray-500 mt-2 w-full">A code will be sent to your current email to approve the change.</p>
+            @endif
         </div>
 
         <!-- Account Type -->

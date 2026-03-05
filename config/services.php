@@ -50,4 +50,10 @@ return [
         'signup_fee_cents' => (int) env('TOW_PROVIDER_SIGNUP_FEE_CENTS', 5000), // $50.00 default
     ],
 
+    'twilio' => [
+        'sid' => env('TWILIO_SID'),
+        'token' => env('TWILIO_AUTH_TOKEN'),
+        'from' => env('TWILIO_FROM'),
+    ],
+
 ];

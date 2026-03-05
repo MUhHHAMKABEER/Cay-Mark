@@ -262,9 +262,8 @@
 
 <aside class="unified-sidebar">
     <!-- Logo -->
-    <a href="{{ url('/') }}" class="logo flex items-center justify-center gap-2 no-underline">
+    <a href="{{ url('/') }}" class="logo flex items-center justify-center no-underline">
         <img src="{{ asset(config('logos.admin_sidebar', 'Logos/Caymark Logo.png')) }}" alt="CayMark" class="h-14 w-auto max-w-full object-contain" />
-        <h1 class="m-0 text-lg font-bold text-gray-900">Admin</h1>
     </a>
 
     <!-- User Profile -->

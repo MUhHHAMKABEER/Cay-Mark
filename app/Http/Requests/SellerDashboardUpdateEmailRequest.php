@@ -5,7 +5,7 @@ namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 
-class BasicDashboardUpdateEmailRequest extends FormRequest
+class SellerDashboardUpdateEmailRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -20,4 +20,3 @@ class BasicDashboardUpdateEmailRequest extends FormRequest
         return ['email' => 'required|email|unique:users,email,' . Auth::id()];
     }
 }
-

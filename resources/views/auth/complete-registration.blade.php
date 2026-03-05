@@ -55,47 +55,118 @@
                 </div>
             </div>
 
+            <!-- Phone Verification Section -->
+            <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 border border-gray-100">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Phone Verification</h2>
+                <p class="text-gray-600 mb-4">Enter your phone number. We'll send a one-time code by SMS. Code expires in 5 minutes.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Phone Number *</label>
+                        <input type="tel" id="phone_input" name="phone" value="{{ old('phone', $user->phone ?? '') }}" placeholder="e.g. +12425551234"
+                            class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        @error('phone')
+                            <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div class="flex items-end gap-2">
+                        <button type="button" id="send-phone-code-btn" class="px-4 py-3 rounded-xl bg-gray-200 text-gray-700 font-semibold hover:bg-gray-300 transition whitespace-nowrap">Send code</button>
+                    </div>
+                </div>
+                <div id="phone-verify-row" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2 hidden">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Verification code</label>
+                        <input type="text" id="phone_code_input" name="phone_verification_code" placeholder="6-digit code" maxlength="6" inputmode="numeric" pattern="[0-9]*"
+                            class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <p class="text-xs text-gray-500 mt-1">Code expires in 5 minutes</p>
+                    </div>
+                    <div class="flex items-end gap-2">
+                        <button type="button" id="verify-phone-btn" class="px-4 py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition whitespace-nowrap">Verify</button>
+                    </div>
+                </div>
+                <div id="phone-verified-badge" class="hidden rounded-xl bg-green-50 border border-green-200 p-3 text-green-800 text-sm font-medium flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-green-600 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                    <span>Phone verified. This number will be saved to your account.</span>
+                </div>
+                <input type="hidden" name="phone_verified" id="phone_verified" value="0">
+            </div>
+
             <!-- Document Upload Section -->
             <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 border border-gray-100">
                 <h2 class="text-2xl font-bold text-gray-900 mb-6">Document Verification</h2>
+                <p class="text-gray-600 mb-6">Upload two government-issued ID documents. Each must have a document type selected.</p>
 
-                <!-- ID Document -->
-                <div class="mb-6">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        Government Issued ID Document *
-                    </label>
-                    <input type="file" name="id_document" id="id_document" accept=".jpg,.jpeg,.png,.pdf" required
-                        class="block w-full text-sm text-gray-700 file:border file:border-gray-300 file:rounded-xl file:px-4 file:py-3 file:bg-white file:text-gray-700 file:cursor-pointer hover:file:bg-gray-50 transition duration-200">
-                    <p class="text-sm text-gray-500 mt-1">JPG, PNG, or PDF (max 5MB)</p>
-                    @error('id_document')
-                        <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
-                    @enderror
-                    <div id="id-doc-preview-wrap" class="mt-3 hidden">
-                        <p class="text-sm font-semibold text-gray-700 mb-2">Added document: <span id="id-doc-filename" class="text-blue-600"></span></p>
-                        <div id="id-doc-preview-card" class="doc-preview-card inline-block p-3 rounded-xl border-2 border-gray-200 bg-gray-50 cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all max-w-[200px]" data-doc-type="id" title="Hover ya click karke full preview dekhen">
-                            <div id="id-doc-thumb" class="w-32 h-32 rounded-lg bg-white border border-gray-200 overflow-hidden flex items-center justify-center text-gray-400 text-xs"></div>
-                            <p id="id-doc-name" class="mt-2 text-sm font-medium text-gray-700 truncate"></p>
-                            <button type="button" class="id-doc-preview-btn mt-2 w-full py-2 px-3 bg-blue-100 text-blue-700 rounded-lg text-xs font-semibold hover:bg-blue-200 transition">Preview Document</button>
-                            <p class="text-xs text-gray-500 mt-1">Ya is card par hover karen — modal mein preview dikhega</p>
+                @php
+                    $idTypes = ['Passport', 'NIB', 'Driver\'s License', 'Voter\'s Card', 'National ID'];
+                @endphp
+
+                <!-- Government ID Document 1 -->
+                <div class="mb-10 p-6 rounded-xl border-2 border-gray-200 bg-gray-50/50">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">Government ID Document 1 *</h3>
+                    <div class="mb-4">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Document type *</label>
+                        <select name="id_type" required
+                            class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
+                            <option value="">Select document type</option>
+                            @foreach($idTypes as $opt)
+                                <option value="{{ $opt }}" {{ old('id_type') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
+                            @endforeach
+                        </select>
+                        @error('id_type')
+                            <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Upload document *</label>
+                        <input type="file" name="id_document" id="id_document" accept=".jpg,.jpeg,.png,.pdf" required
+                            class="block w-full text-sm text-gray-700 file:border file:border-gray-300 file:rounded-xl file:px-4 file:py-3 file:bg-white file:text-gray-700 file:cursor-pointer hover:file:bg-gray-50 transition duration-200">
+                        <p class="text-sm text-gray-500 mt-1">JPG, PNG, or PDF (max 5MB)</p>
+                        @error('id_document')
+                            <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                        @enderror
+                        <div id="id-doc-preview-wrap" class="mt-3 hidden">
+                            <p class="text-sm font-semibold text-gray-700 mb-2">Added: <span id="id-doc-filename" class="text-blue-600"></span></p>
+                            <div id="id-doc-preview-card" class="doc-preview-card inline-block p-3 rounded-xl border-2 border-gray-200 bg-gray-50 cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all max-w-[200px]" data-doc-type="id" title="Click for preview">
+                                <div id="id-doc-thumb" class="w-32 h-32 rounded-lg bg-white border border-gray-200 overflow-hidden flex items-center justify-center text-gray-400 text-xs"></div>
+                                <p id="id-doc-name" class="mt-2 text-sm font-medium text-gray-700 truncate"></p>
+                                <button type="button" class="id-doc-preview-btn mt-2 w-full py-2 px-3 bg-blue-100 text-blue-700 rounded-lg text-xs font-semibold hover:bg-blue-200 transition">Preview</button>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- ID Type -->
-                <div class="mb-6">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        ID Type *
-                    </label>
-                    <select name="id_type" required
-                        class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
-                        <option value="">Select ID Type</option>
-                        <option value="Passport">Passport</option>
-                        <option value="Driver License">Driver's License</option>
-                        <option value="National ID">National ID</option>
-                    </select>
-                    @error('id_type')
-                        <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
-                    @enderror
+                <!-- Government ID Document 2 -->
+                <div class="mb-6 p-6 rounded-xl border-2 border-gray-200 bg-gray-50/50">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">Government ID Document 2 *</h3>
+                    <div class="mb-4">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Document type *</label>
+                        <select name="id_type_2" required
+                            class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
+                            <option value="">Select document type</option>
+                            @foreach($idTypes as $opt)
+                                <option value="{{ $opt }}" {{ old('id_type_2') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
+                            @endforeach
+                        </select>
+                        @error('id_type_2')
+                            <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Upload document *</label>
+                        <input type="file" name="id_document_2" id="id_document_2" accept=".jpg,.jpeg,.png,.pdf" required
+                            class="block w-full text-sm text-gray-700 file:border file:border-gray-300 file:rounded-xl file:px-4 file:py-3 file:bg-white file:text-gray-700 file:cursor-pointer hover:file:bg-gray-50 transition duration-200">
+                        <p class="text-sm text-gray-500 mt-1">JPG, PNG, or PDF (max 5MB)</p>
+                        @error('id_document_2')
+                            <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                        @enderror
+                        <div id="id-doc-2-preview-wrap" class="mt-3 hidden">
+                            <p class="text-sm font-semibold text-gray-700 mb-2">Added: <span id="id-doc-2-filename" class="text-blue-600"></span></p>
+                            <div id="id-doc-2-preview-card" class="doc-preview-card inline-block p-3 rounded-xl border-2 border-gray-200 bg-gray-50 cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all max-w-[200px]" data-doc-type="id_2" title="Click for preview">
+                                <div id="id-doc-2-thumb" class="w-32 h-32 rounded-lg bg-white border border-gray-200 overflow-hidden flex items-center justify-center text-gray-400 text-xs"></div>
+                                <p id="id-doc-2-name" class="mt-2 text-sm font-medium text-gray-700 truncate"></p>
+                                <button type="button" class="id-doc-2-preview-btn mt-2 w-full py-2 px-3 bg-blue-100 text-blue-700 rounded-lg text-xs font-semibold hover:bg-blue-200 transition">Preview</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Business License (Business Seller only) -->
@@ -371,8 +442,87 @@
         }
 
         document.getElementById('id_document').addEventListener('change', function() {
-            showPreview('id_document', 'id-doc-preview-wrap', 'id-doc-filename', 'id-doc-thumb', 'id-doc-preview-card', 'ID Document Preview');
+            showPreview('id_document', 'id-doc-preview-wrap', 'id-doc-filename', 'id-doc-thumb', 'id-doc-preview-card', 'ID Document 1 Preview');
         });
+        document.getElementById('id_document_2').addEventListener('change', function() {
+            showPreview('id_document_2', 'id-doc-2-preview-wrap', 'id-doc-2-filename', 'id-doc-2-thumb', 'id-doc-2-preview-card', 'ID Document 2 Preview');
+        });
+
+        // Phone verification
+        (function() {
+            var sendBtn = document.getElementById('send-phone-code-btn');
+            var verifyBtn = document.getElementById('verify-phone-btn');
+            var phoneInput = document.getElementById('phone_input');
+            var codeInput = document.getElementById('phone_code_input');
+            var verifyRow = document.getElementById('phone-verify-row');
+            var verifiedBadge = document.getElementById('phone-verified-badge');
+            var phoneVerifiedHidden = document.getElementById('phone_verified');
+            if (!sendBtn || !verifyBtn || !phoneInput) return;
+
+            sendBtn.addEventListener('click', function() {
+                var phone = (phoneInput.value || '').trim();
+                if (!phone) { alert('Please enter your phone number.'); return; }
+                sendBtn.disabled = true;
+                sendBtn.textContent = 'Sending...';
+                fetch('{{ route("registration.phone.send-code") }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+                    body: JSON.stringify({ phone: phone })
+                }).then(function(r) { return r.json(); }).then(function(data) {
+                    sendBtn.disabled = false;
+                    sendBtn.textContent = 'Send code';
+                    if (data.success) {
+                        verifyRow.classList.remove('hidden');
+                        codeInput.value = '';
+                        codeInput.focus();
+                        if (data.message) alert(data.message);
+                    } else {
+                        alert(data.message || 'Failed to send code.');
+                    }
+                }).catch(function() {
+                    sendBtn.disabled = false;
+                    sendBtn.textContent = 'Send code';
+                    alert('Request failed. Try again.');
+                });
+            });
+
+            verifyBtn.addEventListener('click', function() {
+                var phone = (phoneInput.value || '').trim();
+                var code = (codeInput.value || '').trim().replace(/\D/g, '').slice(0, 6);
+                if (!phone || !code) { alert('Enter phone number and 6-digit code.'); return; }
+                verifyBtn.disabled = true;
+                verifyBtn.textContent = 'Verifying...';
+                fetch('{{ route("registration.phone.verify") }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+                    body: JSON.stringify({ phone: phone, code: code })
+                }).then(function(r) { return r.json(); }).then(function(data) {
+                    verifyBtn.disabled = false;
+                    verifyBtn.textContent = 'Verify';
+                    if (data.success) {
+                        verifyRow.classList.add('hidden');
+                        verifiedBadge.classList.remove('hidden');
+                        phoneVerifiedHidden.value = '1';
+                        phoneInput.readOnly = true;
+                        sendBtn.disabled = true;
+                    } else {
+                        alert(data.message || 'Invalid or expired code.');
+                    }
+                }).catch(function() {
+                    verifyBtn.disabled = false;
+                    verifyBtn.textContent = 'Verify';
+                    alert('Request failed. Try again.');
+                });
+            });
+
+            document.getElementById('complete-registration-form').addEventListener('submit', function(e) {
+                if (document.getElementById('phone_verified').value !== '1') {
+                    e.preventDefault();
+                    alert('Please verify your phone number first: enter phone, click Send code, then enter the 6-digit code and click Verify.');
+                    return false;
+                }
+            });
+        })();
 
         @if($isBusinessSeller)
         document.getElementById('business_license').addEventListener('change', function() {
@@ -387,7 +537,10 @@
 
         // "Preview Document" button se modal open
         document.querySelectorAll('.id-doc-preview-btn').forEach(function(btn) {
-            btn.addEventListener('click', function(e) { e.preventDefault(); openModal('id_document', 'ID Document Preview'); });
+            btn.addEventListener('click', function(e) { e.preventDefault(); openModal('id_document', 'ID Document 1 Preview'); });
+        });
+        document.querySelectorAll('.id-doc-2-preview-btn').forEach(function(btn) {
+            btn.addEventListener('click', function(e) { e.preventDefault(); openModal('id_document_2', 'ID Document 2 Preview'); });
         });
         document.querySelectorAll('.license-preview-btn').forEach(function(btn) {
             btn.addEventListener('click', function(e) { e.preventDefault(); openModal('business_license', 'Business License Preview'); });
@@ -400,8 +553,8 @@
                 var self = this;
                 hoverTimer = setTimeout(function() {
                     var docType = self.getAttribute('data-doc-type');
-                    var inputId = docType === 'license' ? 'business_license' : 'id_document';
-                    var title = docType === 'license' ? 'Business License Preview' : 'ID Document Preview';
+                    var inputId = docType === 'license' ? 'business_license' : (docType === 'id_2' ? 'id_document_2' : 'id_document');
+                    var title = docType === 'license' ? 'Business License Preview' : (docType === 'id_2' ? 'ID Document 2 Preview' : 'ID Document 1 Preview');
                     if (docPreviews[inputId]) openModal(inputId, title);
                 }, 350);
             });

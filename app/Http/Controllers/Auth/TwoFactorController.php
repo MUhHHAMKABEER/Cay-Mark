@@ -35,6 +35,8 @@ class TwoFactorController extends Controller
      */
     public function verifyChallenge(Request $request): RedirectResponse
     {
+        $code = $this->normalizeCode($request->input('code', ''));
+        $request->merge(['code' => $code]);
         $request->validate(['code' => 'required|string|size:6']);
 
         $user = $request->user();
@@ -42,9 +44,11 @@ class TwoFactorController extends Controller
             return redirect()->route('dashboard.default');
         }
 
-        $valid = (new Google2FA())->verifyKey(
+        $google2fa = new Google2FA();
+        $valid = $google2fa->verifyKey(
             $user->two_factor_secret,
-            $request->code
+            $code,
+            2  // allow 2 periods (~60s) for clock drift
         );
 
         if (!$valid) {
@@ -94,6 +98,8 @@ class TwoFactorController extends Controller
      */
     public function confirmSetup(Request $request): RedirectResponse
     {
+        $code = $this->normalizeCode($request->input('code', ''));
+        $request->merge(['code' => $code]);
         $request->validate(['code' => 'required|string|size:6']);
 
         $user = $request->user();
@@ -101,9 +107,11 @@ class TwoFactorController extends Controller
             return redirect()->route('dashboard.default');
         }
 
-        $valid = (new Google2FA())->verifyKey(
+        $google2fa = new Google2FA();
+        $valid = $google2fa->verifyKey(
             $user->two_factor_secret,
-            $request->code
+            $code,
+            2  // allow 2 periods (~60s) for clock drift
         );
 
         if (!$valid) {
@@ -120,5 +128,14 @@ class TwoFactorController extends Controller
     private function isAdmin($user): bool
     {
         return $user && strtolower(trim($user->role ?? '')) === 'admin';
+    }
+
+    /**
+     * Normalize 2FA code: trim, keep only digits, take first 6 (handles spaces/paste/extra digits).
+     */
+    private function normalizeCode(string $code): string
+    {
+        $digits = preg_replace('/\D/', '', trim($code));
+        return substr($digits, 0, 6);
     }
 }

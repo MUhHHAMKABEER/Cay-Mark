@@ -6,13 +6,19 @@ class ProfileOps
 {
     public static function update($request)
     {
-        $request->user()->fill($request->validated());
-
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        $user = $request->user();
+        $data = $request->validated();
+        // Name is not editable (not in form). Email change requires verification via Dashboard.
+        if (isset($data['email']) && strtolower(trim($data['email'])) !== strtolower(trim($user->email))) {
+            $role = strtolower(trim($user->role ?? ''));
+            $route = $role === 'seller' ? 'dashboard.seller' : ($role === 'buyer' ? 'dashboard.buyer' : 'dashboard.default');
+            return \Illuminate\Support\Facades\Redirect::route($route, ['tab' => 'user'])
+                ->withErrors(['email' => 'To change your email, use Account settings above. A verification code will be sent to your current email first.']);
         }
-
-        $request->user()->save();
+        if (!empty($data['email'])) {
+            $user->email = $data['email'];
+        }
+        $user->save();
 
         $user = $request->user();
         $role = strtolower(trim($user->role ?? ''));

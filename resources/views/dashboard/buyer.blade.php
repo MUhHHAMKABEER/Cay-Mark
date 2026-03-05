@@ -187,26 +187,53 @@
                             @endif
                         </div>
 
-                        <!-- Email (editable) -->
+                        <!-- Email (editable with verification) -->
                         <div class="pt-2 border-t border-gray-100">
-                            <form method="POST" action="{{ route('buyer.user.update-email') }}" class="group">
-                                @csrf
-                                <label class="flex items-center gap-2 text-sm font-semibold text-gray-600 mb-2">
-                                    <span class="material-icons-round text-gray-400 text-lg group-focus-within:text-blue-600 transition-colors">mail</span>
-                                    Email Address
-                                </label>
-                                <div class="flex flex-col sm:flex-row gap-3">
-                                    <div class="flex-1">
-                                        <input type="email" name="email" value="{{ $user->email }}" required
-                                            class="w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-gray-900 font-medium placeholder-gray-400 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all">
+                            @php $emailChangePending = session('email_change_pending') || (new \App\Services\EmailChangeVerificationService())->hasPendingChange($user); @endphp
+                            @if($emailChangePending)
+                                @php $pendingNew = session('email_change_new') ?? (new \App\Services\EmailChangeVerificationService())->getPendingNewEmail($user); @endphp
+                                <form method="POST" action="{{ route('buyer.user.update-email') }}" class="group">
+                                    @csrf
+                                    <input type="hidden" name="email" value="{{ $pendingNew }}">
+                                    <label class="flex items-center gap-2 text-sm font-semibold text-gray-600 mb-2">
+                                        <span class="material-icons-round text-gray-400 text-lg">mail</span>
+                                        Verify email change
+                                    </label>
+                                    <p class="text-sm text-gray-600 mb-3">We sent a verification code to <strong>{{ $user->email }}</strong>. Enter it below to confirm the change to <strong>{{ $pendingNew }}</strong>.</p>
+                                    <div class="flex flex-col sm:flex-row gap-3">
+                                        <div class="flex-1 max-w-[200px]">
+                                            <input type="text" name="code" value="{{ old('code') }}" placeholder="000000" maxlength="6" pattern="[0-9]*" inputmode="numeric" required
+                                                class="w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-gray-900 font-mono text-xl text-center tracking-widest placeholder-gray-400 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all">
+                                            @error('code')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
+                                        </div>
+                                        <button type="submit" class="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3.5 rounded-xl font-semibold shadow-lg shadow-blue-600/20 hover:shadow-blue-600/30 transition-all duration-200">
+                                            <span class="material-icons-round text-lg">check_circle</span>
+                                            Confirm change
+                                        </button>
                                     </div>
-                                    <button type="submit" class="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3.5 rounded-xl font-semibold shadow-lg shadow-blue-600/20 hover:shadow-blue-600/30 transition-all duration-200">
-                                        <span class="material-icons-round text-lg">save</span>
-                                        Update Email
-                                    </button>
-                                </div>
-                                <p class="text-xs text-gray-400 mt-1.5">Visible only to you. You can change it anytime.</p>
-                            </form>
+                                    <p class="text-xs text-gray-400 mt-1.5">Code expires in 15 minutes. <a href="{{ route('dashboard.buyer', ['tab' => 'user']) }}" class="text-blue-600 hover:underline">Cancel</a></p>
+                                </form>
+                            @else
+                                <form method="POST" action="{{ route('buyer.user.update-email') }}" class="group">
+                                    @csrf
+                                    <label class="flex items-center gap-2 text-sm font-semibold text-gray-600 mb-2">
+                                        <span class="material-icons-round text-gray-400 text-lg group-focus-within:text-blue-600 transition-colors">mail</span>
+                                        Email Address
+                                    </label>
+                                    <div class="flex flex-col sm:flex-row gap-3">
+                                        <div class="flex-1">
+                                            <input type="email" name="email" value="{{ old('email', $user->email) }}" required
+                                                class="w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-gray-900 font-medium placeholder-gray-400 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all">
+                                            @error('email')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
+                                        </div>
+                                        <button type="submit" class="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3.5 rounded-xl font-semibold shadow-lg shadow-blue-600/20 hover:shadow-blue-600/30 transition-all duration-200">
+                                            <span class="material-icons-round text-lg">send</span>
+                                            Send verification code
+                                        </button>
+                                    </div>
+                                    <p class="text-xs text-gray-400 mt-1.5">A code will be sent to your current email to approve the change.</p>
+                                </form>
+                            @endif
                         </div>
 
                         <!-- Password row -->

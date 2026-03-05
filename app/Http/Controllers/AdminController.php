@@ -394,7 +394,7 @@ class AdminController extends Controller
      */
     public function membershipManagement()
     {
-        $memberships = \App\Models\Subscription::with(['user', 'package'])
+        $memberships = \App\Models\Subscription::with(['user:id,name,email,username', 'package'])
                                 ->orderBy('created_at', 'desc')
                                 ->paginate(20);
                                 

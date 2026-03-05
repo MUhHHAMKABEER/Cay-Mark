@@ -4,6 +4,7 @@ namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 class GenericNotification extends Notification
@@ -26,12 +27,33 @@ class GenericNotification extends Notification
 
     /**
      * Get the notification's delivery channels.
+     * Database = notification center; Mail = email sync per requirement.
      *
      * @return array<int, string>
      */
     public function via(object $notifiable): array
     {
-        return ['database'];
+        return ['database', 'mail'];
+    }
+
+    /**
+     * Build the mail representation (email sync with notification center).
+     *
+     * @return \Illuminate\Notifications\Messages\MailMessage
+     */
+    public function toMail(object $notifiable): MailMessage
+    {
+        $mail = (new MailMessage)
+            ->subject('CayMark: ' . \Illuminate\Support\Str::limit($this->message, 50))
+            ->line($this->message);
+
+        if (!empty($this->data['link'])) {
+            $mail->action('View details', $this->data['link']);
+        }
+
+        $mail->line('You received this notification because you have an account on CayMark.');
+
+        return $mail;
     }
 
     /**

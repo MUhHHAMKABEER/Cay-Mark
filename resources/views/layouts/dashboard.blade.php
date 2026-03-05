@@ -12,7 +12,25 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
     <link rel="stylesheet" href="https://unpkg.com/shepherd.js/dist/css/shepherd.css" />
-
+    <style>
+        /* CayMark First-Login Guided Tour — professional UI */
+        .shepherd-element.caymark-tour { max-width: 420px; border-radius: 20px; box-shadow: 0 25px 80px rgba(0,0,0,0.18), 0 0 0 1px rgba(255,255,255,0.5); overflow: hidden; }
+        .shepherd-element.caymark-tour .shepherd-content { padding: 0; border-radius: 20px; }
+        .shepherd-element.caymark-tour .shepherd-header { padding: 20px 24px 12px; background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%); color: #fff; }
+        .shepherd-element.caymark-tour .shepherd-cancel-icon { color: rgba(255,255,255,0.9); font-size: 1.5rem; }
+        .shepherd-element.caymark-tour .shepherd-cancel-icon:hover { color: #fff; }
+        .shepherd-element.caymark-tour .caymark-tour-progress { height: 4px; background: rgba(255,255,255,0.3); margin-top: 12px; border-radius: 2px; overflow: hidden; }
+        .shepherd-element.caymark-tour .caymark-tour-progress-bar { height: 100%; background: linear-gradient(90deg, #a5b4fc, #c7d2fe); border-radius: 2px; transition: width 0.35s ease; }
+        .shepherd-element.caymark-tour .shepherd-text { padding: 24px 24px 20px; font-size: 1.05rem; line-height: 1.6; color: #334155; }
+        .shepherd-element.caymark-tour .shepherd-footer { padding: 0 24px 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+        .shepherd-element.caymark-tour .shepherd-footer .shepherd-buttons { display: flex; gap: 10px; margin-left: auto; }
+        .shepherd-element.caymark-tour .shepherd-button { padding: 10px 20px; border-radius: 10px; font-weight: 600; font-size: 0.95rem; transition: transform 0.2s, box-shadow 0.2s; }
+        .shepherd-element.caymark-tour .shepherd-button:not(:disabled):hover { transform: translateY(-1px); }
+        .shepherd-element.caymark-tour .shepherd-button-primary { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: #fff; border: none; box-shadow: 0 4px 14px rgba(37,99,235,0.4); }
+        .shepherd-element.caymark-tour .shepherd-button-secondary { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+        .shepherd-element.caymark-tour .shepherd-modal-overlay { background: rgba(15,23,42,0.6); }
+        .caymark-tour-step-label { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.9; margin-bottom: 4px; }
+    </style>
     <style>
         body {
             font-family: 'Poppins', sans-serif;
@@ -257,29 +275,28 @@
             }
 
             const buyerSteps = [
-                { id: 'buyer-welcome', text: 'Welcome to your Buyer Dashboard. This tour explains each sidebar item.' },
-                { id: 'buyer-home', selector: '[data-tour-id="buyer-home"]', text: 'Home takes you back to the public marketplace.' },
-                { id: 'buyer-dashboard', selector: '[data-tour-id="buyer-dashboard"]', text: 'Dashboard is your overview of bids, wins, and activity.' },
-                { id: 'buyer-user', selector: '[data-tour-id="buyer-user"]', text: 'User lets you manage your profile details.' },
-                { id: 'buyer-auctions', selector: '[data-tour-id="buyer-auctions"]', text: 'Auctions shows live and past auctions you follow.' },
-                { id: 'buyer-saved-items', selector: '[data-tour-id="buyer-saved-items"]', text: 'Saved Items holds your watchlist.' },
-                { id: 'buyer-notifications', selector: '[data-tour-id="buyer-notifications"]', text: 'Notifications keeps you updated on bids and purchases.' },
-                { id: 'buyer-messaging-center', selector: '[data-tour-id="buyer-messaging-center"]', text: 'Messaging Center is your inbox for sellers and support.' },
-                { id: 'buyer-customer-support', selector: '[data-tour-id="buyer-customer-support"]', text: 'Customer Support opens help and support tickets.' },
-                { id: 'buyer-logout', selector: '[data-tour-id="buyer-logout"]', text: 'Log out when you are done.' },
+                { id: 'buyer-welcome', title: 'Welcome to CayMark', text: 'Your dashboard is the command center for bidding, purchases, and messages. This short tour will show you where everything is.' },
+                { id: 'buyer-home', selector: '[data-tour-id="buyer-home"]', title: 'Home', text: 'Return to the public marketplace to browse and search all auctions.' },
+                { id: 'buyer-dashboard', selector: '[data-tour-id="buyer-dashboard"]', title: 'Dashboard', text: 'Your overview of active bids, won items, watchlist, and pending payments at a glance.' },
+                { id: 'buyer-account-settings', selector: '[data-tour-id="buyer-account-settings"]', title: 'Account settings', text: 'Update your profile, password, and payment preferences.' },
+                { id: 'buyer-auctions', selector: '[data-tour-id="buyer-auctions"]', title: 'Auctions', text: 'View live and past auctions you\'re following or have bid on.' },
+                { id: 'buyer-saved-items', selector: '[data-tour-id="buyer-saved-items"]', title: 'Saved Items', text: 'Your watchlist — save listings to bid on later.' },
+                { id: 'buyer-notifications', selector: '[data-tour-id="buyer-notifications"]', title: 'Notifications', text: 'Alerts for outbid, wins, payment reminders, and pickup updates.' },
+                { id: 'buyer-messaging-center', selector: '[data-tour-id="buyer-messaging-center"]', title: 'Messaging Center', text: 'Chat with sellers and support. Use this after winning an item.' },
+                { id: 'buyer-customer-support', selector: '[data-tour-id="buyer-customer-support"]', title: 'Customer Support', text: 'Get help, open tickets, and access FAQs.' },
+                { id: 'buyer-logout', selector: '[data-tour-id="buyer-logout"]', title: 'You\'re all set', text: 'Log out when you\'re done. You can revisit your dashboard anytime from the menu.' },
             ];
 
             const sellerSteps = [
-                { id: 'seller-welcome', text: 'Welcome to your Seller Dashboard. This tour explains each sidebar item.' },
-                { id: 'seller-dashboard', selector: '[data-tour-id="seller-dashboard"]', text: 'Dashboard shows your listings and sales summary.' },
-                { id: 'seller-user', selector: '[data-tour-id="seller-user"]', text: 'User lets you manage your profile details.' },
-                { id: 'seller-submission', selector: '[data-tour-id="seller-submission"]', text: 'Submission is where you create a new listing.' },
-                { id: 'seller-auctions', selector: '[data-tour-id="seller-auctions"]', text: 'Auctions tracks active and completed auctions.' },
-                { id: 'seller-notifications', selector: '[data-tour-id="seller-notifications"]', text: 'Notifications keeps you updated on bids and sales.' },
-                { id: 'seller-messaging-center', selector: '[data-tour-id="seller-messaging-center"]', text: 'Messaging Center is your inbox for buyers.' },
-                { id: 'seller-customer-support', selector: '[data-tour-id="seller-customer-support"]', text: 'Customer Support opens help and support tickets.' },
-                { id: 'seller-my-listings', selector: '[data-tour-id="seller-my-listings"]', text: 'My Listings shows all your submitted vehicles.' },
-                { id: 'seller-logout', selector: '[data-tour-id="seller-logout"]', text: 'Log out when you are done.' },
+                { id: 'seller-welcome', title: 'Welcome to CayMark', text: 'Your seller dashboard is where you manage listings, auctions, payouts, and buyer communication. This short guide walks you through each part of the sidebar so you can get started quickly.' },
+                { id: 'seller-dashboard', selector: '[data-tour-id="seller-dashboard"]', title: 'Dashboard', text: 'Your sales summary, active listings, and payout status in one place.' },
+                { id: 'seller-account-settings', selector: '[data-tour-id="seller-account-settings"]', title: 'Account settings', text: 'Manage your profile, payout method, and business details.' },
+                { id: 'seller-submission', selector: '[data-tour-id="seller-submission"]', title: 'Submission', text: 'Create a new listing — add vehicle details, photos, and auction settings.' },
+                { id: 'seller-auctions', selector: '[data-tour-id="seller-auctions"]', title: 'Auctions', text: 'Track active and completed auctions and view bids.' },
+                { id: 'seller-notifications', selector: '[data-tour-id="seller-notifications"]', title: 'Notifications', text: 'Alerts for new bids, sales, and buyer messages.' },
+                { id: 'seller-messaging-center', selector: '[data-tour-id="seller-messaging-center"]', title: 'Messaging Center', text: 'Communicate with buyers and coordinate pickup after a sale.' },
+                { id: 'seller-customer-support', selector: '[data-tour-id="seller-customer-support"]', title: 'Customer Support', text: 'Get help and submit support tickets.' },
+                { id: 'seller-logout', selector: '[data-tour-id="seller-logout"]', title: 'You\'re all set', text: 'Log out when you\'re done. Your listings and sales are always available from the dashboard.' },
             ];
 
             const steps = role === 'seller' ? sellerSteps : buyerSteps;
@@ -302,38 +319,63 @@
                 if (!window.Shepherd) {
                     return;
                 }
+                const totalSteps = steps.length;
                 const tour = new Shepherd.Tour({
                     defaultStepOptions: {
                         scrollTo: { behavior: 'smooth', block: 'center' },
                         cancelIcon: { enabled: true },
+                        classes: 'caymark-tour',
                     },
                     useModalOverlay: true,
                 });
 
                 steps.forEach((step, index) => {
-                    const hasSelector = step.selector && document.querySelector(step.selector);
-                    if (step.selector && !hasSelector) {
+                    const hasSelector = !step.selector || document.querySelector(step.selector);
+                    if (step.selector && !document.querySelector(step.selector)) {
                         return;
                     }
+                    const stepNumber = index + 1;
+                    const stepLabel = step.title ? (step.title + ' · ' + stepNumber + ' of ' + totalSteps) : (stepNumber + ' of ' + totalSteps);
                     tour.addStep({
                         id: step.id,
+                        title: stepLabel,
                         text: step.text,
                         attachTo: step.selector ? { element: step.selector, on: 'right' } : undefined,
+                        classes: 'caymark-tour',
                         buttons: [
-                            ...(index === 0 ? [] : [{ text: 'Back', action: tour.back }]),
+                            ...(index === 0 ? [] : [{ text: 'Back', classes: 'shepherd-button-secondary', action: tour.back }]),
                             {
-                                text: index === steps.length - 1 ? 'Finish' : 'Next',
-                                action: index === steps.length - 1 ? tour.complete : tour.next,
+                                text: index === totalSteps - 1 ? 'Finish tour' : 'Next',
+                                classes: 'shepherd-button-primary',
+                                action: index === totalSteps - 1 ? tour.complete : tour.next,
                             },
-                            { text: 'Skip', action: tour.cancel },
+                            { text: 'Skip tour', classes: 'shepherd-button-secondary', action: tour.cancel },
                         ],
+                        when: {
+                            show: function() {
+                                const el = document.querySelector('.shepherd-element.caymark-tour');
+                                if (!el) return;
+                                let progressWrap = el.querySelector('.caymark-tour-progress');
+                                if (!progressWrap) {
+                                    progressWrap = document.createElement('div');
+                                    progressWrap.className = 'caymark-tour-progress';
+                                    const bar = document.createElement('div');
+                                    bar.className = 'caymark-tour-progress-bar';
+                                    progressWrap.appendChild(bar);
+                                    const header = el.querySelector('.shepherd-header');
+                                    if (header) header.appendChild(progressWrap);
+                                }
+                                const bar = progressWrap.querySelector('.caymark-tour-progress-bar');
+                                if (bar) bar.style.width = (stepNumber / totalSteps * 100) + '%';
+                            }
+                        }
                     });
                 });
 
                 tour.on('complete', markFirstLogin);
                 tour.on('cancel', markFirstLogin);
 
-                tour.start();
+                setTimeout(function() { tour.start(); }, 400);
             };
 
             if (window.Shepherd) {

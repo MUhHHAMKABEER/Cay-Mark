@@ -58,6 +58,7 @@ Route::middleware('auth')->group(function () {
 Route::get('/dashboard/seller', [App\Http\Controllers\Seller\SellerDashboardController::class, 'index'])->middleware(['auth', 'seller'])->name('dashboard.seller');
 Route::post('/dashboard/seller/update-payout', [App\Http\Controllers\Seller\SellerDashboardController::class, 'updatePayout'])->middleware(['auth', 'seller'])->name('seller-dashboard.update-payout');
 Route::post('/dashboard/seller/change-password', [App\Http\Controllers\Seller\SellerDashboardController::class, 'changePassword'])->middleware(['auth', 'seller'])->name('seller-dashboard.change-password');
+Route::post('/dashboard/seller/update-email', [App\Http\Controllers\Seller\SellerDashboardController::class, 'updateEmail'])->middleware(['auth', 'seller'])->name('seller-dashboard.update-email');
 Route::post('/dashboard/seller/update-phone', [App\Http\Controllers\Seller\SellerDashboardController::class, 'updatePhone'])->middleware(['auth', 'seller'])->name('seller-dashboard.update-phone');
 Route::post('/dashboard/seller/confirm-pickup/{listingId}', [App\Http\Controllers\Seller\SellerDashboardController::class, 'confirmPickup'])->middleware(['auth', 'seller'])->name('seller-dashboard.confirm-pickup');
 
@@ -105,6 +106,14 @@ Route::get('/video-guide', function () {
 Route::get('/policy', function () {
     return view('policy');
 })->name('policy');
+
+Route::get('/terms-of-service', function () {
+    return view('policy'); // dedicated terms view can replace this later
+})->name('terms.of.service');
+
+Route::get('/privacy-policy', function () {
+    return view('policy'); // dedicated privacy view can replace this later
+})->name('privacy.policy');
 
 // Tow Provider directory and signup (public)
 Route::get('/tow-providers', [App\Http\Controllers\TowProviderController::class, 'index'])->name('tow-provider.index');
@@ -221,6 +230,8 @@ Route::post('/finish-registration/membership', [RegisteredUserController::class,
 Route::get('/finish-registration/complete', [RegisteredUserController::class, 'showCompleteRegistration'])->middleware('auth')->name('finish.registration.complete.show');
 Route::post('/finish-registration/complete', [RegisteredUserController::class, 'completeRegistration'])->middleware('auth')->name('finish.registration.complete');
 
+Route::post('/registration/phone/send-code', [RegisteredUserController::class, 'sendPhoneVerificationCode'])->middleware('auth')->name('registration.phone.send-code');
+Route::post('/registration/phone/verify', [RegisteredUserController::class, 'verifyPhoneCode'])->middleware('auth')->name('registration.phone.verify');
 
 Route::get('/listings/models/{make}', [ListingController::class, 'getModels'])->middleware(['auth', 'seller'])->name('seller.listings.getModels');
 

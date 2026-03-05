@@ -156,14 +156,17 @@
                 </div>
 
                 <div class="px-5 pb-5 mt-auto">
-                    <div class="flex space-x-3">
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <a href="{{ route('seller.listings.show', $listing) }}" class="flex-1 px-4 py-2.5 bg-blue-600 text-white text-center font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                            Preview & Manage
+                        </a>
                         @if($listing->listing_method === 'auction' && $listing->slug)
-                            <a href="{{ route('auction.show', $listing) }}" class="flex-1 px-4 py-2.5 bg-blue-600 text-white text-center font-medium rounded-lg hover:bg-blue-700 transition-colors">
-                                View Auction
+                            <a href="{{ route('auction.show', $listing) }}" target="_blank" class="px-4 py-2.5 border border-gray-300 text-gray-700 text-center font-medium rounded-lg hover:bg-gray-50 transition-colors text-sm">
+                                View Public Page
                             </a>
                         @else
-                            <a href="{{ route('listing.show', $listing) }}" class="flex-1 px-4 py-2.5 bg-blue-600 text-white text-center font-medium rounded-lg hover:bg-blue-700 transition-colors">
-                                View Listing
+                            <a href="{{ route('listing.show', $listing) }}" target="_blank" class="px-4 py-2.5 border border-gray-300 text-gray-700 text-center font-medium rounded-lg hover:bg-gray-50 transition-colors text-sm">
+                                View Public Page
                             </a>
                         @endif
                     </div>

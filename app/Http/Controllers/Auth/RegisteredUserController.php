@@ -24,10 +24,62 @@ use Illuminate\Database\Eloquent\MassAssignmentException;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Cache;
+use App\Services\SmsService;
 
 
 class RegisteredUserController extends Controller
 {
+    private const ID_TYPES = ["Passport", "NIB", "Driver's License", "Voter's Card", "National ID"];
+    private const PHONE_VERIFY_TTL = 300; // 5 minutes
+
+    /**
+     * Send one-time SMS code for phone verification (registration). Code expires in 5 minutes.
+     */
+    public function sendPhoneVerificationCode(Request $request)
+    {
+        $request->validate(['phone' => 'required|string|max:20']);
+        $phone = preg_replace('/\D/', '', trim($request->phone));
+        if (strlen($phone) < 10) {
+            return response()->json(['success' => false, 'message' => 'Invalid phone number.']);
+        }
+        $user = $request->user();
+        $code = (string) random_int(100000, 999999);
+        $key = 'phone_verify:' . $user->id;
+        Cache::put($key, [
+            'phone' => $phone,
+            'code' => $code,
+            'expires_at' => now()->timestamp + self::PHONE_VERIFY_TTL,
+        ], self::PHONE_VERIFY_TTL);
+        $sent = (new SmsService())->send($phone, 'Your CayMark verification code is: ' . $code . '. It expires in 5 minutes.');
+        if (!$sent) {
+            return response()->json(['success' => false, 'message' => 'Could not send SMS. Check the number and try again.']);
+        }
+        return response()->json(['success' => true, 'message' => 'Verification code sent. It expires in 5 minutes.']);
+    }
+
+    /**
+     * Verify phone code and associate phone with account (store in session until registration is submitted).
+     */
+    public function verifyPhoneCode(Request $request)
+    {
+        $request->validate(['phone' => 'required|string|max:20', 'code' => 'required|string|size:6']);
+        $phone = preg_replace('/\D/', '', trim($request->phone));
+        $code = preg_replace('/\D/', '', trim($request->code));
+        $user = $request->user();
+        $key = 'phone_verify:' . $user->id;
+        $data = Cache::get($key);
+        if (!$data || $data['code'] !== $code || $data['phone'] !== $phone) {
+            return response()->json(['success' => false, 'message' => 'Invalid or expired code.']);
+        }
+        if (($data['expires_at'] ?? 0) < now()->timestamp) {
+            Cache::forget($key);
+            return response()->json(['success' => false, 'message' => 'Code has expired. Request a new one.']);
+        }
+        Cache::forget($key);
+        $request->session()->put('registration_verified_phone', $data['phone']);
+        return response()->json(['success' => true]);
+    }
     /**
      * Known Bahamian islands used in validation / select lists.
      */
@@ -259,9 +311,9 @@ class RegisteredUserController extends Controller
             // Send Email #1: Complete Your Registration
             $this->sendRegistrationStep1Email($user);
 
-            // Redirect to home page; header will show user icon with "Complete registration" and "Logout"
-            return redirect()->route('welcome')
-                ->with('success', 'Account created! Complete your registration from the menu to continue.');
+            // Redirect to step 2: membership selection (finish registration)
+            return redirect()->route('finish.registration')
+                ->with('success', 'Account created! Choose your membership to continue.');
 
         } catch (\Illuminate\Database\QueryException $e) {
             DB::rollBack();
@@ -676,7 +728,11 @@ public function step3(Request $request)
         // Validation rules
         $rules = [
             'id_document' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
-            'id_type' => 'required|in:Passport,Driver License,National ID',
+            'id_type' => ['required', \Illuminate\Validation\Rule::in(self::ID_TYPES)],
+            'id_document_2' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'id_type_2' => ['required', \Illuminate\Validation\Rule::in(self::ID_TYPES)],
+            'phone' => 'required|string|max:20',
+            'phone_verified' => 'required|in:1',
         ];
 
         // Business Seller requires additional fields
@@ -722,8 +778,18 @@ public function step3(Request $request)
         try {
             Log::info('Step 7: Updating user with ID type');
 
-            // Update user with ID type
+            // Update user with ID types and verified phone
             $user->id_type = $validated['id_type'];
+            $user->id_type_2 = $validated['id_type_2'];
+            $verifiedPhone = $request->session()->get('registration_verified_phone');
+            if ($validated['phone_verified'] == '1') {
+                if (!$verifiedPhone) {
+                    return back()->withErrors(['phone' => 'Phone number was not verified in this session. Please verify again.'])->withInput();
+                }
+                $user->phone = $verifiedPhone;
+                $user->phone_verified_at = now();
+                $request->session()->forget('registration_verified_phone');
+            }
             if ($isBusinessSeller) {
                 $user->relationship_to_business = $validated['relationship_to_business'];
                 Log::info('Step 7a: Added relationship_to_business', [
@@ -765,6 +831,26 @@ public function step3(Request $request)
                         'trace' => $docEx->getTraceAsString(),
                     ]);
                     throw $docEx;
+                }
+            }
+
+            // Second government ID document
+            if ($request->hasFile('id_document_2')) {
+                try {
+                    $idFile2 = $request->file('id_document_2');
+                    $idPath2 = $idFile2->store('user_documents/' . $user->id, 'public');
+                    UserDocument::create([
+                        'user_id' => $user->id,
+                        'doc_type' => 'id_2',
+                        'path' => $idPath2,
+                        'filename' => $idFile2->getClientOriginalName(),
+                        'mime_type' => $idFile2->getMimeType(),
+                        'size' => $idFile2->getSize(),
+                        'verified' => false,
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error('ID document 2 upload failed', ['error' => $e->getMessage()]);
+                    throw $e;
                 }
             }
 
@@ -908,6 +994,10 @@ public function step3(Request $request)
                 'role' => $user->role,
             ]);
 
+            // Ensure first-login tour shows on dashboard (guide for new users)
+            $user->first_login = 0;
+            $user->save();
+
             // Redirect to appropriate dashboard based on role
             $role = trim(strtolower($user->role ?? ''));
             Log::info('Step 17: Redirecting based on role', ['role' => $role]);
@@ -916,7 +1006,7 @@ public function step3(Request $request)
                 return redirect()->route('dashboard.seller')
                     ->with('success', 'Registration completed successfully! Welcome to CayMark.');
             } elseif ($role === 'buyer') {
-                return redirect()->route('welcome') // listings page
+                return redirect()->route('dashboard.buyer')
                     ->with('success', 'Registration completed successfully! Welcome to CayMark.');
             }
 

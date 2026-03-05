@@ -21,7 +21,7 @@ class User extends Authenticatable
 protected $fillable = [
     'name','email','password','username','nationality','island',
     'dob','gender','phone','marketing_opt_in','role',
-    'id_type','business_license_path','relationship_to_business','registration_complete',
+    'id_type','id_type_2','business_license_path','relationship_to_business','registration_complete','phone_verified_at',
     'is_restricted','restriction_ends_at','restriction_reason',
     'last_login_ip',
     'two_factor_secret','two_factor_confirmed_at',
@@ -52,6 +52,7 @@ protected $fillable = [
         'is_restricted' => 'boolean',
         'restriction_ends_at' => 'datetime',
         'two_factor_confirmed_at' => 'datetime',
+        'phone_verified_at' => 'datetime',
     ];
 
     /**

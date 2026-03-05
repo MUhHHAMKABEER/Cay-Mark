@@ -97,39 +97,47 @@
                         </div>
                     </div>
 
-                    <!-- Email Address -->
+                    <!-- Email Address (verification code sent to old email first) -->
                     <div class="bg-gradient-to-br from-gray-50 to-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
-                        <label class="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                            </svg>
-                            Registered Email Address
-                        </label>
-                        <form method="POST" action="{{ route('basic-dashboard.update-email') }}" class="space-y-3">
-                            @csrf
-                            <div class="flex flex-col sm:flex-row gap-3">
-                                <div class="flex-1">
-                                    <input type="email" 
-                                           name="email" 
-                                           value="{{ $user->email }}" 
-                                           class="w-full bg-white border-2 border-gray-300 rounded-lg px-4 py-3.5 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-                                           required>
+                        @php $emailChangePending = session('email_change_pending') || (new \App\Services\EmailChangeVerificationService())->hasPendingChange($user); @endphp
+                        @if($emailChangePending)
+                            @php $pendingNew = session('email_change_new') ?? (new \App\Services\EmailChangeVerificationService())->getPendingNewEmail($user); @endphp
+                            <form method="POST" action="{{ route('basic-dashboard.update-email') }}" class="space-y-3">
+                                @csrf
+                                <input type="hidden" name="email" value="{{ $pendingNew }}">
+                                <label class="block text-sm font-semibold text-gray-700 mb-3">Verify email change</label>
+                                <p class="text-sm text-gray-600 mb-3">We sent a verification code to <strong>{{ $user->email }}</strong>. Enter it below to confirm the change to <strong>{{ $pendingNew }}</strong>.</p>
+                                <div class="flex flex-col sm:flex-row gap-3">
+                                    <div class="flex-1 max-w-[200px]">
+                                        <input type="text" name="code" value="{{ old('code') }}" placeholder="000000" maxlength="6" pattern="[0-9]*" inputmode="numeric" required
+                                            class="w-full bg-white border-2 border-gray-300 rounded-lg px-4 py-3.5 font-mono text-xl text-center tracking-widest focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                        @error('code')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
+                                    </div>
+                                    <button type="submit" class="bg-blue-600 text-white px-6 py-3.5 rounded-lg font-semibold hover:bg-blue-700 transition-all duration-200">Confirm change</button>
                                 </div>
-                                <button type="submit" 
-                                        class="bg-blue-600 text-white px-6 py-3.5 rounded-lg font-semibold hover:bg-blue-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
-                                    </svg>
-                                    <span>Update Email</span>
-                                </button>
-                            </div>
-                            <p class="text-sm text-gray-500 flex items-center gap-1">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                                Email can be changed. You will need to verify your new email address.
-                            </p>
-                        </form>
+                                <p class="text-sm text-gray-500">Code expires in 15 minutes.</p>
+                            </form>
+                        @else
+                            <form method="POST" action="{{ route('basic-dashboard.update-email') }}" class="space-y-3">
+                                @csrf
+                                <label class="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                                    Registered Email Address
+                                </label>
+                                <div class="flex flex-col sm:flex-row gap-3">
+                                    <div class="flex-1">
+                                        <input type="email" name="email" value="{{ old('email', $user->email) }}" required
+                                            class="w-full bg-white border-2 border-gray-300 rounded-lg px-4 py-3.5 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
+                                        @error('email')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
+                                    </div>
+                                    <button type="submit" class="bg-blue-600 text-white px-6 py-3.5 rounded-lg font-semibold hover:bg-blue-700 transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center gap-2">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                                        <span>Send verification code</span>
+                                    </button>
+                                </div>
+                                <p class="text-sm text-gray-500">A code will be sent to your current email to approve the change.</p>
+                            </form>
+                        @endif
                     </div>
 
                     <!-- Password Management -->

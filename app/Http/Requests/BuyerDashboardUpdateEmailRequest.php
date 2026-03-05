@@ -14,9 +14,13 @@ class BuyerDashboardUpdateEmailRequest extends FormRequest
 
     public function rules(): array
     {
-        return [
-            'email' => 'required|email|unique:users,email,' . Auth::id(),
-        ];
+        $rules = [];
+        if ($this->filled('code')) {
+            $rules['code'] = 'required|string|size:6';
+        } else {
+            $rules['email'] = 'required|email|unique:users,email,' . Auth::id();
+        }
+        return $rules;
     }
 }
 

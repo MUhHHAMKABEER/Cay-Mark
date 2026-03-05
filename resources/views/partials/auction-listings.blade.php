@@ -93,6 +93,7 @@
                                 {{ number_format($listing->odometer) }} miles
                                 @if($listing->odometer_estimated)
                                     <span class="text-amber-600 font-medium">(Est.)</span>
+                                    <span class="material-icons text-gray-400 cursor-help align-middle ml-0.5" title="This is an estimated odometer reading and may be subject to change." style="font-size: 14px;">info</span>
                                 @endif
                             @else
                                 N/A

@@ -24,12 +24,31 @@ class AuctionWonNotification extends Notification
 
     /**
      * Get the notification's delivery channels.
+     * Database = notification center; Mail = email sync per requirement.
      *
      * @return array<int, string>
      */
     public function via(object $notifiable): array
     {
-        return ['database'];
+        return ['database', 'mail'];
+    }
+
+    /**
+     * Build the mail representation (email sync with notification center).
+     *
+     * @return \Illuminate\Notifications\Messages\MailMessage
+     */
+    public function toMail(object $notifiable): MailMessage
+    {
+        $vehicleName = $this->invoice->item_name ?? '[VEHICLE_NAME]';
+        $message = "Congratulations! You won {$vehicleName}. Payment is now required.";
+        $url = route('buyer.payment.checkout-single', $this->invoice->id);
+
+        return (new MailMessage)
+            ->subject('CayMark: You won ' . $vehicleName)
+            ->line($message)
+            ->action('Complete payment', $url)
+            ->line('You received this notification because you have an account on CayMark.');
     }
 
     /**

@@ -41,12 +41,9 @@ public function store(LoginRequest $request): RedirectResponse
     }
     $role = trim(strtolower($user->role ?? ''));
     
-    // Admin users must complete 2FA (setup or challenge) before accessing dashboard
+    // Admin: skip 2FA, go straight to dashboard
     if ($role === 'admin') {
-        if (!$user->hasTwoFactorEnabled()) {
-            return redirect()->route('admin.2fa.setup');
-        }
-        return redirect()->route('admin.2fa.challenge');
+        return redirect()->route('admin.dashboard');
     }
     
     // For other users, check if registration is complete
@@ -54,11 +51,15 @@ public function store(LoginRequest $request): RedirectResponse
         return redirect()->route('dashboard.default');
     }
 
-    // Redirect based on role
+    // Redirect based on role (first-time users go to dashboard for guided tour)
     if ($role === 'seller') {
         return redirect()->route('dashboard.seller');
     } elseif ($role === 'buyer') {
-        return redirect()->route('welcome'); // listings page
+        $showTour = (int) ($user->first_login ?? 1) === 0;
+        if ($showTour) {
+            return redirect()->route('dashboard.buyer'); // first login: show tour on dashboard
+        }
+        return redirect()->route('welcome');
     }
 
     // fallback in case role is invalid

@@ -68,7 +68,7 @@
                         <span class="text-white font-bold text-lg">2</span>
                     </div>
                     <div class="ml-3">
-                        <p class="text-sm font-semibold text-gray-900">Step 2: Select Membership</p>
+                        <p class="text-sm font-semibold text-gray-900">Step 2: Select Role & Package</p>
                     </div>
                 </div>
                 <div class="w-16 h-1 bg-gray-200 rounded-full"></div>
@@ -119,7 +119,7 @@
         <form method="POST" action="{{ route('finish.registration.membership') }}" id="membership-form">
             @csrf
 
-            <!-- Role Selection Card -->
+            <!-- Role Selection Card: Buyer | Seller -->
             <div class="bg-white rounded-3xl shadow-2xl border border-gray-200 overflow-hidden mb-8 animate-slide-up">
                 <!-- Professional Top Bar -->
                 <div class="bg-gradient-to-r from-[#063466] to-[#1e3a8a] px-8 py-4">
@@ -133,7 +133,7 @@
 
                 <div class="p-8 md:p-10">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Buyer Option -->
+                        <!-- Buyer -->
                         <label class="relative cursor-pointer group h-full flex">
                             <input type="radio" name="role" value="buyer" class="sr-only peer" required onchange="loadPackages('buyer')">
                             <div class="relative p-8 border-2 border-gray-300 rounded-2xl transition-all duration-300 group-hover:border-[#2563eb] group-hover:shadow-xl peer-checked:border-[#063466] peer-checked:bg-gradient-to-br peer-checked:from-blue-50 peer-checked:to-indigo-50 peer-checked:shadow-2xl transform peer-checked:scale-105 h-full w-full flex flex-col">
@@ -160,7 +160,7 @@
                             </div>
                         </label>
 
-                        <!-- Seller Option -->
+                        <!-- Seller -->
                         <label class="relative cursor-pointer group h-full flex">
                             <input type="radio" name="role" value="seller" class="sr-only peer" required onchange="loadPackages('seller')">
                             <div class="relative p-8 border-2 border-gray-300 rounded-2xl transition-all duration-300 group-hover:border-green-500 group-hover:shadow-xl peer-checked:border-[#063466] peer-checked:bg-gradient-to-br peer-checked:from-green-50 peer-checked:to-emerald-50 peer-checked:shadow-2xl transform peer-checked:scale-105 h-full w-full flex flex-col">
@@ -205,9 +205,14 @@
                     <div class="flex items-center justify-between">
                         <div class="flex items-center space-x-3">
                             <div class="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
-                            <span class="text-white font-semibold">Choose Your Membership Package</span>
+                            <span class="text-white font-semibold" id="package-section-title">Choose Your Membership Package</span>
                         </div>
                     </div>
+                </div>
+
+                <div id="package-section-subtitle" class="hidden px-8 pt-4 pb-2 text-center">
+                    <p class="text-gray-800 font-semibold text-lg mb-1">Choose your seller type</p>
+                    <p class="text-gray-600 font-medium">Confirm below: <strong class="text-emerald-700">Individual Seller</strong> <span class="text-gray-500">(Casual – no registration fee)</span> or <strong class="text-indigo-700">Business Seller</strong> <span class="text-gray-500">(annual membership)</span>.</p>
                 </div>
 
                 <div class="p-8 md:p-10">
@@ -322,7 +327,21 @@
         selectedRole = role;
         const container = document.getElementById('package-selection');
         const submitBtn = document.getElementById('submit-btn');
-        
+        const sectionTitle = document.getElementById('package-section-title');
+        const sectionSubtitle = document.getElementById('package-section-subtitle');
+
+        if (role === 'seller') {
+            if (sectionTitle) sectionTitle.textContent = 'Choose Your Seller Type';
+            if (sectionSubtitle) {
+                sectionSubtitle.classList.remove('hidden');
+            }
+        } else {
+            if (sectionTitle) sectionTitle.textContent = 'Choose Your Membership Package';
+            if (sectionSubtitle) {
+                sectionSubtitle.classList.add('hidden');
+            }
+        }
+
         // Show loading state
         container.innerHTML = `
             <div class="col-span-2 text-center py-12">
@@ -381,6 +400,9 @@
         const price = pkg.price > 0 ? `$${Number(pkg.price).toFixed(2)}` : 'Free';
         const isFree = pkg.price == 0;
         const isBusinessSeller = role === 'seller' && pkg.price > 0;
+        const sellerTypeLabel = role === 'seller' ? (isFree ? 'Individual Seller (Casual)' : 'Business Seller') : null;
+        const sellerTypeDescription = role === 'seller' ? (isFree ? 'For individuals selling occasionally — no registration fee.' : 'For businesses — annual membership with full benefits.') : null;
+        const sellerCardClass = role === 'seller' ? (isFree ? 'border-emerald-300 bg-emerald-50/40 hover:border-emerald-500' : 'border-indigo-300 bg-indigo-50/40 hover:border-indigo-500') : '';
         const features = Array.isArray(pkg.features) ? pkg.features : (typeof pkg.features === 'string' ? JSON.parse(pkg.features) : []);
 
         const input = document.createElement('input');
@@ -392,23 +414,39 @@
 
         input.addEventListener('change', () => {
             document.querySelectorAll('#package-selection label').forEach(l => {
-                l.querySelector('.package-card').classList.remove('ring-4', 'ring-[#063466]', 'bg-gradient-to-br', 'from-blue-50', 'to-indigo-50', 'scale-105');
+                const card = l.querySelector('.package-card');
+                if (!card) return;
+                card.classList.remove('ring-4', 'ring-[#063466]', 'scale-105');
+                if (!card.classList.contains('border-emerald-300') && !card.classList.contains('border-indigo-300')) {
+                    card.classList.remove('bg-gradient-to-br', 'from-blue-50', 'to-indigo-50');
+                }
             });
             if (input.checked) {
-                label.querySelector('.package-card').classList.add('ring-4', 'ring-[#063466]', 'bg-gradient-to-br', 'from-blue-50', 'to-indigo-50', 'scale-105');
+                const card = label.querySelector('.package-card');
+                card.classList.add('ring-4', 'ring-[#063466]', 'scale-105');
+                if (sellerCardClass) {
+                    card.classList.add(isFree ? 'from-emerald-50' : 'from-indigo-50', 'to-white', 'bg-gradient-to-br');
+                } else {
+                    card.classList.add('bg-gradient-to-br', 'from-blue-50', 'to-indigo-50');
+                }
                 selectedPackage = pkg.id;
                 submitBtn.disabled = false;
             }
         });
 
         label.innerHTML = `
-            <div class="package-card relative bg-white border-2 border-gray-300 rounded-2xl p-8 transition-all duration-500 hover:border-[#063466] hover:shadow-xl transform h-full flex flex-col">
+            <div class="package-card relative bg-white border-2 rounded-2xl p-8 transition-all duration-500 hover:shadow-xl transform h-full flex flex-col ${sellerCardClass || 'border-gray-300 hover:border-[#063466]'}">
                 <div class="package-radio-indicator absolute top-6 right-6 w-8 h-8 border-2 border-gray-400 rounded-full transition-all duration-300 group-hover:border-[#063466]">
                     <svg class="package-radio-check w-full h-full text-white opacity-0 transition-opacity duration-300" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                     </svg>
                 </div>
-                
+                ${sellerTypeLabel ? `
+                <div class="mb-4 pb-4 border-b border-gray-200">
+                    <span class="inline-block px-4 py-2 rounded-xl text-sm font-bold ${isFree ? 'bg-emerald-100 text-emerald-800 border-2 border-emerald-400' : 'bg-indigo-100 text-indigo-800 border-2 border-indigo-400'}">${escapeHtml(sellerTypeLabel)}</span>
+                    ${sellerTypeDescription ? `<p class="text-gray-600 text-sm mt-2 font-medium">${escapeHtml(sellerTypeDescription)}</p>` : ''}
+                </div>
+                ` : ''}
                 <div class="flex flex-col md:flex-row md:items-start md:justify-between mb-6 gap-4">
                     <div class="flex-1 min-w-0">
                         <h3 class="text-2xl md:text-3xl font-bold text-gray-900 mb-2">${escapeHtml(pkg.title || 'Package')}</h3>

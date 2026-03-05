@@ -263,6 +263,16 @@ class ListingController extends Controller
         ));
     }
 
+    /**
+     * Edit listing (placeholder: full edit form can be added later).
+     */
+    public function edit($id)
+    {
+        $user = Auth::user();
+        $listing = Listing::where('seller_id', $user->id)->findOrFail($id);
+        return view('Seller.Listing.edit', compact('listing'));
+    }
+
   public function showAuctionLisitng(Request $request)
 {
     $query = Listing::where('listing_method', 'auction')

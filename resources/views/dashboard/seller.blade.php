@@ -30,7 +30,7 @@
 
                 @if(!$user->business_license_path)
                 {{-- INDIVIDUAL SELLER: Only Total Revenue, Active Auction, Pending Payout, Items Sold, Status Overview --}}
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
                     <div class="bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 rounded-xl shadow-xl p-4 text-white transform hover:scale-105 transition-all duration-300 relative overflow-hidden">
                         <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
                         <div class="relative z-10">
@@ -80,10 +80,10 @@
                         </div>
                     </div>
                 </div>
-                <!-- Status Overview (Individual Seller only) -->
-                <div class="max-w-md">
-                    <div class="bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-lg border border-gray-200 p-4 hover:shadow-xl transition-all duration-300">
-                        <div class="flex items-center justify-between mb-3">
+                <!-- Status Overview (Individual Seller only) – full width so area feels filled -->
+                <div class="w-full">
+                    <div class="bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-lg border border-gray-200 p-6 hover:shadow-xl transition-all duration-300 flex flex-col lg:flex-row lg:items-center lg:gap-8">
+                        <div class="flex items-center justify-between mb-3 lg:mb-0 lg:flex-shrink-0 lg:w-48">
                             <div>
                                 <h3 class="text-lg font-bold text-gray-900">Status Overview</h3>
                                 <p class="text-xs text-gray-500">Listing distribution</p>
@@ -92,7 +92,7 @@
                                 <span class="material-icons-round text-purple-600 text-lg">pie_chart</span>
                             </div>
                         </div>
-                        <div class="h-64">
+                        <div class="flex-1 min-h-[280px] lg:min-h-[320px]">
                             <canvas id="listingStatusChart"></canvas>
                         </div>
                     </div>
@@ -330,13 +330,41 @@
                     </div>
                 @endif
 
-                <!-- Email Address -->
+                <!-- Email Address (editable with verification) -->
                 <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Registered Email Address</label>
-                    <div class="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3">
-                        <span class="text-gray-900">{{ $user->email }}</span>
-                    </div>
-                    <p class="text-sm text-gray-500 mt-1">Visible only; cannot be edited</p>
+                    @php $emailChangePending = session('email_change_pending') || (new \App\Services\EmailChangeVerificationService())->hasPendingChange($user); @endphp
+                    @if($emailChangePending)
+                        @php $pendingNew = session('email_change_new') ?? (new \App\Services\EmailChangeVerificationService())->getPendingNewEmail($user); @endphp
+                        <form method="POST" action="{{ route('seller-dashboard.update-email') }}" class="space-y-3">
+                            @csrf
+                            <input type="hidden" name="email" value="{{ $pendingNew }}">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Verify email change</label>
+                            <p class="text-sm text-gray-600">We sent a verification code to <strong>{{ $user->email }}</strong>. Enter it below to confirm the change to <strong>{{ $pendingNew }}</strong>.</p>
+                            <div class="flex flex-wrap items-end gap-3">
+                                <div class="flex-1 min-w-[140px] max-w-[200px]">
+                                    <input type="text" name="code" value="{{ old('code') }}" placeholder="000000" maxlength="6" pattern="[0-9]*" inputmode="numeric" required
+                                        class="w-full border border-gray-300 rounded-lg px-4 py-2.5 font-mono text-lg text-center tracking-widest focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                    @error('code')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
+                                </div>
+                                <button type="submit" class="px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200 font-medium">Confirm change</button>
+                            </div>
+                            <p class="text-xs text-gray-500">Code expires in 15 minutes.</p>
+                        </form>
+                    @else
+                        <form method="POST" action="{{ route('seller-dashboard.update-email') }}" class="space-y-3">
+                            @csrf
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Registered Email Address</label>
+                            <div class="flex flex-wrap items-end gap-3">
+                                <div class="flex-1 min-w-[200px]">
+                                    <input type="email" name="email" value="{{ old('email', $user->email) }}" required
+                                        class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('email') border-red-500 @enderror">
+                                    @error('email')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
+                                </div>
+                                <button type="submit" class="px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200 font-medium">Send verification code</button>
+                            </div>
+                            <p class="text-sm text-gray-500">A code will be sent to your current email to approve the change.</p>
+                        </form>
+                    @endif
                 </div>
 
                 <!-- Phone Number (editable) -->

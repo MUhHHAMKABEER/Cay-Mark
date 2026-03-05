@@ -92,17 +92,23 @@
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                     @forelse($memberships as $membership)
+                    @php
+                        $memberUser = $membership->user;
+                        $memberName = $memberUser ? (trim((string)($memberUser->name ?? '')) ?: $memberUser->email ?? $memberUser->username ?? 'User #' . $membership->user_id) : ('User #' . $membership->user_id);
+                        $memberEmail = $memberUser ? ($memberUser->email ?? null) : null;
+                        $memberInitial = $memberUser ? strtoupper(substr(trim((string)($memberUser->name ?? $memberUser->email ?? 'U')), 0, 1)) : '?';
+                    @endphp
                     <tr class="hover:bg-gray-50">
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex items-center">
                                 <div class="flex-shrink-0 h-10 w-10">
                                     <div class="h-10 w-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-semibold">
-                                        {{ strtoupper(substr($membership->user->name ?? 'U', 0, 1)) }}
+                                        {{ $memberInitial }}
                                     </div>
                                 </div>
                                 <div class="ml-4">
-                                    <div class="text-sm font-medium text-gray-900">{{ $membership->user->name ?? 'N/A' }}</div>
-                                    <div class="text-sm text-gray-500">{{ $membership->user->email ?? 'N/A' }}</div>
+                                    <div class="text-sm font-medium text-gray-900">{{ $memberName }}</div>
+                                    <div class="text-sm text-gray-500">{{ $memberEmail ?? '—' }}</div>
                                 </div>
                             </div>
                         </td>
