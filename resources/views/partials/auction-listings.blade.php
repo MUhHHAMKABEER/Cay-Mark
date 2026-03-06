@@ -3,17 +3,25 @@
         $likesCount = $listing->likes_count ?? $listing->watchlisted_by_count ?? 0;
         $liked = isset($likedListingIds) && $likedListingIds->contains($listing->id);
     @endphp
-    <div class="vehicle-card bg-white rounded-xl shadow-sm overflow-hidden flex flex-col md:flex-row animate-slide-down">
+    <div class="vehicle-card bg-white rounded-xl shadow-sm overflow-hidden flex flex-col md:flex-row animate-slide-down gap-0 min-w-0">
         <!-- Image -->
-        <div class="md:w-2/5 relative image-container">
+        <div class="md:w-2/5 relative image-container min-h-[250px] bg-gray-100">
             @php
                 $img = $listing->images->first();
-                $imgUrl = $img
-                    ? (str_contains($img->image_path, '/')
-                        ? asset($img->image_path)
-                        : asset('uploads/listings/' . $img->image_path))
-                    : asset('images/placeholder-car.png');
-                
+                if (!$img) {
+                    $imgUrl = asset('images/placeholder-car.png');
+                } else {
+                    $p = $img->image_path ?? '';
+                    if (str_starts_with($p, 'http')) {
+                        $imgUrl = $p;
+                    } elseif (str_contains($p, '/')) {
+                        $imgUrl = asset(ltrim($p, '/'));
+                    } elseif (str_starts_with($p, 'listings/')) {
+                        $imgUrl = asset('storage/' . $p);
+                    } else {
+                        $imgUrl = asset('uploads/listings/' . $p);
+                    }
+                }
                 // Calculate end date from database
                 if ($listing->auction_end_time) {
                     $endDate = \Carbon\Carbon::parse($listing->auction_end_time);
@@ -27,6 +35,8 @@
             <img alt="{{ $listing->title ?? $listing->make . ' ' . $listing->model }}"
                 style="height:250px" src="{{ $imgUrl }}"
                 class="w-full h-full object-cover rounded-lg cursor-pointer transition-transform duration-300 hover:scale-105"
+                loading="lazy"
+                onerror="this.onerror=null; this.src='{{ asset('images/placeholder-car.png') }}';"
                 onclick="openImageModal('{{ $imgUrl }}')" />
             <div class="image-overlay">
                 <button
@@ -58,9 +68,9 @@
         </div>
 
         <!-- Info -->
-        <div class="p-5 flex-1 flex flex-col">
-            <div class="flex justify-between items-start mb-2">
-                <h3 class="text-lg font-semibold text-secondary-800">
+        <div class="p-5 flex-1 flex flex-col min-w-0">
+            <div class="flex justify-between items-start gap-2 mb-2">
+                <h3 class="text-lg font-semibold text-secondary-800 break-words line-clamp-2 min-w-0">
                     {{ $listing->year }} {{ $listing->make }} {{ $listing->model }}
                 </h3>
                 <div class="flex space-x-2 items-center">
@@ -83,7 +93,7 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2 min-w-0">
                 <div class="flex items-center">
                     <span class="material-icons text-gray-400 text-sm mr-2">speed</span>
                     <div>
@@ -101,25 +111,25 @@
                         </p>
                     </div>
                 </div>
-                <div class="flex items-center">
-                    <span class="material-icons text-gray-400 text-sm mr-2">receipt</span>
-                    <div>
+                <div class="flex items-center min-w-0">
+                    <span class="material-icons text-gray-400 text-sm mr-2 shrink-0">receipt</span>
+                    <div class="min-w-0">
                         <p class="text-xs text-gray-500">Title Code</p>
-                        <p class="text-sm font-medium">{{ $listing->title_status ?? 'N/A' }}</p>
+                        <p class="text-sm font-medium truncate">{{ $listing->title_status ? strtoupper($listing->title_status) : 'N/A' }}</p>
                     </div>
                 </div>
-                <div class="flex items-center">
-                    <span class="material-icons text-gray-400 text-sm mr-2">location_on</span>
-                    <div>
+                <div class="flex items-center min-w-0">
+                    <span class="material-icons text-gray-400 text-sm mr-2 shrink-0">location_on</span>
+                    <div class="min-w-0">
                         <p class="text-xs text-gray-500">Location</p>
-                        <p class="text-sm font-medium">{{ $listing->island ?? 'N/A' }}</p>
+                        <p class="text-sm font-medium truncate">{{ $listing->island ?? 'N/A' }}</p>
                     </div>
                 </div>
-                <div class="flex items-center">
-                    <span class="material-icons text-gray-400 text-sm mr-2">event</span>
-                    <div>
+                <div class="flex items-center min-w-0">
+                    <span class="material-icons text-gray-400 text-sm mr-2 shrink-0">event</span>
+                    <div class="min-w-0">
                         <p class="text-xs text-gray-500">Sale Date</p>
-                        <p class="text-sm font-medium">
+                        <p class="text-sm font-medium truncate" title="{{ $listing->sale_date ? '' : 'Sale date not set for this listing.' }}">
                             {{ $listing->sale_date ? \Carbon\Carbon::parse($listing->sale_date)->format('M d, Y') : 'N/A' }}
                         </p>
                     </div>
@@ -139,13 +149,13 @@
                     </div>
                 @endif
                 @if ($listing->transmission)
-                    <div class="flex"><span class="font-medium mr-1">Transmission:</span>
-                        <span>{{ $listing->transmission }}</span>
+                    <div class="flex min-w-0"><span class="font-medium mr-1 shrink-0">Transmission:</span>
+                        <span class="truncate">{{ ucfirst(strtolower($listing->transmission ?? '')) }}</span>
                     </div>
                 @endif
                 @if ($listing->fuel_type)
-                    <div class="flex"><span class="font-medium mr-1">Fuel Type:</span>
-                        <span>{{ $listing->fuel_type }}</span>
+                    <div class="flex min-w-0"><span class="font-medium mr-1 shrink-0">Fuel Type:</span>
+                        <span class="truncate">{{ is_string($listing->fuel_type) ? ucfirst(strtolower($listing->fuel_type)) : $listing->fuel_type }}</span>
                     </div>
                 @endif
             </div>

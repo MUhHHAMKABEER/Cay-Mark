@@ -180,6 +180,41 @@
                         </div>
                     </div>
 
+                    <!-- Phone Verification (optional) -->
+                    <div class="rounded-2xl border-2 border-gray-200 bg-gray-50/50 p-6">
+                        <h3 class="text-lg font-bold text-gray-900 mb-2">Phone Verification <span class="text-gray-500 font-normal text-sm">(optional)</span></h3>
+                        <p class="text-gray-600 text-sm mb-4">Enter your phone number. We'll send a one-time code by SMS. Code expires in 5 minutes.</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">Phone Number</label>
+                                <input type="tel" id="reg_phone_input" name="phone" value="{{ old('phone') }}" placeholder="e.g. +12425551234"
+                                    class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-[#063466] focus:border-[#063466]">
+                                @error('phone')
+                                    <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            <div class="flex items-end gap-2">
+                                <button type="button" id="reg-send-code-btn" class="px-4 py-3 rounded-xl bg-gray-200 text-gray-700 font-semibold hover:bg-gray-300 transition whitespace-nowrap">Send code</button>
+                            </div>
+                        </div>
+                        <div id="reg-phone-verify-row" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2 hidden">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">Verification code</label>
+                                <input type="text" id="reg_phone_code_input" placeholder="6-digit code" maxlength="6" inputmode="numeric" pattern="[0-9]*"
+                                    class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-[#063466] focus:border-[#063466]">
+                                <p class="text-xs text-gray-500 mt-1">Code expires in 5 minutes</p>
+                            </div>
+                            <div class="flex items-end gap-2">
+                                <button type="button" id="reg-verify-phone-btn" class="px-4 py-3 rounded-xl bg-[#063466] text-white font-semibold hover:bg-[#052a52] transition whitespace-nowrap">Verify</button>
+                            </div>
+                        </div>
+                        <div id="reg-phone-verified-badge" class="hidden rounded-xl bg-green-50 border border-green-200 p-3 text-green-800 text-sm font-medium flex items-center mt-2">
+                            <svg class="w-5 h-5 mr-2 text-green-600 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                            <span>Phone verified. This number will be saved to your account.</span>
+                        </div>
+                        <input type="hidden" name="phone_verified" id="reg_phone_verified" value="0">
+                    </div>
+
                     <!-- Password Fields -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="group">
@@ -380,6 +415,80 @@
             slash.classList.add('hidden');
         }
     }
+
+    (function() {
+        var sendBtn = document.getElementById('reg-send-code-btn');
+        var verifyBtn = document.getElementById('reg-verify-phone-btn');
+        var phoneInput = document.getElementById('reg_phone_input');
+        var codeInput = document.getElementById('reg_phone_code_input');
+        var verifyRow = document.getElementById('reg-phone-verify-row');
+        var verifiedBadge = document.getElementById('reg-phone-verified-badge');
+        var hiddenVerified = document.getElementById('reg_phone_verified');
+        var sendUrl = '{{ route("register.phone.send-code") }}';
+        var verifyUrl = '{{ route("register.phone.verify") }}';
+        var csrf = document.querySelector('input[name="_token"]');
+        if (!sendBtn || !verifyBtn || !phoneInput || !csrf) return;
+
+        sendBtn.addEventListener('click', function() {
+            var phone = (phoneInput && phoneInput.value) ? phoneInput.value.trim() : '';
+            if (!phone) {
+                alert('Please enter your phone number.');
+                return;
+            }
+            sendBtn.disabled = true;
+            sendBtn.textContent = 'Sending…';
+            fetch(sendUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf.value, 'Accept': 'application/json' },
+                body: JSON.stringify({ phone: phone })
+            }).then(function(r) { return r.json(); }).then(function(data) {
+                sendBtn.disabled = false;
+                sendBtn.textContent = 'Send code';
+                if (data.success) {
+                    if (verifyRow) verifyRow.classList.remove('hidden');
+                    if (codeInput) { codeInput.value = ''; codeInput.focus(); }
+                    alert(data.message || 'Code sent.');
+                } else {
+                    alert(data.message || 'Could not send code.');
+                }
+            }).catch(function() {
+                sendBtn.disabled = false;
+                sendBtn.textContent = 'Send code';
+                alert('Request failed. Try again.');
+            });
+        });
+
+        verifyBtn.addEventListener('click', function() {
+            var phone = (phoneInput && phoneInput.value) ? phoneInput.value.trim() : '';
+            var code = (codeInput && codeInput.value) ? codeInput.value.trim() : '';
+            if (!phone || !code) {
+                alert('Enter phone number and the 6-digit code.');
+                return;
+            }
+            verifyBtn.disabled = true;
+            verifyBtn.textContent = 'Verifying…';
+            fetch(verifyUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf.value, 'Accept': 'application/json' },
+                body: JSON.stringify({ phone: phone, code: code })
+            }).then(function(r) { return r.json(); }).then(function(data) {
+                verifyBtn.disabled = false;
+                verifyBtn.textContent = 'Verify';
+                if (data.success) {
+                    if (verifiedBadge) verifiedBadge.classList.remove('hidden');
+                    if (hiddenVerified) hiddenVerified.value = '1';
+                    if (verifyRow) verifyRow.classList.add('hidden');
+                    if (phoneInput) phoneInput.readOnly = true;
+                } else {
+                    alert(data.message || 'Invalid or expired code.');
+                }
+            }).catch(function() {
+                verifyBtn.disabled = false;
+                verifyBtn.textContent = 'Verify';
+                alert('Request failed. Try again.');
+            });
+        });
+    })();
 </script>
 
 @endsection

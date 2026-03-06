@@ -80,6 +80,55 @@ class RegisteredUserController extends Controller
         $request->session()->put('registration_verified_phone', $data['phone']);
         return response()->json(['success' => true]);
     }
+
+    /**
+     * Send one-time SMS code for phone verification on register page (guest). Code expires in 5 minutes.
+     */
+    public function sendGuestPhoneCode(Request $request)
+    {
+        $request->validate(['phone' => 'required|string|max:20']);
+        $phone = preg_replace('/\D/', '', trim($request->phone));
+        if (strlen($phone) < 10) {
+            return response()->json(['success' => false, 'message' => 'Invalid phone number.']);
+        }
+        $code = (string) random_int(100000, 999999);
+        $sessionId = $request->session()->getId();
+        $key = 'reg_phone_verify:' . $sessionId;
+        Cache::put($key, [
+            'phone' => $phone,
+            'code' => $code,
+            'expires_at' => now()->timestamp + self::PHONE_VERIFY_TTL,
+        ], self::PHONE_VERIFY_TTL);
+        $sent = (new SmsService())->send($phone, 'Your CayMark verification code is: ' . $code . '. It expires in 5 minutes.');
+        if (!$sent) {
+            return response()->json(['success' => false, 'message' => 'Could not send SMS. Check the number and try again.']);
+        }
+        return response()->json(['success' => true, 'message' => 'Verification code sent. It expires in 5 minutes.']);
+    }
+
+    /**
+     * Verify guest phone code (register page). Store verified phone in session for step1 to save.
+     */
+    public function verifyGuestPhoneCode(Request $request)
+    {
+        $request->validate(['phone' => 'required|string|max:20', 'code' => 'required|string|size:6']);
+        $phone = preg_replace('/\D/', '', trim($request->phone));
+        $code = preg_replace('/\D/', '', trim($request->code));
+        $sessionId = $request->session()->getId();
+        $key = 'reg_phone_verify:' . $sessionId;
+        $data = Cache::get($key);
+        if (!$data || $data['code'] !== $code || $data['phone'] !== $phone) {
+            return response()->json(['success' => false, 'message' => 'Invalid or expired code.']);
+        }
+        if (($data['expires_at'] ?? 0) < now()->timestamp) {
+            Cache::forget($key);
+            return response()->json(['success' => false, 'message' => 'Code has expired. Request a new one.']);
+        }
+        Cache::forget($key);
+        $request->session()->put('registration_verified_phone', $data['phone']);
+        $request->session()->put('registration_phone_verified', true);
+        return response()->json(['success' => true]);
+    }
     /**
      * Known Bahamian islands used in validation / select lists.
      */
@@ -137,6 +186,8 @@ class RegisteredUserController extends Controller
             'email' => 'required|email|unique:users,email',
             'password' => ['required', 'confirmed', 'max:15', Password::defaults()],
             'agree_terms' => 'required|accepted',
+            'phone' => 'nullable|string|max:20',
+            'phone_verified' => 'nullable|in:0,1',
         ], [
             'agree_terms.accepted' => 'You must agree to CayMark\'s Terms and Privacy Policy to create an account.',
         ]);
@@ -265,6 +316,14 @@ class RegisteredUserController extends Controller
                 'role' => null, // No role assigned yet
                 'registration_complete' => false, // Registration not complete
             ]);
+
+            // Save verified phone from register-page SMS flow (session set by guest verify endpoint)
+            if ($request->session()->get('registration_phone_verified') && $request->session()->has('registration_verified_phone')) {
+                $user->phone = $request->session()->get('registration_verified_phone');
+                $user->phone_verified_at = now();
+                $user->save();
+                $request->session()->forget(['registration_verified_phone', 'registration_phone_verified']);
+            }
 
             // Mark as first-time so dashboard tour can run
             $user->first_login = 0;
@@ -725,14 +784,12 @@ public function step3(Request $request)
             'is_business_seller' => $isBusinessSeller,
         ]);
 
-        // Validation rules
+        // Validation rules (phone verification moved to register page)
         $rules = [
             'id_document' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
             'id_type' => ['required', \Illuminate\Validation\Rule::in(self::ID_TYPES)],
             'id_document_2' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
             'id_type_2' => ['required', \Illuminate\Validation\Rule::in(self::ID_TYPES)],
-            'phone' => 'required|string|max:20',
-            'phone_verified' => 'required|in:1',
         ];
 
         // Business Seller requires additional fields
@@ -778,18 +835,9 @@ public function step3(Request $request)
         try {
             Log::info('Step 7: Updating user with ID type');
 
-            // Update user with ID types and verified phone
+            // Update user with ID types (phone is set on register page if verified there)
             $user->id_type = $validated['id_type'];
             $user->id_type_2 = $validated['id_type_2'];
-            $verifiedPhone = $request->session()->get('registration_verified_phone');
-            if ($validated['phone_verified'] == '1') {
-                if (!$verifiedPhone) {
-                    return back()->withErrors(['phone' => 'Phone number was not verified in this session. Please verify again.'])->withInput();
-                }
-                $user->phone = $verifiedPhone;
-                $user->phone_verified_at = now();
-                $request->session()->forget('registration_verified_phone');
-            }
             if ($isBusinessSeller) {
                 $user->relationship_to_business = $validated['relationship_to_business'];
                 Log::info('Step 7a: Added relationship_to_business', [

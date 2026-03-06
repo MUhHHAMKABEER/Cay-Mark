@@ -254,6 +254,26 @@ class Listing extends Model
         return \Carbon\Carbon::parse($start)->addDays($this->auction_duration ?? 7);
     }
 
+    /**
+     * Scope: only auctions that are still visible (not ended, not sold).
+     * Use for public auction listing pages.
+     */
+    public function scopeVisibleAuctions($query)
+    {
+        $query->where('status', '!=', 'sold');
+        $query->where(function ($q) {
+            // End date in future: either auction_end_time or computed from start + duration
+            $q->where(function ($sub) {
+                $sub->whereNotNull('auction_end_time')
+                    ->where('auction_end_time', '>=', now());
+            })->orWhere(function ($sub) {
+                $sub->whereNull('auction_end_time')
+                    ->whereRaw('DATE_ADD(COALESCE(auction_start_time, created_at), INTERVAL COALESCE(auction_duration, 7) DAY) >= ?', [now()]);
+            });
+        });
+        return $query;
+    }
+
     public function bids()
 {
     return $this->hasMany(Bid::class);

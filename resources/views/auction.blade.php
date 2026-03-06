@@ -765,25 +765,36 @@
                         </div>
                     </template>
 
-                    <!-- Grid View: spread out – more columns on large screens -->
+                    <!-- Grid View: less cramped – fewer columns, larger gap -->
                     <div x-show="viewMode === 'grid'"
-                        class="grid-view grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5 lg:gap-6" x-cloak>
+                        class="grid-view grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 lg:gap-8" x-cloak>
                         @forelse($auctions as $listing)
                             <div
                                 class="vehicle-card bg-white rounded-xl shadow-sm overflow-hidden flex flex-col h-full animate-bounce-in">
-                                <!-- Image -->
-                                <div class="image-container relative">
+                                <!-- Image: consistent URL (uploads/listings or storage/listings) -->
+                                <div class="image-container relative min-h-[12rem] bg-gray-100">
                                     @php
                                         $img = $listing->images->first();
-                                        $imgUrl = $img
-                                            ? (str_contains($img->image_path, '/')
-                                                ? asset($img->image_path)
-                                                : asset('uploads/listings/' . $img->image_path))
-                                            : asset('images/placeholder-car.png');
+                                        if (!$img) {
+                                            $imgUrl = asset('images/placeholder-car.png');
+                                        } else {
+                                            $p = $img->image_path ?? '';
+                                            if (str_starts_with($p, 'http')) {
+                                                $imgUrl = $p;
+                                            } elseif (str_contains($p, '/')) {
+                                                $imgUrl = asset(ltrim($p, '/'));
+                                            } elseif (str_starts_with($p, 'listings/')) {
+                                                $imgUrl = asset('storage/' . $p);
+                                            } else {
+                                                $imgUrl = asset('uploads/listings/' . $p);
+                                            }
+                                        }
                                     @endphp
                                     <img alt="{{ $listing->title ?? $listing->make . ' ' . $listing->model }}"
                                         src="{{ $imgUrl }}"
                                         class="w-full h-48 object-cover cursor-pointer transition-transform duration-300 hover:scale-105"
+                                        loading="lazy"
+                                        onerror="this.onerror=null; this.src='{{ asset('images/placeholder-car.png') }}';"
                                         onclick="openImageModal('{{ $imgUrl }}')" />
 
                                     <div class="image-overlay">
@@ -828,16 +839,16 @@
                                     </div>
                                 </div>
 
-                                <!-- Content -->
-                                <div class="p-4 flex-1 flex flex-col">
-                                    <h3 class="text-lg font-semibold text-secondary-800 mb-2 line-clamp-1">
+                                <!-- Content: spacing and formatting for readability -->
+                                <div class="p-4 flex-1 flex flex-col min-w-0">
+                                    <h3 class="text-lg font-semibold text-secondary-800 mb-3 line-clamp-2 break-words">
                                         {{ $listing->year }} {{ $listing->make }} {{ $listing->model }}
                                     </h3>
 
-                                    <div class="grid grid-cols-2 gap-2 mb-4">
-                                        <div class="flex items-center text-sm text-gray-600">
-                                            <span class="material-icons text-gray-400 text-sm mr-1">speed</span>
-                                            <span>
+                                    <div class="grid grid-cols-2 gap-x-3 gap-y-3 mb-4">
+                                        <div class="flex items-start text-sm text-gray-600 min-w-0">
+                                            <span class="material-icons text-gray-400 text-sm mr-1.5 shrink-0">speed</span>
+                                            <span class="truncate">
                                             @if($listing->odometer)
                                                 {{ number_format($listing->odometer) }} mi
                                                 @if($listing->odometer_estimated)
@@ -849,17 +860,17 @@
                                             @endif
                                         </span>
                                         </div>
-                                        <div class="flex items-center text-sm text-gray-600">
-                                            <span class="material-icons text-gray-400 text-sm mr-1">location_on</span>
+                                        <div class="flex items-start text-sm text-gray-600 min-w-0">
+                                            <span class="material-icons text-gray-400 text-sm mr-1.5 shrink-0">location_on</span>
                                             <span class="truncate">{{ $listing->island ?? 'N/A' }}</span>
                                         </div>
-                                        <div class="flex items-center text-sm text-gray-600">
-                                            <span class="material-icons text-gray-400 text-sm mr-1">receipt</span>
-                                            <span class="truncate">{{ $listing->title_status ?? 'N/A' }}</span>
+                                        <div class="flex items-start text-sm text-gray-600 min-w-0">
+                                            <span class="material-icons text-gray-400 text-sm mr-1.5 shrink-0">receipt</span>
+                                            <span class="truncate">{{ $listing->title_status ? strtoupper($listing->title_status) : 'N/A' }}</span>
                                         </div>
-                                        <div class="flex items-center text-sm text-gray-600">
-                                            <span class="material-icons text-gray-400 text-sm mr-1">event</span>
-                                            <span>{!! $listing->sale_date ? \Carbon\Carbon::parse($listing->sale_date)->format('M d') : 'N/A' !!}</span>
+                                        <div class="flex items-start text-sm text-gray-600 min-w-0">
+                                            <span class="material-icons text-gray-400 text-sm mr-1.5 shrink-0">event</span>
+                                            <span class="truncate" title="{{ $listing->sale_date ? '' : 'Sale date not set for this listing.' }}">{{ $listing->sale_date ? \Carbon\Carbon::parse($listing->sale_date)->format('M d, Y') : 'N/A' }}</span>
                                         </div>
                                     </div>
 
@@ -886,8 +897,8 @@
                         @endforelse
                     </div>
 
-                    <!-- Detailed View -->
-                    <div x-show="viewMode === 'detail'" class="detail-view grid grid-cols-1 gap-5" id="auctionListings" x-cloak>
+                    <!-- Detailed View: more spacing between cards -->
+                    <div x-show="viewMode === 'detail'" class="detail-view grid grid-cols-1 gap-8" id="auctionListings" x-cloak>
                         @include('partials.auction-listings', ['auctions' => $auctions])
                     </div>
 

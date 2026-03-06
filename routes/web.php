@@ -232,6 +232,9 @@ Route::post('/finish-registration/complete', [RegisteredUserController::class, '
 
 Route::post('/registration/phone/send-code', [RegisteredUserController::class, 'sendPhoneVerificationCode'])->middleware('auth')->name('registration.phone.send-code');
 Route::post('/registration/phone/verify', [RegisteredUserController::class, 'verifyPhoneCode'])->middleware('auth')->name('registration.phone.verify');
+// Guest phone verification (register page, before user exists)
+Route::post('/register/phone/send-code', [RegisteredUserController::class, 'sendGuestPhoneCode'])->name('register.phone.send-code');
+Route::post('/register/phone/verify', [RegisteredUserController::class, 'verifyGuestPhoneCode'])->name('register.phone.verify');
 
 Route::get('/listings/models/{make}', [ListingController::class, 'getModels'])->middleware(['auth', 'seller'])->name('seller.listings.getModels');
 

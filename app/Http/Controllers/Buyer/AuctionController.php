@@ -22,10 +22,11 @@ class AuctionController extends Controller
 {
    public function index(Request $request)
 {
-    // Base query: only auction listings
+    // Base query: only auction listings that are still visible (not ended, not sold)
     $query = Listing::with('images')
         ->withCount(['watchlistedBy as likes_count'])
-        ->where('listing_method', 'auction');
+        ->where('listing_method', 'auction')
+        ->visibleAuctions();
 
     // If you have a 'status' column, filter approved ones
     if (Schema::hasColumn('listings', 'status')) {
@@ -213,10 +214,15 @@ class AuctionController extends Controller
         ->paginate(20)
         ->appends($request->query());
 
-    // Build filter option lists for UI (only from active auctions)
+    // Build filter option lists for UI (only from visible, active auctions)
     $baseQuery = Listing::where('listing_method', 'auction')
-        ->where('listing_state', 'active')
-        ->where('status', 'approved');
+        ->visibleAuctions();
+    if (Schema::hasColumn('listings', 'listing_state')) {
+        $baseQuery->where('listing_state', 'active');
+    }
+    if (Schema::hasColumn('listings', 'status')) {
+        $baseQuery->where('status', 'approved');
+    }
 
     // Location: all islands from config (buyer finds by island)
     $filterOptions = [
