@@ -4,13 +4,17 @@
 @php
     // Popular auctions: active only, do not show ended auctions on front page. End time must be in the future.
     $now = now()->format('Y-m-d H:i:s');
-    $popularAuctions = \App\Models\Listing::with('images')
+    $activeAuctionQuery = \App\Models\Listing::with('images')
         ->where('listing_method', 'auction')
         ->where('listing_state', 'active')
         ->where('status', 'approved')
-        ->whereRaw("COALESCE(auction_end_time, DATE_ADD(COALESCE(auction_start_time, created_at), INTERVAL COALESCE(auction_duration, 7) DAY)) > ?", [$now])
-        ->orderBy('created_at', 'desc')
-        ->take(10)
+        ->whereRaw("COALESCE(auction_end_time, DATE_ADD(COALESCE(auction_start_time, created_at), INTERVAL COALESCE(auction_duration, 7) DAY)) > ?", [$now]);
+
+    // Use most-viewed logic directly for Popular Car Auctions (top 8 most-clicked auctions)
+    $popularAuctions = (clone $activeAuctionQuery)
+        ->orderByDesc('view_count')
+        ->orderByDesc('created_at')
+        ->take(8)
         ->get();
 @endphp
 
@@ -515,49 +519,46 @@
             }
         }, 6000);
 
-        // Countdown Timer Function for Homepage
-        function updateHomepageCountdowns() {
-            document.querySelectorAll('[id^="countdown-home-"]').forEach(element => {
-                const listingId = element.id.replace('countdown-home-', '');
-                const endTime = new Date(element.getAttribute('data-end-time'));
-                const now = new Date();
-                const diff = Math.max(0, Math.floor((endTime - now) / 1000));
+        function runCountdown(element, prefix) {
+            const listingId = element.id.replace(prefix, '');
+            const endTime = new Date(element.getAttribute('data-end-time'));
+            const now = new Date();
+            const diff = Math.max(0, Math.floor((endTime - now) / 1000));
 
-                // Hide LIVE badge if expired
-                const liveBadge = document.getElementById('live-badge-' + listingId);
-                if (liveBadge) {
-                    if (diff <= 0) {
-                        liveBadge.style.display = 'none';
-                    } else {
-                        liveBadge.style.display = 'flex';
-                    }
-                }
+            const liveBadge = document.getElementById('live-badge-' + listingId);
+            if (liveBadge) {
+                liveBadge.style.display = diff <= 0 ? 'none' : 'flex';
+            }
 
-                if (diff <= 0) {
-                    element.innerHTML = '<div class="bg-gray-500/90 backdrop-blur-md text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-xl border border-gray-400/30">Auction Ended</div>';
-                    return;
-                }
+            if (diff <= 0) {
+                element.innerHTML = '<div class="bg-gray-500/90 backdrop-blur-md text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-xl border border-gray-400/30">Auction Ended</div>';
+                return;
+            }
 
-                const days = Math.floor(diff / 86400);
-                const hours = Math.floor((diff % 86400) / 3600);
-                const minutes = Math.floor((diff % 3600) / 60);
-                const seconds = diff % 60;
+            const days = Math.floor(diff / 86400);
+            const hours = Math.floor((diff % 86400) / 3600);
+            const minutes = Math.floor((diff % 3600) / 60);
+            const seconds = diff % 60;
 
-                const daysEl = document.getElementById('days-' + listingId);
-                const hoursEl = document.getElementById('hours-' + listingId);
-                const minutesEl = document.getElementById('minutes-' + listingId);
-                const secondsEl = document.getElementById('seconds-' + listingId);
+            const idPrefix = prefix === 'countdown-home-' ? '' : 'mv-';
+            const daysEl = document.getElementById(idPrefix + 'days-' + listingId);
+            const hoursEl = document.getElementById(idPrefix + 'hours-' + listingId);
+            const minutesEl = document.getElementById(idPrefix + 'minutes-' + listingId);
+            const secondsEl = document.getElementById(idPrefix + 'seconds-' + listingId);
 
-                if (daysEl) daysEl.textContent = String(days).padStart(2, '0');
-                if (hoursEl) hoursEl.textContent = String(hours).padStart(2, '0');
-                if (minutesEl) minutesEl.textContent = String(minutes).padStart(2, '0');
-                if (secondsEl) secondsEl.textContent = String(seconds).padStart(2, '0');
-            });
+            if (daysEl) daysEl.textContent = String(days).padStart(2, '0');
+            if (hoursEl) hoursEl.textContent = String(hours).padStart(2, '0');
+            if (minutesEl) minutesEl.textContent = String(minutes).padStart(2, '0');
+            if (secondsEl) secondsEl.textContent = String(seconds).padStart(2, '0');
         }
 
-        // Update countdown timers every second
+        function updateHomepageCountdowns() {
+            document.querySelectorAll('[id^="countdown-home-"]').forEach(el => runCountdown(el, 'countdown-home-'));
+            document.querySelectorAll('[id^="countdown-mv-"]').forEach(el => runCountdown(el, 'countdown-mv-'));
+        }
+
         setInterval(updateHomepageCountdowns, 1000);
-        updateHomepageCountdowns(); // Initial call
+        updateHomepageCountdowns();
     </script>
 </section>
 

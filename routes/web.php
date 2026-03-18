@@ -1,7 +1,7 @@
 <?php
 
 // Staging / noindex site: block all crawlers via robots.txt
-Route::get('robots.txt', function () {
+\Illuminate\Support\Facades\Route::get('robots.txt', function () {
     if (request()->getHost() === 'kaymark.360webcoders.com' || config('app.noindex')) {
         return response("User-agent: *\nDisallow: /", 200, ['Content-Type' => 'text/plain']);
     }
@@ -10,6 +10,7 @@ Route::get('robots.txt', function () {
 
 use App\Models\Listing;
 use App\Models\Package;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\chatController;
@@ -43,8 +44,21 @@ Route::get('/', function () {
     return view('welcome');
 })->name("welcome");
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
+Route::get('/dashboard', function (Request $request) {
+    $user = $request->user();
+    $role = strtolower(trim($user->role ?? ''));
+
+    if ($role === 'admin') {
+        return redirect()->route('admin.dashboard');
+    }
+    if ($role === 'seller') {
+        return redirect()->route('dashboard.seller');
+    }
+    if ($role === 'buyer') {
+        return redirect()->route('welcome');
+    }
+
+    return redirect()->route('dashboard.default');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
@@ -63,10 +77,12 @@ Route::post('/dashboard/seller/update-phone', [App\Http\Controllers\Seller\Selle
 Route::post('/dashboard/seller/confirm-pickup/{listingId}', [App\Http\Controllers\Seller\SellerDashboardController::class, 'confirmPickup'])->middleware(['auth', 'seller'])->name('seller-dashboard.confirm-pickup');
 
 Route::get('/dashboard/admin', function () {
-    return view('dashboard.admin');
-})->name('dashboard.admin');
+    return redirect()->route('admin.dashboard');
+})->middleware(['auth', 'admin'])->name('dashboard.admin');
 
-Route::get('/dashboard/default', [App\Http\Controllers\BasicDashboardController::class, 'index'])->middleware(['auth'])->name('dashboard.default');
+Route::get('/dashboard/default', function () {
+    return redirect()->route('register');
+})->name('dashboard.default');
 Route::post('/dashboard/default/update-email', [App\Http\Controllers\BasicDashboardController::class, 'updateEmail'])->middleware(['auth'])->name('basic-dashboard.update-email');
 Route::post('/dashboard/default/change-password', [App\Http\Controllers\BasicDashboardController::class, 'changePassword'])->middleware(['auth'])->name('basic-dashboard.change-password');
 
@@ -126,12 +142,12 @@ Route::get('/tow-providers/signup/thanks', [App\Http\Controllers\TowProviderSign
 Route::middleware(['auth', 'buyer'])->prefix('buyer')->group(function () {
     Route::get('/marketplace', [MarketplaceController::class, 'index'])->name('buyer.marketplace');
     Route::get('/auctions', [AuctionController::class, 'index'])->name('buyer.auctions');
-    Route::get('/bids', [App\Http\Controllers\Buyer\BidController::class, 'index'])->name('buyer.bids');
+    Route::get('/bids', fn () => redirect()->route('dashboard.buyer', ['tab' => 'auctions']))->name('buyer.bids');
     Route::get('/watchlist', [WatchlistController::class, 'index'])->name('buyer.watchlist');
-    Route::get('/purchases', [App\Http\Controllers\Buyer\PurchaseController::class, 'index'])->name('buyer.purchases');
-    Route::get('/auctions-won', [App\Http\Controllers\Buyer\PurchaseController::class, 'index'])->name('buyer.auctions-won');
+    Route::get('/purchases', fn () => redirect()->route('dashboard.buyer', ['tab' => 'auctions', 'section' => 'won']))->name('buyer.purchases');
+    Route::get('/auctions-won', fn () => redirect()->route('dashboard.buyer', ['tab' => 'auctions', 'section' => 'won']))->name('buyer.auctions-won');
     Route::get('/invoices/{invoice}/download', [App\Http\Controllers\Buyer\PurchaseController::class, 'downloadInvoice'])->name('buyer.invoice.download');
-    
+
     // Post-Auction Messaging & Pickup Coordination
     Route::get('/post-auction/thread/{invoiceId}', [App\Http\Controllers\PostAuctionMessageController::class, 'showThread'])->name('post-auction.thread');
     Route::post('/post-auction/thread/{threadId}/send-pickup-details', [App\Http\Controllers\PostAuctionMessageController::class, 'sendPickupDetails'])->name('post-auction.send-pickup-details');
@@ -141,12 +157,12 @@ Route::middleware(['auth', 'buyer'])->prefix('buyer')->group(function () {
     Route::post('/post-auction/thread/{threadId}/authorize-third-party', [App\Http\Controllers\PostAuctionMessageController::class, 'authorizeThirdPartyPickup'])->name('post-auction.authorize-third-party');
     Route::post('/post-auction/thread/{threadId}/confirm-pickup', [App\Http\Controllers\PostAuctionMessageController::class, 'confirmPickupWithPin'])->name('post-auction.confirm-pickup');
     Route::post('/post-auction/thread/{threadId}/seller-phone', [App\Http\Controllers\PostAuctionMessageController::class, 'updateSellerPhone'])->name('post-auction.seller-phone');
-    
+
     // Payment Checkout (Path A: Single item, Path B: Multiple items)
     Route::get('/payment/checkout/{invoiceId}', [App\Http\Controllers\Buyer\PaymentController::class, 'checkoutSingle'])->name('buyer.payment.checkout-single');
     Route::post('/payment/checkout/multiple', [App\Http\Controllers\Buyer\PaymentController::class, 'checkoutMultiple'])->name('buyer.payment.checkout-multiple');
     Route::post('/payment/process', [App\Http\Controllers\Buyer\PaymentController::class, 'processPayment'])->name('buyer.payment.process');
-    
+
     Route::get('/deposit-withdrawal', [App\Http\Controllers\Buyer\DepositWithdrawalController::class, 'index'])->name('buyer.deposit-withdrawal');
     Route::post('/deposit-withdrawal/request', [App\Http\Controllers\Buyer\DepositWithdrawalController::class, 'requestWithdrawal'])->name('buyer.deposit-withdrawal.request');
     Route::get('/profile', [App\Http\Controllers\Buyer\ProfileController::class, 'index'])->name('buyer.profile');
@@ -272,16 +288,16 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::post('/payments/{payment}/hold', [AdminController::class, 'holdPayment'])->name('admin.payments.hold');
     Route::post('/withdrawals/{withdrawal}/approve', [AdminController::class, 'approveWithdrawal'])->name('admin.withdrawals.approve');
     Route::post('/withdrawals/{withdrawal}/reject', [AdminController::class, 'rejectWithdrawal'])->name('admin.withdrawals.reject');
-    
+
     // Finance/Admin Payout Management
     Route::get('/payouts', [AdminController::class, 'payoutManagement'])->name('admin.payouts');
     Route::post('/payouts/{payout}/update-status', [AdminController::class, 'updatePayoutStatus'])->name('admin.payouts.update-status');
     Route::get('/payment-payout-logs', [AdminController::class, 'paymentPayoutLogs'])->name('admin.payment-payout-logs');
-    
+
     // Invoice Log (per PDF requirements)
     Route::get('/invoice-log', [AdminController::class, 'invoiceLog'])->name('admin.invoice-log');
     Route::get('/invoices/{invoice}/download', [AdminController::class, 'downloadInvoice'])->name('admin.invoice.download');
-    
+
     // Buyer Default & Non-Payment Management (per PDF requirements)
     Route::get('/unpaid-auctions', [AdminController::class, 'unpaidAuctions'])->name('admin.unpaid-auctions');
     Route::get('/buyer-defaults', [AdminController::class, 'buyerDefaults'])->name('admin.buyer-defaults');
@@ -290,34 +306,34 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::post('/defaults/{default}/close', [AdminController::class, 'closeUnpaidAuction'])->name('admin.defaults.close');
     Route::get('/second-chance-purchases', [AdminController::class, 'secondChancePurchases'])->name('admin.second-chance-purchases');
     Route::post('/second-chance/{secondChance}/generate-invoice', [AdminController::class, 'generateSecondChanceInvoice'])->name('admin.second-chance.generate-invoice');
-    
+
     // Enhanced Admin Routes
     Route::get('/dashboard/analytics', [AdminController::class, 'analyticsDashboard'])->name('admin.dashboard.analytics');
     Route::get('/users/{id}', [AdminController::class, 'viewUser'])->name('admin.users.view');
     Route::put('/users/{id}', [AdminController::class, 'updateUser'])->name('admin.users.update');
     Route::post('/users/{id}/reset-password', [AdminController::class, 'resetUserPassword'])->name('admin.users.reset-password');
     Route::post('/users/{id}/toggle-status', [AdminController::class, 'toggleUserStatus'])->name('admin.users.toggle-status');
-    
+
     Route::get('/listings/{id}/approval', [AdminController::class, 'viewListingForApproval'])->name('admin.listings.approval-detail');
     Route::post('/listings/{id}/edit', [AdminController::class, 'editListing'])->name('admin.listings.edit');
     Route::post('/listings/{id}/extend-auction', [AdminController::class, 'extendAuctionTime'])->name('admin.listings.extend-auction');
     Route::post('/listings/{id}/toggle-status', [AdminController::class, 'toggleListingStatus'])->name('admin.listings.toggle-status');
     Route::delete('/listings/{id}', [AdminController::class, 'deleteListing'])->name('admin.listings.delete');
-    
+
     Route::get('/auctions', [AdminController::class, 'auctionManagement'])->name('admin.auctions');
     Route::get('/auctions/{id}/bidding-logs', [AdminController::class, 'viewBiddingLogs'])->name('admin.auctions.bidding-logs');
     Route::post('/auctions/{id}/cancel', [AdminController::class, 'cancelAuction'])->name('admin.auctions.cancel');
     Route::post('/auctions/{id}/toggle-status', [AdminController::class, 'toggleAuctionStatus'])->name('admin.auctions.toggle-status');
     Route::post('/bids/{id}/remove', [AdminController::class, 'removeBid'])->name('admin.bids.remove');
-    
+
     Route::post('/payments/{id}/update-status', [AdminController::class, 'updatePaymentStatus'])->name('admin.payments.update-status');
     Route::post('/payments/{id}/regenerate-invoice', [AdminController::class, 'regenerateInvoice'])->name('admin.payments.regenerate-invoice');
-    
+
     Route::get('/disputes/{id}', [AdminController::class, 'viewDispute'])->name('admin.disputes.view');
     Route::post('/disputes/{id}/update-status', [AdminController::class, 'updateDisputeStatus'])->name('admin.disputes.update-status');
-    
+
     Route::post('/notifications/{id}/resend', [AdminController::class, 'resendNotification'])->name('admin.notifications.resend');
-    
+
     // Email Template Management
     Route::get('/email-templates', [\App\Http\Controllers\Admin\EmailTemplateController::class, 'index'])->name('admin.email-templates');
     Route::get('/email-templates/{template}/edit', [\App\Http\Controllers\Admin\EmailTemplateController::class, 'edit'])->name('admin.email-templates.edit');

@@ -61,20 +61,20 @@
         </div>
     </div>
 
-    <!-- Filters and Search -->
+    <!-- Filters and Search (JS client-side) -->
     <div class="bg-white rounded-lg shadow mb-6 p-6">
-        <form method="GET" action="{{ route('admin.disputes') }}" class="flex flex-wrap gap-4">
+        <form class="js-admin-filter-form flex flex-wrap gap-4" data-admin-filter-target="#disputes-tbody">
             <div class="flex-1 min-w-[200px]">
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by ID, buyer, or seller..." 
+                <input type="text" name="search" placeholder="Search by ID, buyer, or seller..." 
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
             </div>
             <div>
                 <select name="status" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     <option value="">All Status</option>
-                    <option value="open" {{ request('status') == 'open' ? 'selected' : '' }}>Open</option>
-                    <option value="in_progress" {{ request('status') == 'in_progress' ? 'selected' : '' }}>In Progress</option>
-                    <option value="resolved" {{ request('status') == 'resolved' ? 'selected' : '' }}>Resolved</option>
-                    <option value="escalated" {{ request('status') == 'escalated' ? 'selected' : '' }}>Escalated</option>
+                    <option value="open">Open</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="resolved">Resolved</option>
+                    <option value="escalated">Escalated</option>
                 </select>
             </div>
             <div>
@@ -82,13 +82,9 @@
                     <i class="fas fa-search mr-2"></i>Filter
                 </button>
             </div>
-            @if(request('search') || request('status'))
             <div>
-                <a href="{{ route('admin.disputes') }}" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
-                    Clear
-                </a>
+                <a href="{{ route('admin.disputes') }}" data-admin-filter-clear class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">Clear</a>
             </div>
-            @endif
         </form>
     </div>
 
@@ -111,9 +107,9 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
+                <tbody id="disputes-tbody" class="bg-white divide-y divide-gray-200">
                     @forelse($disputes as $dispute)
-                    <tr class="hover:bg-gray-50">
+                    <tr class="hover:bg-gray-50" data-filter-search="{{ strtolower(($dispute->id ?? '') . ' ' . ($dispute->buyer->name ?? '') . ' ' . ($dispute->buyer->email ?? '') . ' ' . ($dispute->seller->name ?? '') . ' ' . ($dispute->seller->email ?? '')) }}" data-filter-status="{{ strtolower($dispute->status ?? '') }}">
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             #{{ $dispute->id ?? 'N/A' }}
                         </td>
@@ -158,7 +154,7 @@
                         </td>
                     </tr>
                     @empty
-                    <tr>
+                    <tr class="js-admin-empty-row">
                         <td colspan="8" class="px-6 py-12 text-center text-gray-500">
                             <div class="mb-4">
                                 <i class="fas fa-gavel text-4xl text-gray-300"></i>
@@ -168,6 +164,11 @@
                         </td>
                     </tr>
                     @endforelse
+                    @if(isset($disputes) && $disputes->isNotEmpty())
+                    <tr class="js-admin-empty-row" style="display: none;">
+                        <td colspan="8" class="px-6 py-12 text-center text-gray-500"><p>No matching disputes</p></td>
+                    </tr>
+                    @endif
                 </tbody>
             </table>
         </div>

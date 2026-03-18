@@ -67,7 +67,7 @@
 
     {{-- Search and Filters --}}
     <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 mb-8">
-        <form method="GET" action="{{ route('seller.listings.index') }}" class="flex flex-col md:flex-row gap-4 items-center">
+        <form method="GET" action="{{ route('dashboard.seller', ['tab' => 'auctions']) }}" class="flex flex-col md:flex-row gap-4 items-center">
             <div class="relative flex-1 w-full">
                 <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                     <svg class="w-4 h-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">

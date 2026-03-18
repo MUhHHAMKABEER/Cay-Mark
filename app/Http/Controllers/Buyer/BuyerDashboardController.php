@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Buyer;
 
 use App\Http\Controllers\Controller;
 use App\Services\Buyer\BuyerDashboardService;
-use App\Services\InvoiceService;
 use App\Services\Buyer\BuyerDashboardOps;
 use App\Repositories\Buyer\BuyerRepository;
 use Illuminate\Http\Request;
@@ -32,12 +31,8 @@ class BuyerDashboardController extends Controller
         $user = Auth::user();
         $tab = $request->get('tab', 'dashboard');
 
-        if ($tab === 'auctions') {
-            $invoiceService = new InvoiceService();
-            $invoices = $invoiceService->getBuyerInvoices($user);
-            return view('Buyer.auctions-won', compact('invoices'));
-        }
-
+        // Always use unified dashboard with full data so Auctions tab shows Current/Won/Lost
+        // from getWonAuctions() (based on auction end + winning bid), not only after invoice exists.
         $dashboardData = $this->dashboardService->getDashboardData($user);
 
         $data = array_merge(

@@ -479,14 +479,14 @@ public function invoices()
     }
 
     /**
-     * Scope: Get current auctions for seller (active + awaiting PIN)
+     * Scope: Get current auctions for seller (only admin-approved: active or approved; plus sold awaiting PIN).
+     * Listings with status 'pending' (awaiting admin approval) are excluded.
      */
     public function scopeCurrentAuctionsForSeller($query, $sellerId)
     {
         return $query->where('seller_id', $sellerId)
             ->where(function($q) {
-                $q->where('status', 'active')
-                    ->orWhere('status', 'pending')
+                $q->whereIn('status', ['approved', 'active'])
                     ->orWhere(function($subQ) {
                         $subQ->where('status', 'sold')
                             ->whereHas('invoices', function($inv) {
@@ -732,6 +732,104 @@ public function invoices()
         }
 
         return $listing;
+    }
+
+    /**
+     * Update listing from seller edit form (same field mapping as create, no status change).
+     */
+    public function updateFromSellerInput(Request $request, array $payload): void
+    {
+        $transmission = null;
+        if (!empty($payload['transmission'])) {
+            $tUpper = strtoupper(trim($payload['transmission']));
+            if (stripos($tUpper, 'AUTOMATIC') !== false || stripos($tUpper, 'AUTO') !== false) {
+                $transmission = 'automatic';
+            } elseif (stripos($tUpper, 'MANUAL') !== false) {
+                $transmission = 'manual';
+            }
+        }
+
+        $duration = (int) ($payload['auction_duration'] ?? 0);
+        $this->update([
+            'auction_duration' => $duration,
+            'vehicle_type' => $payload['vehicle_type'] ?? null,
+            'condition' => (!empty($payload['is_salvaged']) && (string)$payload['is_salvaged'] === '1') ? 'salvaged' : 'used',
+            'make' => $payload['make'] ?? null,
+            'model' => $payload['model'] ?? null,
+            'trim' => $payload['trim'] ?? null,
+            'year' => $payload['year'] ?? null,
+            'vin' => !empty($payload['vin']) ? TextFormatter::toAllCaps($payload['vin']) : null,
+            'color' => $payload['color'] ?? $this->color,
+            'interior_color' => $payload['interior_color'] ?? $this->interior_color,
+            'island' => $payload['island'] ?? $this->island,
+            'fuel_type' => $payload['fuel_type'] ?? null,
+            'transmission' => $transmission,
+            'drive_type' => $payload['drive_type'] ?? null,
+            'title_status' => ($payload['title_status'] ?? null) === 'yes' ? 'CLEAN' : 'SALVAGE',
+            'primary_damage' => $payload['primary_damage'] ?? $this->primary_damage,
+            'secondary_damage' => $payload['secondary_damage'] ?? null,
+            'keys_available' => ($payload['keys_available'] ?? null) === 'yes',
+            'engine_type' => $payload['engine_size'] ?? null,
+            'cylinders' => $payload['cylinders'] ?? null,
+            'starting_price' => $payload['starting_price'] ?? null,
+            'reserve_price' => $payload['reserve_price'] ?? null,
+            'buy_now_price' => $payload['buy_now_price'] ?? null,
+            'odometer' => isset($payload['odometer']) && $payload['odometer'] !== '' ? (int) $payload['odometer'] : null,
+            'odometer_estimated' => !empty($payload['odometer_estimated']),
+        ]);
+
+        if ($request->hasFile('cover_photo') || $request->hasFile('photos')) {
+            $this->replaceImages($request);
+        }
+    }
+
+    /**
+     * Replace listing images with new uploads (cover + additional).
+     */
+    public function replaceImages(Request $request): void
+    {
+        $oldIds = $this->images()->pluck('id')->toArray();
+        $coverId = null;
+        $uploadDir = public_path('uploads/listings');
+
+        if ($request->hasFile('cover_photo')) {
+            $coverPhoto = $request->file('cover_photo');
+            $newFileName = 'COVER_' . microtime(true) . '_' . uniqid() . '.' . $coverPhoto->getClientOriginalExtension();
+            if ($coverPhoto->move($uploadDir, $newFileName)) {
+                $coverImage = ListingImage::create([
+                    'listing_id' => $this->id,
+                    'image_path' => $newFileName,
+                ]);
+                $coverId = $coverImage->id;
+            }
+        }
+
+        if ($request->hasFile('photos')) {
+            foreach ($request->file('photos') as $index => $photo) {
+                $newFileName = 'LISTING_IMG_' . ($index + 1) . '_' . microtime(true) . '_' . uniqid() . '.' . $photo->getClientOriginalExtension();
+                if ($photo->move($uploadDir, $newFileName)) {
+                    $img = ListingImage::create([
+                        'listing_id' => $this->id,
+                        'image_path' => $newFileName,
+                    ]);
+                    if (!$coverId) {
+                        $coverId = $img->id;
+                    }
+                }
+            }
+        }
+
+        foreach ($this->images()->whereIn('id', $oldIds)->get() as $img) {
+            $path = public_path('uploads/listings/' . $img->image_path);
+            if (is_file($path)) {
+                @unlink($path);
+            }
+            $img->delete();
+        }
+
+        if ($coverId) {
+            $this->update(['cover_photo_id' => $coverId]);
+        }
     }
 
     /**

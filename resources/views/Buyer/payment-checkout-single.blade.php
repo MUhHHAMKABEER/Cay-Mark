@@ -57,6 +57,14 @@
                             <span class="text-sm font-medium text-gray-700">Total due</span>
                             <span class="text-2xl font-bold text-gray-900">${{ number_format($invoice->total_amount_due, 2) }}</span>
                         </div>
+                        @if($invoice->pdf_path)
+                            <div class="mt-3 pt-3 border-t border-gray-100">
+                                <a href="{{ route('buyer.invoice.download', $invoice->id) }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-800">
+                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 2l5 5h-5V4zm-3 12v-4h2v4h2v-4h2v4h2v-6h-8v6zm-4 2v-2h10v2H6z"/></svg>
+                                    Download Invoice
+                                </a>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>

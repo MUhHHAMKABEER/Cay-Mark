@@ -10,6 +10,7 @@ use App\Models\Package;
 use App\Services\VinHinDecoderService;
 use App\Helpers\TextFormatter;
 use App\Http\Requests\SellerListingStoreRequest;
+use App\Http\Requests\SellerListingUpdateRequest;
 use App\Http\Requests\SellerDecodeVinHinRequest;
 use App\Services\Seller\ListingVinDecodeOps;
 use Illuminate\Support\Str;
@@ -264,13 +265,51 @@ class ListingController extends Controller
     }
 
     /**
-     * Edit listing (placeholder: full edit form can be added later).
+     * Edit listing – same form as add listing, pre-filled (submit-listing-new in edit mode).
      */
     public function edit($id)
     {
         $user = Auth::user();
+        $listing = Listing::where('seller_id', $user->id)->with('images')->findOrFail($id);
+        if ($listing->status === 'sold') {
+            return redirect()->route('dashboard.seller', ['tab' => 'auctions'])->with('error', 'Sold listings cannot be edited.');
+        }
+        return view('Seller.submit-listing-new', compact('listing', 'user'));
+    }
+
+    /**
+     * Update listing from edit form.
+     */
+    public function update(SellerListingUpdateRequest $request, $id)
+    {
+        $user = Auth::user();
         $listing = Listing::where('seller_id', $user->id)->findOrFail($id);
-        return view('Seller.Listing.edit', compact('listing'));
+        if ($listing->status === 'sold') {
+            return redirect()->route('dashboard.seller', ['tab' => 'auctions'])->with('error', 'Sold listings cannot be edited.');
+        }
+        $validated = $request->validated();
+        if ($request->starting_price && $request->starting_price <= 0) {
+            return back()->withErrors(['starting_price' => 'Starting Bid must be greater than $0 if entered.'])->withInput();
+        }
+        if ($request->reserve_price && $request->starting_price && $request->reserve_price < $request->starting_price) {
+            return back()->withErrors(['reserve_price' => 'Reserve Price must be greater than or equal to Starting Bid.'])->withInput();
+        }
+        $listing->updateFromSellerInput($request, $validated);
+        return redirect()->route('seller.listings.show', $listing->id)->with('success', 'Listing updated successfully.');
+    }
+
+    /**
+     * Delete a listing (only allowed for own listing and when not sold).
+     */
+    public function destroy($id)
+    {
+        $user = Auth::user();
+        $listing = Listing::where('seller_id', $user->id)->findOrFail($id);
+        if ($listing->status === 'sold') {
+            return redirect()->route('dashboard.seller', ['tab' => 'auctions'])->with('error', 'Cannot delete a sold listing.');
+        }
+        $listing->delete();
+        return redirect()->route('dashboard.seller', ['tab' => 'auctions'])->with('success', 'Listing removed.');
     }
 
   public function showAuctionLisitng(Request $request)
@@ -320,18 +359,6 @@ class ListingController extends Controller
 
         return $view;
     }
-
-    public function show($id)
-    {
-
-        $listing = Listing::with('images')->findOrFail($id);
-
-        return view('showDetail', compact('listing'));
-    }
-
-
-
-
 
     public function addToWatchlist(Request $request, $listingId)
     {

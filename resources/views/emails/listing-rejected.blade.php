@@ -68,7 +68,7 @@
         <p>You may edit and resubmit your listing within 72 hours directly from your dashboard.</p>
         
         <div style="text-align: center;">
-            <a href="{{ route('seller.listings.index') }}" class="button">View Your Listings</a>
+            <a href="{{ route('dashboard.seller', ['tab' => 'auctions']) }}" class="button">View Your Listings</a>
         </div>
         
         <p>Best regards,<br>The CayMark Team</p>

@@ -46,7 +46,7 @@
             <ol class="list-reset flex flex-wrap items-center gap-x-2">
                 <li><a href="{{ route('seller.dashboard') }}" class="text-blue-600 hover:underline">Dashboard</a></li>
                 <li><span class="text-gray-400">/</span></li>
-                <li><a href="{{ route('seller.listings.index') }}" class="text-blue-600 hover:underline">My Listings</a></li>
+                <li><a href="{{ route('dashboard.seller', ['tab' => 'auctions']) }}" class="text-blue-600 hover:underline">My Listings</a></li>
                 <li><span class="text-gray-400">/</span></li>
                 <li class="text-gray-800 font-semibold truncate">{{ $listing->year }} {{ $listing->make }} {{ $listing->model }}</li>
             </ol>

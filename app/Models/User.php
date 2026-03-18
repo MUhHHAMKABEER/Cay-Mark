@@ -247,7 +247,7 @@ public function watchlist()
     {
         $totalListings = $this->listings()->count();
         $activeListings = $this->listings()
-            ->whereIn('status', ['active', 'pending'])
+            ->whereIn('status', ['approved', 'active'])
             ->count();
         $soldListings = $this->listings()
             ->where('status', 'sold')
@@ -342,11 +342,12 @@ public function watchlist()
             ->values()
             ->map(function($listing) {
                 $invoice = $listing->invoices->first();
-                $listing->final_price = $invoice->winning_bid_amount
-                    ?? $listing->getUserHighestBid($this->id)
-                    ?? $listing->starting_price
-                    ?? 0;
-                $listing->payment_status = $invoice->payment_status ?? null;
+                $listing->pending_invoice_id = $invoice?->id;
+                $listing->final_price = $invoice
+                    ? ($invoice->winning_bid_amount ?? $listing->getUserHighestBid($this->id) ?? $listing->starting_price ?? 0)
+                    : ($listing->getUserHighestBid($this->id) ?? $listing->starting_price ?? 0);
+                $listing->payment_status = $invoice ? ($invoice->payment_status ?? 'pending') : 'pending';
+                $listing->total_amount_due = $invoice ? (float) $invoice->total_amount_due : null;
                 return $listing;
             });
     }

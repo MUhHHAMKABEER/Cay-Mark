@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
+use RuntimeException;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -20,6 +23,7 @@ class AuthenticatedSessionController extends Controller
 
     /**
      * Handle an incoming authentication request.
+     * If the user's password in DB is not bcrypt (legacy/plain), we verify and upgrade to bcrypt on successful login.
      */
     public function store(Request $request): RedirectResponse
     {
@@ -28,14 +32,60 @@ class AuthenticatedSessionController extends Controller
             'password' => 'required|string',
         ]);
 
-        if (Auth::attempt($request->only('email', 'password'), $request->boolean('remember'))) {
+        $credentials = $request->only('email', 'password');
+        $remember = $request->boolean('remember');
+
+        try {
+            $attempt = Auth::attempt($credentials, $remember);
+        } catch (RuntimeException $e) {
+            // Stored password is not bcrypt (e.g. plain text or old hash)
+            if (! str_contains($e->getMessage(), 'does not use the Bcrypt algorithm')) {
+                throw $e;
+            }
+            $user = User::where('email', $request->input('email'))->first();
+            if (!$user) {
+                return back()->withErrors(['email' => __('auth.failed')])->onlyInput('email');
+            }
+            $plainPassword = $request->input('password');
+            $storedPassword = $user->password;
+            // Legacy: plain text or non-bcrypt stored value
+            if ($storedPassword === $plainPassword || hash_equals($storedPassword, $plainPassword)) {
+                $user->password = Hash::make($plainPassword);
+                $user->save();
+                Auth::login($user, $remember);
+                $request->session()->regenerate();
+                return $this->redirectAfterLogin($user);
+            }
+            return back()->withErrors([
+                'email' => __('auth.failed'),
+            ])->with('message', 'Your account uses an older password format. Please use "Forgot password" to set a new one.')->onlyInput('email');
+        }
+
+        if ($attempt) {
             $request->session()->regenerate();
-            return redirect()->intended(route('dashboard'));
+            return $this->redirectAfterLogin(Auth::user());
         }
 
         return back()->withErrors([
             'email' => __('auth.failed'),
         ])->onlyInput('email');
+    }
+
+    /**
+     * Redirect user to the correct dashboard by role.
+     */
+    private function redirectAfterLogin($user): RedirectResponse
+    {
+        $role = strtolower(trim($user->role ?? ''));
+        $redirectTo = route('dashboard');
+        if ($role === 'admin') {
+            $redirectTo = route('admin.dashboard');
+        } elseif ($role === 'seller') {
+            $redirectTo = route('dashboard.seller');
+        } elseif ($role === 'buyer') {
+            $redirectTo = route('welcome');
+        }
+        return redirect()->intended($redirectTo);
     }
 
     /**

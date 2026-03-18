@@ -20,30 +20,29 @@
         </div>
     @endif
 
-    <!-- Filters -->
+    <!-- Filters (JS client-side) -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-        <form method="GET" action="{{ route('admin.invoice-log') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <form class="js-admin-filter-form grid grid-cols-1 md:grid-cols-4 gap-4" data-admin-filter-target="#invoice-log-tbody">
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Payment Status</label>
                 <select name="payment_status" class="w-full rounded-lg border-gray-300">
                     <option value="">All Statuses</option>
-                    <option value="pending" {{ request('payment_status') === 'pending' ? 'selected' : '' }}>Pending</option>
-                    <option value="paid" {{ request('payment_status') === 'paid' ? 'selected' : '' }}>Paid</option>
-                    <option value="overdue" {{ request('payment_status') === 'overdue' ? 'selected' : '' }}>Overdue</option>
+                    <option value="pending">Pending</option>
+                    <option value="paid">Paid</option>
+                    <option value="overdue">Overdue</option>
                 </select>
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Date From</label>
-                <input type="date" name="date_from" value="{{ request('date_from') }}" class="w-full rounded-lg border-gray-300">
+                <input type="date" name="date_from" class="w-full rounded-lg border-gray-300">
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Date To</label>
-                <input type="date" name="date_to" value="{{ request('date_to') }}" class="w-full rounded-lg border-gray-300">
+                <input type="date" name="date_to" class="w-full rounded-lg border-gray-300">
             </div>
-            <div class="flex items-end">
-                <button type="submit" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                    Filter
-                </button>
+            <div class="flex items-end gap-2">
+                <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Filter</button>
+                <a href="{{ route('admin.invoice-log') }}" data-admin-filter-clear class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">Clear</a>
             </div>
         </form>
     </div>
@@ -68,9 +67,9 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
+                <tbody id="invoice-log-tbody" class="bg-white divide-y divide-gray-200">
                     @forelse($invoices as $invoice)
-                        <tr class="hover:bg-gray-50">
+                        <tr class="hover:bg-gray-50" data-filter-payment_status="{{ strtolower($invoice->payment_status ?? '') }}" data-filter-date="{{ $invoice->invoice_generated_at ? $invoice->invoice_generated_at->format('Y-m-d') : '' }}">
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                 {{ $invoice->invoice_number }}
                             </td>
@@ -128,14 +127,14 @@
                             </td>
                         </tr>
                         @if($invoice->notes)
-                            <tr>
+                            <tr class="invoice-notes-row" data-filter-payment_status="{{ strtolower($invoice->payment_status ?? '') }}" data-filter-date="{{ $invoice->invoice_generated_at ? $invoice->invoice_generated_at->format('Y-m-d') : '' }}">
                                 <td colspan="12" class="px-6 py-2 text-xs text-gray-500 bg-gray-50">
                                     <strong>Notes:</strong> {{ $invoice->notes }}
                                 </td>
                             </tr>
                         @endif
                     @empty
-                        <tr>
+                        <tr class="js-admin-empty-row">
                             <td colspan="12" class="px-6 py-12 text-center text-gray-500">
                                 <div class="flex flex-col items-center">
                                     <svg class="w-12 h-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -146,6 +145,11 @@
                             </td>
                         </tr>
                     @endforelse
+                    @if($invoices->isNotEmpty())
+                        <tr class="js-admin-empty-row" style="display: none;">
+                            <td colspan="12" class="px-6 py-12 text-center text-gray-500"><p>No matching invoices</p></td>
+                        </tr>
+                    @endif
                 </tbody>
             </table>
         </div>

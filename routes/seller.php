@@ -5,6 +5,7 @@ use App\Http\Controllers\Seller\ListingController;
 use App\Http\Controllers\Seller\PayoutMethodController;
 use App\Http\Controllers\Seller\PickupPinController;
 use App\Http\Controllers\Seller\SupportController;
+use App\Http\Controllers\Buyer\NotificationController;
 use App\Http\Controllers\chatController;
 
 /*
@@ -43,8 +44,12 @@ Route::prefix('seller')->name('seller.')->middleware(['auth', 'seller'])->group(
     Route::get('listings/create', [ListingController::class, 'create'])->name('listings.create');
     Route::post('submit-listings', [ListingController::class, 'store'])->name('listings.store');
     Route::get('listings/success/{id}', [ListingController::class, 'success'])->name('listings.success');
-    Route::get('listings', [ListingController::class, 'showListing'])->name('listings.index');
+    Route::get('listings', function () {
+        return redirect()->route('dashboard.seller', ['tab' => 'auctions']);
+    })->name('listings.index');
     Route::get('listings/{id}/edit', [ListingController::class, 'edit'])->name('listings.edit');
+    Route::put('listings/{id}', [ListingController::class, 'update'])->name('listings.update');
+    Route::delete('listings/{id}', [ListingController::class, 'destroy'])->name('listings.destroy');
     Route::get('listings/{id}', [ListingController::class, 'show'])->name('listings.show');
     Route::get('Auction', [ListingController::class, 'showAuctionLisitng'])->name('Auction.index');
     
@@ -53,6 +58,11 @@ Route::prefix('seller')->name('seller.')->middleware(['auth', 'seller'])->group(
     
     // Support
     Route::post('support/submit', [SupportController::class, 'store'])->name('support.submit');
+
+    // Notifications (mark read, unread count – same controller as buyer, uses Auth::user())
+    Route::post('notifications/{id}/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
+    Route::post('notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+    Route::get('notifications/unread-count', [NotificationController::class, 'getUnreadCount'])->name('notifications.unread-count');
     
     // Messaging Center
     Route::get('messaging', [chatController::class, 'chat'])->name('chat');

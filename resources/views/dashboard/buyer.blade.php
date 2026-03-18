@@ -91,7 +91,7 @@
             </div>
 
             <!-- USER TAB -->
-            <div id="content-user" class="tab-content hidden p-6">
+            <div id="content-user" class="tab-content hidden p-6" style="height: 100%; overflow-y: auto;">
                 <!-- Header -->
                 <div class="mb-8">
                     <div class="flex items-center gap-3 mb-1">
@@ -136,16 +136,79 @@
                                 <p class="text-xs text-gray-400 mt-1.5">Display name on your account</p>
                             </div>
 
-                            <!-- Phone Number -->
+                            <!-- Phone Number (required to bid, with SMS verification like register page) -->
                             <div class="group">
                                 <label class="flex items-center gap-2 text-sm font-semibold text-gray-600 mb-2">
                                     <span class="material-icons-round text-gray-400 text-lg group-focus-within:text-blue-600 transition-colors">phone</span>
                                     Phone Number
+                                    <span class="ml-1 text-[11px] font-semibold text-red-500 uppercase tracking-wide">(required to bid)</span>
                                 </label>
-                                <div class="flex items-center gap-3 rounded-xl bg-slate-50/80 border border-gray-200 px-4 py-3.5">
-                                    <span class="text-gray-900 font-medium">{{ $user->phone ?? '—' }}</span>
+                                <div class="rounded-xl bg-slate-50/80 border border-gray-200 px-4 py-4 space-y-3">
+                                    <div class="flex items-center justify-between gap-3">
+                                        <div class="text-sm">
+                                            <p class="text-gray-500 text-xs mb-0.5">Current</p>
+                                            <p class="text-gray-900 font-medium" id="dashboard_phone_display">{{ $user->phone ?? 'Not set' }}</p>
+                                        </div>
+                                        <div id="dash-phone-verified-badge" class="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-semibold
+                                            {{ $user->phone_verified_at ? 'bg-green-50 text-green-700 border border-green-200' : 'hidden bg-yellow-50 text-yellow-700 border border-yellow-200' }}">
+                                            <svg class="w-3.5 h-3.5 mr-1" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                            </svg>
+                                            <span>{{ $user->phone_verified_at ? 'Verified' : 'Not verified' }}</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="grid grid-cols-1 md:grid-cols-[auto,minmax(0,1.5fr),auto] gap-3 items-end">
+                                        <div class="w-32">
+                                            <label class="block text-xs font-semibold text-gray-600 mb-1">Country</label>
+                                            @php
+                                                $dashPhoneCountry = '1';
+                                            @endphp
+                                            <select id="dash_phone_country" class="w-full px-3 py-2.5 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm">
+                                                <option value="1" @if($dashPhoneCountry === '1') selected @endif>+1</option>
+                                                <option value="92" @if($dashPhoneCountry === '92') selected @endif>+92</option>
+                                            </select>
+                                        </div>
+                                        <div class="min-w-[180px]">
+                                            <label class="block text-xs font-semibold text-gray-600 mb-1">Phone Number</label>
+                                            <input type="tel" id="dash_phone_input" placeholder="e.g. 2425551234"
+                                                class="w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                                inputmode="numeric" pattern="[0-9]*" maxlength="15">
+                                        </div>
+                                        <div class="flex md:block">
+                                            <button type="button" id="dash-send-code-btn"
+                                                class="w-full md:w-auto px-4 py-2.5 rounded-xl bg-gray-200 text-gray-800 text-sm font-semibold hover:bg-gray-300 transition whitespace-nowrap">
+                                                Send code
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" id="dash_phone_full" value="">
+
+                                    <div id="dash-phone-verify-row" class="grid grid-cols-1 md:grid-cols-[minmax(0,1.5fr),auto] gap-3 items-end hidden">
+                                        <div>
+                                            <label class="block text-xs font-semibold text-gray-600 mb-1">Verification code</label>
+                                            <input type="text" id="dash_phone_code_input" placeholder="6-digit code" maxlength="6" inputmode="numeric" pattern="[0-9]*"
+                                                class="w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+                                            <p class="text-[11px] text-gray-500 mt-1">Code expires in 5 minutes.</p>
+                                        </div>
+                                        <div class="flex md:block">
+                                            <button type="button" id="dash-verify-phone-btn"
+                                                class="w-full md:w-auto px-4 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition whitespace-nowrap">
+                                                Verify &amp; Save
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    @if(!$user->phone || !$user->phone_verified_at)
+                                        <p class="text-[11px] text-red-500 mt-1.5">
+                                            You must add and verify a phone number before you can place bids.
+                                        </p>
+                                    @else
+                                        <p class="text-[11px] text-gray-400 mt-1.5">
+                                            Verified phone is used for bid alerts, security, and pickup coordination.
+                                        </p>
+                                    @endif
                                 </div>
-                                <p class="text-xs text-gray-400 mt-1.5">Registered phone number</p>
                             </div>
 
                             <!-- Account Type -->
@@ -395,15 +458,32 @@
                                     </div>
                                     <div class="p-5">
                                         <h3 class="text-lg font-bold text-gray-900 mb-1.5 line-clamp-1">{{ $listing->year ?? '' }} {{ $listing->make ?? '' }} {{ $listing->model ?? 'Item' }}</h3>
-                                        <p class="text-xs text-gray-500 mb-3 font-mono">ITEM #{{ $listing->item_number ?? '—' }}</p>
-                                        <div class="flex items-baseline gap-2 mb-4">
-                                            <span class="text-xs text-gray-500 font-medium">Final Price</span>
-                                            <span class="text-2xl font-bold text-emerald-600">${{ number_format($listing->final_price ?? 0, 0) }}</span>
+                                        <p class="text-xs text-gray-500 mb-2 font-mono">ITEM #{{ $listing->item_number ?? '—' }}</p>
+                                        <div class="flex items-baseline gap-2 mb-2">
+                                            <span class="text-xs text-gray-500 font-medium">Winning bid</span>
+                                            <span class="text-xl font-bold text-emerald-600">${{ number_format($listing->final_price ?? 0, 2) }}</span>
                                         </div>
-                                        <div class="flex items-center gap-2 text-xs text-emerald-600 font-semibold">
+                                        @if($listing->total_amount_due !== null)
+                                            <div class="flex items-baseline gap-2 mb-2">
+                                                <span class="text-xs text-gray-500 font-medium">Total amount due</span>
+                                                <span class="text-lg font-bold text-gray-900">${{ number_format($listing->total_amount_due, 2) }}</span>
+                                            </div>
+                                        @endif
+                                        <div class="flex items-center gap-2 text-xs text-emerald-600 font-semibold mb-4">
                                             <span class="material-icons-round text-sm">check_circle</span>
                                             <span>{{ $statusText }}</span>
                                         </div>
+                                        @php $wonInvoiceId = $listing->pending_invoice_id ?? $listing->invoices->first()?->id; @endphp
+                                        @if($wonInvoiceId)
+                                            @if(($listing->payment_status ?? null) !== 'paid')
+                                                <a href="{{ route('buyer.payment.checkout-single', ['invoiceId' => $wonInvoiceId]) }}" class="block w-full text-center px-4 py-2.5 rounded-lg font-semibold text-sm mb-2 transition-all duration-200 hover:opacity-90" style="background-color: #059669; color: #ffffff;">
+                                                    Make Payment
+                                                </a>
+                                            @endif
+                                            <a href="{{ route('buyer.invoice.download', $wonInvoiceId) }}" class="block w-full text-center py-2.5 rounded-lg border-2 font-semibold text-sm transition-all duration-200" style="border-color: #6b7280; color: #374151;">
+                                                Download Invoice
+                                            </a>
+                                        @endif
                                     </div>
                                 </div>
                             @endforeach
@@ -470,7 +550,9 @@
                     <div class="flex items-center justify-between mb-1">
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/20">
-                                <span class="material-icons-round text-white text-xl">bookmark</span>
+                                <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                                    <path d="M5 3a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v14a.75.75 0 0 1-1.14.63L10 14.86l-3.86 2.77A.75.75 0 0 1 5 17V3z" />
+                                </svg>
                             </div>
                             <div>
                                 <h2 class="text-2xl font-bold text-gray-900 tracking-tight">Saved Items</h2>
@@ -479,7 +561,9 @@
                         </div>
                         @if($savedItems->count() > 0)
                             <div class="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-50 border border-amber-200">
-                                <span class="material-icons-round text-amber-600 text-lg">bookmark</span>
+                                <svg class="w-4 h-4 text-amber-600" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                                    <path d="M5 3a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v14a.75.75 0 0 1-1.14.63L10 14.86l-3.86 2.77A.75.75 0 0 1 5 17V3z" />
+                                </svg>
                                 <span class="text-sm font-semibold text-amber-700">{{ $savedItems->count() }} saved</span>
                             </div>
                         @endif
@@ -489,9 +573,11 @@
                 @if($savedItems->count() > 0)
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         @foreach($savedItems as $listing)
-                            @php 
-                                $endTime = $listing->auction_end_time ?? ($listing->auction_start_time ? \Carbon\Carbon::parse($listing->auction_start_time)->addDays($listing->auction_duration ?? 7) : null);
-                                $isActive = $listing->status === 'active' && $endTime && $endTime->isFuture();
+                            @php
+                                // Use shared helper so end time matches auction detail + homepage logic
+                                $endTime = $listing->getAuctionEndDate();
+                                // Treat listing as active while its computed end time is in the future
+                                $isActive = $endTime && $endTime->isFuture();
                             @endphp
                             <div class="group bg-white rounded-2xl border-2 border-amber-200 overflow-hidden shadow-sm hover:shadow-xl hover:border-amber-300 transition-all duration-300">
                                 <div class="relative h-52 bg-gradient-to-br from-amber-50 to-orange-100 overflow-hidden">
@@ -518,10 +604,18 @@
                                         <span class="text-xs text-gray-500 font-medium">Current Bid</span>
                                         <span class="text-2xl font-bold text-blue-600">${{ number_format($listing->highest_bid ?? $listing->starting_price ?? 0, 0) }}</span>
                                     </div>
-                                    @if($isActive && $endTime)
+                                    @if($endTime)
                                         <div class="bg-red-50 border border-red-200 rounded-xl p-3 mb-4">
-                                            <p class="text-xs text-red-600 font-medium mb-1">Time Remaining</p>
-                                            <p class="text-sm font-bold text-red-600" id="countdown-saved-{{ $listing->id }}" data-end-time="{{ $endTime->toIso8601String() }}">—</p>
+                                            <p class="text-xs text-red-600 font-medium mb-1">
+                                                @if($isActive)
+                                                    Time Remaining
+                                                @else
+                                                    Auction ended on {{ $endTime->format('M j, Y g:i A') }}
+                                                @endif
+                                            </p>
+                                            <p class="text-sm font-bold text-red-600" id="countdown-saved-{{ $listing->id }}" data-end-time="{{ $endTime->toIso8601String() }}">
+                                                —
+                                            </p>
                                         </div>
                                     @endif
                                     <div class="flex flex-col gap-2">
@@ -543,7 +637,10 @@
                 @else
                     <div class="bg-white rounded-2xl border-2 border-dashed border-gray-200 p-12 text-center">
                         <div class="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center">
-                            <span class="material-icons-round text-amber-600 text-4xl">bookmark_border</span>
+                            <svg class="w-10 h-10 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M5 5a2 2 0 0 1 2-2h7.5a2 2 0 0 1 2 2v13.5a.75.75 0 0 1-1.14.63L10 16.75l-5.36 2.38A.75.75 0 0 1 3.5 18.5V5z" />
+                            </svg>
                         </div>
                         <h3 class="text-lg font-bold text-gray-900 mb-2">No Saved Items Yet</h3>
                         <p class="text-gray-500 text-sm max-w-sm mx-auto mb-4">Save auctions you're interested in to track them easily. Click the bookmark icon on any auction to add it here.</p>
@@ -590,17 +687,17 @@
 
                 <!-- Filter Buttons -->
                 <div class="mb-4 flex items-center gap-3 flex-shrink-0" x-data="{ currentFilter: 'all' }" x-init="window.notificationFilter = currentFilter">
-                    <button @click="currentFilter = 'all'; window.notificationFilter = 'all'; filterNotifications('all')" 
+                    <button @click="currentFilter = 'all'; window.notificationFilter = 'all'; filterNotifications('all')"
                             :class="currentFilter === 'all' ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
                             class="px-5 py-2.5 rounded-lg font-semibold text-sm transition-all">
                         All
                     </button>
-                    <button @click="currentFilter = 'unread'; window.notificationFilter = 'unread'; filterNotifications('unread')" 
+                    <button @click="currentFilter = 'unread'; window.notificationFilter = 'unread'; filterNotifications('unread')"
                             :class="currentFilter === 'unread' ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
                             class="px-5 py-2.5 rounded-lg font-semibold text-sm transition-all">
                         Unread
                     </button>
-                    <button @click="currentFilter = 'read'; window.notificationFilter = 'read'; filterNotifications('read')" 
+                    <button @click="currentFilter = 'read'; window.notificationFilter = 'read'; filterNotifications('read')"
                             :class="currentFilter === 'read' ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
                             class="px-5 py-2.5 rounded-lg font-semibold text-sm transition-all">
                         Read
@@ -614,7 +711,7 @@
                             return $notification->created_at->format('F Y');
                         });
                     @endphp
-                    
+
                     <div class="notifications-scroll-wrapper notifications-scrollbar pr-2 border border-gray-200 rounded-xl flex-1 min-h-0" style="max-height: 55vh; overflow-y: scroll; overflow-x: hidden;">
                     <div class="notifications-container space-y-6 py-1">
                         @foreach($groupedNotifications as $month => $monthNotifications)
@@ -625,18 +722,18 @@
                                     <h3 class="text-lg font-bold text-gray-700 px-4">{{ $month }}</h3>
                                     <div class="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
                                 </div>
-                                
+
                                 <!-- Notifications for this month -->
                                 <div class="space-y-3">
                                     @foreach($monthNotifications->sortByDesc('created_at') as $notification)
-                            @php 
+                            @php
                                 $d = is_array($notification->data) ? $notification->data : [];
                                 $msg = $d['message'] ?? $d['title'] ?? 'Notification';
                                 $type = $d['type'] ?? 'info';
                                 $isUnread = !$notification->read_at;
                                 $link = $d['link'] ?? null;
                                 $actionLabel = $d['action_label'] ?? 'View details';
-                                
+
                                 // Icon mapping based on type
                                 $iconMap = [
                                     'bid' => 'gavel',
@@ -648,7 +745,7 @@
                                     'default' => 'notifications'
                                 ];
                                 $icon = $iconMap[$type] ?? $iconMap['default'];
-                                
+
                                 // Color mapping
                                 $colorMap = [
                                     'bid' => ['bg' => 'bg-blue-50', 'border' => 'border-blue-200', 'icon' => 'text-blue-600', 'dot' => 'bg-blue-600'],
@@ -660,7 +757,7 @@
                                 ];
                                 $colors = $colorMap[$type] ?? $colorMap['default'];
                             @endphp
-                            <div class="notification-card group relative bg-white rounded-xl border-2 {{ $isUnread ? $colors['border'] . ' ' . $colors['bg'] : 'border-gray-200' }} p-4 hover:shadow-lg transition-all duration-200 {{ $isUnread ? 'shadow-sm cursor-pointer' : '' }}" 
+                            <div class="notification-card group relative bg-white rounded-xl border-2 {{ $isUnread ? $colors['border'] . ' ' . $colors['bg'] : 'border-gray-200' }} p-4 hover:shadow-lg transition-all duration-200 {{ $isUnread ? 'shadow-sm cursor-pointer' : '' }}"
                                  data-notification-id="{{ $notification->id }}"
                                  data-is-unread="{{ $isUnread ? 'true' : 'false' }}"
                                  data-read-status="{{ $isUnread ? 'unread' : 'read' }}"
@@ -671,7 +768,7 @@
                                     <div class="flex-shrink-0 w-12 h-12 rounded-xl {{ $isUnread ? $colors['bg'] : 'bg-gray-100' }} flex items-center justify-center border-2 {{ $isUnread ? $colors['border'] : 'border-gray-200' }}">
                                         <span class="material-icons-round {{ $isUnread ? $colors['icon'] : 'text-gray-400' }} text-xl">{{ $icon }}</span>
                                     </div>
-                                    
+
                                     <!-- Content -->
                                     <div class="flex-1 min-w-0">
                                         <div class="flex items-start justify-between gap-3">
@@ -913,7 +1010,7 @@
             <div class="flex gap-3 pt-2">
                 <button type="button" onclick="hidePasswordModal()"
                     class="flex-1 px-4 py-3 rounded-xl border-2 border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 transition-all">Cancel</button>
-                    <button type="submit" 
+                    <button type="submit"
                     class="flex-1 px-4 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-lg shadow-blue-600/25 transition-all">Update Password</button>
                 </div>
             </form>
@@ -930,16 +1027,16 @@ function showTab(tabName) {
 }
 function showAuctionSection(section) {
     document.querySelectorAll('.auction-section').forEach(s => s.classList.add('hidden'));
-    document.querySelectorAll('.auction-tab-button').forEach(b => { 
-        b.classList.remove('active', 'text-white', 'bg-gradient-to-r', 'from-blue-600', 'to-indigo-600', 'shadow-sm'); 
-        b.classList.add('text-gray-600', 'hover:text-gray-900'); 
+    document.querySelectorAll('.auction-tab-button').forEach(b => {
+        b.classList.remove('active', 'text-white', 'bg-gradient-to-r', 'from-blue-600', 'to-indigo-600', 'shadow-sm');
+        b.classList.add('text-gray-600', 'hover:text-gray-900');
     });
     var el = document.getElementById('auction-section-' + section);
     if (el) el.classList.remove('hidden');
     var btn = document.getElementById('auction-' + section);
-    if (btn) { 
-        btn.classList.add('active', 'text-white', 'bg-gradient-to-r', 'from-blue-600', 'to-indigo-600', 'shadow-sm'); 
-        btn.classList.remove('text-gray-600', 'hover:text-gray-900'); 
+    if (btn) {
+        btn.classList.add('active', 'text-white', 'bg-gradient-to-r', 'from-blue-600', 'to-indigo-600', 'shadow-sm');
+        btn.classList.remove('text-gray-600', 'hover:text-gray-900');
     }
 }
 function showPasswordModal() { document.getElementById('passwordModal').classList.remove('hidden'); }
@@ -952,6 +1049,111 @@ document.addEventListener('DOMContentLoaded', function() {
     if (tab === 'auctions') showAuctionSection(new URLSearchParams(window.location.search).get('section') || 'current');
     setInterval(updateCountdowns, 1000);
     updateCountdowns();
+
+    // Dashboard phone verification (auth users) – mirrors register page behaviour
+    (function() {
+        var sendBtn = document.getElementById('dash-send-code-btn');
+        var verifyBtn = document.getElementById('dash-verify-phone-btn');
+        var phoneInput = document.getElementById('dash_phone_input');
+        var countrySelect = document.getElementById('dash_phone_country');
+        var phoneFull = document.getElementById('dash_phone_full');
+        var codeInput = document.getElementById('dash_phone_code_input');
+        var verifyRow = document.getElementById('dash-phone-verify-row');
+        var verifiedBadge = document.getElementById('dash-phone-verified-badge');
+        var phoneDisplay = document.getElementById('dashboard_phone_display');
+        if (!sendBtn || !verifyBtn || !phoneInput || !countrySelect) return;
+
+        var csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ||
+            document.querySelector('input[name="_token"]')?.value || '';
+
+        var sendUrl = '{{ route("registration.phone.send-code") }}';
+        var verifyUrl = '{{ route("registration.phone.verify") }}';
+
+        function getFullPhone() {
+            var code = (countrySelect && countrySelect.value) ? countrySelect.value.trim() : '';
+            var num = (phoneInput && phoneInput.value) ? phoneInput.value.trim().replace(/^0+/, '') : '';
+            if (!code || !num) return '';
+            return '+' + code + num;
+        }
+
+        function setFullPhoneInput() {
+            if (phoneFull) phoneFull.value = getFullPhone();
+        }
+
+        sendBtn.addEventListener('click', function() {
+            var phone = getFullPhone();
+            if (!phone) {
+                alert('Please select country and enter your phone number.');
+                return;
+            }
+            setFullPhoneInput();
+            sendBtn.disabled = true;
+            sendBtn.textContent = 'Sending…';
+            fetch(sendUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ phone: phone })
+            }).then(function(r) { return r.json(); }).then(function(data) {
+                sendBtn.disabled = false;
+                sendBtn.textContent = 'Send code';
+                if (data.success) {
+                    if (verifyRow) verifyRow.classList.remove('hidden');
+                    if (codeInput) { codeInput.value = ''; codeInput.focus(); }
+                    alert(data.message || 'Verification code sent. It expires in 5 minutes.');
+                } else {
+                    alert(data.message || 'Could not send SMS. Please check the number and try again.');
+                }
+            }).catch(function() {
+                sendBtn.disabled = false;
+                sendBtn.textContent = 'Send code';
+                alert('Something went wrong while sending SMS. Please try again.');
+            });
+        });
+
+        verifyBtn.addEventListener('click', function() {
+            var phone = getFullPhone();
+            var code = codeInput ? codeInput.value.trim() : '';
+            if (!phone || !code) {
+                alert('Please enter your phone number and the SMS code.');
+                return;
+            }
+            verifyBtn.disabled = true;
+            verifyBtn.textContent = 'Verifying…';
+            fetch(verifyUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ phone: phone, code: code })
+            }).then(function(r) { return r.json(); }).then(function(data) {
+                verifyBtn.disabled = false;
+                verifyBtn.textContent = 'Verify & Save';
+                if (data.success) {
+                    if (phoneDisplay) phoneDisplay.textContent = data.phone || phone;
+                    if (verifiedBadge) {
+                        verifiedBadge.classList.remove('hidden');
+                        verifiedBadge.classList.remove('bg-yellow-50', 'text-yellow-700', 'border-yellow-200');
+                        verifiedBadge.classList.add('bg-green-50', 'text-green-700', 'border-green-200');
+                        var span = verifiedBadge.querySelector('span');
+                        if (span) span.textContent = 'Verified';
+                    }
+                    alert(data.message || 'Phone number verified and saved to your account.');
+                } else {
+                    alert(data.message || 'Verification failed. Please check the code and try again.');
+                }
+            }).catch(function() {
+                verifyBtn.disabled = false;
+                verifyBtn.textContent = 'Verify & Save';
+                alert('Verification failed. Please try again.');
+            });
+        });
+    })();
 });
 
 function updateCountdowns() {
@@ -1011,10 +1213,10 @@ function markNotificationAsRead(notificationId, element) {
     if (!element.dataset.isUnread || element.dataset.isUnread === 'false') {
         return; // Already read
     }
-    
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || 
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ||
                       document.querySelector('input[name="_token"]')?.value || '';
-    
+
     fetch(`/buyer/notifications/${notificationId}/mark-read`, {
         method: 'POST',
         headers: {
@@ -1033,36 +1235,36 @@ function markNotificationAsRead(notificationId, element) {
             element.dataset.isUnread = 'false';
             element.setAttribute('data-read-status', 'read');
             element.removeAttribute('onclick');
-            
+
             // Remove unread dot
             const unreadDot = element.querySelector('.unread-dot');
             if (unreadDot) {
                 unreadDot.remove();
             }
-            
+
             // Update icon styling
             const iconContainer = element.querySelector('.flex-shrink-0.w-12');
             if (iconContainer) {
                 iconContainer.classList.remove('bg-blue-50', 'bg-amber-50', 'bg-emerald-50', 'bg-purple-50', 'border-blue-200', 'border-amber-200', 'border-emerald-200', 'border-purple-200');
                 iconContainer.classList.add('bg-gray-100', 'border-gray-200');
             }
-            
+
             const icon = element.querySelector('.material-icons-round');
             if (icon) {
                 icon.classList.remove('text-blue-600', 'text-amber-600', 'text-emerald-600', 'text-purple-600');
                 icon.classList.add('text-gray-400');
             }
-            
+
             // Update text styling
             const text = element.querySelector('.font-semibold');
             if (text) {
                 text.classList.remove('text-gray-900');
                 text.classList.add('text-gray-700');
             }
-            
+
             // Update unread count in header
             updateUnreadCount();
-            
+
             // If filtering by unread, hide this notification
             const currentFilter = window.notificationFilter || 'all';
             if (currentFilter === 'unread') {
@@ -1087,10 +1289,10 @@ function markNotificationAsRead(notificationId, element) {
 function markAllNotificationsAsRead() {
     const btn = document.getElementById('read-all-notifications-btn');
     if (btn) btn.disabled = true;
-    
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || 
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ||
                       document.querySelector('input[name="_token"]')?.value || '';
-    
+
     fetch('/buyer/notifications/mark-all-read', {
         method: 'POST',
         headers: {
@@ -1148,7 +1350,7 @@ function updateUnreadCount() {
         .then(response => response.json())
         .then(data => {
             const count = data.count || 0;
-            
+
             // Update header badge
             const headerBadge = document.querySelector('.unread-count-badge');
             if (headerBadge) {
@@ -1159,7 +1361,7 @@ function updateUnreadCount() {
                     headerBadge.style.display = 'none';
                 }
             }
-            
+
             // Update sidebar badge
             const sidebarBadge = document.querySelector('.sidebar-notification-badge');
             if (sidebarBadge) {
@@ -1170,7 +1372,7 @@ function updateUnreadCount() {
                     sidebarBadge.style.display = 'none';
                 }
             }
-            
+
             // Update header unread count display
             const unreadDisplay = document.querySelector('.unread-count-display');
             if (unreadDisplay) {
@@ -1191,10 +1393,10 @@ function updateUnreadCount() {
 function filterNotifications(filterType) {
     const allCards = document.querySelectorAll('.notification-card');
     const monthGroups = document.querySelectorAll('.notification-month-group');
-    
+
     allCards.forEach(card => {
         const readStatus = card.getAttribute('data-read-status');
-        
+
         if (filterType === 'all') {
             card.style.display = '';
         } else if (filterType === 'unread') {
@@ -1211,7 +1413,7 @@ function filterNotifications(filterType) {
             }
         }
     });
-    
+
     // Hide month groups that have no visible notifications
     monthGroups.forEach(group => {
         const cards = group.querySelectorAll('.notification-card');
@@ -1221,7 +1423,7 @@ function filterNotifications(filterType) {
                 hasVisible = true;
             }
         });
-        
+
         if (!hasVisible) {
             group.style.display = 'none';
         } else {

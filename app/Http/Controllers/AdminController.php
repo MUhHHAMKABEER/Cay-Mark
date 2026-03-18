@@ -447,17 +447,11 @@ class AdminController extends Controller
     }
 
     /**
-     * View single listing for approval
+     * View single listing detail (pending = approval flow with actions; active/other = read-only detail).
      */
     public function viewListingForApproval($id)
     {
         $listing = Listing::with(['seller', 'images'])->findOrFail($id);
-        
-        if ($listing->status !== 'pending') {
-            return redirect()->route('admin.listing-review')
-                ->with('error', 'This listing is not pending approval.');
-        }
-
         return view('admin.listing-approval-detail', compact('listing'));
     }
 
@@ -832,19 +826,32 @@ class AdminController extends Controller
     }
 
     /**
-     * Resend notification
+     * Resend notification (sends a new in-app + email via GenericNotification).
      */
     public function resendNotification($notificationId)
     {
         $notification = \Illuminate\Notifications\DatabaseNotification::findOrFail($notificationId);
-        $user = $notification->notifiable;
+        $notifiable = $notification->notifiable;
 
-        // Extract notification data and resend
-        $data = $notification->data;
-        $notificationService = new \App\Services\NotificationService();
+        if (!$notifiable instanceof \App\Models\User) {
+            return back()->with('error', 'Only user notifications can be resent.');
+        }
 
-        // Map notification types to service methods
-        // This is a simplified version - you may need to enhance based on actual notification types
+        $data = is_array($notification->data) ? $notification->data : [];
+        $type = $data['type'] ?? 'notification';
+        $message = $data['message'] ?? 'You have a new notification.';
+        $payload = collect($data)->except(['type', 'message'])->all();
+
+        try {
+            $notifiable->notify(new \App\Notifications\GenericNotification($type, $message, $payload));
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Admin resend notification failed', [
+                'notification_id' => $notificationId,
+                'user_id' => $notifiable->id,
+                'error' => $e->getMessage(),
+            ]);
+            return back()->with('error', 'Failed to resend notification: ' . $e->getMessage());
+        }
 
         return back()->with('success', 'Notification resent successfully.');
     }

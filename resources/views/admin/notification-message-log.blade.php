@@ -28,16 +28,15 @@
 
     <!-- Notifications Tab -->
     <div id="notifications-tab" class="tab-content">
-        <!-- Filters -->
+        <!-- Filters (JS client-side) -->
         <div class="bg-white rounded-lg shadow mb-6 p-6">
-            <form method="GET" action="{{ route('admin.notifications') }}" class="flex flex-wrap gap-4">
-                <input type="hidden" name="tab" value="notifications">
+            <form class="js-admin-filter-form flex flex-wrap gap-4" data-admin-filter-target="#notifications-tbody">
                 <div class="flex-1 min-w-[200px]">
-                    <input type="text" name="user_id" value="{{ request('user_id') }}" placeholder="User ID..." 
+                    <input type="text" name="user_id" placeholder="User ID or name..." 
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                 </div>
                 <div>
-                    <input type="text" name="type" value="{{ request('type') }}" placeholder="Notification type..." 
+                    <input type="text" name="type" placeholder="Notification type..." 
                         class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                 </div>
                 <div>
@@ -45,13 +44,9 @@
                         <i class="fas fa-search mr-2"></i>Filter
                     </button>
                 </div>
-                @if(request('user_id') || request('type'))
                 <div>
-                    <a href="{{ route('admin.notifications') }}" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
-                        Clear
-                    </a>
+                    <a href="{{ route('admin.notifications') }}" data-admin-filter-clear class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">Clear</a>
                 </div>
-                @endif
             </form>
         </div>
 
@@ -73,9 +68,9 @@
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
+                    <tbody id="notifications-tbody" class="bg-white divide-y divide-gray-200">
                         @forelse($notifications as $notification)
-                        <tr class="hover:bg-gray-50">
+                        <tr class="hover:bg-gray-50" data-filter-user_id="{{ strtolower(($notification->id ?? '') . ' ' . ($notification->notifiable->name ?? '') . ' ' . ($notification->notifiable->email ?? '')) }}" data-filter-type="{{ strtolower($notification->data['type'] ?? '') }}">
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                 #{{ $notification->id }}
                             </td>
@@ -124,13 +119,18 @@
                             </td>
                         </tr>
                         @empty
-                        <tr>
+                        <tr class="js-admin-empty-row">
                             <td colspan="7" class="px-6 py-12 text-center text-gray-500">
                                 <i class="fas fa-bell text-4xl mb-3 text-gray-300"></i>
                                 <p>No notifications found</p>
                             </td>
                         </tr>
                         @endforelse
+                        @if($notifications->isNotEmpty())
+                        <tr class="js-admin-empty-row" style="display: none;">
+                            <td colspan="7" class="px-6 py-12 text-center text-gray-500"><p>No matching notifications</p></td>
+                        </tr>
+                        @endif
                     </tbody>
                 </table>
             </div>
@@ -146,12 +146,11 @@
 
     <!-- Messages Tab -->
     <div id="messages-tab" class="tab-content hidden">
-        <!-- Filters -->
+        <!-- Filters (JS client-side) -->
         <div class="bg-white rounded-lg shadow mb-6 p-6">
-            <form method="GET" action="{{ route('admin.notifications') }}" class="flex flex-wrap gap-4">
-                <input type="hidden" name="tab" value="messages">
+            <form class="js-admin-filter-form flex flex-wrap gap-4" data-admin-filter-target="#messages-tbody">
                 <div class="flex-1 min-w-[200px]">
-                    <input type="text" name="chat_id" value="{{ request('chat_id') }}" placeholder="Chat ID..." 
+                    <input type="text" name="chat_id" placeholder="Chat ID or sender..." 
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                 </div>
                 <div>
@@ -159,13 +158,9 @@
                         <i class="fas fa-search mr-2"></i>Filter
                     </button>
                 </div>
-                @if(request('chat_id'))
                 <div>
-                    <a href="{{ route('admin.notifications') }}?tab=messages" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
-                        Clear
-                    </a>
+                    <a href="{{ route('admin.notifications') }}?tab=messages" data-admin-filter-clear class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">Clear</a>
                 </div>
-                @endif
             </form>
         </div>
 
@@ -185,9 +180,9 @@
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
+                    <tbody id="messages-tbody" class="bg-white divide-y divide-gray-200">
                         @forelse($messages as $message)
-                        <tr class="hover:bg-gray-50">
+                        <tr class="hover:bg-gray-50" data-filter-chat_id="{{ strtolower(($message->id ?? '') . ' ' . ($message->chat_id ?? '') . ' ' . ($message->user->name ?? '') . ' ' . ($message->user->email ?? '')) }}">
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                 #{{ $message->id }}
                             </td>
@@ -215,13 +210,18 @@
                             </td>
                         </tr>
                         @empty
-                        <tr>
+                        <tr class="js-admin-empty-row">
                             <td colspan="5" class="px-6 py-12 text-center text-gray-500">
                                 <i class="fas fa-comments text-4xl mb-3 text-gray-300"></i>
                                 <p>No messages found</p>
                             </td>
                         </tr>
                         @endforelse
+                        @if(isset($messages) && $messages->isNotEmpty())
+                        <tr class="js-admin-empty-row" style="display: none;">
+                            <td colspan="5" class="px-6 py-12 text-center text-gray-500"><p>No matching messages</p></td>
+                        </tr>
+                        @endif
                     </tbody>
                 </table>
             </div>

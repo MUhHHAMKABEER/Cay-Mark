@@ -3,6 +3,98 @@
 @section('title', 'Listing Review - Admin')
 
 @section('content')
+@php
+    $resolveListingImageUrl = function ($imagePath) {
+        $path = trim((string) $imagePath);
+        if ($path === '') {
+            return asset('images/placeholder-product.png');
+        }
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+        $normalized = ltrim(str_replace('\\', '/', $path), '/');
+        if (str_starts_with($normalized, 'storage/') || str_starts_with($normalized, 'uploads/')) {
+            return asset($normalized);
+        }
+        return asset('uploads/listings/' . $normalized);
+    };
+@endphp
+
+<style>
+    .listing-review-thumb {
+        position: relative;
+        width: 68px;
+        height: 52px;
+        flex-shrink: 0;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid #dbe4ee;
+        background: #f8fafc;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+    }
+    .listing-review-thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+    .listing-review-thumb-button {
+        display: block;
+        width: 100%;
+        height: 100%;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        cursor: pointer;
+    }
+    .listing-review-thumb-badge {
+        position: absolute;
+        right: 6px;
+        bottom: 6px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 22px;
+        height: 22px;
+        border-radius: 9999px;
+        background: rgba(15, 23, 42, 0.72);
+        color: #fff;
+        font-size: 11px;
+        pointer-events: none;
+    }
+    .listing-image-preview-modal {
+        position: fixed;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+        background: rgba(15, 23, 42, 0.45);
+        backdrop-filter: blur(2px);
+        z-index: 60;
+    }
+    .listing-image-preview-modal.is-visible {
+        display: flex;
+    }
+    .listing-image-preview-card {
+        width: min(720px, 100%);
+        background: #fff;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25);
+    }
+    .listing-image-preview-frame {
+        background: #0f172a;
+        max-height: 70vh;
+    }
+    .listing-image-preview-frame img {
+        width: 100%;
+        max-height: 70vh;
+        object-fit: contain;
+        display: block;
+    }
+</style>
+
 <div class="bg-gray-50 min-h-screen">
     <!-- Header -->
     <div class="bg-white shadow-sm mb-6 rounded-lg p-6">
@@ -79,13 +171,29 @@
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                     @forelse($pendingListings as $listing)
+                    @php
+                        $mainImage = $listing->images->first();
+                        $imageUrl = $mainImage ? $resolveListingImageUrl($mainImage->image_path) : asset('images/placeholder-product.png');
+                        $vehicleName = trim(($listing->year ?? '') . ' ' . ($listing->make ?? '') . ' ' . ($listing->model ?? ''));
+                    @endphp
                     <tr class="hover:bg-gray-50">
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex items-center">
                                 @if($listing->images && $listing->images->count() > 0)
-                                <img src="{{ $listing->images->first()->image_path ?? 'https://via.placeholder.com/60' }}" 
-                                    alt="{{ $listing->make ?? '' }} {{ $listing->model ?? '' }}"
-                                    class="h-12 w-16 object-cover rounded mr-3">
+                                <div class="listing-review-thumb mr-3">
+                                    <button type="button"
+                                        class="listing-review-thumb-button js-listing-image-trigger"
+                                        data-image="{{ $imageUrl }}"
+                                        data-title="{{ $vehicleName !== '' ? $vehicleName : 'Pending Listing' }}"
+                                        data-listing="#{{ $listing->id }}"
+                                        data-seller="{{ $listing->seller->name ?? 'N/A' }}">
+                                        <img src="{{ $imageUrl }}"
+                                            alt="{{ $listing->make ?? '' }} {{ $listing->model ?? '' }}">
+                                        <span class="listing-review-thumb-badge">
+                                            <i class="fas fa-search-plus"></i>
+                                        </span>
+                                    </button>
+                                </div>
                                 @else
                                 <div class="h-12 w-16 bg-gray-200 rounded mr-3 flex items-center justify-center">
                                     <i class="fas fa-car text-gray-400"></i>
@@ -165,4 +273,60 @@
         @endif
     </div>
 </div>
+
+<div id="listingImagePreviewModal" class="listing-image-preview-modal" aria-hidden="true">
+    <div id="listingImagePreviewCard" class="listing-image-preview-card">
+        <div class="listing-image-preview-frame">
+            <img id="listingImagePreviewModalImg" src="" alt="Listing preview">
+        </div>
+        <div class="px-5 py-4 border-t border-gray-100">
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <h3 id="listingImagePreviewModalTitle" class="text-lg font-semibold text-gray-900">Listing Preview</h3>
+                    <p id="listingImagePreviewModalMeta" class="text-sm text-gray-500 mt-1"></p>
+                </div>
+                <div class="text-xs text-gray-400 whitespace-nowrap">Click outside to close</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var modal = document.getElementById('listingImagePreviewModal');
+        var modalCard = document.getElementById('listingImagePreviewCard');
+        var modalImg = document.getElementById('listingImagePreviewModalImg');
+        var modalTitle = document.getElementById('listingImagePreviewModalTitle');
+        var modalMeta = document.getElementById('listingImagePreviewModalMeta');
+
+        if (!modal || !modalCard || !modalImg || !modalTitle || !modalMeta) return;
+
+        function showModal(trigger) {
+            modalImg.src = trigger.dataset.image || '';
+            modalTitle.textContent = trigger.dataset.title || 'Listing Preview';
+            modalMeta.textContent = (trigger.dataset.listing || '') + '  Seller: ' + (trigger.dataset.seller || 'N/A');
+            modal.classList.add('is-visible');
+            modal.setAttribute('aria-hidden', 'false');
+        }
+
+        function hideModal() {
+            modal.classList.remove('is-visible');
+            modal.setAttribute('aria-hidden', 'true');
+            modalImg.src = '';
+        }
+
+        document.querySelectorAll('.js-listing-image-trigger').forEach(function (trigger) {
+            trigger.addEventListener('click', function (e) {
+                e.preventDefault();
+                showModal(trigger);
+            });
+        });
+
+        modal.addEventListener('click', function (event) {
+            if (!modalCard.contains(event.target)) {
+                hideModal();
+            }
+        });
+    });
+</script>
 @endsection

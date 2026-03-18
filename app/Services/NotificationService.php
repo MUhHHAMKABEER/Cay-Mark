@@ -195,7 +195,7 @@ class NotificationService
         $this->sendNotification($seller, 'listing_submitted', "Your listing for {$vehicleName} has been submitted for review.", [
             'listing_id' => $listing->id,
             'item_name' => $vehicleName,
-            'link' => route('seller.listings.index'),
+            'link' => route('dashboard.seller', ['tab' => 'auctions']),
         ]);
     }
 

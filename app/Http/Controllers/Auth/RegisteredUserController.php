@@ -53,6 +53,7 @@ class RegisteredUserController extends Controller
         ], self::PHONE_VERIFY_TTL);
         $sent = (new SmsService())->send($phone, 'Your CayMark verification code is: ' . $code . '. It expires in 5 minutes.');
         if (!$sent) {
+            Log::warning('Registration phone SMS failed (auth flow)', ['phone_digits' => $phone, 'user_id' => $user->id]);
             return response()->json(['success' => false, 'message' => 'Could not send SMS. Check the number and try again.']);
         }
         return response()->json(['success' => true, 'message' => 'Verification code sent. It expires in 5 minutes.']);
@@ -77,8 +78,16 @@ class RegisteredUserController extends Controller
             return response()->json(['success' => false, 'message' => 'Code has expired. Request a new one.']);
         }
         Cache::forget($key);
-        $request->session()->put('registration_verified_phone', $data['phone']);
-        return response()->json(['success' => true]);
+        // Persist verified phone directly on the user's account (dashboard + bidding requirement)
+        $user->phone = $data['phone'];
+        $user->phone_verified_at = now();
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'phone' => $user->phone,
+            'message' => 'Phone number verified and saved to your account.',
+        ]);
     }
 
     /**
@@ -101,6 +110,7 @@ class RegisteredUserController extends Controller
         ], self::PHONE_VERIFY_TTL);
         $sent = (new SmsService())->send($phone, 'Your CayMark verification code is: ' . $code . '. It expires in 5 minutes.');
         if (!$sent) {
+            Log::warning('Registration phone SMS failed (guest/register flow)', ['phone_digits' => $phone, 'session_id' => $request->session()->getId()]);
             return response()->json(['success' => false, 'message' => 'Could not send SMS. Check the number and try again.']);
         }
         return response()->json(['success' => true, 'message' => 'Verification code sent. It expires in 5 minutes.']);
@@ -200,29 +210,29 @@ class RegisteredUserController extends Controller
                 'first_name' => $validated['first_name'],
                 'last_name' => $validated['last_name'],
             ]);
-            
+
             // Generate unique username from first name and last name
             $firstName = strtolower(trim($validated['first_name']));
             $lastName = strtolower(trim($validated['last_name']));
-            
+
             Log::info('Step 1: Names cleaned', [
                 'first_name_original' => $validated['first_name'],
                 'last_name_original' => $validated['last_name'],
                 'first_name_lowercase' => $firstName,
                 'last_name_lowercase' => $lastName,
             ]);
-            
+
             // Remove spaces and special characters, keep only alphanumeric
             $firstName = preg_replace('/[^a-z0-9]/', '', $firstName);
             $lastName = preg_replace('/[^a-z0-9]/', '', $lastName);
-            
+
             Log::info('Step 2: After regex cleaning', [
                 'first_name_cleaned' => $firstName,
                 'last_name_cleaned' => $lastName,
                 'first_name_empty' => empty($firstName),
                 'last_name_empty' => empty($lastName),
             ]);
-            
+
             // Fallback if names become empty after cleaning
             if (empty($firstName)) {
                 $firstName = 'user';
@@ -232,24 +242,24 @@ class RegisteredUserController extends Controller
                 $lastName = 'name';
                 Log::warning('Last name became empty after cleaning, using fallback: name');
             }
-            
+
             // Combine first name and last name
             $baseUsername = $firstName . '.' . $lastName;
             $username = $baseUsername;
             $counter = 1;
-            
+
             Log::info('Step 3: Base username generated', [
                 'base_username' => $baseUsername,
                 'initial_username' => $username,
             ]);
-            
+
             // Check existing users count
             $existingUsersCount = User::count();
             Log::info('Step 4: Database check', [
                 'total_users_in_db' => $existingUsersCount,
                 'checking_username' => $username,
             ]);
-            
+
             // Ensure username is unique (check before insert)
             $checkCount = 0;
             while (User::where('username', $username)->exists()) {
@@ -259,10 +269,10 @@ class RegisteredUserController extends Controller
                     'conflicting_username' => $username,
                     'existing_user' => User::where('username', $username)->first(['id', 'email', 'name']),
                 ]);
-                
+
                 $username = $baseUsername . $counter;
                 $counter++;
-                
+
                 // Safety limit to prevent infinite loop
                 if ($counter > 1000) {
                     // Fallback to email-based username if too many conflicts
@@ -274,14 +284,14 @@ class RegisteredUserController extends Controller
                     break;
                 }
             }
-            
+
             if ($checkCount > 0) {
                 Log::info('Step 5: Username conflicts resolved', [
                     'conflicts_found' => $checkCount,
                     'final_username' => $username,
                 ]);
             }
-            
+
             // Final check before insert
             $finalCheck = User::where('username', $username)->exists();
             Log::info('Step 6: Final username check before insert', [
@@ -289,7 +299,7 @@ class RegisteredUserController extends Controller
                 'username_exists' => $finalCheck,
                 'all_existing_usernames' => User::pluck('username')->toArray(),
             ]);
-            
+
             if ($finalCheck) {
                 Log::error('CRITICAL: Username still exists after all checks!', [
                     'username' => $username,
@@ -297,7 +307,7 @@ class RegisteredUserController extends Controller
                 ]);
                 throw new \Exception('Username conflict detected after all resolution attempts. Username: ' . $username);
             }
-            
+
             // Log for debugging
             Log::info('Step 7: Attempting user creation', [
                 'name' => trim($validated['first_name'] . ' ' . $validated['last_name']),
@@ -306,7 +316,7 @@ class RegisteredUserController extends Controller
                 'first_name_cleaned' => $firstName,
                 'last_name_cleaned' => $lastName,
             ]);
-            
+
             // Create user account immediately
             $user = User::create([
                 'name' => trim($validated['first_name'] . ' ' . $validated['last_name']),
@@ -328,12 +338,12 @@ class RegisteredUserController extends Controller
             // Mark as first-time so dashboard tour can run
             $user->first_login = 0;
             $user->save();
-            
+
             Log::info('Step 8: User::create() called', [
                 'user_object' => $user ? 'created' : 'null',
                 'user_id' => $user->id ?? 'no_id',
             ]);
-            
+
             // Verify user was created
             if (!$user || !$user->id) {
                 Log::error('User creation returned null or no ID', [
@@ -342,7 +352,7 @@ class RegisteredUserController extends Controller
                 ]);
                 throw new \Exception('User creation failed - no user ID returned');
             }
-            
+
             // Verify user exists in database
             $createdUser = User::find($user->id);
             if (!$createdUser) {
@@ -352,9 +362,9 @@ class RegisteredUserController extends Controller
                 ]);
                 throw new \Exception('User was created but not found in database');
             }
-            
+
             Log::info('=== REGISTRATION STEP 1 SUCCESS ===', [
-                'user_id' => $user->id, 
+                'user_id' => $user->id,
                 'username' => $username,
                 'email' => $user->email,
                 'name' => $user->name,
@@ -376,11 +386,11 @@ class RegisteredUserController extends Controller
 
         } catch (\Illuminate\Database\QueryException $e) {
             DB::rollBack();
-            
+
             $errorMessage = $e->getMessage();
             $sql = $e->getSql() ?? 'N/A';
             $bindings = $e->getBindings() ?? [];
-            
+
             Log::error('=== REGISTRATION STEP 1 FAILED (Database QueryException) ===', [
                 'error_message' => $errorMessage,
                 'sql_query' => $sql,
@@ -391,7 +401,7 @@ class RegisteredUserController extends Controller
                 'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString(),
             ]);
-            
+
             // Check for specific database errors
             if (str_contains($errorMessage, 'username') || str_contains($errorMessage, 'Duplicate entry')) {
                 Log::error('=== USERNAME CONFLICT DETECTED ===', [
@@ -401,16 +411,18 @@ class RegisteredUserController extends Controller
                     'all_existing_usernames' => User::pluck('username')->toArray(),
                     'total_users' => User::count(),
                 ]);
-                
+
                 return redirect()->route('register')
+                    ->withInput($request->only(['first_name', 'last_name', 'email', 'phone', 'agree_terms']))
                     ->with('error', 'Username generation conflict. Please try again with a different name combination.');
             }
-            
+
             return redirect()->route('register')
+                ->withInput($request->only(['first_name', 'last_name', 'email', 'phone', 'agree_terms']))
                 ->with('error', 'Account creation failed due to a database error. Please check logs for details.');
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             Log::error('=== REGISTRATION STEP 1 FAILED (General Exception) ===', [
                 'error_message' => $e->getMessage(),
                 'exception_class' => get_class($e),
@@ -420,8 +432,9 @@ class RegisteredUserController extends Controller
                 'full_trace' => $e->getTraceAsString(),
                 'request_data' => $request->all(),
             ]);
-            
+
             return redirect()->route('register')
+                ->withInput($request->only(['first_name', 'last_name', 'email', 'phone', 'agree_terms']))
                 ->with('error', 'Account creation failed: ' . $e->getMessage());
         }
     }
@@ -451,7 +464,7 @@ class RegisteredUserController extends Controller
             'package_name' => $package->title ?? null,
             'price' => $package->price ?? 0,
         ]);
-        
+
 
         // advance UI to step 3
         $request->session()->put('registration_step', 3);
@@ -663,7 +676,7 @@ public function step3(Request $request)
     public function finishRegistration()
     {
         $user = Auth::user();
-        
+
         // If registration is already complete, redirect to appropriate dashboard
         if ($user->isRegistrationComplete()) {
             return redirect()->route('dashboard');
@@ -1114,7 +1127,7 @@ public function step3(Request $request)
                 $message->to($user->email, $user->name)
                     ->subject('Welcome to CayMark - Registration Successful');
             });
-            
+
             // Send in-app notifications
             $notificationService = new \App\Services\NotificationService();
             $notificationService->registrationCompleted($user);

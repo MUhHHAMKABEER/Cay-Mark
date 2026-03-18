@@ -27,7 +27,7 @@
     <div class="bg-white rounded-xl shadow-md border border-gray-100 p-6 mb-8">
         <h2 class="text-xl font-bold text-gray-800 mb-4">Deposit & Withdraw</h2>
         <p class="text-gray-600 mb-4">Bids at or above ${{ number_format($walletSummary['deposit_threshold'] ?? 2000, 0) }} require a {{ $walletSummary['deposit_percentage'] ?? 10 }}% deposit. Add funds when you checkout after winning an auction, or contact support for deposit options.</p>
-        <a href="{{ route('buyer.bids') }}" class="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition">My Bids</a>
+        <a href="{{ route('dashboard.buyer', ['tab' => 'auctions']) }}" class="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition">My Bids</a>
     </div>
 
     @if(isset($pendingWithdrawals) && $pendingWithdrawals->isNotEmpty())

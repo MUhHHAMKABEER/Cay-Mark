@@ -3,6 +3,14 @@
 @section('title', 'Active Listings Management - Admin')
 
 @section('content')
+@php
+    $listingImageUrl = function ($path) {
+        $path = trim((string) ($path ?? ''));
+        if ($path === '' || str_starts_with($path, 'http')) return $path ?: asset('images/placeholder-product.png');
+        $p = ltrim(str_replace('\\', '/', $path), '/');
+        return str_starts_with($p, 'uploads/') ? asset($p) : asset('uploads/listings/' . $p);
+    };
+@endphp
 <div class="bg-gray-50 min-h-screen">
     <!-- Header -->
     <div class="bg-white shadow-sm mb-6 rounded-lg p-6">
@@ -50,25 +58,21 @@
         </div>
     </div>
 
-    <!-- Search and Filters -->
+    <!-- Search and Filters (JS client-side) -->
     <div class="bg-white rounded-lg shadow mb-6 p-6">
-        <form method="GET" action="{{ route('admin.active-listings') }}" class="flex flex-wrap gap-4">
+        <form class="js-admin-filter-form flex flex-wrap gap-4" data-admin-filter-target="#listings-tbody">
             <div class="flex-1 min-w-[250px]">
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by item number, make, or model..." 
+                <input type="text" name="search" placeholder="Search by item number, make, or model..." 
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
             </div>
             <div>
                 <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-                    <i class="fas fa-search mr-2"></i>Search
+                    <i class="fas fa-search mr-2"></i>Filter
                 </button>
             </div>
-            @if(request('search'))
             <div>
-                <a href="{{ route('admin.active-listings') }}" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
-                    Clear
-                </a>
+                <a href="{{ route('admin.active-listings') }}" data-admin-filter-clear class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">Clear</a>
             </div>
-            @endif
         </form>
     </div>
 
@@ -91,9 +95,9 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
+                <tbody id="listings-tbody" class="bg-white divide-y divide-gray-200">
                     @forelse($activeListings as $listing)
-                    <tr class="hover:bg-gray-50">
+                    <tr class="hover:bg-gray-50" data-filter-search="{{ strtolower(($listing->item_number ?? '') . ' ' . ($listing->id ?? '') . ' ' . ($listing->year ?? '') . ' ' . ($listing->make ?? '') . ' ' . ($listing->model ?? '') . ' ' . ($listing->subcategory ?? '') . ' ' . ($listing->seller->name ?? '') . ' ' . ($listing->seller->email ?? '')) }}">
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm font-medium text-gray-900">{{ $listing->item_number ?? 'N/A' }}</div>
                             <div class="text-xs text-gray-500">#{{ $listing->id }}</div>
@@ -101,9 +105,10 @@
                         <td class="px-6 py-4">
                             <div class="flex items-center">
                                 @if($listing->images && $listing->images->count() > 0)
-                                <img src="{{ $listing->images->first()->image_path ?? 'https://via.placeholder.com/60' }}" 
-                                    alt="{{ $listing->make ?? '' }} {{ $listing->model ?? '' }}"
-                                    class="h-12 w-16 object-cover rounded mr-3">
+                                @php $mainImg = $listing->images->first(); $imgUrl = $listingImageUrl($mainImg->image_path); @endphp
+                                <button type="button" class="admin-listing-thumb mr-3 js-active-listing-image" data-image="{{ $imgUrl }}" data-title="{{ ($listing->year ?? '') . ' ' . ($listing->make ?? '') . ' ' . ($listing->model ?? '') }}">
+                                    <img src="{{ $imgUrl }}" alt="{{ $listing->make ?? '' }} {{ $listing->model ?? '' }}" class="h-12 w-16 object-cover rounded">
+                                </button>
                                 @else
                                 <div class="h-12 w-16 bg-gray-200 rounded mr-3 flex items-center justify-center">
                                     <i class="fas fa-car text-gray-400"></i>
@@ -173,13 +178,18 @@
                         </td>
                     </tr>
                     @empty
-                    <tr>
+                    <tr class="js-admin-empty-row">
                         <td colspan="8" class="px-6 py-12 text-center text-gray-500">
                             <i class="fas fa-list text-4xl mb-3 text-gray-300"></i>
                             <p>No active listings found</p>
                         </td>
                     </tr>
                     @endforelse
+                    @if($activeListings->isNotEmpty())
+                    <tr class="js-admin-empty-row" style="display: none;">
+                        <td colspan="8" class="px-6 py-12 text-center text-gray-500"><p>No matching listings</p></td>
+                    </tr>
+                    @endif
                 </tbody>
             </table>
         </div>
@@ -192,6 +202,29 @@
         @endif
     </div>
 </div>
+
+<!-- Image preview modal (click outside to close) -->
+<div id="activeListingImageModal" class="admin-img-modal hidden" aria-hidden="true">
+    <div class="admin-img-modal-backdrop" data-dismiss="activeListingImageModal"></div>
+    <div class="admin-img-modal-card" onclick="event.stopPropagation()">
+        <button type="button" class="admin-img-modal-close" onclick="closeActiveListingImageModal()" aria-label="Close"><i class="fas fa-times"></i></button>
+        <img id="activeListingModalImg" src="" alt="Listing" class="admin-img-modal-img">
+        <p id="activeListingModalTitle" class="admin-img-modal-title text-sm text-gray-600 mt-2"></p>
+    </div>
+</div>
+
+<style>
+.admin-listing-thumb { padding: 0; border: none; background: none; border-radius: 12px; cursor: pointer; overflow: hidden; display: block; }
+.admin-listing-thumb:hover { opacity: 0.9; }
+.admin-img-modal { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+.admin-img-modal.hidden { display: none !important; }
+.admin-img-modal-backdrop { position: absolute; inset: 0; background: rgba(15,23,42,0.5); backdrop-filter: blur(4px); }
+.admin-img-modal-card { position: relative; max-width: min(900px,95vw); background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); padding: 1rem; }
+.admin-img-modal-close { position: absolute; top: 0.75rem; right: 0.75rem; width: 40px; height: 40px; border: none; border-radius: 10px; background: rgba(15,23,42,0.7); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 2; }
+.admin-img-modal-close:hover { background: rgba(15,23,42,0.9); }
+.admin-img-modal-img { display: block; max-width: 100%; max-height: 80vh; object-fit: contain; }
+.admin-img-modal-title { margin: 0; padding: 0 0.5rem; }
+</style>
 
 <!-- Extend Auction Modal -->
 <div id="extendModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
@@ -230,12 +263,35 @@ function closeExtendModal() {
     document.getElementById('extendModal').classList.add('hidden');
 }
 
-// Close modal when clicking outside
+function openActiveListingImageModal(src, title) {
+    document.getElementById('activeListingModalImg').src = src || '';
+    document.getElementById('activeListingModalTitle').textContent = title || '';
+    document.getElementById('activeListingImageModal').classList.remove('hidden');
+    document.getElementById('activeListingImageModal').setAttribute('aria-hidden', 'false');
+}
+function closeActiveListingImageModal() {
+    document.getElementById('activeListingImageModal').classList.add('hidden');
+    document.getElementById('activeListingImageModal').setAttribute('aria-hidden', 'true');
+    document.getElementById('activeListingModalImg').src = '';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.js-active-listing-image').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            openActiveListingImageModal(btn.dataset.image, btn.dataset.title || '');
+        });
+    });
+    document.querySelectorAll('[data-dismiss="activeListingImageModal"]').forEach(function(el) {
+        el.addEventListener('click', closeActiveListingImageModal);
+    });
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeActiveListingImageModal();
+    });
+});
+
 window.onclick = function(event) {
     const modal = document.getElementById('extendModal');
-    if (event.target == modal) {
-        closeExtendModal();
-    }
-}
+    if (event.target == modal) closeExtendModal();
+};
 </script>
 @endsection

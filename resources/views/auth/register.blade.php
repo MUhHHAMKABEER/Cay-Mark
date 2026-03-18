@@ -116,7 +116,7 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                     </svg>
                                 </div>
-                                <input type="text" id="first_name" name="first_name" required value="{{ old('first_name') }}"
+                                <input type="text" id="first_name" name="first_name" required value="{{ old('first_name', request()->query('first_name', '')) }}"
                                     class="w-full pl-12 pr-4 py-4 rounded-xl border-2 border-gray-200 focus:border-[#063466] focus:ring-4 focus:ring-[#063466]/10 transition-all duration-300 text-gray-900 placeholder-gray-400 font-medium"
                                     placeholder="Enter your first name">
                                 @error('first_name')
@@ -140,7 +140,7 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                     </svg>
                                 </div>
-                                <input type="text" id="last_name" name="last_name" required value="{{ old('last_name') }}"
+                                <input type="text" id="last_name" name="last_name" required value="{{ old('last_name', request()->query('last_name', '')) }}"
                                     class="w-full pl-12 pr-4 py-4 rounded-xl border-2 border-gray-200 focus:border-[#063466] focus:ring-4 focus:ring-[#063466]/10 transition-all duration-300 text-gray-900 placeholder-gray-400 font-medium"
                                     placeholder="Enter your last name">
                                 @error('last_name')
@@ -166,7 +166,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                 </svg>
                             </div>
-                            <input type="email" id="email" name="email" required value="{{ old('email') }}"
+                            <input type="email" id="email" name="email" required value="{{ old('email', request()->query('email', '')) }}"
                                 class="w-full pl-12 pr-4 py-4 rounded-xl border-2 border-gray-200 focus:border-[#063466] focus:ring-4 focus:ring-[#063466]/10 transition-all duration-300 text-gray-900 placeholder-gray-400 font-medium"
                                 placeholder="your.email@example.com">
                             @error('email')
@@ -185,18 +185,31 @@
                         <h3 class="text-lg font-bold text-gray-900 mb-2">Phone Verification <span class="text-gray-500 font-normal text-sm">(optional)</span></h3>
                         <p class="text-gray-600 text-sm mb-4">Enter your phone number. We'll send a one-time code by SMS. Code expires in 5 minutes.</p>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-700 mb-1">Phone Number</label>
-                                <input type="tel" id="reg_phone_input" name="phone" value="{{ old('phone') }}" placeholder="e.g. +12425551234"
-                                    class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-[#063466] focus:border-[#063466]">
-                                @error('phone')
-                                    <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
-                                @enderror
-                            </div>
-                            <div class="flex items-end gap-2">
-                                <button type="button" id="reg-send-code-btn" class="px-4 py-3 rounded-xl bg-gray-200 text-gray-700 font-semibold hover:bg-gray-300 transition whitespace-nowrap">Send code</button>
+                            <div class="md:col-span-2 flex flex-wrap gap-3 items-end">
+                                <div class="w-32 shrink-0">
+                                    <label class="block text-sm font-semibold text-gray-700 mb-1">Country</label>
+                                    @php
+                                        $regPhoneCountry = old('phone_country', request()->query('phone_country', '92'));
+                                    @endphp
+                                    <select id="reg_phone_country" class="w-full px-3 py-3 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-[#063466] focus:border-[#063466] bg-white">
+                                        <option value="92" @if($regPhoneCountry === '92') selected @endif>+92</option>
+                                        <option value="1" @if($regPhoneCountry === '1') selected @endif>+1</option>
+                                    </select>
+                                </div>
+                                <div class="flex-1 min-w-[180px]">
+                                    <label class="block text-sm font-semibold text-gray-700 mb-1">Phone Number</label>
+                                    <input type="tel" id="reg_phone_input" value="{{ old('phone_number', request()->query('phone', '')) }}" placeholder="e.g. 3115595905"
+                                        class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-[#063466] focus:border-[#063466]" inputmode="numeric" pattern="[0-9]*" maxlength="15">
+                                    @error('phone')
+                                        <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                                <div class="shrink-0">
+                                    <button type="button" id="reg-send-code-btn" class="px-4 py-3 rounded-xl bg-gray-200 text-gray-700 font-semibold hover:bg-gray-300 transition whitespace-nowrap">Send code</button>
+                                </div>
                             </div>
                         </div>
+                        <input type="hidden" name="phone" id="reg_phone_full" value="{{ old('phone', request()->query('phone', '')) }}">
                         <div id="reg-phone-verify-row" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2 hidden">
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-1">Verification code</label>
@@ -204,8 +217,8 @@
                                     class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-[#063466] focus:border-[#063466]">
                                 <p class="text-xs text-gray-500 mt-1">Code expires in 5 minutes</p>
                             </div>
-                            <div class="flex items-end gap-2">
-                                <button type="button" id="reg-verify-phone-btn" class="px-4 py-3 rounded-xl bg-[#063466] text-white font-semibold hover:bg-[#052a52] transition whitespace-nowrap">Verify</button>
+                            <div class="flex items-center pt-7 md:pt-7">
+                                <button type="button" id="reg-verify-phone-btn" class="px-4 py-3 rounded-xl bg-[#063466] text-white font-semibold hover:bg-[#052a52] transition whitespace-nowrap self-start">Verify</button>
                             </div>
                         </div>
                         <div id="reg-phone-verified-badge" class="hidden rounded-xl bg-green-50 border border-green-200 p-3 text-green-800 text-sm font-medium flex items-center mt-2">
@@ -279,9 +292,12 @@
                     <div class="bg-gradient-to-r from-gray-50 to-blue-50 rounded-2xl p-6 border-2 border-gray-200 hover:border-[#063466]/30 transition-all duration-300">
                         <label class="flex items-start space-x-4 cursor-pointer group">
                             <div class="flex-shrink-0 mt-1">
+                                @php
+                                    $agreeTermsChecked = old('agree_terms') || request()->query('agree_terms');
+                                @endphp
                                 <input type="checkbox" name="agree_terms" value="1" required
                                     class="w-6 h-6 text-[#063466] rounded-lg focus:ring-4 focus:ring-[#063466]/20 border-2 border-gray-300 cursor-pointer transition-all duration-200"
-                                    {{ old('agree_terms') ? 'checked' : '' }}>
+                                    @if($agreeTermsChecked) checked @endif>
                             </div>
                             <div class="flex-1">
                                 <span class="text-gray-800 font-bold text-base block mb-1 group-hover:text-[#063466] transition-colors">
@@ -305,10 +321,10 @@
                         @enderror
                     </div>
 
-                    <!-- Submit Button -->
-                    <div class="pt-4">
-                        <button type="submit"
-                            class="w-full bg-gradient-to-r from-[#063466] to-[#1e3a8a] text-white px-8 py-5 rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
+                    <!-- Submit Button: active by default; disabled only after Send code until Verify succeeds -->
+                    <div class="pt-4 relative" id="reg-submit-wrap">
+                        <button type="submit" id="reg-submit-btn"
+                            class="reg-submit-btn w-full bg-gradient-to-r from-[#063466] to-[#1e3a8a] text-white px-8 py-5 rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none disabled:hover:shadow-xl">
                             <span class="relative z-10 flex items-center justify-center">
                                 <span>Create My Account</span>
                                 <svg class="w-6 h-6 ml-3 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -317,6 +333,9 @@
                             </span>
                             <div class="absolute inset-0 bg-gradient-to-r from-[#1e3a8a] to-[#2563eb] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                         </button>
+                        <span id="reg-hover-tooltip" class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-4 py-2 bg-gray-800 text-white text-sm rounded-lg whitespace-nowrap opacity-0 pointer-events-none transition-opacity duration-200 z-20">
+                            <span id="reg-typewriter-text" class="inline-block overflow-hidden whitespace-nowrap border-r-2 border-white w-0">First verify the code</span>
+                        </span>
                         <p class="text-center text-gray-500 text-sm mt-4">
                             Already have an account? 
                             <a href="{{ route('login') }}" class="text-[#063466] hover:text-[#1e3a8a] font-semibold underline decoration-2 underline-offset-2 transition-colors">Sign in here</a>
@@ -397,6 +416,26 @@
     input:focus, select:focus, textarea:focus {
         outline: none;
     }
+    #reg-typewriter-text {
+        display: inline-block;
+        overflow: hidden;
+        white-space: nowrap;
+        width: 0;
+        border-right: 2px solid rgba(255,255,255,0.9);
+        vertical-align: bottom;
+    }
+    #reg-submit-wrap.reg-pending-verify:hover #reg-hover-tooltip {
+        opacity: 1;
+    }
+    #reg-submit-wrap.reg-pending-verify:hover #reg-typewriter-text.reg-typewriter-on {
+        animation: reg-typewriter 1.4s steps(22) forwards;
+    }
+    #reg-submit-wrap.reg-pending-verify .reg-submit-btn {
+        background: linear-gradient(to right, #9ca3af, #6b7280);
+    }
+    @keyframes reg-typewriter {
+        to { width: 22ch; }
+    }
 </style>
 
 <script>
@@ -420,6 +459,8 @@
         var sendBtn = document.getElementById('reg-send-code-btn');
         var verifyBtn = document.getElementById('reg-verify-phone-btn');
         var phoneInput = document.getElementById('reg_phone_input');
+        var countrySelect = document.getElementById('reg_phone_country');
+        var phoneFull = document.getElementById('reg_phone_full');
         var codeInput = document.getElementById('reg_phone_code_input');
         var verifyRow = document.getElementById('reg-phone-verify-row');
         var verifiedBadge = document.getElementById('reg-phone-verified-badge');
@@ -429,12 +470,23 @@
         var csrf = document.querySelector('input[name="_token"]');
         if (!sendBtn || !verifyBtn || !phoneInput || !csrf) return;
 
+        function getFullPhone() {
+            var code = (countrySelect && countrySelect.value) ? countrySelect.value.trim() : '';
+            var num = (phoneInput && phoneInput.value) ? phoneInput.value.trim().replace(/^0+/, '') : '';
+            if (!code || !num) return '';
+            return '+' + code + num;
+        }
+        function setFullPhoneInput() {
+            if (phoneFull) phoneFull.value = getFullPhone();
+        }
+
         sendBtn.addEventListener('click', function() {
-            var phone = (phoneInput && phoneInput.value) ? phoneInput.value.trim() : '';
+            var phone = getFullPhone();
             if (!phone) {
-                alert('Please enter your phone number.');
+                alert('Please select country and enter your phone number.');
                 return;
             }
+            setFullPhoneInput();
             sendBtn.disabled = true;
             sendBtn.textContent = 'Sending…';
             fetch(sendUrl, {
@@ -447,6 +499,10 @@
                 if (data.success) {
                     if (verifyRow) verifyRow.classList.remove('hidden');
                     if (codeInput) { codeInput.value = ''; codeInput.focus(); }
+                    var submitBtn = document.getElementById('reg-submit-btn');
+                    var submitWrap = document.getElementById('reg-submit-wrap');
+                    if (submitBtn) submitBtn.disabled = true;
+                    if (submitWrap) submitWrap.classList.add('reg-pending-verify');
                     alert(data.message || 'Code sent.');
                 } else {
                     alert(data.message || 'Could not send code.');
@@ -459,12 +515,13 @@
         });
 
         verifyBtn.addEventListener('click', function() {
-            var phone = (phoneInput && phoneInput.value) ? phoneInput.value.trim() : '';
+            var phone = getFullPhone();
             var code = (codeInput && codeInput.value) ? codeInput.value.trim() : '';
             if (!phone || !code) {
                 alert('Enter phone number and the 6-digit code.');
                 return;
             }
+            setFullPhoneInput();
             verifyBtn.disabled = true;
             verifyBtn.textContent = 'Verifying…';
             fetch(verifyUrl, {
@@ -479,6 +536,11 @@
                     if (hiddenVerified) hiddenVerified.value = '1';
                     if (verifyRow) verifyRow.classList.add('hidden');
                     if (phoneInput) phoneInput.readOnly = true;
+                    if (countrySelect) countrySelect.disabled = true;
+                    var submitBtn = document.getElementById('reg-submit-btn');
+                    var submitWrap = document.getElementById('reg-submit-wrap');
+                    if (submitBtn) { submitBtn.disabled = false; }
+                    if (submitWrap) submitWrap.classList.remove('reg-pending-verify');
                 } else {
                     alert(data.message || 'Invalid or expired code.');
                 }
@@ -487,6 +549,35 @@
                 verifyBtn.textContent = 'Verify';
                 alert('Request failed. Try again.');
             });
+        });
+
+        var step1Form = document.getElementById('step1-form');
+        if (step1Form) {
+            step1Form.addEventListener('submit', function() {
+                var phoneFullEl = document.getElementById('reg_phone_full');
+                if (phoneFullEl && countrySelect && phoneInput && phoneInput.value.trim()) {
+                    var code = countrySelect.value.trim();
+                    var num = phoneInput.value.trim().replace(/^0+/, '');
+                    if (code && num) phoneFullEl.value = '+' + code + num;
+                }
+            });
+        }
+    })();
+    (function() {
+        var submitWrap = document.getElementById('reg-submit-wrap');
+        var typewriterEl = document.getElementById('reg-typewriter-text');
+        if (!submitWrap || !typewriterEl) return;
+        submitWrap.addEventListener('mouseenter', function() {
+            if (!submitWrap.classList.contains('reg-pending-verify')) return;
+            typewriterEl.classList.remove('reg-typewriter-on');
+            typewriterEl.style.width = '0';
+            requestAnimationFrame(function() {
+                typewriterEl.classList.add('reg-typewriter-on');
+            });
+        });
+        submitWrap.addEventListener('mouseleave', function() {
+            typewriterEl.classList.remove('reg-typewriter-on');
+            typewriterEl.style.width = '0';
         });
     })();
 </script>

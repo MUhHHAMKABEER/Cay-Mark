@@ -85,43 +85,37 @@
         </div>
     </div>
 
-    <!-- Filters and Search -->
+    <!-- Filters and Search (JS client-side) -->
     <div class="bg-white rounded-lg shadow mb-6 p-6">
-        <form method="GET" action="{{ route('admin.payments') }}" class="flex flex-wrap gap-4">
+        <form class="js-admin-filter-form flex flex-wrap gap-4" data-admin-filter-target="#payments-tbody">
             <div class="flex-1 min-w-[200px]">
-                <input type="text" name="buyer_id" value="{{ request('buyer_id') }}" placeholder="Buyer ID..." 
+                <input type="text" name="buyer_id" placeholder="Buyer ID or name..." 
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
             </div>
             <div>
                 <select name="status" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     <option value="">All Status</option>
-                    <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
-                    <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Completed</option>
-                    <option value="failed" {{ request('status') == 'failed' ? 'selected' : '' }}>Failed</option>
-                    <option value="pending_release" {{ request('status') == 'pending_release' ? 'selected' : '' }}>Pending Release</option>
-                    <option value="held" {{ request('status') == 'held' ? 'selected' : '' }}>Held</option>
+                    <option value="pending">Pending</option>
+                    <option value="completed">Completed</option>
+                    <option value="failed">Failed</option>
+                    <option value="pending_release">Pending Release</option>
+                    <option value="held">Held</option>
                 </select>
             </div>
             <div>
-                <input type="date" name="date_from" value="{{ request('date_from') }}" 
-                    class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <input type="date" name="date_from" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
             </div>
             <div>
-                <input type="date" name="date_to" value="{{ request('date_to') }}" 
-                    class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <input type="date" name="date_to" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
             </div>
             <div>
                 <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
                     <i class="fas fa-search mr-2"></i>Filter
                 </button>
             </div>
-            @if(request('status') || request('buyer_id') || request('date_from') || request('date_to'))
             <div>
-                <a href="{{ route('admin.payments') }}" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
-                    Clear
-                </a>
+                <a href="{{ route('admin.payments') }}" data-admin-filter-clear class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">Clear</a>
             </div>
-            @endif
         </form>
     </div>
 
@@ -144,9 +138,9 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
+                <tbody id="payments-tbody" class="bg-white divide-y divide-gray-200">
                     @forelse($payments as $payment)
-                    <tr class="hover:bg-gray-50">
+                    <tr class="hover:bg-gray-50" data-filter-buyer_id="{{ strtolower($payment->id . ' ' . ($payment->user->name ?? '') . ' ' . ($payment->user->email ?? '')) }}" data-filter-status="{{ strtolower($payment->status ?? '') }}" data-filter-date="{{ $payment->created_at->format('Y-m-d') }}">
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             #{{ $payment->id }}
                         </td>
@@ -204,13 +198,18 @@
                         </td>
                     </tr>
                     @empty
-                    <tr>
+                    <tr class="js-admin-empty-row">
                         <td colspan="8" class="px-6 py-12 text-center text-gray-500">
                             <i class="fas fa-credit-card text-4xl mb-3 text-gray-300"></i>
                             <p>No payments found</p>
                         </td>
                     </tr>
                     @endforelse
+                    @if($payments->isNotEmpty())
+                    <tr class="js-admin-empty-row" style="display: none;">
+                        <td colspan="8" class="px-6 py-12 text-center text-gray-500"><p>No matching payments</p></td>
+                    </tr>
+                    @endif
                 </tbody>
             </table>
         </div>

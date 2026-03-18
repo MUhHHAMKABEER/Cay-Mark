@@ -44,6 +44,7 @@
         </div>
     </main>
 
+    <script src="{{ asset('js/admin-table-filter.js') }}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const deleteButtons = document.querySelectorAll('.confirm-action');

@@ -432,6 +432,10 @@
                         if (isset($item['tab']) && ($currentRoute === 'dashboard.seller' || $currentRoute === 'dashboard.buyer')) {
                             $currentTab = request()->get('tab', 'dashboard');
                             $isActive = $currentTab === $item['tab'];
+                            if (isset($item['section'])) {
+                                $currentSection = request()->get('section');
+                                $isActive = $isActive && ($currentSection === $item['section']);
+                            }
                         }
                         
                         // Also check for partial matches for nested routes
@@ -452,6 +456,9 @@
                         $url = route($item['route']);
                         if (isset($item['tab'])) {
                             $url .= '?tab=' . $item['tab'];
+                            if (isset($item['section'])) {
+                                $url .= '&section=' . $item['section'];
+                            }
                         }
                     }
                 @endphp

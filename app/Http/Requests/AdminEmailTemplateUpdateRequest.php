@@ -13,9 +13,13 @@ class AdminEmailTemplateUpdateRequest extends FormRequest
 
     public function rules(): array
     {
-        return [
-            'content' => 'required|string',
+        $rules = [
+            'editor_mode' => 'nullable|in:simple,advanced',
         ];
+        if ($this->input('editor_mode') === 'advanced') {
+            $rules['content'] = 'required|string';
+        }
+        return $rules;
     }
 }
 

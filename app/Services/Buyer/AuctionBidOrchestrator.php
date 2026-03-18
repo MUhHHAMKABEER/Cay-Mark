@@ -30,6 +30,13 @@ class AuctionBidOrchestrator
             ]);
         }
 
+        // Require verified phone number before bidding
+        if (empty($user->phone) || is_null($user->phone_verified_at)) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'amount' => 'You must add and verify a phone number on your account before placing bids. Go to Dashboard → Profile and verify your phone.',
+            ]);
+        }
+
         if ($user->is_restricted) {
             if ($user->restriction_ends_at && now()->greaterThan($user->restriction_ends_at)) {
                 $user->update([

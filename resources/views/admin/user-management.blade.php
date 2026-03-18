@@ -61,25 +61,25 @@
         </div>
     </div>
 
-    <!-- Filters and Search -->
+    <!-- Filters and Search (JS client-side) -->
     <div class="bg-white rounded-lg shadow mb-6 p-6">
-        <form method="GET" action="{{ route('admin.users') }}" class="flex flex-wrap gap-4">
+        <form class="js-admin-filter-form flex flex-wrap gap-4" data-admin-filter-target="#users-tbody" method="get" action="{{ route('admin.users') }}">
             <div class="flex-1 min-w-[250px]">
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by name, email, or phone..." 
+                <input type="text" name="search" placeholder="Search by name, email, or phone..." 
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
             </div>
             <div>
                 <select name="role" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     <option value="">All Roles</option>
-                    <option value="buyer" {{ request('role') == 'buyer' ? 'selected' : '' }}>Buyers</option>
-                    <option value="seller" {{ request('role') == 'seller' ? 'selected' : '' }}>Sellers</option>
+                    <option value="buyer">Buyers</option>
+                    <option value="seller">Sellers</option>
                 </select>
             </div>
             <div>
                 <select name="status" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     <option value="">All Status</option>
-                    <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
-                    <option value="restricted" {{ request('status') == 'restricted' ? 'selected' : '' }}>Restricted</option>
+                    <option value="active">Active</option>
+                    <option value="restricted">Restricted</option>
                 </select>
             </div>
             <div>
@@ -87,13 +87,11 @@
                     <i class="fas fa-search mr-2"></i>Filter
                 </button>
             </div>
-            @if(request('search') || request('role') || request('status'))
             <div>
-                <a href="{{ route('admin.users') }}" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
+                <a href="{{ route('admin.users') }}" data-admin-filter-clear class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
                     Clear
                 </a>
             </div>
-            @endif
         </form>
     </div>
 
@@ -110,9 +108,9 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
+                <tbody id="users-tbody" class="bg-white divide-y divide-gray-200">
                     @forelse($users as $user)
-                    <tr class="hover:bg-gray-50">
+                    <tr class="hover:bg-gray-50" data-filter-search="{{ strtolower($user->name . ' ' . ($user->email ?? '') . ' ' . ($user->phone ?? '')) }}" data-filter-role="{{ strtolower($user->role ?? '') }}" data-filter-status="{{ ($user->is_restricted ?? false) ? 'restricted' : 'active' }}">
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex items-center">
                                 <div class="flex-shrink-0 h-10 w-10">
@@ -159,13 +157,21 @@
                         </td>
                     </tr>
                     @empty
-                    <tr>
+                    <tr class="js-admin-empty-row">
                         <td colspan="5" class="px-6 py-12 text-center text-gray-500">
                             <i class="fas fa-users text-4xl mb-3 text-gray-300"></i>
                             <p>No users found</p>
                         </td>
                     </tr>
                     @endforelse
+                    @if($users->isNotEmpty())
+                    <tr class="js-admin-empty-row" style="display: none;">
+                        <td colspan="5" class="px-6 py-12 text-center text-gray-500">
+                            <i class="fas fa-search text-4xl mb-3 text-gray-300"></i>
+                            <p>No matching users</p>
+                        </td>
+                    </tr>
+                    @endif
                 </tbody>
             </table>
         </div>

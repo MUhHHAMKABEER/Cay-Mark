@@ -194,7 +194,7 @@ To avoid indexing a staging or duplicate site (e.g. **kaymark.360webcoders.com**
 - **Automatic:** If the request host is `kaymark.360webcoders.com`, the app adds `<meta name="robots" content="noindex, nofollow">` and serves `robots.txt` with `Disallow: /`.
 - **Manual:** Set `NOINDEX=true` in `.env` on any server to enable the same behavior.
 
-Production main site should **not** use this host and should **not** set `NOINDEX=true`.
+Production main site should **not** use this host and should **not** set `NOINDEX=true`.dtuhyj
 
 ---
 

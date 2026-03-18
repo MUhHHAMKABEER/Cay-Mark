@@ -39,6 +39,24 @@ class SellerDashboardService
     }
 
     /**
+     * Get won auctions for seller (ended with a winner – status sold)
+     */
+    public function getWonAuctions(User $user): Collection
+    {
+        return $user->listings()
+            ->where('status', 'sold')
+            ->with(['images', 'invoices' => function ($q) {
+                $q->where('payment_status', 'paid');
+            }])
+            ->latest('updated_at')
+            ->get()
+            ->map(function ($listing) {
+                $listing->final_price = $listing->getFinalPrice();
+                return $listing;
+            });
+    }
+
+    /**
      * Get auction summary statistics
      */
     public function getAuctionSummary(User $user): array
@@ -270,6 +288,7 @@ class SellerDashboardService
         return [
             'currentAuctions' => $this->getCurrentAuctions($user),
             'pastAuctions' => $this->getPastAuctions($user),
+            'wonAuctions' => $this->getWonAuctions($user),
             'rejectedListings' => $this->getRejectedListings($user),
             'auctionSummary' => $this->getAuctionSummary($user),
             'notifications' => $this->getNotifications($user),

@@ -8,7 +8,8 @@
     if ($isBuyer && $user) {
         $wallet = \App\Models\UserWallet::getOrCreateForUser($user->id);
         $activeBids = $user->bids()->where('status', 'active')->count();
-        $wonCount = \App\Models\Invoice::where('buyer_id', $user->id)->where('payment_status', 'paid')->count();
+        // Match dashboard: won = auctions ended where user has highest bid (paid or pending)
+        $wonCount = $user->getWonAuctions()->count();
         $watchlistCount = $user->watchlist()->count();
         $buyerHeaderStats = [
             'buying_power' => (float) $wallet->available_balance,
@@ -85,7 +86,7 @@
                                 </span>
                                 <span class="text-gray-900 font-semibold text-sm">${{ number_format($buyerHeaderStats['buying_power'], 0) }}</span>
                             </a>
-                            <a href="{{ route('buyer.bids') }}" class="buyer-header-stat flex flex-col items-center rounded-lg bg-gray-100 hover:bg-gray-200 px-3 py-2 min-w-[90px] transition-colors border border-gray-200">
+                            <a href="{{ route('dashboard.buyer', ['tab' => 'auctions']) }}" class="buyer-header-stat flex flex-col items-center rounded-lg bg-gray-100 hover:bg-gray-200 px-3 py-2 min-w-[90px] transition-colors border border-gray-200">
                                 <span class="flex items-center gap-1 text-gray-600 text-xs">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/></svg>
                                     Bid Status

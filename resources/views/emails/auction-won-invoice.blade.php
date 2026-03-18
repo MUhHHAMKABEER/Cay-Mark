@@ -47,25 +47,25 @@
         <h1>CayMark</h1>
         <p>Island Exchange & Auction House</p>
     </div>
-    
+
     <div class="content">
         <h2>Congratulations — You Won {{ $invoice->item_name ?? '[VEHICLE_NAME]' }}</h2>
-        
+
         <p>Congratulations,</p>
-        
+
         <p>You placed the winning bid on {{ $invoice->item_name ?? '[VEHICLE_NAME]' }}.</p>
-        
+
         <p>Please complete your payment to secure your purchase:</p>
-        
+
         <div style="text-align: center;">
             <a href="{{ route('buyer.payment.checkout-single', $invoice->id) }}" class="button">Pay Now</a>
         </div>
-        
+
         <p>If you have any questions, please contact our support team.</p>
-        
+
         <p>Best regards,<br>The CayMark Team</p>
     </div>
-    
+
     <div class="footer">
         <p>This is an automated email. Please do not reply to this message.</p>
         <p>&copy; {{ date('Y') }} CayMark. All rights reserved.</p>
