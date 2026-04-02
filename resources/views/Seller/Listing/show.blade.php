@@ -46,7 +46,7 @@
             <ol class="list-reset flex flex-wrap items-center gap-x-2">
                 <li><a href="{{ route('seller.dashboard') }}" class="text-blue-600 hover:underline">Dashboard</a></li>
                 <li><span class="text-gray-400">/</span></li>
-                <li><a href="{{ route('dashboard.seller', ['tab' => 'auctions']) }}" class="text-blue-600 hover:underline">My Listings</a></li>
+                <li><a href="{{ route('seller.auctions') }}" class="text-blue-600 hover:underline">My Listings</a></li>
                 <li><span class="text-gray-400">/</span></li>
                 <li class="text-gray-800 font-semibold truncate">{{ $listing->year }} {{ $listing->make }} {{ $listing->model }}</li>
             </ol>
@@ -188,12 +188,7 @@
                         <div class="info-item"><span class="info-label">Has Key</span><span class="info-value">{{ $listing->keys_available ? 'Yes' : 'No' }}</span></div>
                         <div class="info-item">
                             <span class="info-label">Title Status</span>
-                            <span class="info-value">
-                                @if(($listing->title_status ?? '') === 'CLEAN') Yes
-                                @elseif(($listing->title_status ?? '') === 'SALVAGE') No
-                                @else {{ $listing->title_status ?? 'N/A' }}
-                                @endif
-                            </span>
+                            <span class="info-value">{{ $listing->title_status_display }}</span>
                         </div>
                         <div class="info-item"><span class="info-label">VIN</span><span class="info-value font-mono">{{ $listing->vin ?? 'N/A' }}</span></div>
                     </div>

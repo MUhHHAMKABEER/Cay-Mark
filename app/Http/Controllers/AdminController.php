@@ -21,6 +21,7 @@ use App\Http\Requests\AdminUpdatePayoutStatusRequest;
 use App\Http\Requests\AdminResolveDefaultRequest;
 use App\Http\Requests\AdminCloseUnpaidAuctionRequest;
 use App\Models\AdminActivityLog;
+use App\Models\Invoice;
 use App\Services\Admin\AdminActionHub;
 
 class AdminController extends Controller
@@ -50,15 +51,14 @@ class AdminController extends Controller
             ->count();
         
         $stats = [
-            'total_active_listings' => Listing::where('status', 'approved')->count(),
             'listings_awaiting_approval' => Listing::where('status', 'pending')->count(),
             'total_users' => User::count(),
             'total_buyers' => User::where('role', 'buyer')->count(),
             'total_sellers' => User::where('role', 'seller')->count(),
             'active_auctions' => $activeAuctions,
-            'payments_pending' => Payment::where('status', 'pending')->orWhere('status', 'pending_release')->count(),
+            'payments_pending' => Invoice::where('payment_status', 'pending')->count(),
             'payouts_pending' => \App\Models\Payout::whereIn('status', ['pending', 'processing'])->count(),
-            'open_disputes' => 0, // Will be updated when Dispute model exists
+            'open_disputes' => 0,
         ];
 
         // Recent user signups
@@ -711,6 +711,21 @@ class AdminController extends Controller
         ];
 
         return view('admin.payment-management', compact('payments', 'paymentStats'));
+    }
+
+    /**
+     * Pending Payments — only buyer auction debts (unpaid invoices)
+     */
+    public function pendingPayments(Request $request)
+    {
+        $invoices = Invoice::where('payment_status', 'pending')
+            ->with(['buyer', 'listing.images', 'listing'])
+            ->orderBy('payment_deadline', 'asc')
+            ->paginate(20);
+
+        $totalOwed = Invoice::where('payment_status', 'pending')->sum('total_amount_due');
+
+        return view('admin.pending-payments', compact('invoices', 'totalOwed'));
     }
 
     /**
@@ -1637,5 +1652,48 @@ class AdminController extends Controller
     public function closeUnpaidAuction(AdminCloseUnpaidAuctionRequest $request, $defaultId)
     {
         return AdminActionHub::closeUnpaidAuction($request, $defaultId);
+    }
+
+    /**
+     * Support Tickets Management
+     */
+    public function supportTickets(Request $request)
+    {
+        $query = \App\Models\SupportTicket::with('user')->latest();
+
+        if ($request->has('status') && in_array($request->status, ['open', 'in_progress', 'resolved', 'closed'])) {
+            $query->where('status', $request->status);
+        }
+
+        $tickets = $query->paginate(20);
+
+        $stats = [
+            'total' => \App\Models\SupportTicket::count(),
+            'open' => \App\Models\SupportTicket::where('status', 'open')->count(),
+            'in_progress' => \App\Models\SupportTicket::where('status', 'in_progress')->count(),
+            'resolved' => \App\Models\SupportTicket::where('status', 'resolved')->count(),
+        ];
+
+        return view('admin.support-tickets', compact('tickets', 'stats'));
+    }
+
+    /**
+     * Reply to a support ticket
+     */
+    public function replyToTicket(Request $request, $ticketId)
+    {
+        $request->validate([
+            'admin_reply' => 'required|string|max:2000',
+            'status' => 'required|in:in_progress,resolved,closed',
+        ]);
+
+        $ticket = \App\Models\SupportTicket::findOrFail($ticketId);
+        $ticket->update([
+            'admin_reply' => $request->admin_reply,
+            'status' => $request->status,
+            'replied_at' => now(),
+        ]);
+
+        return back()->with('success', 'Reply sent successfully.');
     }
 }

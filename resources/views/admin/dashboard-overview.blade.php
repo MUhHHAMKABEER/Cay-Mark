@@ -12,15 +12,15 @@
 
     <!-- Stats Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-        <!-- Total Active Listings -->
+        <!-- Active Auctions -->
         <div class="bg-white rounded-lg shadow p-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-600">Active Listings</p>
-                    <p class="text-2xl font-bold text-gray-900 mt-1">{{ $stats['total_active_listings'] ?? 0 }}</p>
+                    <p class="text-sm font-medium text-gray-600">Active Auctions</p>
+                    <p class="text-2xl font-bold text-gray-900 mt-1">{{ $stats['active_auctions'] ?? 0 }}</p>
                 </div>
-                <div class="p-3 bg-blue-100 rounded-full">
-                    <i class="fas fa-list text-blue-600 text-xl"></i>
+                <div class="p-3 bg-purple-100 rounded-full">
+                    <i class="fas fa-gavel text-purple-600 text-xl"></i>
                 </div>
             </div>
         </div>
@@ -54,31 +54,19 @@
             </div>
         </div>
 
-        <!-- Active Auctions -->
-        <div class="bg-white rounded-lg shadow p-6">
+        <!-- Pending Payments (buyer auction debts only) -->
+        <a href="{{ route('admin.pending-payments') }}" class="bg-white rounded-lg shadow p-6 hover:shadow-md transition block">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-600">Active Auctions</p>
-                    <p class="text-2xl font-bold text-gray-900 mt-1">{{ $stats['active_auctions'] ?? 0 }}</p>
-                </div>
-                <div class="p-3 bg-purple-100 rounded-full">
-                    <i class="fas fa-gavel text-purple-600 text-xl"></i>
-                </div>
-            </div>
-        </div>
-
-        <!-- Payments Pending -->
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600">Payments Pending</p>
+                    <p class="text-sm font-medium text-gray-600">Pending Payments</p>
                     <p class="text-2xl font-bold text-gray-900 mt-1">{{ $stats['payments_pending'] ?? 0 }}</p>
+                    <p class="text-xs text-gray-500 mt-1">Buyer auction debts</p>
                 </div>
                 <div class="p-3 bg-orange-100 rounded-full">
                     <i class="fas fa-credit-card text-orange-600 text-xl"></i>
                 </div>
             </div>
-        </div>
+        </a>
 
         <!-- Payouts Pending -->
         <div class="bg-white rounded-lg shadow p-6">

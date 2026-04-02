@@ -22,7 +22,7 @@ class EnsureUserIsSeller
 
         if ($role !== 'seller') {
             if ($role === 'buyer') {
-                return redirect()->route('dashboard.buyer')->with('error', 'This page is for sellers only.');
+                return redirect()->route('buyer.dashboard')->with('error', 'This page is for sellers only.');
             }
             if ($role === 'admin') {
                 return redirect()->route('admin.dashboard');

@@ -42,6 +42,11 @@ public function index(Request $request)
         'title_condition' => $toArray($request->input('title_condition')),
     ];
 
+    $allowedColors = config('listing_colors.allowed', []);
+    if (! empty($filters['colors']) && $allowedColors !== []) {
+        $filters['colors'] = array_values(array_intersect($filters['colors'], $allowedColors));
+    }
+
     // Numeric / range filters
     $yearFrom = $request->input('year_from');
     $yearTo   = $request->input('year_to');
@@ -119,7 +124,7 @@ public function index(Request $request)
         'types' => Listing::select('major_category')->distinct()->pluck('major_category')->filter()->values(),
         'makes' => Listing::select('make')->distinct()->pluck('make')->filter()->values(),
         'models' => Listing::select('model')->distinct()->pluck('model')->filter()->values(),
-        'colors' => Listing::select('color')->distinct()->pluck('color')->filter()->values(),
+        'colors' => collect(config('listing_colors.allowed', []))->values(),
         'primary_damage' => Listing::select('primary_damage')->distinct()->pluck('primary_damage')->filter()->values(),
         'secondary_damage' => Listing::select('secondary_damage')->distinct()->pluck('secondary_damage')->filter()->values(),
         'transmission' => Listing::select('transmission')->distinct()->pluck('transmission')->filter()->values(),

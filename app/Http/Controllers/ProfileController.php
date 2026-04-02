@@ -22,10 +22,10 @@ class ProfileController extends Controller
         $role = strtolower(trim($user->role ?? ''));
 
         if ($role === 'seller') {
-            return redirect()->route('dashboard.seller', ['tab' => 'user']);
+            return redirect()->route('seller.account');
         }
         if ($role === 'buyer') {
-            return redirect()->route('dashboard.buyer', ['tab' => 'user']);
+            return redirect()->route('buyer.user');
         }
         if ($role === 'admin') {
             return redirect()->route('admin.dashboard');

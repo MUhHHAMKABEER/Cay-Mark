@@ -32,7 +32,7 @@ test('new users can register as seller', function () {
     ]);
 
     $this->assertAuthenticated();
-    $response->assertRedirect(route('dashboard.seller'));
+    $response->assertRedirect(route('seller.dashboard'));
 });
 
 test('new users can register as admin', function () {

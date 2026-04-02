@@ -9,6 +9,17 @@ use Illuminate\Support\Facades\Auth;
 class NotificationController extends Controller
 {
     /**
+     * Display the buyer's notifications page
+     */
+    public function index()
+    {
+        $user = Auth::user();
+        $notifications = $user->notifications()->paginate(20);
+
+        return view('Buyer.notifications', compact('notifications'));
+    }
+
+    /**
      * Mark a notification as read
      */
     public function markAsRead(Request $request, $id)

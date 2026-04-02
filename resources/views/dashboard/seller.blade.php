@@ -9,6 +9,187 @@
 .notifications-scrollbar::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 6px; }
 .notifications-scrollbar::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 6px; }
 .notifications-scrollbar::-webkit-scrollbar-thumb:hover { background: #64748b; }
+/* Auctions tab: scroll inside fixed-height main (layouts/dashboard .main-content overflow:hidden) */
+.seller-auctions-scrollbar {
+    max-height: calc(100vh - 4rem);
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+.seller-auctions-scrollbar::-webkit-scrollbar { width: 10px; }
+.seller-auctions-scrollbar::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 6px; }
+.seller-auctions-scrollbar::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 6px; }
+.seller-auctions-scrollbar::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
+/* Seller — Auctions tab: professional polish */
+.seller-auctions-wrap {
+    background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 1rem;
+    padding: 1.25rem;
+}
+@media (min-width: 640px) {
+    .seller-auctions-wrap { padding: 1.5rem 1.75rem; }
+}
+.seller-auctions-hero-icon {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0.875rem;
+    background: linear-gradient(135deg, #063466 0%, #1e40af 100%);
+    box-shadow: 0 8px 24px rgba(6, 52, 102, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.seller-auctions-stat {
+    position: relative;
+    overflow: hidden;
+    border-radius: 1rem;
+    padding: 1.25rem 1.25rem 1.125rem;
+    color: #fff;
+    box-shadow: 0 10px 40px -12px rgba(15, 23, 42, 0.25);
+}
+.seller-auctions-stat::after {
+    content: '';
+    position: absolute;
+    right: -1rem;
+    top: -1rem;
+    width: 6rem;
+    height: 6rem;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.08);
+    pointer-events: none;
+}
+.seller-auctions-stat-label {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.92;
+}
+.seller-auctions-stat-value {
+    font-size: 1.875rem;
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+}
+.seller-auctions-stat-hint {
+    font-size: 0.8125rem;
+    opacity: 0.88;
+    margin-top: 0.25rem;
+}
+#content-auctions .auction-tab-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.625rem 1rem;
+    border-radius: 0.75rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: #64748b;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+#content-auctions .auction-tab-button:hover {
+    color: #0f172a;
+    background: rgba(255,255,255,0.7);
+}
+#content-auctions .auction-tab-button.active {
+    color: #fff !important;
+    background: linear-gradient(135deg, #063466 0%, #1e3a8a 100%) !important;
+    box-shadow: 0 4px 16px rgba(6, 52, 102, 0.35);
+}
+.seller-auction-card {
+    border-radius: 1rem;
+    border: 1px solid rgba(226, 232, 240, 0.95);
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+    overflow: hidden;
+    transition: box-shadow 0.25s ease, border-color 0.25s ease, transform 0.2s ease;
+}
+.seller-auction-card:hover {
+    box-shadow: 0 12px 40px -12px rgba(15, 23, 42, 0.18);
+    border-color: #cbd5e1;
+}
+.seller-auction-card-media {
+    position: relative;
+    height: 12rem;
+    background: linear-gradient(135deg, #e2e8f0 0%, #f1f5f9 100%);
+}
+.seller-auction-card-media img {
+    transition: transform 0.35s ease;
+}
+.seller-auction-card:hover .seller-auction-card-media img {
+    transform: scale(1.04);
+}
+.seller-auctions-empty {
+    border-radius: 1rem;
+    border: 2px dashed #cbd5e1;
+    background: linear-gradient(180deg, rgba(248,250,252,0.9) 0%, rgba(241,245,249,0.5) 100%);
+}
+
+/* Listing card: View / Delete — match professional auctions UI */
+#content-auctions .seller-auction-card-actions {
+    display: flex;
+    align-items: stretch;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #f1f5f9;
+}
+#content-auctions .seller-auction-btn {
+    flex: 1 1 0;
+    min-width: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    min-height: 2.5rem;
+    padding: 0.5rem 0.625rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    border-radius: 0.625rem;
+    line-height: 1.2;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+    border: 1px solid transparent;
+    cursor: pointer;
+    text-decoration: none;
+}
+#content-auctions .seller-auction-btn .material-icons-round {
+    font-size: 1.125rem;
+    opacity: 0.95;
+}
+#content-auctions .seller-auction-btn--view {
+    color: #fff;
+    background: linear-gradient(135deg, #063466 0%, #1e3a8a 100%);
+    border-color: rgba(6, 52, 102, 0.35);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+#content-auctions .seller-auction-btn--view:hover {
+    box-shadow: 0 4px 14px rgba(6, 52, 102, 0.28);
+    filter: brightness(1.06);
+}
+#content-auctions .seller-auction-btn--view:active {
+    transform: scale(0.98);
+}
+#content-auctions .seller-auction-btn--delete {
+    color: #b91c1c;
+    background: #fff;
+    border-color: #fecaca;
+}
+#content-auctions .seller-auction-btn--delete:hover {
+    background: #fef2f2;
+    border-color: #f87171;
+    color: #991b1b;
+    box-shadow: 0 1px 3px rgba(185, 28, 28, 0.12);
+}
+#content-auctions .seller-auction-btn--delete:active {
+    transform: scale(0.98);
+}
 </style>
 <!-- Chart.js CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -342,7 +523,7 @@
                     @php $emailChangePending = session('email_change_pending') || (new \App\Services\EmailChangeVerificationService())->hasPendingChange($user); @endphp
                     @if($emailChangePending)
                         @php $pendingNew = session('email_change_new') ?? (new \App\Services\EmailChangeVerificationService())->getPendingNewEmail($user); @endphp
-                        <form method="POST" action="{{ route('seller-dashboard.update-email') }}" class="space-y-3">
+                        <form method="POST" action="{{ route('seller.dashboard.update-email') }}" class="space-y-3">
                             @csrf
                             <input type="hidden" name="email" value="{{ $pendingNew }}">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Verify email change</label>
@@ -358,7 +539,7 @@
                             <p class="text-xs text-gray-500">Code expires in 15 minutes.</p>
                         </form>
                     @else
-                        <form method="POST" action="{{ route('seller-dashboard.update-email') }}" class="space-y-3">
+                        <form method="POST" action="{{ route('seller.dashboard.update-email') }}" class="space-y-3">
                             @csrf
                             <label class="block text-sm font-medium text-gray-700 mb-2">Registered Email Address</label>
                             <div class="flex flex-wrap items-end gap-3">
@@ -377,7 +558,7 @@
                 <!-- Phone Number (editable) -->
                 <div class="mb-6">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
-                    <form method="POST" action="{{ route('seller-dashboard.update-phone') }}" class="flex flex-wrap items-end gap-3">
+                    <form method="POST" action="{{ route('seller.dashboard.update-phone') }}" class="flex flex-wrap items-end gap-3">
                         @csrf
                         <div class="flex-1 min-w-[200px]">
                             <input type="text" name="phone" value="{{ old('phone', $user->phone) }}" placeholder="Your phone number"
@@ -485,7 +666,7 @@
                     <div class="bg-amber-50 border-l-4 border-amber-400 p-6 rounded-lg mb-6">
                         <h3 class="text-lg font-semibold text-amber-900 mb-2">Payout Settings Required</h3>
                         <p class="text-amber-800 mb-4">You must add payout settings before submitting a listing.</p>
-                        <a href="{{ route('dashboard.seller', ['tab' => 'user']) }}" class="inline-block bg-amber-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-amber-700 transition duration-200">
+                        <a href="{{ route('seller.account') }}" class="inline-block bg-amber-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-amber-700 transition duration-200">
                             Add Payout Settings
                         </a>
                     </div>
@@ -503,50 +684,69 @@
             </div>
 
             <!-- AUCTIONS TAB -->
-            <div id="content-auctions" class="tab-content hidden p-6">
-                <h2 class="text-xl font-bold text-gray-900 mb-6">My Auctions</h2>
+            <div id="content-auctions" class="tab-content hidden p-4 sm:p-6 lg:p-7 seller-auctions-scrollbar" data-tour-id="seller-auctions">
+                <div class="seller-auctions-wrap">
+                <div class="mb-8 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
+                    <div class="flex items-start gap-4">
+                        <div class="seller-auctions-hero-icon" aria-hidden="true">
+                            <span class="material-icons-round text-white text-2xl">gavel</span>
+                        </div>
+                        <div>
+                            <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">My Auctions</h2>
+                            <p class="text-slate-600 text-sm mt-1 max-w-xl leading-relaxed">Live listings, completed sales, and outcomes — all in one place.</p>
+                        </div>
+                    </div>
+                    <a href="{{ route('seller.listings.create') }}"
+                       class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white shadow-lg shadow-slate-900/20 transition hover:opacity-95 active:scale-[0.99]"
+                       style="background: linear-gradient(135deg, #063466 0%, #1e3a8a 100%);">
+                        <span class="material-icons-round text-lg">add_circle_outline</span>
+                        New listing
+                    </a>
+                </div>
 
-                <!-- Summary Statistics -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                        <h3 class="text-sm font-medium text-blue-900 mb-1">CURRENT SUMMARY</h3>
-                        <p class="text-2xl font-bold text-blue-600">{{ $auctionSummary['current_count'] }}</p>
-                        <p class="text-sm text-blue-700">Active Auctions</p>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+                    <div class="seller-auctions-stat" style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 55%, #1e40af 100%);">
+                        <p class="seller-auctions-stat-label">Live now</p>
+                        <p class="seller-auctions-stat-value">{{ $auctionSummary['current_count'] }}</p>
+                        <p class="seller-auctions-stat-hint">Active auctions</p>
                     </div>
-                    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
-                        <h3 class="text-sm font-medium text-green-900 mb-1">PAST SUMMARY</h3>
-                        <p class="text-2xl font-bold text-green-600">{{ $auctionSummary['total_items_sold'] }}</p>
-                        <p class="text-sm text-green-700">Total Items Sold</p>
+                    <div class="seller-auctions-stat" style="background: linear-gradient(135deg, #059669 0%, #047857 55%, #0f766e 100%);">
+                        <p class="seller-auctions-stat-label">All-time</p>
+                        <p class="seller-auctions-stat-value">{{ $auctionSummary['total_items_sold'] }}</p>
+                        <p class="seller-auctions-stat-hint">Items sold</p>
                     </div>
-                    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
-                        <h3 class="text-sm font-medium text-green-900 mb-1">PAST SUMMARY</h3>
-                        <p class="text-2xl font-bold text-green-600">${{ number_format($auctionSummary['total_sales_revenue'], 2) }}</p>
-                        <p class="text-sm text-green-700">Total Sales Revenue</p>
+                    <div class="seller-auctions-stat" style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 55%, #5b21b6 100%);">
+                        <p class="seller-auctions-stat-label">Revenue</p>
+                        <p class="seller-auctions-stat-value">${{ number_format($auctionSummary['total_sales_revenue'], 0) }}</p>
+                        <p class="seller-auctions-stat-hint">Total sales (lifetime)</p>
                     </div>
                 </div>
 
-                <!-- Sub-tabs for CURRENT, PAST, REJECTED -->
-                <div class="border-b border-gray-200 mb-6">
-                    <nav class="flex -mb-px">
-                        <button onclick="showAuctionSection('current')" 
-                                id="auction-current" 
-                                class="auction-tab-button active px-6 py-3 text-sm font-medium text-blue-600 border-b-2 border-blue-600">
-                            CURRENT
+                <div class="mb-6">
+                    <nav class="inline-flex flex-wrap gap-1.5 p-1.5 rounded-2xl bg-white/90 border border-slate-200/90 shadow-sm w-full sm:w-auto">
+                        <button type="button" onclick="showAuctionSection('current')"
+                                id="auction-current"
+                                class="auction-tab-button active">
+                            <span class="material-icons-round text-lg opacity-90">bolt</span>
+                            Current
                         </button>
-                        <button onclick="showAuctionSection('past')" 
-                                id="auction-past" 
-                                class="auction-tab-button px-6 py-3 text-sm font-medium text-gray-500 hover:text-gray-700 border-b-2 border-transparent">
-                            PAST
+                        <button type="button" onclick="showAuctionSection('past')"
+                                id="auction-past"
+                                class="auction-tab-button">
+                            <span class="material-icons-round text-lg opacity-90">history</span>
+                            Past
                         </button>
-                        <button onclick="showAuctionSection('rejected')" 
-                                id="auction-rejected" 
-                                class="auction-tab-button px-6 py-3 text-sm font-medium text-gray-500 hover:text-gray-700 border-b-2 border-transparent">
-                            REJECTED
+                        <button type="button" onclick="showAuctionSection('rejected')"
+                                id="auction-rejected"
+                                class="auction-tab-button">
+                            <span class="material-icons-round text-lg opacity-90">block</span>
+                            Rejected
                         </button>
-                        <button onclick="showAuctionSection('won')" 
-                                id="auction-won" 
-                                class="auction-tab-button px-6 py-3 text-sm font-medium text-gray-500 hover:text-gray-700 border-b-2 border-transparent">
-                            WON
+                        <button type="button" onclick="showAuctionSection('won')"
+                                id="auction-won"
+                                class="auction-tab-button">
+                            <span class="material-icons-round text-lg opacity-90">emoji_events</span>
+                            Won
                         </button>
                     </nav>
                 </div>
@@ -556,8 +756,8 @@
                     @if($currentAuctions->count() > 0)
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             @foreach($currentAuctions as $listing)
-                                <div class="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition duration-200">
-                                    <div class="h-48 bg-gray-200 overflow-hidden">
+                                <div class="seller-auction-card">
+                                    <div class="seller-auction-card-media overflow-hidden">
                                         @php
                                             $img = $listing->images->first();
                                             $imgUrl = $img ? (str_contains($img->image_path ?? '', '/') ? asset($img->image_path) : asset('uploads/listings/' . $img->image_path)) : null;
@@ -590,7 +790,7 @@
                                             </p>
                                             <div class="bg-amber-50 border-l-4 border-amber-400 p-4 rounded mb-3">
                                                 <p class="font-semibold text-amber-900 mb-2">Awaiting Pickup Confirmation</p>
-                                                <form method="POST" action="{{ route('seller-dashboard.confirm-pickup', $listing->id) }}">
+                                                <form method="POST" action="{{ route('seller.dashboard.confirm-pickup', $listing->id) }}">
                                                     @csrf
                                                     <div class="mb-3">
                                                         <label class="block text-sm font-medium text-gray-700 mb-2">ENTER PICKUP PIN</label>
@@ -627,13 +827,13 @@
                                             @endif
                                         @endif
 
-                                        <div class="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
+                                        <div class="seller-auction-card-actions">
                                             @if(in_array($listing->status, ['approved', 'active']))
-                                                <a href="{{ route('seller.listings.edit', $listing->id) }}" class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition">
-                                                    <span class="material-icons-round text-lg">edit</span> Edit
+                                                <a href="{{ route('seller.listings.show', $listing->id) }}" class="seller-auction-btn seller-auction-btn--view">
+                                                    <span class="material-icons-round" aria-hidden="true">visibility</span> View
                                                 </a>
-                                                <button type="button" onclick="openDeleteModal({{ $listing->id }}, '{{ addslashes($listing->year . ' ' . $listing->make . ' ' . $listing->model) }}')" class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition">
-                                                    <span class="material-icons-round text-lg">delete</span> Delete
+                                                <button type="button" onclick="openDeleteModal({{ $listing->id }}, '{{ addslashes($listing->year . ' ' . $listing->make . ' ' . $listing->model) }}')" class="seller-auction-btn seller-auction-btn--delete">
+                                                    <span class="material-icons-round" aria-hidden="true">delete_outline</span> Delete
                                                 </button>
                                             @endif
                                         </div>
@@ -642,8 +842,13 @@
                             @endforeach
                         </div>
                     @else
-                        <div class="text-center py-12 bg-gray-50 rounded-lg">
-                            <p class="text-gray-500 text-lg">No current auctions.</p>
+                        <div class="seller-auctions-empty text-center py-14 px-6">
+                            <span class="material-icons-round text-5xl text-slate-300 mb-3 block" aria-hidden="true">inventory_2</span>
+                            <p class="text-slate-800 text-lg font-semibold">No live auctions</p>
+                            <p class="text-slate-500 text-sm mt-2 max-w-md mx-auto">When you have active listings, they will appear here.</p>
+                            <a href="{{ route('seller.listings.create') }}" class="inline-flex items-center gap-2 mt-6 px-5 py-2.5 rounded-xl text-sm font-semibold text-white shadow-md hover:opacity-95 transition" style="background: linear-gradient(135deg, #063466 0%, #1e3a8a 100%);">
+                                <span class="material-icons-round text-lg">add</span> Create a listing
+                            </a>
                         </div>
                     @endif
                 </div>
@@ -653,8 +858,8 @@
                     @if($pastAuctions->count() > 0)
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             @foreach($pastAuctions as $listing)
-                                <div class="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
-                                    <div class="h-48 bg-gray-200 overflow-hidden">
+                                <div class="seller-auction-card">
+                                    <div class="seller-auction-card-media overflow-hidden">
                                         @php
                                             $imgP = $listing->images->first();
                                             $imgUrlP = $imgP ? (str_contains($imgP->image_path ?? '', '/') ? asset($imgP->image_path) : asset('uploads/listings/' . $imgP->image_path)) : null;
@@ -688,8 +893,10 @@
                             @endforeach
                         </div>
                     @else
-                        <div class="text-center py-12 bg-gray-50 rounded-lg">
-                            <p class="text-gray-500 text-lg">No past auctions yet.</p>
+                        <div class="seller-auctions-empty text-center py-14 px-6">
+                            <span class="material-icons-round text-5xl text-slate-300 mb-3 block" aria-hidden="true">history</span>
+                            <p class="text-slate-800 text-lg font-semibold">No completed sales yet</p>
+                            <p class="text-slate-500 text-sm mt-2 max-w-md mx-auto">Completed auctions will appear here after they end.</p>
                         </div>
                     @endif
                 </div>
@@ -699,8 +906,8 @@
                     @if($rejectedListings->count() > 0)
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             @foreach($rejectedListings as $listing)
-                                <div class="bg-white border border-red-200 rounded-lg overflow-hidden shadow-sm">
-                                    <div class="h-48 bg-gray-200 overflow-hidden">
+                                <div class="seller-auction-card border-red-200/80 bg-red-50/10">
+                                    <div class="seller-auction-card-media overflow-hidden">
                                         @php
                                             $imgR = $listing->images->first();
                                             $imgUrlR = $imgR ? (str_contains($imgR->image_path ?? '', '/') ? asset($imgR->image_path) : asset('uploads/listings/' . $imgR->image_path)) : null;
@@ -747,7 +954,7 @@
                                                     </span>
                                                 </p>
                                             </div>
-                                            <a href="{{ route('listings.create') }}?edit={{ $listing->id }}" 
+                                            <a href="{{ route('seller.listings.edit', $listing->id) }}" 
                                                class="block w-full bg-blue-600 text-white text-center px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition duration-200">
                                                 EDIT LISTING
                                             </a>
@@ -761,8 +968,10 @@
                             @endforeach
                         </div>
                     @else
-                        <div class="text-center py-12 bg-gray-50 rounded-lg">
-                            <p class="text-gray-500 text-lg">No rejected listings.</p>
+                        <div class="seller-auctions-empty text-center py-14 px-6">
+                            <span class="material-icons-round text-5xl text-slate-300 mb-3 block" aria-hidden="true">task_alt</span>
+                            <p class="text-slate-800 text-lg font-semibold">No rejected listings</p>
+                            <p class="text-slate-500 text-sm mt-2 max-w-md mx-auto">If a submission is declined, you will see it here with the reason.</p>
                         </div>
                     @endif
                 </div>
@@ -772,8 +981,8 @@
                     @if(isset($wonAuctions) && $wonAuctions->count() > 0)
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             @foreach($wonAuctions as $listing)
-                                <div class="bg-white border-2 border-emerald-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition">
-                                    <div class="h-48 bg-gray-200 overflow-hidden">
+                                <div class="seller-auction-card border-2 border-emerald-300/90 shadow-md">
+                                    <div class="seller-auction-card-media overflow-hidden">
                                         @php
                                             $imgW = $listing->images->first();
                                             $imgUrlW = $imgW ? (str_contains($imgW->image_path ?? '', '/') ? asset($imgW->image_path) : asset('uploads/listings/' . $imgW->image_path)) : null;
@@ -807,10 +1016,13 @@
                             @endforeach
                         </div>
                     @else
-                        <div class="text-center py-12 bg-gray-50 rounded-lg">
-                            <p class="text-gray-500 text-lg">No won auctions yet. Auctions that end with a winning bid will appear here.</p>
+                        <div class="seller-auctions-empty text-center py-14 px-6">
+                            <span class="material-icons-round text-5xl text-slate-300 mb-3 block" aria-hidden="true">emoji_events</span>
+                            <p class="text-slate-800 text-lg font-semibold">No won auctions yet</p>
+                            <p class="text-slate-500 text-sm mt-2 max-w-md mx-auto">When an auction ends with a winning bid, it will appear here.</p>
                         </div>
                     @endif
+                </div>
                 </div>
             </div>
 
@@ -1012,10 +1224,12 @@
                         @csrf
                         <div class="mb-4">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Ticket Title</label>
-                            <input type="text" 
-                                   name="title" 
-                                   required
-                                   class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <select name="title" required class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Select issue type...</option>
+                                @foreach(\App\Models\SupportTicket::TITLE_OPTIONS as $option)
+                                    <option value="{{ $option }}">{{ $option }}</option>
+                                @endforeach
+                            </select>
                         </div>
                         <div class="mb-4">
                             <label class="block text-sm font-medium text-gray-700 mb-2">Message</label>
@@ -1034,9 +1248,39 @@
                 <!-- Ticket History -->
                 <div class="mt-6">
                     <h3 class="text-lg font-semibold text-gray-900 mb-4">Ticket History</h3>
-                    <div class="bg-gray-50 rounded-lg p-6 text-center">
-                        <p class="text-gray-500">Ticket history will appear here once tickets are submitted.</p>
-                    </div>
+                    @php
+                        $sellerTickets = \App\Models\SupportTicket::where('user_id', auth()->id())->latest()->get();
+                    @endphp
+                    @if($sellerTickets->count() > 0)
+                        <div class="space-y-4">
+                            @foreach($sellerTickets as $ticket)
+                            <div class="border border-gray-200 rounded-lg p-4 {{ $ticket->status === 'open' ? 'bg-blue-50 border-blue-200' : '' }}">
+                                <div class="flex items-center justify-between mb-2">
+                                    <h4 class="font-semibold text-gray-900">{{ $ticket->title }}</h4>
+                                    <span class="px-3 py-1 text-xs font-semibold rounded-full
+                                        {{ $ticket->status === 'open' ? 'bg-blue-100 text-blue-800' : '' }}
+                                        {{ $ticket->status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' : '' }}
+                                        {{ $ticket->status === 'resolved' ? 'bg-green-100 text-green-800' : '' }}
+                                        {{ $ticket->status === 'closed' ? 'bg-gray-100 text-gray-800' : '' }}">
+                                        {{ ucfirst(str_replace('_', ' ', $ticket->status)) }}
+                                    </span>
+                                </div>
+                                <p class="text-gray-600 text-sm mb-2">{{ $ticket->message }}</p>
+                                <p class="text-xs text-gray-400">{{ $ticket->created_at->diffForHumans() }}</p>
+                                @if($ticket->admin_reply)
+                                <div class="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                                    <p class="text-xs font-semibold text-gray-500 mb-1">Admin Reply:</p>
+                                    <p class="text-sm text-gray-700">{{ $ticket->admin_reply }}</p>
+                                </div>
+                                @endif
+                            </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="bg-gray-50 rounded-lg p-6 text-center">
+                            <p class="text-gray-500">No tickets submitted yet.</p>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -1087,7 +1331,7 @@ document.getElementById('deleteListingModal') && document.getElementById('delete
     <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
         <div class="mt-3">
             <h3 class="text-lg font-medium text-gray-900 mb-4">Change Password</h3>
-            <form method="POST" action="{{ route('seller-dashboard.change-password') }}">
+            <form method="POST" action="{{ route('seller.dashboard.change-password') }}">
                 @csrf
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
@@ -1143,7 +1387,7 @@ document.getElementById('deleteListingModal') && document.getElementById('delete
     <div class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white m-4">
         <div class="mt-3">
             <h3 class="text-lg font-medium text-gray-900 mb-4">Payout Settings</h3>
-            <form method="POST" action="{{ route('seller-dashboard.update-payout') }}">
+            <form method="POST" action="{{ route('seller.dashboard.update-payout') }}">
                 @csrf
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div>
@@ -1233,23 +1477,25 @@ function showTab(tabName) {
         contentElement.style.display = 'block';
     }
     
-    // Update URL without page reload
-    const url = new URL(window.location);
-    url.searchParams.set('tab', tabName);
-    window.history.pushState({}, '', url);
-    
     // Initialize charts if switching to dashboard tab
     if (tabName === 'dashboard') {
         setTimeout(initializeCharts, 50);
     }
 }
 
-// Show tab on page load based on URL parameter
+// Show tab on page load (server route sets active tab)
 document.addEventListener('DOMContentLoaded', function() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const tab = urlParams.get('tab') || 'dashboard'; // Default to 'dashboard' if no tab specified
-    
+    const tab = @json($activeTab ?? 'dashboard');
+
     showTab(tab);
+
+    if (tab === 'auctions') {
+        const params = new URLSearchParams(window.location.search);
+        const sec = params.get('section');
+        if (sec && ['current', 'past', 'rejected', 'won'].indexOf(sec) !== -1) {
+            showAuctionSection(sec);
+        }
+    }
     
     // Initialize Charts (will work for dashboard tab, safe to call for others)
     if (tab === 'dashboard') {
@@ -1262,20 +1508,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Auction Section Navigation
 function showAuctionSection(section) {
-    document.querySelectorAll('.auction-section').forEach(section => {
-        section.classList.add('hidden');
+    document.querySelectorAll('.auction-section').forEach(function (el) {
+        el.classList.add('hidden');
     });
-    
-    document.querySelectorAll('.auction-tab-button').forEach(button => {
-        button.classList.remove('active', 'text-blue-600', 'border-blue-600');
-        button.classList.add('text-gray-500', 'border-transparent');
+
+    document.querySelectorAll('.auction-tab-button').forEach(function (btn) {
+        btn.classList.remove('active');
     });
-    
-    document.getElementById('auction-section-' + section).classList.remove('hidden');
-    
+
+    const panel = document.getElementById('auction-section-' + section);
+    if (panel) panel.classList.remove('hidden');
+
     const activeButton = document.getElementById('auction-' + section);
-    activeButton.classList.add('active', 'text-blue-600', 'border-blue-600');
-    activeButton.classList.remove('text-gray-500', 'border-transparent');
+    if (activeButton) activeButton.classList.add('active');
 }
 
 // Password Modal

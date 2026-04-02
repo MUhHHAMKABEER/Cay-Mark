@@ -19,13 +19,23 @@ use App\Http\Controllers\chatController;
 
 Route::prefix('seller')->name('seller.')->middleware(['auth', 'seller'])->group(function () {
     
-    // Dashboard
-    Route::get('/dashboard', [App\Http\Controllers\Seller\SellerDashboardController::class, 'index'])
+    // Dashboard (overview + tab pages — clean URLs /seller/...)
+    Route::get('/dashboard', [App\Http\Controllers\Seller\SellerDashboardController::class, 'dashboard'])
         ->name('dashboard');
+    Route::get('/account', [App\Http\Controllers\Seller\SellerDashboardController::class, 'account'])->name('account');
+    Route::get('/auctions', [App\Http\Controllers\Seller\SellerDashboardController::class, 'auctions'])->name('auctions');
+    Route::get('/submission', [App\Http\Controllers\Seller\SellerDashboardController::class, 'submission'])->name('submission');
+    Route::get('/notifications', [App\Http\Controllers\Seller\SellerDashboardController::class, 'notifications'])->name('notifications');
+    Route::get('/support', [App\Http\Controllers\Seller\SellerDashboardController::class, 'support'])->name('support');
+
     Route::post('/dashboard/update-payout', [App\Http\Controllers\Seller\SellerDashboardController::class, 'updatePayout'])
         ->name('dashboard.update-payout');
     Route::post('/dashboard/change-password', [App\Http\Controllers\Seller\SellerDashboardController::class, 'changePassword'])
         ->name('dashboard.change-password');
+    Route::post('/dashboard/update-email', [App\Http\Controllers\Seller\SellerDashboardController::class, 'updateEmail'])
+        ->name('dashboard.update-email');
+    Route::post('/dashboard/update-phone', [App\Http\Controllers\Seller\SellerDashboardController::class, 'updatePhone'])
+        ->name('dashboard.update-phone');
     Route::post('/dashboard/confirm-pickup/{listingId}', [App\Http\Controllers\Seller\SellerDashboardController::class, 'confirmPickup'])
         ->name('dashboard.confirm-pickup');
 
@@ -45,7 +55,7 @@ Route::prefix('seller')->name('seller.')->middleware(['auth', 'seller'])->group(
     Route::post('submit-listings', [ListingController::class, 'store'])->name('listings.store');
     Route::get('listings/success/{id}', [ListingController::class, 'success'])->name('listings.success');
     Route::get('listings', function () {
-        return redirect()->route('dashboard.seller', ['tab' => 'auctions']);
+        return redirect()->route('seller.auctions');
     })->name('listings.index');
     Route::get('listings/{id}/edit', [ListingController::class, 'edit'])->name('listings.edit');
     Route::put('listings/{id}', [ListingController::class, 'update'])->name('listings.update');

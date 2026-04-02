@@ -7,11 +7,14 @@
         ['route' => 'admin.users', 'icon' => 'people', 'label' => 'User Management'],
         ['route' => 'admin.memberships', 'icon' => 'card_membership', 'label' => 'Memberships'],
         ['route' => 'admin.listing-review', 'icon' => 'fact_check', 'label' => 'Listing Review'],
-        ['route' => 'admin.active-listings', 'icon' => 'directions_car', 'label' => 'Active Listings'],
+        ['route' => 'admin.active-listings', 'icon' => 'directions_car', 'label' => 'Active Auctions'],
         ['route' => 'admin.boosts-addons', 'icon' => 'rocket_launch', 'label' => 'Boosts & Add-ons'],
-        ['route' => 'admin.payments', 'icon' => 'account_balance_wallet', 'label' => 'Payments'],
+        ['route' => 'admin.payments', 'icon' => 'account_balance_wallet', 'label' => 'Payment Management'],
+        ['route' => 'admin.pending-payments', 'icon' => 'payments', 'label' => 'Pending Payments'],
         ['route' => 'admin.disputes', 'icon' => 'gavel', 'label' => 'Disputes Center'],
+        ['route' => 'admin.support-tickets', 'icon' => 'support_agent', 'label' => 'Support Tickets'],
         ['route' => 'admin.notifications', 'icon' => 'notifications', 'label' => 'Notifications'],
+        ['route' => 'admin.email-templates', 'icon' => 'mail', 'label' => 'Email Templates'],
         ['route' => 'admin.reports-analytics', 'icon' => 'bar_chart', 'label' => 'Reports & Analytics'],
     ];
 @endphp

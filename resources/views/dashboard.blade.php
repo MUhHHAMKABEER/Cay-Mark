@@ -9,7 +9,7 @@
 @elseif($role === 'admin')
     <script>window.location="{{ route('admin.dashboard') }}";</script>
 @elseif($role === 'seller')
-    <script>window.location="{{ route('dashboard.seller') }}";</script>
+    <script>window.location="{{ route('seller.dashboard') }}";</script>
 @elseif($role === 'buyer')
     <script>window.location="{{ route('welcome') }}";</script>
 @else

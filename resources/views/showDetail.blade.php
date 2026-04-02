@@ -353,7 +353,7 @@
                                         </div>
                                         <div class="flex justify-between">
                                             <span class="text-gray-600">Title Status</span>
-                                            <span class="font-medium">{{ $listing->title_status }}</span>
+                                            <span class="font-medium">{{ $listing->title_status_display }}</span>
                                         </div>
                                         <div class="flex justify-between">
                                             <span class="text-gray-600">Primary Damage</span>

@@ -52,7 +52,7 @@ Route::get('/dashboard', function (Request $request) {
         return redirect()->route('admin.dashboard');
     }
     if ($role === 'seller') {
-        return redirect()->route('dashboard.seller');
+        return redirect()->route('seller.dashboard');
     }
     if ($role === 'buyer') {
         return redirect()->route('welcome');
@@ -68,13 +68,49 @@ Route::middleware('auth')->group(function () {
 });
 
 
-// Legacy dashboard routes (for backward compatibility)
-Route::get('/dashboard/seller', [App\Http\Controllers\Seller\SellerDashboardController::class, 'index'])->middleware(['auth', 'seller'])->name('dashboard.seller');
+// Legacy /dashboard/seller?tab= → redirect to /seller/* (POST targets kept for old clients)
+Route::get('/dashboard/seller', function (Request $request) {
+    $tab = $request->query('tab', 'dashboard');
+    $map = [
+        'dashboard' => 'seller.dashboard',
+        'user' => 'seller.account',
+        'auctions' => 'seller.auctions',
+        'submission' => 'seller.submission',
+        'notifications' => 'seller.notifications',
+        'support' => 'seller.support',
+        'messaging' => 'seller.chat',
+    ];
+    $target = $map[$tab] ?? 'seller.dashboard';
+    if ($tab === 'auctions' && $request->filled('section')) {
+        return redirect()->to(route('seller.auctions').'?section='.urlencode((string) $request->query('section')));
+    }
+
+    return redirect()->route($target);
+})->middleware(['auth', 'seller'])->name('dashboard.seller');
 Route::post('/dashboard/seller/update-payout', [App\Http\Controllers\Seller\SellerDashboardController::class, 'updatePayout'])->middleware(['auth', 'seller'])->name('seller-dashboard.update-payout');
 Route::post('/dashboard/seller/change-password', [App\Http\Controllers\Seller\SellerDashboardController::class, 'changePassword'])->middleware(['auth', 'seller'])->name('seller-dashboard.change-password');
 Route::post('/dashboard/seller/update-email', [App\Http\Controllers\Seller\SellerDashboardController::class, 'updateEmail'])->middleware(['auth', 'seller'])->name('seller-dashboard.update-email');
 Route::post('/dashboard/seller/update-phone', [App\Http\Controllers\Seller\SellerDashboardController::class, 'updatePhone'])->middleware(['auth', 'seller'])->name('seller-dashboard.update-phone');
 Route::post('/dashboard/seller/confirm-pickup/{listingId}', [App\Http\Controllers\Seller\SellerDashboardController::class, 'confirmPickup'])->middleware(['auth', 'seller'])->name('seller-dashboard.confirm-pickup');
+
+Route::get('/dashboard/buyer', function (Request $request) {
+    $tab = $request->query('tab', 'dashboard');
+    $map = [
+        'dashboard' => 'buyer.dashboard',
+        'user' => 'buyer.user',
+        'auctions' => 'buyer.auctions',
+        'saved' => 'buyer.saved-items',
+        'notifications' => 'buyer.notifications',
+        'messaging' => 'buyer.messaging-center',
+        'support' => 'buyer.customer-support',
+    ];
+    $target = $map[$tab] ?? 'buyer.dashboard';
+    if ($tab === 'auctions' && $request->filled('section')) {
+        return redirect()->to(route('buyer.auctions').'?section='.urlencode((string) $request->query('section')));
+    }
+
+    return redirect()->route($target);
+})->middleware(['auth', 'buyer'])->name('dashboard.buyer');
 
 Route::get('/dashboard/admin', function () {
     return redirect()->route('admin.dashboard');
@@ -141,11 +177,10 @@ Route::get('/tow-providers/signup/thanks', [App\Http\Controllers\TowProviderSign
 
 Route::middleware(['auth', 'buyer'])->prefix('buyer')->group(function () {
     Route::get('/marketplace', [MarketplaceController::class, 'index'])->name('buyer.marketplace');
-    Route::get('/auctions', [AuctionController::class, 'index'])->name('buyer.auctions');
-    Route::get('/bids', fn () => redirect()->route('dashboard.buyer', ['tab' => 'auctions']))->name('buyer.bids');
+    Route::get('/bids', fn () => redirect()->route('buyer.auctions'))->name('buyer.bids');
     Route::get('/watchlist', [WatchlistController::class, 'index'])->name('buyer.watchlist');
-    Route::get('/purchases', fn () => redirect()->route('dashboard.buyer', ['tab' => 'auctions', 'section' => 'won']))->name('buyer.purchases');
-    Route::get('/auctions-won', fn () => redirect()->route('dashboard.buyer', ['tab' => 'auctions', 'section' => 'won']))->name('buyer.auctions-won');
+    Route::get('/purchases', fn () => redirect()->to(route('buyer.auctions').'?section=won'))->name('buyer.purchases');
+    Route::get('/auctions-won', fn () => redirect()->to(route('buyer.auctions').'?section=won'))->name('buyer.auctions-won');
     Route::get('/invoices/{invoice}/download', [App\Http\Controllers\Buyer\PurchaseController::class, 'downloadInvoice'])->name('buyer.invoice.download');
 
     // Post-Auction Messaging & Pickup Coordination
@@ -166,7 +201,6 @@ Route::middleware(['auth', 'buyer'])->prefix('buyer')->group(function () {
     Route::get('/deposit-withdrawal', [App\Http\Controllers\Buyer\DepositWithdrawalController::class, 'index'])->name('buyer.deposit-withdrawal');
     Route::post('/deposit-withdrawal/request', [App\Http\Controllers\Buyer\DepositWithdrawalController::class, 'requestWithdrawal'])->name('buyer.deposit-withdrawal.request');
     Route::get('/profile', [App\Http\Controllers\Buyer\ProfileController::class, 'index'])->name('buyer.profile');
-    Route::get('/notifications', [App\Http\Controllers\Buyer\NotificationController::class, 'index'])->name('buyer.notifications');
     Route::get('/support', [App\Http\Controllers\Buyer\SupportController::class, 'index'])->name('buyer.support');
     Route::post('/support/submit', [App\Http\Controllers\Buyer\SupportController::class, 'store'])->name('buyer.support.submit');
 });
@@ -272,6 +306,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/active-listings', [AdminController::class, 'activeListings'])->name('admin.active-listings');
     Route::get('/boosts-addons', [AdminController::class, 'boostsAddOns'])->name('admin.boosts-addons');
     Route::get('/payments', [AdminController::class, 'payments'])->name('admin.payments');
+    Route::get('/pending-payments', [AdminController::class, 'pendingPayments'])->name('admin.pending-payments');
     Route::get('/disputes', [AdminController::class, 'disputes'])->name('admin.disputes');
     Route::get('/notifications', [AdminController::class, 'notifications'])->name('admin.notifications');
     Route::get('/reports-analytics', [AdminController::class, 'reportsAnalytics'])->name('admin.reports-analytics');
@@ -333,6 +368,10 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::post('/disputes/{id}/update-status', [AdminController::class, 'updateDisputeStatus'])->name('admin.disputes.update-status');
 
     Route::post('/notifications/{id}/resend', [AdminController::class, 'resendNotification'])->name('admin.notifications.resend');
+
+    // Support Tickets Management
+    Route::get('/support-tickets', [AdminController::class, 'supportTickets'])->name('admin.support-tickets');
+    Route::post('/support-tickets/{ticket}/reply', [AdminController::class, 'replyToTicket'])->name('admin.support-tickets.reply');
 
     // Email Template Management
     Route::get('/email-templates', [\App\Http\Controllers\Admin\EmailTemplateController::class, 'index'])->name('admin.email-templates');

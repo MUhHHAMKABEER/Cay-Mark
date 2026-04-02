@@ -264,7 +264,7 @@
         
         <!-- Action Buttons -->
         <div class="action-buttons">
-            <a href="{{ route('dashboard.seller', ['tab' => 'auctions']) }}" class="btn-primary-action">
+            <a href="{{ route('seller.auctions') }}" class="btn-primary-action">
                 <span class="material-icons-round" style="font-size: 1.125rem;">list_alt</span>
                 View My Listings
             </a>

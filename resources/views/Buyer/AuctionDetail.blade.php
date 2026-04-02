@@ -636,15 +636,7 @@
                         </div>
                         <div class="info-item">
                             <span class="info-label">Title status</span>
-                            <span class="info-value">
-                                @if(($listing->title_status ?? '') === 'CLEAN')
-                                    Yes
-                                @elseif(($listing->title_status ?? '') === 'SALVAGE')
-                                    No
-                                @else
-                                    {{ $listing->title_status ?? 'N/A' }}
-                                @endif
-                            </span>
+                            <span class="info-value">{{ $listing->title_status_display }}</span>
                         </div>
                         @auth
                         <div class="info-item">

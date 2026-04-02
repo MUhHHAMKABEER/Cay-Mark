@@ -56,10 +56,16 @@ class ListingController extends Controller
     {
         try {
             $user = Auth::user();
+
+            if (empty($user->phone) || is_null($user->phone_verified_at)) {
+                return back()->withErrors([
+                    'phone' => 'You must verify a phone number before submitting a listing. Go to Dashboard → Profile and verify your phone.',
+                ])->withInput();
+            }
+
             $userPackage = $user->activeSubscription?->package;
             $isIndividualSeller = $userPackage && $userPackage->price == 25.00;
 
-            // All validation is handled by SellerListingStoreRequest
             $validated = $request->validated();
 
         // Validate pricing rules
@@ -272,7 +278,7 @@ class ListingController extends Controller
         $user = Auth::user();
         $listing = Listing::where('seller_id', $user->id)->with('images')->findOrFail($id);
         if ($listing->status === 'sold') {
-            return redirect()->route('dashboard.seller', ['tab' => 'auctions'])->with('error', 'Sold listings cannot be edited.');
+            return redirect()->route('seller.auctions')->with('error', 'Sold listings cannot be edited.');
         }
         return view('Seller.submit-listing-new', compact('listing', 'user'));
     }
@@ -285,7 +291,7 @@ class ListingController extends Controller
         $user = Auth::user();
         $listing = Listing::where('seller_id', $user->id)->findOrFail($id);
         if ($listing->status === 'sold') {
-            return redirect()->route('dashboard.seller', ['tab' => 'auctions'])->with('error', 'Sold listings cannot be edited.');
+            return redirect()->route('seller.auctions')->with('error', 'Sold listings cannot be edited.');
         }
         $validated = $request->validated();
         if ($request->starting_price && $request->starting_price <= 0) {
@@ -306,10 +312,10 @@ class ListingController extends Controller
         $user = Auth::user();
         $listing = Listing::where('seller_id', $user->id)->findOrFail($id);
         if ($listing->status === 'sold') {
-            return redirect()->route('dashboard.seller', ['tab' => 'auctions'])->with('error', 'Cannot delete a sold listing.');
+            return redirect()->route('seller.auctions')->with('error', 'Cannot delete a sold listing.');
         }
         $listing->delete();
-        return redirect()->route('dashboard.seller', ['tab' => 'auctions'])->with('success', 'Listing removed.');
+        return redirect()->route('seller.auctions')->with('success', 'Listing removed.');
     }
 
   public function showAuctionLisitng(Request $request)

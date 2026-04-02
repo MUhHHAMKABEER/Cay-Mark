@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Active Listings Management - Admin')
+@section('title', 'Active Auctions Management - Admin')
 
 @section('content')
 @php
@@ -14,8 +14,8 @@
 <div class="bg-gray-50 min-h-screen">
     <!-- Header -->
     <div class="bg-white shadow-sm mb-6 rounded-lg p-6">
-        <h1 class="text-3xl font-bold text-gray-900">Active Listings Management</h1>
-        <p class="text-gray-600 mt-2">Manage all approved and active listings</p>
+        <h1 class="text-3xl font-bold text-gray-900">Active Auctions Management</h1>
+        <p class="text-gray-600 mt-2">Manage all approved and active auctions</p>
     </div>
 
     <!-- Listing Stats -->
@@ -79,7 +79,7 @@
     <!-- Listings Table -->
     <div class="bg-white rounded-lg shadow overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-200">
-            <h2 class="text-xl font-semibold text-gray-900">Active Listings</h2>
+            <h2 class="text-xl font-semibold text-gray-900">Active Auctions</h2>
         </div>
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
@@ -144,11 +144,17 @@
                             @endif
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            @if($listing->auction_end_time)
-                                <div class="text-sm font-medium text-gray-900">{{ $listing->auction_end_time->format('M j, Y') }}</div>
-                                <div class="text-xs {{ $listing->auction_end_time->isPast() ? 'text-red-600' : ($listing->auction_end_time->diffInHours(now()) <= 24 ? 'text-orange-600' : 'text-gray-500') }}">
-                                    {{ $listing->auction_end_time->format('g:i A') }}
-                                    @if($listing->auction_end_time->diffInHours(now()) <= 24 && !$listing->auction_end_time->isPast())
+                            @php
+                                $endTime = $listing->auction_end_time;
+                                if (!$endTime && $listing->auction_start_time && $listing->auction_duration) {
+                                    $endTime = \Carbon\Carbon::parse($listing->auction_start_time)->addDays($listing->auction_duration);
+                                }
+                            @endphp
+                            @if($endTime)
+                                <div class="text-sm font-medium text-gray-900">{{ $endTime->format('M j, Y') }}</div>
+                                <div class="text-xs {{ $endTime->isPast() ? 'text-red-600' : ($endTime->diffInHours(now()) <= 24 ? 'text-orange-600' : 'text-gray-500') }}">
+                                    {{ $endTime->format('g:i A') }}
+                                    @if($endTime->diffInHours(now()) <= 24 && !$endTime->isPast())
                                         <span class="block">Ending Soon</span>
                                     @endif
                                 </div>
@@ -168,12 +174,13 @@
                                     class="text-blue-600 hover:text-blue-900" title="View Details">
                                     <i class="fas fa-eye"></i>
                                 </a>
-                                @if($listing->listing_method === 'auction')
-                                <a href="#" onclick="event.preventDefault(); showExtendModal({{ $listing->id }});" 
-                                    class="text-green-600 hover:text-green-900" title="Extend Auction">
-                                    <i class="fas fa-clock"></i>
-                                </a>
-                                @endif
+                                <form method="POST" action="{{ route('admin.listings.delete', $listing->id) }}" class="inline" onsubmit="return confirm('Are you sure you want to delete this listing?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="text-red-600 hover:text-red-900" title="Delete Listing">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
                             </div>
                         </td>
                     </tr>

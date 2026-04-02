@@ -24,73 +24,78 @@ class BuyerDashboardController extends Controller
     }
 
     /**
-     * Display the buyer dashboard with all tabs (Dashboard Overview, User, Auctions, etc.)
+     * Legacy /dashboard/buyer?tab= → use named routes under /buyer/*
      */
     public function index(Request $request)
     {
-        $user = Auth::user();
-        $tab = $request->get('tab', 'dashboard');
-
-        // Always use unified dashboard with full data so Auctions tab shows Current/Won/Lost
-        // from getWonAuctions() (based on auction end + winning bid), not only after invoice exists.
-        $dashboardData = $this->dashboardService->getDashboardData($user);
-
-        $data = array_merge(
-            ['user' => $user, 'activeTab' => $tab],
-            $dashboardData
-        );
-
-        return view('dashboard.buyer', $data);
+        return $this->renderUnifiedBuyerDashboard($request, $request->get('tab', 'dashboard'));
     }
 
-    /**
-     * Display USER page - Account Information
-     */
-    public function user()
+    protected function renderUnifiedBuyerDashboard(Request $request, string $activeTab)
     {
         $user = Auth::user();
-        return view('buyer.user', compact('user'));
+        $dashboardData = $this->dashboardService->getDashboardData($user);
+
+        return view('dashboard.buyer', array_merge(
+            ['user' => $user, 'activeTab' => $activeTab],
+            $dashboardData
+        ));
     }
 
     /**
-     * Display AUCTIONS page
+     * Dashboard overview (main tab)
+     */
+    public function dashboardOverview(Request $request)
+    {
+        return $this->renderUnifiedBuyerDashboard($request, 'dashboard');
+    }
+
+    /**
+     * Account settings tab
+     */
+    public function user(Request $request)
+    {
+        return $this->renderUnifiedBuyerDashboard($request, 'user');
+    }
+
+    /**
+     * Auctions tab (current / won / lost — ?section=)
      */
     public function auctions(Request $request)
     {
-        $user = Auth::user();
-        $section = $request->get('section', 'current'); // current, won, lost
-
-        $currentAuctions = $this->dashboardService->getCurrentAuctions($user);
-        $wonAuctions = $this->dashboardService->getWonAuctions($user);
-        $lostAuctions = $this->dashboardService->getLostAuctions($user);
-        
-        // Get chart data
-        $biddingActivityData = $this->dashboardService->getBiddingActivityData($user);
-        $spendingTrendsData = $this->dashboardService->getSpendingTrendsData($user);
-        $winLossRatioData = $this->dashboardService->getWinLossRatioData($user);
-
-        return view('buyer.auctions', compact('user', 'currentAuctions', 'wonAuctions', 'lostAuctions', 'section', 
-            'biddingActivityData', 'spendingTrendsData', 'winLossRatioData'));
+        return $this->renderUnifiedBuyerDashboard($request, 'auctions');
     }
 
     /**
-     * Display SAVED ITEMS page
+     * Saved items tab
      */
-    public function savedItems()
+    public function savedItems(Request $request)
     {
-        $user = Auth::user();
-        $savedItems = $this->dashboardService->getSavedItems($user);
-        return view('buyer.saved-items', compact('user', 'savedItems'));
+        return $this->renderUnifiedBuyerDashboard($request, 'saved');
     }
 
     /**
-     * Display NOTIFICATIONS page
+     * Notifications tab
      */
-    public function notifications()
+    public function notifications(Request $request)
     {
-        $user = Auth::user();
-        $notifications = $this->dashboardService->getNotifications($user);
-        return view('buyer.notifications', compact('user', 'notifications'));
+        return $this->renderUnifiedBuyerDashboard($request, 'notifications');
+    }
+
+    /**
+     * Messaging center tab
+     */
+    public function messagingCenter(Request $request)
+    {
+        return $this->renderUnifiedBuyerDashboard($request, 'messaging');
+    }
+
+    /**
+     * Customer support tab
+     */
+    public function customerSupport(Request $request)
+    {
+        return $this->renderUnifiedBuyerDashboard($request, 'support');
     }
 
 

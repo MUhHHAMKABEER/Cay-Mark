@@ -114,8 +114,8 @@
                 <div class="flex items-center min-w-0">
                     <span class="material-icons text-gray-400 text-sm mr-2 shrink-0">receipt</span>
                     <div class="min-w-0">
-                        <p class="text-xs text-gray-500">Title Code</p>
-                        <p class="text-sm font-medium truncate">{{ $listing->title_status ? strtoupper($listing->title_status) : 'N/A' }}</p>
+                        <p class="text-xs text-gray-500">Title</p>
+                        <p class="text-sm font-medium truncate">{{ $listing->title_status_display }}</p>
                     </div>
                 </div>
                 <div class="flex items-center min-w-0">

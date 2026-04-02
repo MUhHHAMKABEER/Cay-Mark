@@ -866,7 +866,7 @@
                                         </div>
                                         <div class="flex items-start text-sm text-gray-600 min-w-0">
                                             <span class="material-icons text-gray-400 text-sm mr-1.5 shrink-0">receipt</span>
-                                            <span class="truncate">{{ $listing->title_status ? strtoupper($listing->title_status) : 'N/A' }}</span>
+                                            <span class="truncate">{{ $listing->title_status_display }}</span>
                                         </div>
                                         <div class="flex items-start text-sm text-gray-600 min-w-0">
                                             <span class="material-icons text-gray-400 text-sm mr-1.5 shrink-0">event</span>

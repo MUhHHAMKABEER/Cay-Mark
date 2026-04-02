@@ -61,6 +61,11 @@ class AuctionController extends Controller
         'title_condition' => $toArray($request->input('title_condition')),
     ];
 
+    $allowedColors = config('listing_colors.allowed', []);
+    if (! empty($filters['colors']) && $allowedColors !== []) {
+        $filters['colors'] = array_values(array_intersect($filters['colors'], $allowedColors));
+    }
+
     // Text search (header search bar)
     $search = trim((string) $request->input('search', ''));
 
@@ -245,7 +250,7 @@ class AuctionController extends Controller
         'transmissions' => $baseQuery->select('transmission')->distinct()->pluck('transmission')->filter()->sort()->values(),
         'drive_trains' => collect(['FWD', 'RWD', 'AWD', '4WD']),
         'fuel_types' => $baseQuery->select('fuel_type')->distinct()->pluck('fuel_type')->filter()->sort()->values(),
-        'colors' => $baseQuery->select('color')->distinct()->pluck('color')->filter()->sort()->values(),
+        'colors' => collect(config('listing_colors.allowed', []))->sort()->values(),
         'title_options' => [
             'CLEAN' => 'Has Title',
             'SALVAGE' => 'No Title',

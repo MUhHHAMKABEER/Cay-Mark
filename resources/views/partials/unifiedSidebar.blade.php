@@ -1,7 +1,7 @@
 @php
     $user = Auth::user();
     $role = $user->role ?? 'buyer';
-    $currentRoute = request()->route()->getName();
+    $currentRoute = request()->route()?->getName() ?? '';
     
     // Define menu items for each role
     $menuItems = [];
@@ -24,30 +24,29 @@
     } elseif ($role === 'seller') {
         $menuItems = [
             ['route' => 'welcome', 'icon' => 'home', 'label' => 'Home'],
-            ['route' => 'dashboard.seller', 'icon' => 'dashboard', 'label' => 'Dashboard', 'tab' => 'dashboard'],
-            ['route' => 'dashboard.seller', 'icon' => 'person', 'label' => 'Account settings', 'tab' => 'user'],
-            ['route' => 'seller.listings.create', 'icon' => 'add_box', 'label' => 'Submission'],
-            ['route' => 'dashboard.seller', 'icon' => 'gavel', 'label' => 'Auctions', 'tab' => 'auctions'],
-            ['route' => 'dashboard.seller', 'icon' => 'notifications', 'label' => 'Notifications', 'tab' => 'notifications'],
-            ['route' => 'seller.chat', 'icon' => 'mail', 'label' => 'Messaging Center'],
-            ['route' => 'dashboard.seller', 'icon' => 'support_agent', 'label' => 'Customer Support', 'tab' => 'support'],
+            ['route' => 'seller.dashboard', 'icon' => 'dashboard', 'label' => 'Dashboard'],
+            ['route' => 'seller.account', 'icon' => 'person', 'label' => 'Account settings'],
+            ['route' => 'seller.listings.create', 'icon' => 'add_box', 'label' => 'Submission', 'match_routes' => ['seller.listings.edit', 'seller.listings.update', 'seller.listings.success', 'seller.listings.store'], 'prefix_match' => false],
+            ['route' => 'seller.auctions', 'icon' => 'gavel', 'label' => 'Auctions', 'match_routes' => ['seller.listings.show']],
+            ['route' => 'seller.notifications', 'icon' => 'notifications', 'label' => 'Notifications'],
+            ['route' => 'seller.chat', 'icon' => 'mail', 'label' => 'Messaging Center', 'match_routes' => ['seller.chat.show', 'seller.chat.message']],
+            ['route' => 'seller.support', 'icon' => 'support_agent', 'label' => 'Customer Support'],
         ];
         $roleLabel = $user->business_license_path ? 'Business Seller' : 'Individual Seller';
-        $dashboardRoute = 'dashboard.seller';
+        $dashboardRoute = 'seller.dashboard';
     } else {
-        // Buyer (unified dashboard like seller - all tabs in one view)
         $menuItems = [
             ['route' => 'welcome', 'icon' => 'home', 'label' => 'Home'],
-            ['route' => 'dashboard.buyer', 'icon' => 'dashboard', 'label' => 'Dashboard', 'tab' => 'dashboard'],
-            ['route' => 'dashboard.buyer', 'icon' => 'person', 'label' => 'Account settings', 'tab' => 'user'],
-            ['route' => 'dashboard.buyer', 'icon' => 'gavel', 'label' => 'Auctions', 'tab' => 'auctions'],
-            ['route' => 'dashboard.buyer', 'icon' => 'bookmark', 'label' => 'Saved Items', 'tab' => 'saved'],
-            ['route' => 'dashboard.buyer', 'icon' => 'notifications', 'label' => 'Notifications', 'tab' => 'notifications'],
-            ['route' => 'dashboard.buyer', 'icon' => 'mail', 'label' => 'Messaging Center', 'tab' => 'messaging'],
-            ['route' => 'dashboard.buyer', 'icon' => 'support_agent', 'label' => 'Customer Support', 'tab' => 'support'],
+            ['route' => 'buyer.dashboard', 'icon' => 'dashboard', 'label' => 'Dashboard'],
+            ['route' => 'buyer.user', 'icon' => 'person', 'label' => 'Account settings', 'match_routes' => ['buyer.profile']],
+            ['route' => 'buyer.auctions', 'icon' => 'gavel', 'label' => 'Auctions'],
+            ['route' => 'buyer.saved-items', 'icon' => 'bookmark', 'label' => 'Saved Items', 'match_routes' => ['buyer.watchlist', 'watchlist.index']],
+            ['route' => 'buyer.notifications', 'icon' => 'notifications', 'label' => 'Notifications'],
+            ['route' => 'buyer.messaging-center', 'icon' => 'mail', 'label' => 'Messaging Center', 'match_routes' => ['buyer.messages']],
+            ['route' => 'buyer.customer-support', 'icon' => 'support_agent', 'label' => 'Customer Support'],
         ];
         $roleLabel = 'Buyer';
-        $dashboardRoute = 'dashboard.buyer';
+        $dashboardRoute = 'buyer.dashboard';
     }
 @endphp
 
@@ -134,61 +133,79 @@
 
     .unified-sidebar .user-profile {
         display: flex;
-        flex-direction: column;
+        flex-direction: row;
         align-items: center;
-        padding: 2rem 1.5rem;
+        gap: 0.875rem;
+        padding: 1.125rem 1.25rem;
         margin-bottom: 0;
         position: relative;
         text-decoration: none;
         color: inherit;
-        background: white;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
         flex-shrink: 0;
-        transition: all 0.3s ease;
-    }
-    
-    .unified-sidebar .user-profile:hover {
-        background: #f8fafc;
+        transition: background 0.2s ease, box-shadow 0.2s ease;
     }
 
     .unified-sidebar .user-profile:hover {
+        background: #f1f5f9;
         text-decoration: none;
     }
 
-    .unified-sidebar .avatar {
-        width: 90px;
-        height: 90px;
-        border-radius: 50%;
-        object-fit: cover;
-        margin-bottom: 1rem;
-        border: 4px solid #eef2ff;
-        box-shadow: 0 4px 20px rgba(67, 97, 238, 0.15), 0 0 0 4px rgba(255, 255, 255, 0.8);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Monogram — no profile photo */
+    .unified-sidebar .user-profile-initials {
+        flex-shrink: 0;
+        width: 2.75rem;
+        height: 2.75rem;
+        border-radius: 0.625rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8125rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        color: #fff;
+        background: linear-gradient(145deg, #063466 0%, #1e40af 50%, #4361ee 100%);
+        box-shadow: 0 2px 8px rgba(6, 52, 102, 0.22);
     }
 
-    .unified-sidebar .avatar:hover {
-        transform: scale(1.05);
-        box-shadow: 0 8px 30px rgba(67, 97, 238, 0.25), 0 0 0 4px rgba(255, 255, 255, 0.9);
-        border-color: var(--primary);
+    .unified-sidebar .user-profile:hover .user-profile-initials {
+        box-shadow: 0 4px 12px rgba(6, 52, 102, 0.28);
+    }
+
+    .unified-sidebar .user-profile-meta {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.35rem;
+        min-width: 0;
+        flex: 1;
     }
 
     .unified-sidebar .user-name {
-        font-size: 1.15rem;
-        font-weight: 700;
-        color: var(--dark);
-        margin-bottom: 0.5rem;
-        letter-spacing: -0.3px;
+        font-size: 0.9375rem;
+        font-weight: 600;
+        color: #0f172a;
+        margin: 0;
+        letter-spacing: -0.02em;
+        line-height: 1.3;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
     }
 
     .unified-sidebar .user-role {
-        font-size: 0.8rem;
+        font-size: 0.625rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
         color: #64748b;
-        font-weight: 600;
-        background: linear-gradient(135deg, #eef2ff 0%, #f0f9ff 100%);
-        padding: 0.4rem 1rem;
-        border-radius: 25px;
-        border: 1px solid rgba(67, 97, 238, 0.1);
-        box-shadow: 0 2px 8px rgba(67, 97, 238, 0.1);
+        background: #e2e8f0;
+        padding: 0.2rem 0.45rem;
+        border-radius: 0.25rem;
+        border: none;
+        box-shadow: none;
     }
 
     .unified-sidebar nav {
@@ -239,6 +256,7 @@
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         position: relative;
         margin: 0 0.5rem;
+        border-left: none;
     }
 
     .unified-sidebar nav a:hover {
@@ -258,14 +276,14 @@
     .unified-sidebar nav a.active::before {
         content: '';
         position: absolute;
-        left: -0.5rem;
-        top: 50%;
-        transform: translateY(-50%);
-        height: 60%;
-        width: 4px;
-        background: linear-gradient(180deg, var(--primary) 0%, #3b82f6 100%);
-        border-radius: 0 4px 4px 0;
-        box-shadow: 0 0 8px rgba(67, 97, 238, 0.4);
+        left: 50%;
+        bottom: 0.35rem;
+        transform: translateX(-50%);
+        height: 3px;
+        width: min(70%, 8rem);
+        background: linear-gradient(90deg, var(--primary) 0%, #3b82f6 100%);
+        border-radius: 999px;
+        box-shadow: 0 1px 6px rgba(67, 97, 238, 0.35);
     }
 
     .unified-sidebar nav a i,
@@ -370,7 +388,8 @@
         }
 
         .unified-sidebar .user-profile {
-            padding: 0 0.5rem;
+            padding: 0.75rem 0.5rem;
+            justify-content: center;
         }
 
         .unified-sidebar .user-name,
@@ -378,9 +397,10 @@
             display: none;
         }
 
-        .unified-sidebar .avatar {
-            width: 50px;
-            height: 50px;
+        .unified-sidebar .user-profile-initials {
+            width: 2.375rem;
+            height: 2.375rem;
+            font-size: 0.75rem;
         }
 
         .unified-sidebar nav a span:not(.material-icons):not(.material-icons-round) {
@@ -411,11 +431,23 @@
         <img src="{{ asset(config('logos.sidebar', 'Logos/Caymark Logo.png')) }}" alt="CayMark" class="h-14 w-auto max-w-full object-contain" />
     </a>
 
-    <a href="{{ route('profile.edit') }}" class="user-profile">
-        <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAlZcArzLDu2ar9LMEKLq0Pc00JlKrypvY4o2sWPG7w2mqW-aQNk4bjM2otcK9rpP0L9Y9D6ufd1Hfl8VqG5QxQ70E70W2J9cIesp7CPnk60kNw55FYTZCqay0QTWJtOhG1fSzhpJ9qlyLUFFNstRlPZb2dYFbdpSXxaPvgx3J5yySMRc6c-OZWtIFKK4nU_k4AqY0bECTu42n9S1JfRLaYSB8-anFeAj3KHcMIrFKs8m09OiQcCxnEKa6nxdnCOjWXAmxG1d3hg68"
-            alt="User Avatar" class="avatar">
-        <h2 class="user-name">{{ Str::ucfirst($user->name) }}</h2>
-        <span class="user-role">{{ $roleLabel }}</span>
+    @php
+        $displayName = trim((string) ($user->name ?? ''));
+        $parts = $displayName !== '' ? preg_split('/\s+/u', $displayName, -1, PREG_SPLIT_NO_EMPTY) : [];
+        if (count($parts) >= 2) {
+            $userInitials = mb_strtoupper(mb_substr($parts[0], 0, 1) . mb_substr($parts[count($parts) - 1], 0, 1));
+        } elseif (count($parts) === 1) {
+            $userInitials = mb_strtoupper(mb_substr($parts[0], 0, min(2, mb_strlen($parts[0]))));
+        } else {
+            $userInitials = '?';
+        }
+    @endphp
+    <a href="{{ route('profile.edit') }}" class="user-profile" title="{{ $displayName ?: 'Account' }} · {{ $roleLabel }}">
+        <span class="user-profile-initials" aria-hidden="true">{{ $userInitials }}</span>
+        <div class="user-profile-meta">
+            <span class="user-name">{{ Str::ucfirst($user->name) }}</span>
+            <span class="user-role">{{ $roleLabel }}</span>
+        </div>
     </a>
 
     <nav>
@@ -425,27 +457,21 @@
                     $isActive = false;
                     if ($item['route'] !== '#') {
                         $routeName = $item['route'];
-                        // Check if current route matches exactly
-                        $isActive = $currentRoute === $routeName;
-                        
-                        // If tab is specified, check if current tab matches
-                        if (isset($item['tab']) && ($currentRoute === 'dashboard.seller' || $currentRoute === 'dashboard.buyer')) {
-                            $currentTab = request()->get('tab', 'dashboard');
-                            $isActive = $currentTab === $item['tab'];
-                            if (isset($item['section'])) {
-                                $currentSection = request()->get('section');
-                                $isActive = $isActive && ($currentSection === $item['section']);
-                            }
+                        $matchRoutes = $item['match_routes'] ?? [];
+
+                        if ($currentRoute !== '' && count($matchRoutes) > 0 && in_array($currentRoute, $matchRoutes, true)) {
+                            $isActive = true;
                         }
-                        
-                        // Also check for partial matches for nested routes
+
                         if (!$isActive && !isset($item['tab'])) {
-                            $routeParts = explode('.', $routeName);
-                            $currentParts = explode('.', $currentRoute);
-                            // Check if first parts match (e.g., 'seller.listings' matches 'seller.listings.create')
-                            if (count($routeParts) >= 2 && count($currentParts) >= 2) {
-                                $isActive = $routeParts[0] === $currentParts[0] && 
-                                           $routeParts[1] === $currentParts[1];
+                            $isActive = ($currentRoute === $routeName);
+                            if (!$isActive && $currentRoute !== '' && ($item['prefix_match'] ?? true)) {
+                                $routeParts = explode('.', $routeName);
+                                $currentParts = explode('.', $currentRoute);
+                                if (count($routeParts) >= 2 && count($currentParts) >= 2) {
+                                    $isActive = $routeParts[0] === $currentParts[0] &&
+                                               $routeParts[1] === $currentParts[1];
+                                }
                             }
                         }
                     }
@@ -454,12 +480,6 @@
                     $url = '#';
                     if ($item['route'] !== '#') {
                         $url = route($item['route']);
-                        if (isset($item['tab'])) {
-                            $url .= '?tab=' . $item['tab'];
-                            if (isset($item['section'])) {
-                                $url .= '&section=' . $item['section'];
-                            }
-                        }
                     }
                 @endphp
                 @php
@@ -500,26 +520,6 @@
 </aside>
 
 <script>
-    // Ensure active state persists on page load
-    document.addEventListener('DOMContentLoaded', function() {
-        const currentRoute = '{{ $currentRoute }}';
-        document.querySelectorAll('.unified-sidebar nav a').forEach(link => {
-            const href = link.getAttribute('href');
-            if (href && href !== '#') {
-                // Remove active class from all
-                link.classList.remove('active');
-            }
-        });
-        
-        // Add active class based on current route
-        document.querySelectorAll('.unified-sidebar nav a').forEach(link => {
-            if (link.classList.contains('active')) {
-                // Already set by PHP, keep it
-                return;
-            }
-        });
-    });
-
     // Smooth hover effects
     document.querySelectorAll('.unified-sidebar nav li, .unified-sidebar .logout-btn').forEach(item => {
         item.addEventListener('mouseenter', function() {

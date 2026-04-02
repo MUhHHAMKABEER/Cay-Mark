@@ -31,22 +31,52 @@ class SellerDashboardController extends Controller
     }
 
     /**
-     * Display the seller dashboard with all tabs data
+     * Legacy entry (query ?tab=) — prefer named tab routes under /seller/*
      */
     public function index(Request $request)
     {
-        $user = Auth::user();
-        $activeTab = $request->get('tab', 'dashboard');
+        return $this->renderSellerDashboard($request->query('tab', 'dashboard'));
+    }
 
-        // Get all data using service
+    public function dashboard()
+    {
+        return $this->renderSellerDashboard('dashboard');
+    }
+
+    public function account()
+    {
+        return $this->renderSellerDashboard('user');
+    }
+
+    public function auctions()
+    {
+        return $this->renderSellerDashboard('auctions');
+    }
+
+    public function submission()
+    {
+        return $this->renderSellerDashboard('submission');
+    }
+
+    public function notifications()
+    {
+        return $this->renderSellerDashboard('notifications');
+    }
+
+    public function support()
+    {
+        return $this->renderSellerDashboard('support');
+    }
+
+    protected function renderSellerDashboard(string $activeTab)
+    {
+        $user = Auth::user();
         $dashboardData = $this->dashboardService->getDashboardData($user);
 
-        $data = array_merge([
+        return view('dashboard.seller', array_merge([
             'user' => $user,
             'activeTab' => $activeTab,
-        ], $dashboardData);
-
-        return view('dashboard.seller', $data);
+        ], $dashboardData));
     }
 
 

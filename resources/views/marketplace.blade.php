@@ -591,7 +591,7 @@
                                     </div>
                                     <div class="flex items-center">
                                         <i class="fas fa-file-alt text-gray-400 text-xs mr-1"></i>
-                                        <span class="truncate">{{ $listing->title_status ?? 'N/A' }}</span>
+                                        <span class="truncate">{{ $listing->title_status_display }}</span>
                                     </div>
                                 </div>
 
@@ -686,7 +686,7 @@
                                         <i class="fas fa-file-alt text-gray-400 mr-2"></i>
                                         <div>
                                             <p class="text-xs text-gray-500">Title</p>
-                                            <p class="text-sm font-medium">{{ $listing->title_status ?? 'N/A' }}</p>
+                                            <p class="text-sm font-medium">{{ $listing->title_status_display }}</p>
                                         </div>
                                     </div>
                                 </div>

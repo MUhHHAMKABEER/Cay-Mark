@@ -92,7 +92,7 @@
                         </div>
                         <div>
                             <label class="text-sm font-medium text-gray-500">Title Status</label>
-                            <p class="text-gray-900 font-semibold">{{ $listing->title_status ?? 'N/A' }}</p>
+                            <p class="text-gray-900 font-semibold">{{ $listing->title_status_display }}</p>
                         </div>
                         <div>
                             <label class="text-sm font-medium text-gray-500">Primary Damage</label>

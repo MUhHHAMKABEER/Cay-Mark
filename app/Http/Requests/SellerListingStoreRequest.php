@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class SellerListingStoreRequest extends FormRequest
 {
@@ -43,19 +44,22 @@ class SellerListingStoreRequest extends FormRequest
             // Required condition fields
             'title_status' => 'required|in:yes,no',
             'island' => 'required|string',
-            'color' => 'required|string',
-            'interior_color' => 'required|string',
+            'color' => ['required', 'string', Rule::in(config('listing_colors.allowed', []))],
+            'interior_color' => ['required', 'string', Rule::in(config('listing_colors.allowed', []))],
             'primary_damage' => 'required|string',
             'keys_available' => 'required|in:yes,no',
             'is_salvaged' => 'required|in:0,1',
+            'run_and_drive' => 'required|in:yes,no',
             'odometer' => 'nullable|integer|min:0|max:9999999',
             'odometer_estimated' => 'nullable|boolean',
             'secondary_damage' => 'nullable|string',
             'additional_notes' => 'nullable|string',
 
-            // SECTION 2 - Photos
+            // SECTION 2 - Photos & Media
             'cover_photo' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'photos' => 'required|array|min:5',
             'photos.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'video' => 'required|file|mimes:mp4,mov,avi,webm|max:102400',
 
             // SECTION 3 - Auction Settings
             'auction_duration' => 'required|in:5,7,14,21,28',
@@ -79,7 +83,9 @@ class SellerListingStoreRequest extends FormRequest
             'title_status.in' => 'Invalid title status selected. Please choose Yes or No.',
             'island.required' => 'Please select the island location where your vehicle is located.',
             'color.required' => 'Please select the exterior color of your vehicle.',
+            'color.in' => 'Please select a valid exterior color.',
             'interior_color.required' => 'Please select the interior color of your vehicle.',
+            'interior_color.in' => 'Please select a valid interior color.',
             'primary_damage.required' => 'Please select the primary damage type for your vehicle.',
             'keys_available.required' => 'Please indicate if keys are available for your vehicle.',
             'keys_available.in' => 'Invalid selection. Please choose Yes or No for keys availability.',
@@ -87,7 +93,10 @@ class SellerListingStoreRequest extends FormRequest
             'odometer.min' => 'Odometer cannot be negative.',
             'odometer.max' => 'Odometer value is too high. Please enter a valid reading.',
 
-            // Section 2 - Photos
+            'run_and_drive.required' => 'Please indicate if the vehicle can run and drive.',
+            'run_and_drive.in' => 'Invalid selection for Run & Drive.',
+
+            // Section 2 - Photos & Media
             'cover_photo.required' => 'Cover photo is required. Please upload a cover image for your listing.',
             'cover_photo.image' => 'Cover photo must be an image file (JPEG, PNG, JPG, GIF, or WEBP).',
             'cover_photo.mimes' => 'Cover photo must be in JPEG, PNG, JPG, GIF, or WEBP format.',
@@ -95,6 +104,11 @@ class SellerListingStoreRequest extends FormRequest
             'photos.*.image' => 'One or more photos are not valid image files. Please upload only image files.',
             'photos.*.mimes' => 'Photos must be in JPEG, PNG, JPG, GIF, or WEBP format.',
             'photos.*.max' => 'One or more photos exceed 5MB size limit. Please compress your images and try again.',
+            'photos.required' => 'At least 5 additional photos are required.',
+            'photos.min' => 'You must upload at least 5 additional photos (rear, left side, right side, dashboard, VIN label).',
+            'video.required' => 'A video of the engine bay is required for all listings.',
+            'video.mimes' => 'Video must be in MP4, MOV, AVI, or WEBM format.',
+            'video.max' => 'Video size must not exceed 100MB.',
 
             // Section 3 - Auction Settings
             'auction_duration.required' => 'Please select the auction duration (5, 7, 14, 21, or 28 days).',

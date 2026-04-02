@@ -1064,10 +1064,10 @@ public function step3(Request $request)
             Log::info('Step 17: Redirecting based on role', ['role' => $role]);
 
             if ($role === 'seller') {
-                return redirect()->route('dashboard.seller')
+                return redirect()->route('seller.dashboard')
                     ->with('success', 'Registration completed successfully! Welcome to CayMark.');
             } elseif ($role === 'buyer') {
-                return redirect()->route('dashboard.buyer')
+                return redirect()->route('buyer.dashboard')
                     ->with('success', 'Registration completed successfully! Welcome to CayMark.');
             }
 

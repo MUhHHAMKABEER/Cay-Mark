@@ -50,6 +50,8 @@ class Listing extends Model
         'primary_damage',
         'secondary_damage',
         'keys_available',
+        'run_and_drive',
+        'video_path',
         'engine_type',
         'cylinders',
         'hull_material',
@@ -91,6 +93,26 @@ class Listing extends Model
         'odometer_estimated' => 'boolean',
         'rejected_at' => 'datetime',
     ];
+
+    public function getTitleStatusDisplayAttribute(): string
+    {
+        return match (strtoupper($this->title_status ?? '')) {
+            'CLEAN', 'YES' => 'Has Title',
+            'SALVAGE', 'NO' => 'No Title',
+            default => $this->title_status ?? 'N/A',
+        };
+    }
+
+    public function getComputedEndTimeAttribute()
+    {
+        if ($this->auction_end_time) {
+            return $this->auction_end_time;
+        }
+        if ($this->auction_start_time && $this->auction_duration) {
+            return \Carbon\Carbon::parse($this->auction_start_time)->addDays($this->auction_duration);
+        }
+        return null;
+    }
 
     /**
      * Booted method to handle model events.
@@ -673,6 +695,7 @@ public function invoices()
             'primary_damage' => $p['primary_damage'],
             'secondary_damage' => $p['secondary_damage'] ?? null,
             'keys_available' => ($p['keys_available'] ?? null) === 'yes',
+            'run_and_drive' => $p['run_and_drive'] ?? null,
             'engine_type' => $p['engine_size'] ?? null,
             'cylinders' => $p['cylinders'] ?? null,
             'starting_price' => $p['starting_price'] ?? null,
@@ -728,8 +751,17 @@ public function invoices()
 
         if ($coverId) {
             $listing->cover_photo_id = $coverId;
-            $listing->save();
         }
+
+        // Handle video upload
+        if ($request->hasFile('video')) {
+            $video = $request->file('video');
+            $videoName = 'VIDEO_' . $listing->id . '_' . microtime(true) . '.' . $video->getClientOriginalExtension();
+            $video->move(public_path('uploads/listings'), $videoName);
+            $listing->video_path = $videoName;
+        }
+
+        $listing->save();
 
         return $listing;
     }
@@ -769,6 +801,7 @@ public function invoices()
             'primary_damage' => $payload['primary_damage'] ?? $this->primary_damage,
             'secondary_damage' => $payload['secondary_damage'] ?? null,
             'keys_available' => ($payload['keys_available'] ?? null) === 'yes',
+            'run_and_drive' => $payload['run_and_drive'] ?? null,
             'engine_type' => $payload['engine_size'] ?? null,
             'cylinders' => $payload['cylinders'] ?? null,
             'starting_price' => $payload['starting_price'] ?? null,
@@ -780,6 +813,13 @@ public function invoices()
 
         if ($request->hasFile('cover_photo') || $request->hasFile('photos')) {
             $this->replaceImages($request);
+        }
+
+        if ($request->hasFile('video')) {
+            $video = $request->file('video');
+            $videoName = 'VIDEO_' . $this->id . '_' . microtime(true) . '.' . $video->getClientOriginalExtension();
+            $video->move(public_path('uploads/listings'), $videoName);
+            $this->update(['video_path' => $videoName]);
         }
     }
 

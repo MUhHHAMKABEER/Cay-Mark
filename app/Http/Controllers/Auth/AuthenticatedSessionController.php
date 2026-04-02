@@ -81,7 +81,7 @@ class AuthenticatedSessionController extends Controller
         if ($role === 'admin') {
             $redirectTo = route('admin.dashboard');
         } elseif ($role === 'seller') {
-            $redirectTo = route('dashboard.seller');
+            $redirectTo = route('seller.dashboard');
         } elseif ($role === 'buyer') {
             $redirectTo = route('welcome');
         }

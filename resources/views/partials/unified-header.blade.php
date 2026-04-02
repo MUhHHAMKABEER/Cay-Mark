@@ -86,7 +86,7 @@
                                 </span>
                                 <span class="text-gray-900 font-semibold text-sm">${{ number_format($buyerHeaderStats['buying_power'], 0) }}</span>
                             </a>
-                            <a href="{{ route('dashboard.buyer', ['tab' => 'auctions']) }}" class="buyer-header-stat flex flex-col items-center rounded-lg bg-gray-100 hover:bg-gray-200 px-3 py-2 min-w-[90px] transition-colors border border-gray-200">
+                            <a href="{{ route('buyer.auctions') }}" class="buyer-header-stat flex flex-col items-center rounded-lg bg-gray-100 hover:bg-gray-200 px-3 py-2 min-w-[90px] transition-colors border border-gray-200">
                                 <span class="flex items-center gap-1 text-gray-600 text-xs">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/></svg>
                                     Bid Status
@@ -107,10 +107,10 @@
                                 {{ strtoupper(substr($user->name, 0, 1)) }}
                             </button>
                             <div x-show="open" @click.away="open = false" x-cloak class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
-                                <a href="{{ route('dashboard.buyer') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Buyer Dashboard</a>
+                                <a href="{{ route('buyer.dashboard') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Buyer Dashboard</a>
                                 <a href="{{ route('buyer.messaging-center') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Messages / Notifications</a>
                                 <a href="{{ route('buyer.deposit-withdrawal') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Wallet / Deposits</a>
-                                <a href="{{ route('dashboard.buyer') }}?tab=user" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Account Settings</a>
+                                <a href="{{ route('buyer.user') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Account Settings</a>
                                 <hr class="my-2">
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
@@ -121,11 +121,11 @@
                     @elseif($isSeller)
                         <!-- Seller Mode: Active/Recent counts + Quick links + Profile -->
                         <div class="hidden lg:flex items-center gap-3">
-                            <a href="{{ route('dashboard.seller') }}" class="flex flex-col items-center rounded-lg bg-gray-100 hover:bg-gray-200 px-3 py-2 min-w-[80px] transition-colors text-sm">
+                            <a href="{{ route('seller.dashboard') }}" class="flex flex-col items-center rounded-lg bg-gray-100 hover:bg-gray-200 px-3 py-2 min-w-[80px] transition-colors text-sm">
                                 <span class="text-gray-600">Active</span>
                                 <span class="font-semibold text-gray-900">{{ $sellerHeaderStats['active_auctions'] }}</span>
                             </a>
-                            <a href="{{ route('dashboard.seller', ['tab' => 'auctions']) }}" class="flex flex-col items-center rounded-lg bg-gray-100 hover:bg-gray-200 px-3 py-2 min-w-[80px] transition-colors text-sm">
+                            <a href="{{ route('seller.auctions') }}" class="flex flex-col items-center rounded-lg bg-gray-100 hover:bg-gray-200 px-3 py-2 min-w-[80px] transition-colors text-sm">
                                 <span class="text-gray-600">Recently finished</span>
                                 <span class="font-semibold text-gray-900">{{ $sellerHeaderStats['recently_finished'] }}</span>
                             </a>
@@ -133,7 +133,7 @@
                         <a href="{{ route('seller.listings.create') }}" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors">
                             Submit listing
                         </a>
-                        <a href="{{ route('dashboard.seller') }}" class="relative p-2 text-gray-600 hover:text-blue-600 transition-colors" title="Notifications">
+                        <a href="{{ route('seller.notifications') }}" class="relative p-2 text-gray-600 hover:text-blue-600 transition-colors" title="Notifications">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
                             </svg>
@@ -152,11 +152,11 @@
                                 </svg>
                             </button>
                             <div x-show="open" @click.away="open = false" x-cloak class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
-                                <a href="{{ route('dashboard.seller') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Dashboard</a>
+                                <a href="{{ route('seller.dashboard') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Dashboard</a>
                                 <a href="{{ route('Auction.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Auctions</a>
                                 <a href="{{ route('seller.listings.create') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Submit listing</a>
                                 <a href="{{ route('seller.payouts') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Payouts</a>
-                                <a href="{{ route('dashboard.seller', ['tab' => 'auctions']) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My listings</a>
+                                <a href="{{ route('seller.auctions') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My listings</a>
                                 <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Account settings</a>
                                 <hr class="my-2">
                                 <form method="POST" action="{{ route('logout') }}">
@@ -242,7 +242,7 @@
                         @endif
                     </a>
                 @elseif($isSeller)
-                    <a href="{{ route('dashboard.seller') }}" class="hover:underline font-medium">
+                    <a href="{{ route('seller.notifications') }}" class="hover:underline font-medium">
                         @if($unreadNotificationCount > 0)
                             <span>{{ $unreadNotificationCount }} new notification{{ $unreadNotificationCount !== 1 ? 's' : '' }} — new bids, listing activity, payment required, reminder to create listings</span>
                         @else

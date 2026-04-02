@@ -139,7 +139,6 @@
         .unified-sidebar nav a.active {
             background: rgba(255, 255, 255, 0.1);
             color: white;
-            border-left: 3px solid var(--accent-gold);
         }
 
         .unified-sidebar nav a i {
@@ -264,7 +263,7 @@
     <script src="https://unpkg.com/shepherd.js/dist/js/shepherd.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const onDashboard = @json(request()->routeIs('dashboard.buyer', 'dashboard.seller'));
+            const onDashboard = {!! json_encode(request()->routeIs('dashboard.buyer', 'dashboard.seller', 'seller.*', 'buyer.*')) !!};
             if (!onDashboard) {
                 return;
             }

@@ -274,7 +274,7 @@
                                             Confirm change
                                         </button>
                                     </div>
-                                    <p class="text-xs text-gray-400 mt-1.5">Code expires in 15 minutes. <a href="{{ route('dashboard.buyer', ['tab' => 'user']) }}" class="text-blue-600 hover:underline">Cancel</a></p>
+                                    <p class="text-xs text-gray-400 mt-1.5">Code expires in 15 minutes. <a href="{{ route('buyer.user') }}" class="text-blue-600 hover:underline">Cancel</a></p>
                                 </form>
                             @else
                                 <form method="POST" action="{{ route('buyer.user.update-email') }}" class="group">
@@ -1022,7 +1022,6 @@ function showTab(tabName) {
     document.querySelectorAll('.tab-content').forEach(c => { c.style.display = 'none'; });
     var el = document.getElementById('content-' + tabName);
     if (el) el.style.display = 'block';
-    var url = new URL(window.location); url.searchParams.set('tab', tabName); window.history.pushState({}, '', url);
     if (tabName === 'dashboard') setTimeout(initializeCharts, 50);
 }
 function showAuctionSection(section) {
@@ -1044,7 +1043,7 @@ function hidePasswordModal() { document.getElementById('passwordModal').classLis
 window.onclick = function(e) { if (e.target === document.getElementById('passwordModal')) hidePasswordModal(); };
 
 document.addEventListener('DOMContentLoaded', function() {
-    var tab = new URLSearchParams(window.location.search).get('tab') || 'dashboard';
+    var tab = @json($activeTab ?? 'dashboard');
         showTab(tab);
     if (tab === 'auctions') showAuctionSection(new URLSearchParams(window.location.search).get('section') || 'current');
     setInterval(updateCountdowns, 1000);

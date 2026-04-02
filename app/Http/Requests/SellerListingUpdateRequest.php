@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class SellerListingUpdateRequest extends FormRequest
 {
@@ -34,17 +35,19 @@ class SellerListingUpdateRequest extends FormRequest
             'vehicle_type' => 'nullable|string',
             'title_status' => 'required|in:yes,no',
             'island' => 'required|string',
-            'color' => 'required|string',
-            'interior_color' => 'required|string',
+            'color' => ['required', 'string', Rule::in(config('listing_colors.allowed', []))],
+            'interior_color' => ['required', 'string', Rule::in(config('listing_colors.allowed', []))],
             'primary_damage' => 'required|string',
             'keys_available' => 'required|in:yes,no',
             'is_salvaged' => 'required|in:0,1',
+            'run_and_drive' => 'required|in:yes,no',
             'odometer' => 'nullable|integer|min:0|max:9999999',
             'odometer_estimated' => 'nullable|boolean',
             'secondary_damage' => 'nullable|string',
             'additional_notes' => 'nullable|string',
             'cover_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
             'photos.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'video' => 'nullable|file|mimes:mp4,mov,avi,webm|max:102400',
             'auction_duration' => 'required|in:5,7,14,21,28',
             'starting_price' => 'nullable|numeric|min:0',
             'reserve_price' => 'nullable|numeric|min:0',

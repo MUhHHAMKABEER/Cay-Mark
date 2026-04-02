@@ -195,7 +195,7 @@ class NotificationService
         $this->sendNotification($seller, 'listing_submitted', "Your listing for {$vehicleName} has been submitted for review.", [
             'listing_id' => $listing->id,
             'item_name' => $vehicleName,
-            'link' => route('dashboard.seller', ['tab' => 'auctions']),
+            'link' => route('seller.auctions'),
         ]);
     }
 
@@ -237,7 +237,7 @@ class NotificationService
             'item_name' => $vehicleName,
             'winning_bid_amount' => $winningBidAmount,
             'reserve_price' => $reservePrice,
-            'link' => route('dashboard.seller', ['tab' => 'auctions']),
+            'link' => route('seller.auctions'),
         ]);
     }
 

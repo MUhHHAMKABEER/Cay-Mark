@@ -1,4 +1,8 @@
-@extends('layouts.Seller')
+@extends('layouts.dashboard')
+
+@section('title')
+{{ !empty($listing ?? null) ? 'Edit Listing - CayMark' : 'Create Listing - CayMark' }}
+@endsection
 
 @section('content')
 @php
@@ -31,6 +35,44 @@
         gap: 1rem;
         margin-bottom: 1.5rem;
         flex-wrap: wrap;
+    }
+
+    /* Horizontal page layout: rail (title + steps) | form */
+    .create-listing-layout {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    @media (min-width: 1024px) {
+        .create-listing-layout {
+            flex-direction: row;
+            align-items: flex-start;
+            gap: 2rem;
+        }
+        .create-listing-rail {
+            position: sticky;
+            top: 1rem;
+            align-self: flex-start;
+            max-width: 280px;
+            flex-shrink: 0;
+        }
+        .create-listing-rail .step-indicator {
+            flex-direction: column;
+            align-items: stretch;
+            justify-content: flex-start;
+            margin-bottom: 0;
+            gap: 0.5rem;
+        }
+        .create-listing-rail .step-item {
+            width: 100%;
+            border-radius: 12px;
+            justify-content: flex-start;
+            padding: 0.75rem 1rem;
+        }
+        .create-listing-main {
+            flex: 1;
+            min-width: 0;
+        }
     }
 
     /* VIN locked section: visually disabled */
@@ -306,6 +348,19 @@
     .form-section:hover {
         box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
     }
+
+    /* Inside main floating card: keep sections white, lighter chrome */
+    .create-listing-shell {
+        background: #ffffff;
+    }
+    .create-listing-shell .form-section {
+        background: #ffffff !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+        border: 1px solid #e5e7eb;
+    }
+    .create-listing-shell .form-section:hover {
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+    }
     
     .section-header {
         display: flex;
@@ -563,40 +618,38 @@
     }
 </style>
 
-<div class="w-full py-4 px-4" style="min-height: calc(100vh - 100px); background-color: #FDFBF8;">
-    <div class="w-full max-w-full mx-auto">
-        <!-- Header -->
-        <div class="text-center mb-4 animate-fade-in">
-            <div class="inline-block mb-2">
-                <div class="bg-white rounded-xl px-6 py-4 shadow-lg border border-gray-100">
-                    <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mb-1">
-                        {{ $isEdit ? 'Edit Listing' : 'Create New Listing' }}
-                    </h1>
-                    <p class="text-gray-600 text-sm md:text-base">{{ $isEdit ? 'Update your listing details below.' : 'List your vehicle or vessel in just a few simple steps' }}</p>
+<div class="flex-1 min-h-0 w-full overflow-y-auto overflow-x-hidden bg-[#FDFBF8] p-4 sm:p-6 lg:p-8">
+    <div class="w-full max-w-7xl mx-auto">
+        <div class="create-listing-shell rounded-2xl bg-white p-5 sm:p-6 lg:p-8 shadow-lg border border-gray-100">
+        <div class="create-listing-layout">
+        <aside class="create-listing-rail w-full">
+            <div class="text-center lg:text-left mb-4 lg:mb-6 animate-fade-in">
+                <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mb-1">
+                    {{ $isEdit ? 'Edit Listing' : 'Create New Listing' }}
+                </h1>
+                <p class="text-gray-600 text-sm md:text-base">{{ $isEdit ? 'Update your listing details below.' : 'List your vehicle or vessel in just a few simple steps' }}</p>
+            </div>
+            <div class="step-indicator animate-fade-in">
+                <div class="step-item active" id="step-indicator-1">
+                    <div class="step-number">1</div>
+                    <span>Vehicle Info</span>
+                </div>
+                <div class="step-item" id="step-indicator-2">
+                    <div class="step-number">2</div>
+                    <span>Photos</span>
+                </div>
+                <div class="step-item" id="step-indicator-3">
+                    <div class="step-number">3</div>
+                    <span>Auction Settings</span>
+                </div>
+                <div class="step-item" id="step-indicator-4">
+                    <div class="step-number">4</div>
+                    <span>Payment</span>
                 </div>
             </div>
-        </div>
+        </aside>
 
-        <!-- Step Indicator -->
-        <div class="step-indicator animate-fade-in">
-            <div class="step-item active" id="step-indicator-1">
-                <div class="step-number">1</div>
-                <span>Vehicle Info</span>
-            </div>
-            <div class="step-item" id="step-indicator-2">
-                <div class="step-number">2</div>
-                <span>Photos</span>
-            </div>
-            <div class="step-item" id="step-indicator-3">
-                <div class="step-number">3</div>
-                <span>Auction Settings</span>
-            </div>
-            <div class="step-item" id="step-indicator-4">
-                <div class="step-number">4</div>
-                <span>Payment</span>
-            </div>
-        </div>
-        
+        <div class="create-listing-main w-full min-w-0">
         <!-- Error Messages Display -->
         @if($errors->any() || session('error'))
             <div class="mb-4 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg animate-fade-in">
@@ -637,17 +690,17 @@
                     </div>
                 </div>
                 
-                <!-- Reader type: VIN vs HIN (custom radio group) -->
+                <!-- Vehicle type: Automobile vs Marine -->
                 <div class="mb-3">
-                    <label class="form-label">IDENTIFIER TYPE <span class="text-red-500">*</span></label>
+                    <label class="form-label">VEHICLE TYPE <span class="text-red-500">*</span></label>
                     <div class="identifier-type-group">
                         <label class="identifier-type-option">
                             <input type="radio" name="vin_hin_type" value="vin" checked>
-                            <span class="identifier-type-label">VIN reader</span>
+                            <span class="identifier-type-label">Automobile</span>
                         </label>
                         <label class="identifier-type-option">
                             <input type="radio" name="vin_hin_type" value="hin">
-                            <span class="identifier-type-label">HIN reader</span>
+                            <span class="identifier-type-label">Marine</span>
                         </label>
                     </div>
                 </div>
@@ -719,7 +772,7 @@
                 <div id="vinLockedSection" class="{{ $isEdit ? '' : 'vin-section-locked' }}">
                 @if(!$isEdit)
                 <p id="vinLockedMessage" class="mb-3 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-4 py-2">
-                    <i class="fas fa-lock mr-2"></i>Use the VIN/HIN reader above first. After 3 attempts, you can enter details manually.
+                    <i class="fas fa-lock mr-2"></i>Use the VIN/HIN reader above to auto-fill vehicle details.
                 </p>
                 @else
                 <p id="vinLockedMessage" class="mb-3 text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded-lg px-4 py-2" style="display: none;"></p>
@@ -728,15 +781,15 @@
                 <div id="manualFields" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                     <div>
                         <label class="form-label">MAKE</label>
-                        <input type="text" name="make" class="form-input uppercase" style="text-transform: uppercase;" value="{{ old('make', $listing->make ?? '') }}">
+                        <input type="text" name="make" class="form-input uppercase js-letters-only" style="text-transform: uppercase;" pattern="[A-Za-z\s\-]+" title="Letters only" value="{{ old('make', $listing->make ?? '') }}">
                     </div>
                     <div>
                         <label class="form-label">MODEL</label>
-                        <input type="text" name="model" class="form-input uppercase" style="text-transform: uppercase;" value="{{ old('model', $listing->model ?? '') }}">
+                        <input type="text" name="model" class="form-input uppercase js-letters-only" style="text-transform: uppercase;" pattern="[A-Za-z\s\-]+" title="Letters only" value="{{ old('model', $listing->model ?? '') }}">
                     </div>
                     <div>
                         <label class="form-label">YEAR</label>
-                        <input type="text" name="year" class="form-input uppercase" style="text-transform: uppercase;" value="{{ old('year', $listing->year ?? '') }}">
+                        <input type="text" name="year" class="form-input js-year-input" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" max="{{ date('Y') }}" title="4-digit year, cannot exceed {{ date('Y') }}" value="{{ old('year', $listing->year ?? '') }}">
                     </div>
                     <div>
                         <label class="form-label">TRIM</label>
@@ -783,20 +836,9 @@
                         <select name="color" required class="form-input">
                             <option value="">Select Color</option>
                             @php $selColor = old('color', $listing->color ?? ''); @endphp
-                            <option value="BLACK" {{ $selColor === 'BLACK' ? 'selected' : '' }}>Black</option>
-                            <option value="WHITE" {{ $selColor === 'WHITE' ? 'selected' : '' }}>White</option>
-                            <option value="SILVER" {{ $selColor === 'SILVER' ? 'selected' : '' }}>Silver</option>
-                            <option value="GRAY" {{ $selColor === 'GRAY' ? 'selected' : '' }}>Gray</option>
-                            <option value="RED" {{ $selColor === 'RED' ? 'selected' : '' }}>Red</option>
-                            <option value="BLUE" {{ $selColor === 'BLUE' ? 'selected' : '' }}>Blue</option>
-                            <option value="GREEN" {{ $selColor === 'GREEN' ? 'selected' : '' }}>Green</option>
-                            <option value="BROWN" {{ $selColor === 'BROWN' ? 'selected' : '' }}>Brown</option>
-                            <option value="YELLOW" {{ $selColor === 'YELLOW' ? 'selected' : '' }}>Yellow</option>
-                            <option value="ORANGE" {{ $selColor === 'ORANGE' ? 'selected' : '' }}>Orange</option>
-                            <option value="BEIGE" {{ $selColor === 'BEIGE' ? 'selected' : '' }}>Beige</option>
-                            <option value="GOLD" {{ $selColor === 'GOLD' ? 'selected' : '' }}>Gold</option>
-                            <option value="BRONZE" {{ $selColor === 'BRONZE' ? 'selected' : '' }}>Bronze</option>
-                            <option value="MAROON" {{ $selColor === 'MAROON' ? 'selected' : '' }}>Maroon</option>
+                            @foreach(config('listing_colors.allowed', []) as $c)
+                                <option value="{{ $c }}" {{ $selColor === $c ? 'selected' : '' }}>{{ ucfirst(strtolower($c)) }}</option>
+                            @endforeach
                         </select>
                     </div>
                     <div>
@@ -804,20 +846,9 @@
                         <select name="interior_color" required class="form-input">
                             <option value="">Select Color</option>
                             @php $selInt = old('interior_color', $listing->interior_color ?? ''); @endphp
-                            <option value="BLACK" {{ $selInt === 'BLACK' ? 'selected' : '' }}>Black</option>
-                            <option value="WHITE" {{ $selInt === 'WHITE' ? 'selected' : '' }}>White</option>
-                            <option value="SILVER" {{ $selInt === 'SILVER' ? 'selected' : '' }}>Silver</option>
-                            <option value="GRAY" {{ $selInt === 'GRAY' ? 'selected' : '' }}>Gray</option>
-                            <option value="RED" {{ $selInt === 'RED' ? 'selected' : '' }}>Red</option>
-                            <option value="BLUE" {{ $selInt === 'BLUE' ? 'selected' : '' }}>Blue</option>
-                            <option value="GREEN" {{ $selInt === 'GREEN' ? 'selected' : '' }}>Green</option>
-                            <option value="BROWN" {{ $selInt === 'BROWN' ? 'selected' : '' }}>Brown</option>
-                            <option value="YELLOW" {{ $selInt === 'YELLOW' ? 'selected' : '' }}>Yellow</option>
-                            <option value="ORANGE" {{ $selInt === 'ORANGE' ? 'selected' : '' }}>Orange</option>
-                            <option value="BEIGE" {{ $selInt === 'BEIGE' ? 'selected' : '' }}>Beige</option>
-                            <option value="GOLD" {{ $selInt === 'GOLD' ? 'selected' : '' }}>Gold</option>
-                            <option value="BRONZE" {{ $selInt === 'BRONZE' ? 'selected' : '' }}>Bronze</option>
-                            <option value="MAROON" {{ $selInt === 'MAROON' ? 'selected' : '' }}>Maroon</option>
+                            @foreach(config('listing_colors.allowed', []) as $c)
+                                <option value="{{ $c }}" {{ $selInt === $c ? 'selected' : '' }}>{{ ucfirst(strtolower($c)) }}</option>
+                            @endforeach
                         </select>
                     </div>
                     <!-- Primary and Secondary Damage side by side, same options -->
@@ -919,6 +950,18 @@
                         <x-custom-checkbox name="odometer_estimated" value="1" label="Estimated reading" :checked="(bool) old('odometer_estimated', $listing->odometer_estimated ?? false)" />
                         <p class="text-xs text-gray-500">Check if odometer is not actual (e.g. exempt or estimated).</p>
                     </div>
+                    <div>
+                        <label class="form-label">RUN & DRIVE <span class="text-red-500">*</span></label>
+                        <select name="run_and_drive" required class="form-input">
+                            <option value="">Select</option>
+                            @php $rdVal = old('run_and_drive', $listing->run_and_drive ?? ''); @endphp
+                            <option value="yes" {{ $rdVal === 'yes' ? 'selected' : '' }}>Yes</option>
+                            <option value="no" {{ $rdVal === 'no' ? 'selected' : '' }}>No</option>
+                        </select>
+                        <div class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
+                            <strong>Run & Drive:</strong> Indicates whether the vehicle is able to start and drive under its own power. Select "Yes" if the vehicle can be driven, or "No" if it requires towing or transport.
+                        </div>
+                    </div>
                     <div class="col-span-2 md:col-span-3 lg:col-span-4">
                         <label class="form-label">ADDITIONAL NOTES</label>
                         <textarea name="additional_notes" rows="2" class="form-input uppercase" style="text-transform: uppercase;" placeholder="Enter any additional notes...">{{ old('additional_notes') }}</textarea>
@@ -928,18 +971,18 @@
 
                 <div class="flex justify-end">
                     <button type="button" id="btn-continue-to-photos" onclick="typeof showSection === 'function' && showSection(2)" class="btn-primary">
-                        Continue to Photos <i class="fas fa-arrow-right ml-2"></i>
+                        Continue to Photos & Media <i class="fas fa-arrow-right ml-2"></i>
                     </button>
                 </div>
             </div>
 
-            <!-- SECTION 2: PHOTOS -->
+            <!-- SECTION 2: PHOTOS & MEDIA -->
             <div id="section2" class="form-section" style="display: @if(session('error_section') === 'section2') block; border: 2px solid #ef4444; border-radius: 12px; @else none; @endif">
                 <div class="section-header">
                     <div class="section-icon">2</div>
                     <div>
-                        <h2 class="text-xl font-bold text-gray-900">Upload Photos</h2>
-                        <p class="text-xs text-gray-600">{{ $isEdit ? 'Replace by choosing new photos below, or keep current.' : 'Add high-quality photos of your vehicle' }}</p>
+                        <h2 class="text-xl font-bold text-gray-900">Upload Photos & Media</h2>
+                        <p class="text-xs text-gray-600">{{ $isEdit ? 'Replace by choosing new photos below, or keep current.' : 'Add high-quality photos and video of your vehicle' }}</p>
                     </div>
                 </div>
                 @if($isEdit && $listing->images->count() > 0)
@@ -954,9 +997,15 @@
                         <p class="text-xs text-gray-500 mt-2">Upload new photos below to replace all.</p>
                     </div>
                 @endif
+
+                <div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                    <p class="text-sm font-semibold text-blue-800 mb-1"><i class="fas fa-info-circle mr-1"></i> Required Photos</p>
+                    <p class="text-xs text-blue-700">You must include: Front view (cover photo), Rear view, Left side, Right side, Dashboard (including odometer), and VIN on door or vehicle information label.</p>
+                </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div>
-                        <label class="form-label">COVER PHOTO @if(!$isEdit)<span class="text-red-500">*</span>@endif</label>
+                        <label class="form-label">COVER PHOTO (Front View) @if(!$isEdit)<span class="text-red-500">*</span>@endif</label>
                         <p class="text-xs text-gray-600 mb-2">Front view of vehicle or vessel (Main photo)</p>
                         <div class="file-upload-box" id="coverPhotoUploadBox">
                             <input type="file" name="cover_photo" id="cover_photo_input" @if(!$isEdit) required @endif accept="image/*" class="file-upload-input">
@@ -971,7 +1020,7 @@
 
                     <div>
                         <label class="form-label">ADDITIONAL PHOTOS @if(!$isEdit)<span class="text-red-500">*</span>@endif</label>
-                        <p class="text-xs text-gray-600 mb-2">{{ $isEdit ? 'Upload 5–10 new photos to replace existing, or leave empty to keep current.' : 'Required: At least 5 photos. Maximum: 10 photos. Recommended: Left side, Right side, Rear, Interior (2), Dashboard/Odometer, VIN/HIN photo, Engine bay' }}</p>
+                        <p class="text-xs text-gray-600 mb-2">{{ $isEdit ? 'Upload 5–10 new photos to replace existing, or leave empty to keep current.' : 'Required: Rear view, Left side, Right side, Dashboard/Odometer, VIN on door. Max: 10 photos.' }}</p>
                         <div class="file-upload-box" id="photosUploadBox">
                             <input type="file" name="photos[]" id="photos_input" multiple @if(!$isEdit) required @endif accept="image/*" class="file-upload-input" min="{{ $isEdit ? 0 : 5 }}" max="10">
                             <div class="file-upload-inner">
@@ -982,9 +1031,24 @@
                         </div>
                         <div id="photoPreview" class="photo-preview-grid mt-2"></div>
                         <p id="photoWarning" class="text-xs text-amber-600 mt-1" style="display: none;">
-                            <i class="fas fa-exclamation-triangle mr-1"></i> WE RECOMMEND AT LEAST 7 PHOTOS FOR BEST RESULTS.
+                            <i class="fas fa-exclamation-triangle mr-1"></i> MINIMUM 5 REQUIRED PHOTOS.
                         </p>
                     </div>
+                </div>
+
+                <!-- Video Upload -->
+                <div class="mb-4">
+                    <label class="form-label">UPLOAD VIDEO <span class="text-red-500">*</span></label>
+                    <p class="text-xs text-gray-600 mb-2">Engine bay — Video must be 20 seconds to 1 minute long. Required for all listings.</p>
+                    <div class="file-upload-box" id="videoUploadBox">
+                        <input type="file" name="video" id="video_input" @if(!$isEdit) required @endif accept="video/mp4,video/quicktime,video/x-msvideo,video/webm" class="file-upload-input">
+                        <div class="file-upload-inner">
+                            <div class="file-upload-icon"><i class="fas fa-video"></i></div>
+                            <div class="file-upload-btn-text">{{ $isEdit ? 'Replace Video' : 'Choose Video' }}</div>
+                            <div class="file-upload-status" id="videoStatus">{{ $isEdit ? 'Keep current or choose new' : 'No video chosen' }}</div>
+                        </div>
+                    </div>
+                    <div id="videoPreview" class="mt-2"></div>
                 </div>
 
                 <div class="flex flex-col sm:flex-row gap-4 justify-between">
@@ -1087,14 +1151,21 @@
                     </div>
                 </div>
 
-                <!-- Payment (Individual Sellers only) -->
-                @if($user->activeSubscription?->package?->price == 25.00)
+                <!-- Payment (Individual Sellers) -->
+                @php
+                    $sellerPackage = $user->activeSubscription?->package;
+                    $isIndividualSeller = $sellerPackage && (
+                        (float) $sellerPackage->price === 25.00 ||
+                        stripos($sellerPackage->title ?? '', 'individual') !== false
+                    );
+                @endphp
+                @if($isIndividualSeller)
                 <div class="mb-4 warning-box">
                     <h3 class="text-base font-semibold mb-2 text-amber-900">
-                        <i class="fas fa-exclamation-circle mr-2"></i>Payment Required
+                        <i class="fas fa-exclamation-circle mr-2"></i>Payment Required — $25 Listing Fee
                     </h3>
-                    <p class="text-xs mb-3 text-amber-800">Individual Sellers must pay a $25 listing fee before submission.</p>
-                    <div>
+                    <p class="text-xs mb-3 text-amber-800">Individual Sellers must pay a $25 listing fee for each submission.</p>
+                    <div class="mb-3">
                         <label class="form-label">PAYMENT METHOD <span class="text-red-500">*</span></label>
                         <select name="payment_method" required class="form-input">
                             <option value="">Select Payment Method</option>
@@ -1102,10 +1173,13 @@
                             <option value="stored_payment">Stored Payment Method</option>
                         </select>
                     </div>
+                    <div class="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                        <p class="text-xs text-amber-800"><i class="fas fa-lock mr-1"></i> Your payment of <strong>$25.00</strong> will be processed upon submission.</p>
+                    </div>
                 </div>
                 @else
                 <div class="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                    <p class="text-sm text-gray-700">No listing fee applies to your account. Review and submit below.</p>
+                    <p class="text-sm text-gray-700">No listing fee applies to your business account. Review and submit below.</p>
                 </div>
                 @endif
 
@@ -1131,6 +1205,9 @@
                 </div>
             </div>
         </form>
+        </div>
+        </div>
+        </div>
     </div>
 </div>
 
@@ -1866,7 +1943,15 @@
             setVinLockedFieldsDisabled(false);
         } else {
             var msg = document.getElementById('vinLockedMessage');
-            if (msg) msg.innerHTML = '<i class="fas fa-lock mr-2"></i>Use the VIN/HIN reader above. After ' + VIN_UNLOCK_AFTER + ' attempts you can enter manually. (Attempts: ' + vinAttemptCount + '/' + VIN_UNLOCK_AFTER + ')';
+            if (msg) {
+                if (vinAttemptCount >= VIN_UNLOCK_AFTER - 1) {
+                    msg.innerHTML = '<i class="fas fa-info-circle mr-2"></i>Please enter item details manually.';
+                    msg.className = 'mb-3 text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded-lg px-4 py-2';
+                } else {
+                    msg.innerHTML = '<i class="fas fa-times-circle mr-2"></i>Unsuccessful. Please try again.';
+                    msg.className = 'mb-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-4 py-2';
+                }
+            }
         }
     }
     setVinLockedFieldsDisabled(true);
@@ -2036,11 +2121,8 @@
         option.addEventListener('click', function() {
             const radio = this.querySelector('input[type="radio"]');
             if (radio) {
-                // Remove checked from all
                 document.querySelectorAll('input[name="auction_duration"]').forEach(r => r.checked = false);
-                // Check this one
                 radio.checked = true;
-                // Update visual state
                 document.querySelectorAll('.duration-option').forEach(opt => {
                     opt.classList.remove('border-blue-600', 'bg-blue-50');
                 });
@@ -2048,6 +2130,62 @@
             }
         });
     });
+
+    // Year: numbers only, max 4 digits, cannot exceed current year
+    document.querySelectorAll('.js-year-input').forEach(function(input) {
+        input.addEventListener('input', function() {
+            this.value = this.value.replace(/[^0-9]/g, '').slice(0, 4);
+            var currentYear = new Date().getFullYear();
+            if (this.value.length === 4 && parseInt(this.value) > currentYear) {
+                this.value = String(currentYear);
+            }
+        });
+        input.addEventListener('keypress', function(e) {
+            if (!/[0-9]/.test(e.key)) e.preventDefault();
+        });
+    });
+
+    // Make/Model: letters only
+    document.querySelectorAll('.js-letters-only').forEach(function(input) {
+        input.addEventListener('input', function() {
+            this.value = this.value.replace(/[^A-Za-z\s\-]/g, '').toUpperCase();
+        });
+        input.addEventListener('keypress', function(e) {
+            if (!/[A-Za-z\s\-]/.test(e.key)) e.preventDefault();
+        });
+    });
+
+    // Video upload preview + duration validation
+    var videoInput = document.getElementById('video_input');
+    if (videoInput) {
+        videoInput.addEventListener('change', function(e) {
+            var file = e.target.files[0];
+            var statusEl = document.getElementById('videoStatus');
+            var previewEl = document.getElementById('videoPreview');
+            var box = document.getElementById('videoUploadBox');
+            if (previewEl) previewEl.innerHTML = '';
+            if (!file) {
+                if (statusEl) statusEl.textContent = 'No video chosen';
+                if (box) box.classList.remove('has-file');
+                return;
+            }
+            if (statusEl) statusEl.textContent = file.name + ' (' + (file.size / (1024*1024)).toFixed(1) + ' MB)';
+            if (box) box.classList.add('has-file');
+            var video = document.createElement('video');
+            video.preload = 'metadata';
+            video.onloadedmetadata = function() {
+                window.URL.revokeObjectURL(video.src);
+                var dur = video.duration;
+                if (dur < 20 || dur > 60) {
+                    alert('Video must be between 20 seconds and 1 minute. Your video is ' + Math.round(dur) + ' seconds.');
+                    videoInput.value = '';
+                    if (statusEl) statusEl.textContent = 'No video chosen';
+                    if (box) box.classList.remove('has-file');
+                }
+            };
+            video.src = URL.createObjectURL(file);
+        });
+    }
 </script>
 @endsection
 
