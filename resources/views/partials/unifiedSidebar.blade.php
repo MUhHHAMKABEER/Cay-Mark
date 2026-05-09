@@ -7,18 +7,23 @@
 
     if ($role === 'admin') {
         $menuItems = [
-            ['route' => 'admin.dashboard', 'icon' => 'dashboard', 'label' => 'Dashboard'],
-            ['route' => 'admin.users', 'icon' => 'people', 'label' => 'User Management'],
+            ['route' => 'admin.dashboard', 'icon' => 'dashboard', 'label' => 'Dashboard', 'match_routes' => ['admin.dashboard.analytics'], 'prefix_match' => false],
+            ['route' => 'admin.users', 'icon' => 'people', 'label' => 'User Management', 'match_routes' => ['admin.users.view', 'admin.users.update', 'admin.users.reset-password', 'admin.users.toggle-status'], 'prefix_match' => false],
             ['route' => 'admin.memberships', 'icon' => 'card_membership', 'label' => 'Memberships'],
-            ['route' => 'admin.show.listing', 'icon' => 'fact_check', 'label' => 'Listing Review'],
-            ['route' => 'admin.active-listings', 'icon' => 'directions_car', 'label' => 'Active Listings'],
+            ['route' => 'admin.listing-review', 'icon' => 'fact_check', 'label' => 'Listing Review', 'match_routes' => ['admin.listings.approval-detail'], 'prefix_match' => false],
+            ['route' => 'admin.active-listings', 'icon' => 'directions_car', 'label' => 'Active Auctions'],
             ['route' => 'admin.boosts-addons', 'icon' => 'rocket_launch', 'label' => 'Boosts & Add-ons'],
-            ['route' => 'admin.payments', 'icon' => 'account_balance_wallet', 'label' => 'Payments'],
-            ['route' => 'admin.disputes', 'icon' => 'gavel', 'label' => 'Disputes Center'],
+            ['route' => 'admin.payments', 'icon' => 'account_balance_wallet', 'label' => 'Payment Management', 'match_routes' => ['admin.pending-payments', 'admin.payouts', 'admin.payment-payout-logs', 'admin.invoice-log', 'admin.unpaid-auctions', 'admin.buyer-defaults', 'admin.second-chance-purchases'], 'prefix_match' => false],
+            ['route' => 'admin.pending-payments', 'icon' => 'schedule', 'label' => 'Pending Payments'],
+            ['route' => 'admin.disputes', 'icon' => 'gavel', 'label' => 'Disputes Center', 'match_routes' => ['admin.disputes.view', 'admin.disputes.update-status'], 'prefix_match' => false],
+            ['route' => 'admin.messaging.flags.index', 'icon' => 'flag', 'label' => 'Messaging Flags', 'match_routes' => ['admin.messaging.flags.show', 'admin.messaging.flags.unflag'], 'prefix_match' => false],
+            ['route' => 'admin.support-tickets', 'icon' => 'support_agent', 'label' => 'Support Tickets'],
             ['route' => 'admin.notifications', 'icon' => 'notifications', 'label' => 'Notifications'],
-            ['route' => 'admin.reports-analytics', 'icon' => 'bar_chart', 'label' => 'Reports & Analytics'],
+            ['route' => 'admin.email-templates', 'icon' => 'mail', 'label' => 'Email Templates', 'match_routes' => ['admin.email-templates.edit', 'admin.email-templates.preview', 'admin.email-templates.update', 'admin.email-templates.restore'], 'prefix_match' => false],
+            ['route' => 'admin.reports-analytics', 'icon' => 'bar_chart', 'label' => 'Reports & Analytics', 'match_routes' => ['admin.user-activity-insights', 'admin.revenue-tracking', 'admin.revenue-tracking.export'], 'prefix_match' => false],
         ];
         $roleLabel = 'Administrator';
+        $roleBadge = 'ADMIN';
         $dashboardRoute = 'admin.dashboard';
     } elseif ($role === 'seller') {
         $menuItems = [
@@ -470,7 +475,7 @@
         <span class="material-icons-round">chevron_left</span>
     </button>
 
-    <a href="{{ route('welcome') }}" class="logo" aria-label="CayMark home">
+    <a href="{{ $role === 'admin' ? route('admin.dashboard') : route('welcome') }}" class="logo" aria-label="CayMark home">
         <img class="logo-full" src="{{ asset(config('logos.sidebar', 'Logos/Caymark Logo.png')) }}" alt="CayMark" />
         <img class="logo-icon" src="{{ asset(config('logos.sidebar', 'Logos/Caymark Logo.png')) }}" alt="CayMark" />
     </a>

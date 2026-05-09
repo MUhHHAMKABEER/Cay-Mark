@@ -306,13 +306,17 @@ class VinHinDecoderService
         // Auto.dev API response structure:
         // - Root level: make, model, trim, engine, drive, transmission, body
         // - Nested 'vehicle': year, make, model, manufacturer
-        
-        // Extract from root level
+        // - Some responses wrap the payload in 'data'
+
         $data = $apiResponse;
-        
+
+        if (isset($apiResponse['data']) && is_array($apiResponse['data'])) {
+            $data = array_merge($data, $apiResponse['data']);
+        }
+
         // Extract from nested 'vehicle' object if it exists
-        if (isset($apiResponse['vehicle']) && is_array($apiResponse['vehicle'])) {
-            $data = array_merge($data, $apiResponse['vehicle']);
+        if (isset($data['vehicle']) && is_array($data['vehicle'])) {
+            $data = array_merge($data, $data['vehicle']);
         }
         
         // Map Auto.dev fields to our internal format
@@ -324,9 +328,9 @@ class VinHinDecoderService
         $trim = $this->cleanTrimField($rawTrim, $rawDriveType);
         
         $mapped = [
-            'make' => $data['make'] ?? $data['manufacturer'] ?? null,
-            'model' => $data['model'] ?? null,
-            'year' => $data['year'] ?? $data['modelYear'] ?? null,
+            'make' => $data['make'] ?? $data['manufacturer'] ?? $data['manufacturerName'] ?? $data['brand'] ?? $data['brandName'] ?? null,
+            'model' => $data['model'] ?? $data['modelName'] ?? null,
+            'year' => $data['year'] ?? $data['modelYear'] ?? $data['model_year'] ?? null,
             'trim' => $trim,
             'engine_size' => $data['engine'] ?? $data['engineSize'] ?? $data['style'] ?? $data['displacement'] ?? null,
             'cylinders' => $this->extractCylinders($data['engine'] ?? $data['style'] ?? null),
@@ -577,17 +581,25 @@ class VinHinDecoderService
      */
     public function formatDecodedData(array $decodedData): array
     {
+        $caps = static function ($value): ?string {
+            if ($value === null || $value === '') {
+                return null;
+            }
+
+            return TextFormatter::toAllCaps(is_string($value) ? $value : (string) $value);
+        };
+
         return [
-            'make' => TextFormatter::toAllCaps($decodedData['make'] ?? null),
-            'model' => TextFormatter::toAllCaps($decodedData['model'] ?? null),
-            'year' => TextFormatter::toAllCaps($decodedData['year'] ?? null),
-            'trim' => TextFormatter::toAllCaps($decodedData['trim'] ?? null),
-            'engine_size' => TextFormatter::toAllCaps($decodedData['engine_size'] ?? $decodedData['engine'] ?? null),
-            'cylinders' => TextFormatter::toAllCaps($decodedData['cylinders'] ?? null),
-            'drive_type' => TextFormatter::toAllCaps($decodedData['drive_type'] ?? null),
-            'fuel_type' => TextFormatter::toAllCaps($decodedData['fuel_type'] ?? null),
-            'transmission' => TextFormatter::toAllCaps($decodedData['transmission'] ?? null),
-            'vehicle_type' => TextFormatter::toAllCaps($decodedData['vehicle_type'] ?? null),
+            'make' => $caps($decodedData['make'] ?? null),
+            'model' => $caps($decodedData['model'] ?? null),
+            'year' => $caps($decodedData['year'] ?? null),
+            'trim' => $caps($decodedData['trim'] ?? null),
+            'engine_size' => $caps($decodedData['engine_size'] ?? $decodedData['engine'] ?? null),
+            'cylinders' => $caps($decodedData['cylinders'] ?? null),
+            'drive_type' => $caps($decodedData['drive_type'] ?? null),
+            'fuel_type' => $caps($decodedData['fuel_type'] ?? null),
+            'transmission' => $caps($decodedData['transmission'] ?? null),
+            'vehicle_type' => $caps($decodedData['vehicle_type'] ?? null),
         ];
     }
 }

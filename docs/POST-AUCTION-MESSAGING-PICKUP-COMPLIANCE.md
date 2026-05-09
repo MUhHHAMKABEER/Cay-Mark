@@ -86,7 +86,7 @@ This checklist maps the **POST-AUCTION MESSAGING & PICKUP COORDINATION** spec to
 
 | Spec | Status | Notes |
 |------|--------|--------|
-| 4-digit PIN generated after payment | ✅ | `Listing::generatePickupPin()` (4 digits); called after payment / when thread opens |
+| 6-digit PIN generated after payment | ✅ | `Listing::generatePickupPin()` (6 digits); called after payment / when thread opens |
 | PIN visible to buyer only: Auction Won dashboard + thread | ⚠️ | **Thread:** PIN shown to buyer ✅. **Dashboard "Auction Won" section:** PIN not currently shown ✅ (spec: "Auction Won" dashboard section) — **missing in Won cards** |
 | Seller never sees PIN in advance | ✅ | PIN only on listing; seller sees it only at handoff when buyer provides it |
 | At handoff: ID + PIN; seller enters via [ CONFIRM PICKUP ] | ✅ | Seller dashboard and thread: Confirm Pickup with PIN entry |

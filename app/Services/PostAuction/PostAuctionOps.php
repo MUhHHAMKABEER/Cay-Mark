@@ -14,6 +14,7 @@ use App\Services\ContentFilterService;
 use App\Services\Messaging\MessagingNotifier;
 use App\Services\NotificationService;
 use App\Services\PayoutService;
+use App\Services\Seller\SellerPickupCompletionService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -33,12 +34,14 @@ class PostAuctionOps
             abort(403, 'Only seller can send pickup details.');
         }
 
+        if ($r = self::guardClosed($thread)) { return $r; }
+
         $validated = $request->validated();
 
         $addressFilter = $contentFilter->validateAddress($validated['street_address']);
         if (! $addressFilter['is_valid']) {
             return back()->withErrors([
-                'street_address' => 'Address contains prohibited content (phone numbers, emails, or links).',
+                'street_address' => $contentFilter->addressValidationUserMessage($addressFilter, 'Pickup address'),
             ])->withInput();
         }
 
@@ -97,6 +100,8 @@ class PostAuctionOps
             abort(403, 'Only seller can resend the pickup schedule.');
         }
 
+        if ($r = self::guardClosed($thread)) { return $r; }
+
         $detail = $thread->latestPickupDetail;
         if (! $detail) {
             return back()->withErrors(['error' => 'There is no pickup schedule to resend yet.']);
@@ -139,6 +144,8 @@ class PostAuctionOps
             abort(403, 'Only buyer can accept pickup details.');
         }
 
+        if ($r = self::guardClosed($thread)) { return $r; }
+
         $pickupDetail = $thread->latestPickupDetail;
         if (! $pickupDetail || ! in_array($pickupDetail->status, ['pending', 'change_requested'])) {
             return back()->withErrors(['error' => 'No pending pickup details to accept.']);
@@ -179,6 +186,8 @@ class PostAuctionOps
         if ($user->id !== $thread->buyer_id) {
             abort(403, 'Only buyer can request pickup changes.');
         }
+
+        if ($r = self::guardClosed($thread)) { return $r; }
 
         $validated = $request->validated();
 
@@ -243,6 +252,8 @@ class PostAuctionOps
             abort(403, 'Only buyer can request a new location.');
         }
 
+        if ($r = self::guardClosed($thread)) { return $r; }
+
         $validated = $request->validated();
 
         $pickupDetail = PickupDetail::findOrFail($validated['pickup_detail_id']);
@@ -253,7 +264,7 @@ class PostAuctionOps
         $addressFilter = $contentFilter->validateAddress($validated['requested_location']);
         if (! $addressFilter['is_valid']) {
             return back()->withErrors([
-                'requested_location' => 'Location contains prohibited content (phone numbers, emails, or links) or is not a valid address.',
+                'requested_location' => $contentFilter->addressValidationUserMessage($addressFilter, 'Requested location'),
             ])->withInput();
         }
 
@@ -307,6 +318,8 @@ class PostAuctionOps
         if ($user->id !== $thread->seller_id) {
             abort(403, 'Only seller can respond to change requests.');
         }
+
+        if ($r = self::guardClosed($thread)) { return $r; }
 
         $validated = $request->validated();
 
@@ -366,12 +379,14 @@ class PostAuctionOps
             abort(403, 'Only buyer can request delivery.');
         }
 
+        if ($r = self::guardClosed($thread)) { return $r; }
+
         $validated = $request->validated();
 
         $addressFilter = $contentFilter->validateAddress($validated['delivery_address']);
         if (! $addressFilter['is_valid']) {
             return back()->withErrors([
-                'delivery_address' => 'Delivery address contains prohibited content (phone numbers, emails, or links) or is not a valid address.',
+                'delivery_address' => $contentFilter->addressValidationUserMessage($addressFilter, 'Delivery address'),
             ])->withInput();
         }
 
@@ -425,6 +440,8 @@ class PostAuctionOps
             abort(403, 'Only seller can respond to delivery requests.');
         }
 
+        if ($r = self::guardClosed($thread)) { return $r; }
+
         $validated = $request->validated();
 
         if ($validated['action'] === 'approve') {
@@ -461,6 +478,8 @@ class PostAuctionOps
         if ($user->id !== $thread->buyer_id) {
             abort(403, 'Only buyer can authorize third-party pickup.');
         }
+
+        if ($r = self::guardClosed($thread)) { return $r; }
 
         $validated = $request->validated();
 
@@ -519,51 +538,17 @@ class PostAuctionOps
 
         $validated = $request->validated();
         $listing = $thread->listing;
-        $pin = $validated['pickup_pin'];
 
-        if (! $listing->verifyPickupPin($pin)) {
-            Log::warning('Invalid pickup PIN attempted', [
-                'thread_id' => $thread->id,
-                'seller_id' => $user->id,
-            ]);
+        $result = (new SellerPickupCompletionService())
+            ->completeAfterSellerPin($listing, $user, (string) $validated['pickup_pin']);
 
+        if (! $result['success']) {
             return back()->withErrors([
-                'pickup_pin' => 'Invalid PIN. Please verify the PIN with the buyer.',
+                'pickup_pin' => $result['error'] ?? 'Unable to confirm pickup.',
             ]);
         }
 
-        DB::transaction(function () use ($thread, $listing, $user) {
-            $thread->update([
-                'pickup_confirmed' => true,
-                'pickup_confirmed_at' => now(),
-            ]);
-
-            $listing->update([
-                'pickup_confirmed' => true,
-                'pickup_confirmed_at' => now(),
-                'pickup_confirmed_by' => $thread->seller_id,
-            ]);
-
-            (new PayoutService())->createPayoutAfterPickup($thread->invoice, $listing);
-
-            MessagingThreadEvent::record(
-                $thread, $user,
-                MessagingThreadEvent::TYPE_PICKUP_CONFIRMED,
-                [
-                    'invoice_id' => $thread->invoice_id,
-                    'listing_id' => $listing->id,
-                    'method' => 'pin',
-                ],
-                countsAsExchange: false,
-            );
-        });
-
-        Log::info('Pickup confirmed with PIN', [
-            'thread_id' => $thread->id,
-            'listing_id' => $listing->id,
-        ]);
-
-        return back()->with('success', 'Pickup confirmed! Payout process has been initiated.');
+        return back()->with('success', 'Pickup confirmed! Transaction is closed and payout has been initiated.');
     }
 
     // ====================================================================
@@ -578,6 +563,8 @@ class PostAuctionOps
         if ($user->id !== $thread->buyer_id && $user->id !== $thread->seller_id) {
             abort(403);
         }
+
+        if ($r = self::guardClosed($thread)) { return $r; }
 
         $validated = $request->validated();
 
@@ -611,6 +598,8 @@ class PostAuctionOps
         if ($user->id !== $thread->buyer_id && $user->id !== $thread->seller_id) {
             abort(403);
         }
+
+        if ($r = self::guardClosed($thread)) { return $r; }
 
         $validated = $request->validated();
 
@@ -659,6 +648,8 @@ class PostAuctionOps
             abort(403);
         }
 
+        if ($r = self::guardClosed($thread)) { return $r; }
+
         if (! $thread->flagged_for_admin) {
             $thread->flagForAdmin(PostAuctionThread::FLAG_MANUAL);
             app(MessagingNotifier::class)->notifyAdmin($thread);
@@ -684,6 +675,8 @@ class PostAuctionOps
         if ($user->id !== $thread->seller_id) {
             abort(403, 'Only seller can mark ready for pickup.');
         }
+
+        if ($r = self::guardClosed($thread)) { return $r; }
 
         $thread->forceFill(['seller_ready_at' => now()])->save();
 
@@ -723,8 +716,23 @@ class PostAuctionOps
     }
 
     // ====================================================================
-    //  Internal helpers — exchange counter + auto-flag
+    //  Internal helpers — closed-thread guard + exchange counter + auto-flag
     // ====================================================================
+
+    /**
+     * Stop any further write action on a thread once the seller has confirmed
+     * pickup. Returns a redirect-with-errors response if closed, null otherwise.
+     * Callers should: `if ($r = self::guardClosed($thread)) { return $r; }`.
+     */
+    protected static function guardClosed(PostAuctionThread $thread)
+    {
+        if ($thread->pickup_confirmed) {
+            return back()->withErrors([
+                'thread' => 'This conversation is closed. The pickup has been confirmed and no further actions are accepted.',
+            ]);
+        }
+        return null;
+    }
 
     protected static function recordExchange(PostAuctionThread $thread): void
     {

@@ -14,7 +14,7 @@ class SellerPickupPinConfirmRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'pickup_pin' => 'required|string|size:6',
+            'pickup_pin' => ['required', 'string', 'size:6', 'regex:/^[0-9]{6}$/'],
         ];
     }
 }

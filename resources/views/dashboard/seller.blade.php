@@ -196,6 +196,56 @@
 #content-auctions .seller-auction-btn--delete:active {
     transform: scale(0.98);
 }
+
+/* My Auctions: grid vs list (row) — same idea as public auction page */
+#content-auctions.seller-auctions-view-list .seller-auction-grid {
+    display: flex !important;
+    flex-direction: column;
+    gap: 1rem;
+}
+#content-auctions.seller-auctions-view-list .seller-auction-card {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    max-width: 100%;
+}
+@media (min-width: 768px) {
+    #content-auctions.seller-auctions-view-list .seller-auction-card {
+        flex-direction: row;
+    }
+    #content-auctions.seller-auctions-view-list .seller-auction-card-media {
+        width: 11rem;
+        min-width: 11rem;
+        height: auto;
+        min-height: 8rem;
+        max-height: 14rem;
+        align-self: stretch;
+    }
+    #content-auctions.seller-auctions-view-list .seller-auction-card-media img,
+    #content-auctions.seller-auctions-view-list .seller-auction-card-media > div {
+        height: 100%;
+        min-height: 8rem;
+    }
+}
+#content-auctions.seller-auctions-view-list .seller-auction-card > .p-4,
+#content-auctions.seller-auctions-view-list .seller-auction-card > .p-5 {
+    flex: 1;
+    min-width: 0;
+}
+.seller-auctions-view-toggle-btn {
+    transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+.seller-auctions-view-toggle-btn.is-active {
+    background: #fff;
+    color: #2563eb;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(229, 231, 235, 0.9);
+}
+.seller-auctions-view-toggle-btn:not(.is-active) {
+    color: #6b7280;
+}
+.seller-auctions-view-toggle-btn:not(.is-active):hover {
+    color: #374151;
+}
 </style>
 <!-- Chart.js CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -856,7 +906,7 @@
                     </div>
                 </div>
 
-                <div class="mb-6">
+                <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
                     <nav class="inline-flex flex-wrap gap-1.5 p-1.5 rounded-2xl bg-white/90 border border-slate-200/90 shadow-sm w-full sm:w-auto">
                         <button type="button" onclick="showAuctionSection('current')"
                                 id="auction-current"
@@ -867,8 +917,8 @@
                         <button type="button" onclick="showAuctionSection('past')"
                                 id="auction-past"
                                 class="auction-tab-button">
-                            <span class="material-icons-round text-lg opacity-90">history</span>
-                            Past
+                            <span class="material-icons-round text-lg opacity-90">task_alt</span>
+                            Completed
                         </button>
                         <button type="button" onclick="showAuctionSection('rejected')"
                                 id="auction-rejected"
@@ -883,12 +933,24 @@
                             Won
                         </button>
                     </nav>
+                    <div class="inline-flex rounded-xl bg-gray-100 p-1 shadow-inner shrink-0" role="group" aria-label="View layout">
+                        <button type="button" id="seller-auctions-view-btn-grid" class="seller-auctions-view-toggle-btn is-active inline-flex items-center gap-1.5 rounded-lg px-3 sm:px-4 py-2 text-sm font-medium"
+                                onclick="setSellerAuctionsViewMode('grid')">
+                            <span class="material-icons text-lg leading-none" style="font-size: 1.125rem;">grid_view</span>
+                            <span>Grid</span>
+                        </button>
+                        <button type="button" id="seller-auctions-view-btn-list" class="seller-auctions-view-toggle-btn inline-flex items-center gap-1.5 rounded-lg px-3 sm:px-4 py-2 text-sm font-medium"
+                                onclick="setSellerAuctionsViewMode('list')">
+                            <span class="material-icons text-lg leading-none" style="font-size: 1.125rem;">view_list</span>
+                            <span>List</span>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- CURRENT AUCTIONS -->
                 <div id="auction-section-current" class="auction-section">
                     @if($currentAuctions->count() > 0)
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="seller-auction-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             @foreach($currentAuctions as $listing)
                                 <div class="seller-auction-card">
                                     <div class="seller-auction-card-media overflow-hidden">
@@ -917,48 +979,20 @@
                                             <span class="font-medium">ITEM NUMBER:</span> {{ $listing->item_number ?? 'CM' . str_pad($listing->id, 6, '0', STR_PAD_LEFT) }}
                                         </p>
 
-                                        @if($listing->awaiting_pin)
-                                            <!-- Awaiting PIN Confirmation -->
-                                            <p class="text-lg font-bold text-green-600 mb-3">
-                                                Final Sale Price: ${{ number_format($listing->current_bid, 2) }}
-                                            </p>
-                                            <div class="bg-amber-50 border-l-4 border-amber-400 p-4 rounded mb-3">
-                                                <p class="font-semibold text-amber-900 mb-2">Awaiting Pickup Confirmation</p>
-                                                <form method="POST" action="{{ route('seller.dashboard.confirm-pickup', $listing->id) }}">
-                                                    @csrf
-                                                    <div class="mb-3">
-                                                        <label class="block text-sm font-medium text-gray-700 mb-2">ENTER PICKUP PIN</label>
-                                                        <input type="text" 
-                                                               name="pickup_pin" 
-                                                               maxlength="4"
-                                                               pattern="[0-9]{4}"
-                                                               required
-                                                               class="w-full border border-gray-300 rounded-lg px-4 py-2 text-center text-2xl font-bold focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                                               placeholder="____">
-                                                    </div>
-                                                    <button type="submit" 
-                                                            class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition duration-200">
-                                                        CONFIRM PICKUP
-                                                    </button>
-                                                </form>
+                                        <p class="text-lg font-bold text-blue-600 mb-3">
+                                            Current Bid: ${{ number_format($listing->current_bid, 2) }}
+                                        </p>
+                                        @php
+                                            $endTime = $listing->auction_end_time ?? ($listing->auction_start_time ? \Carbon\Carbon::parse($listing->auction_start_time)->addDays($listing->auction_duration) : null);
+                                        @endphp
+                                        @if($endTime && $endTime->isFuture())
+                                            <div class="mb-3">
+                                                <p class="text-sm text-gray-600 mb-1">Time Remaining:</p>
+                                                <p class="text-lg font-bold text-red-600" id="countdown-{{ $listing->id }}"
+                                                   data-end-time="{{ $endTime->toIso8601String() }}">
+                                                    Calculating...
+                                                </p>
                                             </div>
-                                        @else
-                                            <!-- Active Auction -->
-                                            <p class="text-lg font-bold text-blue-600 mb-3">
-                                                Current Bid: ${{ number_format($listing->current_bid, 2) }}
-                                            </p>
-                                            @php
-                                                $endTime = $listing->auction_end_time ?? ($listing->auction_start_time ? \Carbon\Carbon::parse($listing->auction_start_time)->addDays($listing->auction_duration) : null);
-                                            @endphp
-                                            @if($endTime && $endTime->isFuture())
-                                                <div class="mb-3">
-                                                    <p class="text-sm text-gray-600 mb-1">Time Remaining:</p>
-                                                    <p class="text-lg font-bold text-red-600" id="countdown-{{ $listing->id }}" 
-                                                       data-end-time="{{ $endTime->toIso8601String() }}">
-                                                        Calculating...
-                                                    </p>
-                                                </div>
-                                            @endif
                                         @endif
 
                                         <div class="seller-auction-card-actions">
@@ -987,17 +1021,31 @@
                     @endif
                 </div>
 
-                <!-- PAST AUCTIONS -->
+                <!-- COMPLETED AUCTIONS -->
                 <div id="auction-section-past" class="auction-section hidden">
                     @if($pastAuctions->count() > 0)
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        @php
+                            $statusBadgeMap = [
+                                'awaiting_payment'  => ['label' => 'Awaiting Payment',                  'classes' => 'bg-amber-50 text-amber-700 border-amber-200'],
+                                'payment_received'  => ['label' => 'Payment Received - Action Required', 'classes' => 'bg-blue-50 text-blue-700 border-blue-200'],
+                                'completed'         => ['label' => 'Completed',                          'classes' => 'bg-emerald-50 text-emerald-700 border-emerald-200'],
+                                'awaiting_invoice'  => ['label' => 'Awaiting Invoice',                   'classes' => 'bg-slate-100 text-slate-600 border-slate-200'],
+                            ];
+                        @endphp
+                        <div class="seller-auction-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             @foreach($pastAuctions as $listing)
-                                <div class="seller-auction-card">
+                                @php
+                                    $imgP = $listing->images->first();
+                                    $imgUrlP = $imgP ? (str_contains($imgP->image_path ?? '', '/') ? asset($imgP->image_path) : asset('uploads/listings/' . $imgP->image_path)) : null;
+                                    $status = $listing->completion_status ?? 'awaiting_invoice';
+                                    $badge = $statusBadgeMap[$status] ?? $statusBadgeMap['awaiting_invoice'];
+                                    $endTime = $listing->auction_end_time ?? ($listing->auction_start_time ? \Carbon\Carbon::parse($listing->auction_start_time)->addDays($listing->auction_duration) : null);
+                                    $endLabel = $endTime ? \Carbon\Carbon::parse($endTime)->format('M d, Y') : '—';
+                                    $location = trim((string)($listing->city ?? '') . (($listing->city && $listing->state) ? ', ' : '') . (string)($listing->state ?? '')) ?: ($listing->location ?? '—');
+                                    $cardClasses = $status === 'completed' ? 'seller-auction-card border-2 border-emerald-300/90 shadow-md' : 'seller-auction-card';
+                                @endphp
+                                <div class="{{ $cardClasses }}">
                                     <div class="seller-auction-card-media overflow-hidden">
-                                        @php
-                                            $imgP = $listing->images->first();
-                                            $imgUrlP = $imgP ? (str_contains($imgP->image_path ?? '', '/') ? asset($imgP->image_path) : asset('uploads/listings/' . $imgP->image_path)) : null;
-                                        @endphp
                                         @if($imgUrlP)
                                             <img src="{{ $imgUrlP }}" alt="{{ $listing->make }} {{ $listing->model }}" class="w-full h-full object-cover">
                                         @else
@@ -1008,29 +1056,98 @@
                                             </div>
                                         @endif
                                     </div>
-                                    <div class="p-4">
-                                        <h3 class="text-lg font-semibold text-gray-900 mb-2">
+                                    <div class="p-5">
+                                        <h3 class="text-lg font-semibold text-gray-900 mb-2 leading-tight">
                                             {{ $listing->year }} {{ $listing->make }} {{ $listing->model }}
                                         </h3>
-                                        <p class="text-sm text-gray-600 mb-2">
-                                            <span class="font-medium">ITEM NUMBER:</span> {{ $listing->item_number ?? 'CM' . str_pad($listing->id, 6, '0', STR_PAD_LEFT) }}
-                                        </p>
-                                        <p class="text-lg font-bold text-green-600 mb-2">
-                                            Final Sale Price: ${{ number_format($listing->final_price, 2) }}
-                                        </p>
-                                        <span class="inline-block bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-semibold">
-                                            ENDED
-                                        </span>
-                                        <a href="{{ route('seller.listings.show', $listing->id) }}" class="mt-3 block w-full text-center px-3 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition">View details</a>
+                                        <div class="flex items-center gap-2 text-sm text-slate-600 mb-1">
+                                            <span class="material-icons-round text-base text-slate-400">place</span>
+                                            <span>{{ $location }}</span>
+                                        </div>
+                                        <div class="flex items-center gap-2 text-sm text-slate-600 mb-3">
+                                            <span class="material-icons-round text-base text-slate-400">event</span>
+                                            <span>Auction Ended: {{ $endLabel }}</span>
+                                        </div>
+                                        <div class="mb-3">
+                                            <p class="text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">Payment Status</p>
+                                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border {{ $badge['classes'] }}">
+                                                {{ $badge['label'] }}
+                                            </span>
+                                        </div>
+
+                                        @if($status === 'payment_received')
+                                            <div class="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                                <p class="text-sm font-semibold text-blue-900 mb-3">
+                                                    Enter the pick-up code provided by the buyer at pickup to complete this transaction.
+                                                </p>
+                                                <form method="POST" action="{{ route('seller.dashboard.confirm-pickup', $listing->id) }}" class="seller-pin-form" data-pin-form>
+                                                    @csrf
+                                                    <label class="block text-xs font-medium text-slate-700 mb-2">Enter Pick-up Code</label>
+                                                    <div class="flex gap-2 mb-3" data-pin-boxes>
+                                                        @for($i = 0; $i < 6; $i++)
+                                                            <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" required
+                                                                   class="seller-pin-box w-10 h-12 text-center text-lg font-bold border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                                                                   aria-label="Pick-up code digit {{ $i + 1 }}">
+                                                        @endfor
+                                                    </div>
+                                                    <input type="hidden" name="pickup_pin" data-pin-hidden>
+                                                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg transition" data-pin-submit disabled>
+                                                        Submit Code
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        @elseif($status === 'completed')
+                                            <div class="mt-4 bg-emerald-50 border border-emerald-200 rounded-lg p-4 space-y-1.5">
+                                                <div class="flex items-center gap-2 text-sm text-emerald-800">
+                                                    <span class="material-icons-round text-base">check_circle</span>
+                                                    <span class="font-semibold">Pickup Confirmed</span>
+                                                </div>
+                                                <div class="flex items-center gap-2 text-sm text-emerald-800">
+                                                    <span class="material-icons-round text-base">payments</span>
+                                                    <span>
+                                                        @if(($listing->payout_status ?? null) === 'completed')
+                                                            Payout Completed
+                                                        @else
+                                                            Payout Processing
+                                                        @endif
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        @elseif($status === 'awaiting_payment')
+                                            <div class="mt-4 bg-amber-50 border border-amber-200 rounded-lg p-4">
+                                                <p class="text-sm text-amber-900">
+                                                    Buyer payment is pending. The pick-up code will appear here once payment is received.
+                                                </p>
+                                            </div>
+                                        @endif
+
+                                        <div class="mt-4 border-t border-slate-200 pt-4 grid grid-cols-3 gap-2 text-xs">
+                                            <div>
+                                                <p class="text-slate-500">Sale Price</p>
+                                                <p class="font-semibold text-slate-900 text-sm">${{ number_format($listing->sale_price ?? 0, 2) }}</p>
+                                            </div>
+                                            <div>
+                                                <p class="text-slate-500">CayMark Fee</p>
+                                                <p class="font-semibold text-rose-600 text-sm">-${{ number_format($listing->seller_commission_amount ?? 0, 2) }}</p>
+                                            </div>
+                                            <div>
+                                                <p class="text-slate-500">You Will Receive</p>
+                                                <p class="font-semibold text-emerald-600 text-sm">${{ number_format($listing->net_payout_amount ?? 0, 2) }}</p>
+                                            </div>
+                                        </div>
+
+                                        <a href="{{ route('seller.listings.show', $listing->id) }}" class="mt-4 inline-flex items-center justify-center gap-1.5 w-full px-3 py-2 bg-white border border-slate-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 transition">
+                                            <span class="material-icons-round text-base">visibility</span> View Details
+                                        </a>
                                     </div>
                                 </div>
                             @endforeach
                         </div>
                     @else
                         <div class="seller-auctions-empty text-center py-14 px-6">
-                            <span class="material-icons-round text-5xl text-slate-300 mb-3 block" aria-hidden="true">history</span>
+                            <span class="material-icons-round text-5xl text-slate-300 mb-3 block" aria-hidden="true">task_alt</span>
                             <p class="text-slate-800 text-lg font-semibold">No completed sales yet</p>
-                            <p class="text-slate-500 text-sm mt-2 max-w-md mx-auto">Completed auctions will appear here after they end.</p>
+                            <p class="text-slate-500 text-sm mt-2 max-w-md mx-auto">Sold auctions will appear here so you can track payment, enter the pick-up code, and confirm completion.</p>
                         </div>
                     @endif
                 </div>
@@ -1038,7 +1155,7 @@
                 <!-- REJECTED LISTINGS -->
                 <div id="auction-section-rejected" class="auction-section hidden">
                     @if($rejectedListings->count() > 0)
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="seller-auction-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             @foreach($rejectedListings as $listing)
                                 <div class="seller-auction-card border-red-200/80 bg-red-50/10">
                                     <div class="seller-auction-card-media overflow-hidden">
@@ -1113,7 +1230,7 @@
                 <!-- WON AUCTIONS (ended with a winner) -->
                 <div id="auction-section-won" class="auction-section hidden">
                     @if(isset($wonAuctions) && $wonAuctions->count() > 0)
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="seller-auction-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             @foreach($wonAuctions as $listing)
                                 <div class="seller-auction-card border-2 border-emerald-300/90 shadow-md">
                                     <div class="seller-auction-card-media overflow-hidden">
@@ -1732,6 +1849,10 @@ function showTab(tabName) {
     if (contentElement) {
         contentElement.style.display = 'block';
     }
+
+    if (tabName === 'auctions' && typeof applyStoredSellerAuctionsViewMode === 'function') {
+        applyStoredSellerAuctionsViewMode();
+    }
     
     // Initialize charts if switching to dashboard tab
     if (tabName === 'dashboard') {
@@ -1872,6 +1993,37 @@ document.addEventListener('DOMContentLoaded', function() {
     })();
 });
 
+(function () {
+    var STORAGE_KEY = 'sellerAuctionsViewMode';
+    window.setSellerAuctionsViewMode = function (mode) {
+        var root = document.getElementById('content-auctions');
+        var btnGrid = document.getElementById('seller-auctions-view-btn-grid');
+        var btnList = document.getElementById('seller-auctions-view-btn-list');
+        if (!root) return;
+        var isList = mode === 'list';
+        root.classList.toggle('seller-auctions-view-list', isList);
+        if (btnGrid && btnList) {
+            btnGrid.classList.toggle('is-active', !isList);
+            btnList.classList.toggle('is-active', isList);
+        }
+        try {
+            localStorage.setItem(STORAGE_KEY, isList ? 'list' : 'grid');
+        } catch (e) {}
+    };
+    window.applyStoredSellerAuctionsViewMode = function () {
+        try {
+            var v = localStorage.getItem(STORAGE_KEY);
+            if (v === 'list') {
+                setSellerAuctionsViewMode('list');
+            } else {
+                setSellerAuctionsViewMode('grid');
+            }
+        } catch (e) {
+            setSellerAuctionsViewMode('grid');
+        }
+    };
+})();
+
 // Auction Section Navigation
 function showAuctionSection(section) {
     document.querySelectorAll('.auction-section').forEach(function (el) {
@@ -1888,6 +2040,54 @@ function showAuctionSection(section) {
     const activeButton = document.getElementById('auction-' + section);
     if (activeButton) activeButton.classList.add('active');
 }
+
+// Six-box pickup PIN inputs on the Completed tab.
+// - auto-advances to next box on input
+// - jumps back on Backspace when empty
+// - accepts pasted 6-digit codes
+// - mirrors the value into a single hidden field for submit
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('[data-pin-form]').forEach(function (form) {
+        var boxes = Array.from(form.querySelectorAll('[data-pin-boxes] .seller-pin-box'));
+        var hidden = form.querySelector('[data-pin-hidden]');
+        var submit = form.querySelector('[data-pin-submit]');
+        if (!boxes.length || !hidden) return;
+
+        function syncHidden() {
+            var value = boxes.map(function (b) { return b.value || ''; }).join('');
+            hidden.value = value;
+            if (submit) submit.disabled = value.length !== 6;
+        }
+
+        boxes.forEach(function (box, idx) {
+            box.addEventListener('input', function (e) {
+                var v = (box.value || '').replace(/\D/g, '').slice(0, 1);
+                box.value = v;
+                if (v && idx < boxes.length - 1) boxes[idx + 1].focus();
+                syncHidden();
+            });
+            box.addEventListener('keydown', function (e) {
+                if (e.key === 'Backspace' && !box.value && idx > 0) {
+                    boxes[idx - 1].focus();
+                }
+            });
+            box.addEventListener('paste', function (e) {
+                var text = (e.clipboardData || window.clipboardData).getData('text') || '';
+                var digits = text.replace(/\D/g, '').slice(0, 6);
+                if (!digits) return;
+                e.preventDefault();
+                digits.split('').forEach(function (d, i) {
+                    if (boxes[i]) boxes[i].value = d;
+                });
+                var next = Math.min(digits.length, boxes.length - 1);
+                boxes[next].focus();
+                syncHidden();
+            });
+        });
+
+        syncHidden();
+    });
+});
 
 // Password Modal
 function showPasswordModal() {

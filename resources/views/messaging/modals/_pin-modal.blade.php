@@ -9,11 +9,11 @@
             <div class="messaging-modal-body">
                 <div class="messaging-modal-notice">
                     <span class="material-icons-round">info</span>
-                    <span>The buyer will give you a 4-digit PIN at pickup. Enter it here to mark the transaction complete and trigger your payout.</span>
+                    <span>The buyer will give you a 6-digit PIN at pickup. Enter it here to mark the transaction complete and trigger your payout.</span>
                 </div>
                 <div class="messaging-modal-field">
                     <label>Pickup PIN *</label>
-                    <input type="text" name="pickup_pin" required maxlength="4" pattern="[0-9]{4}" placeholder="1234" style="text-align:center; font-size: 1.5rem; font-family: 'Courier New', monospace; letter-spacing: 0.5em;">
+                    <input type="text" name="pickup_pin" required maxlength="6" inputmode="numeric" pattern="[0-9]{6}" placeholder="123456" style="text-align:center; font-size: 1.5rem; font-family: 'Courier New', monospace; letter-spacing: 0.5em;">
                 </div>
             </div>
             <div class="messaging-modal-footer">

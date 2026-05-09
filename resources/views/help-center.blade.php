@@ -584,7 +584,7 @@
                 <div class="faq-card">
                     <h3 class="text-lg font-bold text-gray-900 mb-2">6. How does the Pickup PIN work?</h3>
                     <p class="text-gray-600 leading-relaxed">
-                        Once payment is successful, a four-digit PIN is generated. The buyer or authorized representative must present this PIN at pickup. The seller enters the PIN inside their dashboard to confirm release of the vehicle and to begin processing seller payment.
+                        Once payment is successful, a six-digit PIN is generated. The buyer or authorized representative must present this PIN at pickup. The seller enters the PIN inside their dashboard to confirm release of the vehicle and to begin processing seller payment.
                     </p>
                 </div>
                 <div class="faq-card">

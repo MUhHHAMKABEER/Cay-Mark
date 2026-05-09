@@ -1922,6 +1922,49 @@
         var lockedMsg = document.getElementById('vinLockedMessage');
         if (lockedMsg) lockedMsg.style.display = disabled ? 'block' : 'none';
     }
+
+    /**
+     * Manual row duplicates the same name="make|model|year|trim" as #decodedFields.
+     * Disabled inputs are not submitted — so when VIN decode succeeds we disable the
+     * manual row to avoid empty manual values overwriting decoded values in $_POST.
+     */
+    function setManualVehicleIdentityRowDisabled(disabled) {
+        var mf = document.getElementById('manualFields');
+        if (!mf) return;
+        mf.querySelectorAll('input[name="make"], input[name="model"], input[name="year"], input[name="trim"]').forEach(function(el) {
+            el.disabled = !!disabled;
+        });
+    }
+
+    /**
+     * When #decodedFields is hidden, disable its inputs so stale values are not posted
+     * alongside the manual row (PHP keeps the last duplicate name).
+     */
+    function setDecodedVehicleFieldsInputsDisabled(disabled) {
+        var block = document.getElementById('decodedFields');
+        if (!block) return;
+        block.querySelectorAll('input').forEach(function(el) {
+            el.disabled = !!disabled;
+        });
+    }
+
+    /** API keys that do not match element id decoded_<key> */
+    var vinDecodedFieldIdMap = {
+        engine_size: 'decoded_engine',
+        drive_type: 'decoded_drive',
+        fuel_type: 'decoded_fuel',
+    };
+
+    function applyVinDecodedDataToForm(dataObj) {
+        Object.keys(dataObj).forEach(function(key) {
+            var id = vinDecodedFieldIdMap[key] || ('decoded_' + key);
+            var field = document.getElementById(id);
+            if (field) {
+                var v = dataObj[key];
+                field.value = v !== null && v !== undefined ? String(v) : '';
+            }
+        });
+    }
     function onVinAttemptDone() {
         vinAttemptCount++;
         if (vinAttemptCount >= VIN_UNLOCK_AFTER) {
@@ -1939,7 +1982,10 @@
             }
         }
     }
+    @if(!$isEdit)
     setVinLockedFieldsDisabled(true);
+    setDecodedVehicleFieldsInputsDisabled(true);
+    @endif
 
     // VIN/HIN Decoder
     var searchVinBtn = document.getElementById('searchVinBtn');
@@ -1968,14 +2014,13 @@
         .then(data => {
             const messageDiv = document.getElementById('vinDecoderMessage');
             if (data.success) {
-                Object.keys(data.data).forEach(key => {
-                    const field = document.getElementById('decoded_' + key);
-                    if (field) field.value = data.data[key];
-                });
+                applyVinDecodedDataToForm(data.data);
                 document.getElementById('decodedFields').style.display = 'grid';
                 document.getElementById('manualFields').style.display = 'none';
                 messageDiv.innerHTML = '<span class="text-green-600"><i class="fas fa-check-circle mr-1"></i>VIN/HIN decoded successfully</span>';
                 setVinLockedFieldsDisabled(false);
+                setManualVehicleIdentityRowDisabled(true);
+                setDecodedVehicleFieldsInputsDisabled(false);
                 var decodedBlock = document.getElementById('decodedFields');
                 if (decodedBlock) {
                     decodedBlock.querySelectorAll('input').forEach(function(input) {
@@ -1985,7 +2030,9 @@
                 }
             } else {
                 document.getElementById('decodedFields').style.display = 'none';
+                setDecodedVehicleFieldsInputsDisabled(true);
                 document.getElementById('manualFields').style.display = 'grid';
+                setManualVehicleIdentityRowDisabled(false);
                 messageDiv.innerHTML = '<span class="text-red-600"><i class="fas fa-exclamation-circle mr-1"></i>' + data.message + '</span>';
                 onVinAttemptDone();
             }
@@ -1995,6 +2042,10 @@
         .catch(error => {
             console.error('Error:', error);
             document.getElementById('vinDecoderMessage').innerHTML = '<span class="text-red-600"><i class="fas fa-exclamation-circle mr-1"></i>Error decoding VIN/HIN. Please enter details manually.</span>';
+            document.getElementById('decodedFields').style.display = 'none';
+            setDecodedVehicleFieldsInputsDisabled(true);
+            document.getElementById('manualFields').style.display = 'grid';
+            setManualVehicleIdentityRowDisabled(false);
             onVinAttemptDone();
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-search mr-2"></i>Search';

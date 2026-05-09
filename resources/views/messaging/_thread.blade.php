@@ -61,7 +61,7 @@
                 </div>
                 <div class="hint">
                     <span class="material-icons-round" style="font-size: 1rem; color:#d97706;">info</span>
-                    Ask the buyer for their 4-digit pickup code, then enter it below to complete the sale.
+                    Ask the buyer for their 6-digit pickup code, then enter it below to complete the sale.
                 </div>
             @endif
         </div>
@@ -231,7 +231,7 @@
                 <span class="material-icons-round" style="font-size: 1.1rem; vertical-align:middle;">vpn_key</span>
                 Confirm Pickup with Buyer's PIN
             </div>
-            <p style="font-size: 0.85rem; color:#475569; margin-bottom: 0.75rem;">Ask the buyer for the 4-digit code shown in their dashboard, then enter it here to mark this transaction complete and trigger your payout.</p>
+            <p style="font-size: 0.85rem; color:#475569; margin-bottom: 0.75rem;">Ask the buyer for the 6-digit code shown in their dashboard, then enter it here to mark this transaction complete and trigger your payout.</p>
             <button type="button" class="btn btn-accept" onclick="openMessagingModal('modal-pin')" style="background:#10b981; color:#fff; border:none; padding: 0.625rem 1.25rem; border-radius: 10px; font-weight: 600; cursor: pointer;">
                 Enter Pickup PIN
             </button>

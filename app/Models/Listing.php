@@ -315,6 +315,14 @@ public function invoices()
 }
 
     /**
+     * Listing has payouts (one per completed pickup, in practice).
+     */
+    public function payouts()
+    {
+        return $this->hasMany(\App\Models\Payout::class);
+    }
+
+    /**
      * Listing has post-auction threads
      */
     public function postAuctionThreads()
@@ -358,11 +366,11 @@ public function invoices()
     }
 
     /**
-     * Generate pickup PIN (4 digits per PDF requirements).
+     * Generate pickup PIN (6 digits).
      */
     public function generatePickupPin(): string
     {
-        $pin = str_pad(rand(0, 9999), 4, '0', STR_PAD_LEFT);
+        $pin = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
         $this->pickup_pin = $pin;
         $this->pickup_pin_generated_at = now();
         $this->save();
@@ -370,7 +378,7 @@ public function invoices()
     }
 
     /**
-     * Format stored pickup PIN for buyer-facing copy (e.g. CM-0839).
+     * Format stored pickup PIN for buyer-facing copy (e.g. CM-038392).
      */
     public static function formatPickupPinForBuyer(?string $pin): ?string
     {
@@ -378,7 +386,7 @@ public function invoices()
             return null;
         }
 
-        return 'CM-' . str_pad((string) $pin, 4, '0', STR_PAD_LEFT);
+        return 'CM-' . str_pad((string) $pin, 6, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -521,32 +529,37 @@ public function invoices()
     }
 
     /**
-     * Scope: Get current auctions for seller (only admin-approved: active or approved; plus sold awaiting PIN).
+     * Scope: Get current auctions for seller (only admin-approved: active or approved).
+     * Sold listings (whether awaiting payment, awaiting PIN, or fully completed)
+     * live under the Completed tab via scopeCompletedForSeller, never here.
      * Listings with status 'pending' (awaiting admin approval) are excluded.
      */
     public function scopeCurrentAuctionsForSeller($query, $sellerId)
     {
         return $query->where('seller_id', $sellerId)
-            ->where(function($q) {
-                $q->whereIn('status', ['approved', 'active'])
-                    ->orWhere(function($subQ) {
-                        $subQ->where('status', 'sold')
-                            ->whereHas('invoices', function($inv) {
-                                $inv->where('payment_status', 'paid');
-                            })
-                            ->where('pickup_confirmed', false);
-                    });
-            });
+            ->whereIn('status', ['approved', 'active']);
     }
 
     /**
-     * Scope: Get past auctions for seller (completed with pickup confirmed)
+     * Scope: Past auctions (legacy alias of completed-and-confirmed).
+     * Kept for back-compat with any caller that still expects only finalized rows.
      */
     public function scopePastAuctionsForSeller($query, $sellerId)
     {
         return $query->where('seller_id', $sellerId)
             ->where('status', 'sold')
             ->where('pickup_confirmed', true);
+    }
+
+    /**
+     * Scope: Every sold listing for the seller — drives the Completed tab.
+     * Cards there show the appropriate state badge (Awaiting Payment /
+     * Payment Received - Action Required / Completed / Unsuccessful).
+     */
+    public function scopeCompletedForSeller($query, $sellerId)
+    {
+        return $query->where('seller_id', $sellerId)
+            ->where('status', 'sold');
     }
 
     /**

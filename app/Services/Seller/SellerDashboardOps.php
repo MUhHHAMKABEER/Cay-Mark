@@ -2,6 +2,8 @@
 
 namespace App\Services\Seller;
 
+use App\Models\User;
+
 class SellerDashboardOps
 {
     public static function updatePayout($request, $repository)
@@ -56,9 +58,15 @@ class SellerDashboardOps
         return back()->with('success', 'Password changed successfully.');
     }
 
+    /**
+     * Confirm pickup from the seller dashboard PIN form. Delegates the entire
+     * post-pickup flow (listing flags, thread sync, payout creation,
+     * notifications, admin signal) to SellerPickupCompletionService.
+     */
     public static function confirmPickup($request, $listingId, $repository)
     {
         $request->validated();
+        /** @var User $user */
         $user = \Illuminate\Support\Facades\Auth::user();
         $listing = $repository->getListingById($user, $listingId);
 
@@ -66,16 +74,13 @@ class SellerDashboardOps
             return back()->withErrors(['pickup_pin' => 'Listing not found.']);
         }
 
-        if ($listing->pickup_pin !== $request->pickup_pin) {
-            return back()->withErrors(['pickup_pin' => 'Invalid pickup PIN.']);
+        $result = (new SellerPickupCompletionService())
+            ->completeAfterSellerPin($listing, $user, (string) $request->pickup_pin);
+
+        if (! $result['success']) {
+            return back()->withErrors(['pickup_pin' => $result['error'] ?? 'Unable to confirm pickup.']);
         }
 
-        $listing->pickup_confirmed = true;
-        $listing->pickup_confirmed_at = now();
-        $listing->pickup_confirmed_by = $user->id;
-        $listing->save();
-
-        return back()->with('success', 'Pickup confirmed successfully. Payment processing has begun.');
+        return back()->with('success', 'Pickup confirmed. Transaction is closed and payout has been initiated.');
     }
 }
-

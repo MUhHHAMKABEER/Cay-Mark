@@ -72,25 +72,86 @@ class ContentFilterService
     }
 
     /**
-     * Validate address field (should not contain contact data)
-     * 
+     * Validate address field (should not contain contact data).
+     *
+     * Street-style lines often start with a number, but many valid locations
+     * (e.g. neighbourhood or area names, marina berths, rural routes) do not.
+     * We only enforce: no phones/emails/links from filterContent, and a
+     * minimum meaningful length with at least one letter.
+     *
      * @param string $address
      * @return array
      */
     public function validateAddress(string $address): array
     {
         $result = $this->filterContent($address);
-        
-        // Additional validation: address should start with a number
-        if (!preg_match('/^\d+/', trim($address))) {
+
+        $trimmed = trim($address);
+        if ($trimmed === '') {
             $result['is_valid'] = false;
             $result['blocked_items'][] = [
                 'type' => 'address_format',
-                'content' => 'Address must start with a number',
+                'content' => 'Address cannot be empty',
+            ];
+
+            return $result;
+        }
+
+        if (mb_strlen($trimmed) < 5) {
+            $result['is_valid'] = false;
+            $result['blocked_items'][] = [
+                'type' => 'address_format',
+                'content' => 'Address is too short',
+            ];
+
+            return $result;
+        }
+
+        if (! preg_match('/\p{L}/u', $trimmed)) {
+            $result['is_valid'] = false;
+            $result['blocked_items'][] = [
+                'type' => 'address_format',
+                'content' => 'Address must include at least one letter',
             ];
         }
 
         return $result;
+    }
+
+    /**
+     * Human-readable message when validateAddress() fails.
+     *
+     * @param  array<string, mixed>  $result  Return value from validateAddress()
+     */
+    public function addressValidationUserMessage(array $result, string $fieldLabel = 'This address'): string
+    {
+        if (! empty($result['is_valid'])) {
+            return '';
+        }
+
+        $types = array_column($result['blocked_items'] ?? [], 'type');
+        $hasContact = (bool) array_intersect($types, ['phone_number', 'email', 'social_link']);
+        $hasFormat = in_array('address_format', $types, true);
+
+        $formatHint = '';
+        foreach ($result['blocked_items'] ?? [] as $b) {
+            if (($b['type'] ?? '') === 'address_format' && ! empty($b['content'])) {
+                $formatHint = (string) $b['content'];
+                break;
+            }
+        }
+
+        if ($hasContact && $hasFormat) {
+            return $fieldLabel.' cannot include phone numbers, emails, or links, and must be at least 5 characters with at least one letter.';
+        }
+        if ($hasContact) {
+            return $fieldLabel.' cannot include phone numbers, email addresses, or web links.';
+        }
+        if ($formatHint !== '') {
+            return $fieldLabel.': '.$formatHint.'.';
+        }
+
+        return $fieldLabel.' could not be accepted. Please enter at least 5 characters, including a letter (e.g. area, road, or landmark).';
     }
 }
 

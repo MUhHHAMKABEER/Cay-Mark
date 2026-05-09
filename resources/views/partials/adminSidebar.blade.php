@@ -1,3 +1,4 @@
+{{-- Deprecated: layouts.admin now includes partials/unifiedSidebar. This file is unused. --}}
 @php
     $user = Auth::user();
     $currentRoute = request()->route()->getName();

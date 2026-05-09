@@ -206,19 +206,76 @@ public function watchlist()
     }
 
     /**
-     * Get past auctions for seller (completed with pickup confirmed)
+     * Past auctions (legacy alias). New seller Completed tab uses
+     * getCompletedAuctions() to surface every sold listing with its
+     * stage-specific status (awaiting payment / awaiting PIN / completed).
      */
     public function getPastAuctions()
     {
+        return $this->getCompletedAuctions();
+    }
+
+    /**
+     * Cards for the seller "Completed" tab.
+     *
+     * Returns every sold listing with the data the UI needs to pick a status
+     * pill (Awaiting Payment / Payment Received - Action Required / Completed)
+     * and to render the financial breakdown shown in the mock.
+     */
+    public function getCompletedAuctions()
+    {
         return $this->listings()
-            ->pastAuctionsForSeller($this->id)
-            ->with(['images', 'invoices' => function($query) {
-                $query->where('payment_status', 'paid');
-            }])
-            ->latest('pickup_confirmed_at')
+            ->completedForSeller($this->id)
+            ->with([
+                'images',
+                'invoices' => function ($query) {
+                    $query->latest('id');
+                },
+                'payouts' => function ($query) {
+                    $query->latest('id');
+                },
+            ])
+            ->latest('updated_at')
             ->get()
-            ->map(function($listing) {
-                $listing->final_price = $listing->getFinalPrice();
+            ->map(function ($listing) {
+                $paidInvoice = $listing->invoices->firstWhere('payment_status', 'paid');
+                $primaryInvoice = $paidInvoice ?? $listing->invoices->first();
+                $payout = $listing->payouts->first();
+
+                $salePrice = (float) ($primaryInvoice?->winning_bid_amount
+                    ?? $listing->getFinalPrice()
+                    ?? $listing->getCurrentBid());
+
+                $sellerCommission = (float) ($payout->seller_commission ?? 0);
+                $netPayout = (float) ($payout->net_payout ?? 0);
+
+                if ($payout === null && $salePrice > 0) {
+                    $estimate = (new \App\Services\CommissionService())
+                        ->calculateSellerCommission($salePrice);
+                    $sellerCommission = (float) $estimate['commission'];
+                    $netPayout = round($salePrice - $sellerCommission, 2);
+                }
+
+                $listing->primary_invoice = $primaryInvoice;
+                $listing->paid_invoice = $paidInvoice;
+                $listing->payout_record = $payout;
+                $listing->sale_price = $salePrice;
+                $listing->seller_commission_amount = $sellerCommission;
+                $listing->net_payout_amount = $netPayout;
+                $listing->final_price = $salePrice;
+
+                if ($listing->pickup_confirmed) {
+                    $listing->completion_status = 'completed';
+                } elseif ($paidInvoice) {
+                    $listing->completion_status = 'payment_received';
+                } elseif ($primaryInvoice) {
+                    $listing->completion_status = 'awaiting_payment';
+                } else {
+                    $listing->completion_status = 'awaiting_invoice';
+                }
+
+                $listing->payout_status = $payout?->status;
+
                 return $listing;
             });
     }

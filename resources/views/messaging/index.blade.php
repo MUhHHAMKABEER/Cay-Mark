@@ -139,6 +139,8 @@
                 @include('messaging._empty')
             @elseif (! $activeThread->isUnlocked())
                 @include('messaging._locked', ['hideBuyerName' => $isSeller])
+            @elseif ($activeThread->pickup_confirmed)
+                @include('messaging._thread-closed')
             @else
                 @include('messaging._thread')
             @endif

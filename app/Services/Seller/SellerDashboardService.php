@@ -23,11 +23,11 @@ class SellerDashboardService
     }
 
     /**
-     * Get past auctions (completed with pickup confirmed)
+     * Get completed-tab cards (every sold listing with stage-specific status).
      */
     public function getPastAuctions(User $user): Collection
     {
-        return $user->getPastAuctions();
+        return $user->getCompletedAuctions();
     }
 
     /**
