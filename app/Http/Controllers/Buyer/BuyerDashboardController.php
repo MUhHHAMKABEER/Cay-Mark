@@ -43,6 +43,7 @@ class BuyerDashboardController extends Controller
                 'user' => $user,
                 'activeTab' => $activeTab,
                 'supportCategories' => SupportTicket::categoryOptionsForRole(User::ROLE_BUYER),
+                'buyerSupportTickets' => SupportTicket::where('user_id', $user->id)->latest()->get(),
             ],
             $dashboardData
         ));

@@ -875,9 +875,9 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <!-- Support Form -->
-                    <div class="lg:col-span-2">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+                    <!-- Support Form + ticket history -->
+                    <div class="lg:col-span-2 space-y-6">
                         <div class="bg-white rounded-2xl border-2 border-gray-200 shadow-sm overflow-hidden">
                             <div class="bg-teal-50 border-b-2 border-teal-200 px-6 py-4" style="background-color: #f0fdfa;">
                                 <div class="flex items-center gap-3">
@@ -940,6 +940,59 @@
                                     </button>
                                 </div>
                             </form>
+                        </div>
+
+                        <div class="bg-white rounded-2xl border-2 border-gray-200 shadow-sm overflow-hidden">
+                            <div class="bg-teal-50 border-b-2 border-teal-200 px-6 py-4" style="background-color: #f0fdfa;">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-teal-600 flex items-center justify-center" style="background-color: #0d9488;">
+                                        <span class="material-icons-round text-white text-lg">history</span>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-lg font-bold text-gray-900">Ticket History</h3>
+                                        <p class="text-xs text-gray-600">Your recent support requests</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-6">
+                                @if($buyerSupportTickets->count() > 0)
+                                    <div class="space-y-4">
+                                        @foreach($buyerSupportTickets as $ticket)
+                                            <div class="rounded-xl border-2 p-4 transition-shadow {{ $ticket->status === 'open' ? 'border-teal-200 bg-teal-50/50' : 'border-gray-200 bg-gray-50/30' }}">
+                                                <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                                                    <div>
+                                                        <h4 class="font-semibold text-gray-900">{{ $ticket->title }}</h4>
+                                                        @if($ticket->public_ticket_number)
+                                                            <p class="text-xs font-mono text-teal-700 mt-0.5">#{{ $ticket->public_ticket_number }}</p>
+                                                        @endif
+                                                    </div>
+                                                    <span class="px-3 py-1 text-xs font-semibold rounded-full
+                                                        {{ $ticket->status === 'open' ? 'bg-blue-100 text-blue-800' : '' }}
+                                                        {{ $ticket->status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' : '' }}
+                                                        {{ $ticket->status === 'resolved' ? 'bg-green-100 text-green-800' : '' }}
+                                                        {{ $ticket->status === 'closed' ? 'bg-gray-100 text-gray-800' : '' }}">
+                                                        {{ ucfirst(str_replace('_', ' ', $ticket->status)) }}
+                                                    </span>
+                                                </div>
+                                                <p class="text-gray-600 text-sm mb-2 whitespace-pre-wrap">{{ $ticket->message }}</p>
+                                                <p class="text-xs text-gray-400">Submitted {{ $ticket->created_at->diffForHumans() }}</p>
+                                                @if($ticket->admin_reply)
+                                                    <div class="mt-3 p-3 bg-white border border-teal-100 rounded-xl">
+                                                        <p class="text-xs font-semibold text-teal-800 mb-1">Admin reply</p>
+                                                        <p class="text-sm text-gray-700">{{ $ticket->admin_reply }}</p>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <div class="rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 py-10 text-center">
+                                        <span class="material-icons-round text-gray-300 text-4xl mb-2 block">confirmation_number</span>
+                                        <p class="text-gray-600 font-medium">No tickets yet</p>
+                                        <p class="text-gray-400 text-sm mt-1">Submit a ticket above and it will appear here.</p>
+                                    </div>
+                                @endif
+                            </div>
                         </div>
                     </div>
 
