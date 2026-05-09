@@ -21,6 +21,12 @@
 .seller-auctions-scrollbar::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 6px; }
 .seller-auctions-scrollbar::-webkit-scrollbar-thumb:hover { background: #64748b; }
 
+.customer-support-scrollbar { max-height: calc(100vh - 140px); overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
+.customer-support-scrollbar::-webkit-scrollbar { width: 10px; }
+.customer-support-scrollbar::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 6px; }
+.customer-support-scrollbar::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 6px; }
+.customer-support-scrollbar::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
 /* Seller — Auctions tab: professional polish */
 .seller-auctions-wrap {
     background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
@@ -1215,75 +1221,212 @@
             </div>
 
             <!-- CUSTOMER SUPPORT TAB -->
-            <div id="content-support" class="tab-content hidden p-6">
-                <h2 class="text-xl font-bold text-gray-900 mb-6">Customer Support</h2>
-
-                <div class="bg-white border border-gray-200 rounded-lg p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Submit Support Ticket</h3>
-                    <form method="POST" action="{{ route('seller.support.submit') }}">
-                        @csrf
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Ticket Title</label>
-                            <select name="title" required class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                <option value="">Select issue type...</option>
-                                @foreach($supportCategories as $option)
-                                    <option value="{{ $option }}" {{ old('title') === $option ? 'selected' : '' }}>{{ $option }}</option>
-                                @endforeach
-                            </select>
+            <div id="content-support" class="tab-content hidden p-6 customer-support-scrollbar">
+                @if (session('success'))
+                    <div id="seller-support-success-banner" class="flex items-center gap-3 rounded-xl bg-emerald-50 border-2 border-emerald-200 px-4 py-3 mb-6 text-emerald-900 shadow-sm" role="status">
+                        <span class="material-icons-round text-emerald-600 text-xl flex-shrink-0">check_circle</span>
+                        <span class="font-medium">{{ session('success') }}</span>
+                    </div>
+                @endif
+                <div class="mb-8">
+                    <div class="flex items-center gap-3 mb-1">
+                        <div class="w-10 h-10 rounded-xl bg-teal-600 flex items-center justify-center shadow-lg" style="background-color: #0d9488;">
+                            <span class="material-icons-round text-white text-xl">support_agent</span>
                         </div>
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Message</label>
-                            <textarea name="message"
-                                      rows="6"
-                                      required
-                                      maxlength="800"
-                                      placeholder="10–800 characters..."
-                                      class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">{{ old('message') }}</textarea>
-                            <p class="text-xs text-gray-500 mt-1">Message must be between 10 and 800 characters.</p>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3">
+                                <h2 class="text-2xl font-bold text-gray-900 tracking-tight">Customer Support</h2>
+                                <div class="hidden md:flex items-center gap-2 px-3 py-1 rounded-lg bg-teal-50 border border-teal-200">
+                                    <span class="text-xs font-semibold text-teal-700">CayMark</span>
+                                </div>
+                            </div>
+                            <p class="text-sm text-gray-500">Get help with listings, payouts, and your seller account</p>
                         </div>
-                        <button type="submit" 
-                                class="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition duration-200">
-                            Submit Ticket
-                        </button>
-                    </form>
+                    </div>
                 </div>
 
-                <!-- Ticket History -->
-                <div class="mt-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Ticket History</h3>
-                    @php
-                        $sellerTickets = \App\Models\SupportTicket::where('user_id', auth()->id())->latest()->get();
-                    @endphp
-                    @if($sellerTickets->count() > 0)
-                        <div class="space-y-4">
-                            @foreach($sellerTickets as $ticket)
-                            <div class="border border-gray-200 rounded-lg p-4 {{ $ticket->status === 'open' ? 'bg-blue-50 border-blue-200' : '' }}">
-                                <div class="flex items-center justify-between mb-2">
-                                    <h4 class="font-semibold text-gray-900">{{ $ticket->title }}</h4>
-                                    <span class="px-3 py-1 text-xs font-semibold rounded-full
-                                        {{ $ticket->status === 'open' ? 'bg-blue-100 text-blue-800' : '' }}
-                                        {{ $ticket->status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' : '' }}
-                                        {{ $ticket->status === 'resolved' ? 'bg-green-100 text-green-800' : '' }}
-                                        {{ $ticket->status === 'closed' ? 'bg-gray-100 text-gray-800' : '' }}">
-                                        {{ ucfirst(str_replace('_', ' ', $ticket->status)) }}
-                                    </span>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 space-y-6">
+                        <div class="bg-white rounded-2xl border-2 border-gray-200 shadow-sm overflow-hidden">
+                            <div class="bg-teal-50 border-b-2 border-teal-200 px-6 py-4" style="background-color: #f0fdfa;">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-teal-600 flex items-center justify-center" style="background-color: #0d9488;">
+                                        <span class="material-icons-round text-white text-lg">help_outline</span>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-lg font-bold text-gray-900">Submit Support Ticket</h3>
+                                        <p class="text-xs text-gray-600">We'll respond within 24 hours</p>
+                                    </div>
                                 </div>
-                                <p class="text-gray-600 text-sm mb-2">{{ $ticket->message }}</p>
-                                <p class="text-xs text-gray-400">{{ $ticket->created_at->diffForHumans() }}</p>
-                                @if($ticket->admin_reply)
-                                <div class="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                                    <p class="text-xs font-semibold text-gray-500 mb-1">Admin Reply:</p>
-                                    <p class="text-sm text-gray-700">{{ $ticket->admin_reply }}</p>
+                            </div>
+                            <form method="POST" action="{{ route('seller.support.submit') }}" class="p-6 space-y-5">
+                                @csrf
+                                @if ($errors->has('title') || $errors->has('message'))
+                                    <div class="rounded-xl border-2 border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                                        <p class="font-semibold mb-1">Please fix the following:</p>
+                                        <ul class="list-disc list-inside space-y-1">
+                                            @foreach ((array) ($errors->get('title') ?? []) as $err)
+                                                <li>{{ $err }}</li>
+                                            @endforeach
+                                            @foreach ((array) ($errors->get('message') ?? []) as $err)
+                                                <li>{{ $err }}</li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                @endif
+                                <div class="group">
+                                    <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                                        <span class="material-icons-round text-gray-400 text-lg group-focus-within:text-teal-600 transition-colors">category</span>
+                                        Ticket category
+                                    </label>
+                                    <select name="title" required class="w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-gray-900 font-medium focus:bg-white focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 transition-all">
+                                        <option value="">Select issue type…</option>
+                                        @foreach($supportCategories as $option)
+                                            <option value="{{ $option }}" {{ old('title') === $option ? 'selected' : '' }}>{{ $option }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('title')
+                                        <p class="text-xs text-red-600 mt-1.5">{{ $message }}</p>
+                                    @enderror
+                                    <p class="text-xs text-gray-400 mt-1.5">Choose the option that best matches your issue</p>
                                 </div>
+                                <div class="group">
+                                    <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                                        <span class="material-icons-round text-gray-400 text-lg group-focus-within:text-teal-600 transition-colors">description</span>
+                                        Message
+                                    </label>
+                                    <textarea name="message" rows="8" required maxlength="800" placeholder="Describe your issue in detail (10–800 characters)…"
+                                        class="w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-gray-900 font-medium placeholder-gray-400 focus:bg-white focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 transition-all resize-none">{{ old('message') }}</textarea>
+                                    @error('message')
+                                        <p class="text-xs text-red-600 mt-1.5">{{ $message }}</p>
+                                    @enderror
+                                    <p class="text-xs text-gray-400 mt-1.5">10–800 characters. Include listing IDs, payout details, or error messages.</p>
+                                </div>
+                                <div class="pt-2">
+                                    <button type="submit" class="w-full inline-flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-700 text-white px-6 py-3.5 rounded-xl font-semibold shadow-lg shadow-teal-600/30 hover:shadow-teal-600/40 transition-all duration-200" style="background-color: #0d9488; color: #ffffff;">
+                                        <span class="material-icons-round text-lg text-white">send</span>
+                                        <span class="text-white font-semibold">Submit Ticket</span>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        @php
+                            $sellerTickets = \App\Models\SupportTicket::where('user_id', auth()->id())->latest()->get();
+                        @endphp
+                        <div class="bg-white rounded-2xl border-2 border-gray-200 shadow-sm overflow-hidden">
+                            <div class="bg-teal-50 border-b-2 border-teal-200 px-6 py-4" style="background-color: #f0fdfa;">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-teal-600 flex items-center justify-center" style="background-color: #0d9488;">
+                                        <span class="material-icons-round text-white text-lg">history</span>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-lg font-bold text-gray-900">Ticket History</h3>
+                                        <p class="text-xs text-gray-600">Your recent support requests</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-6">
+                                @if($sellerTickets->count() > 0)
+                                    <div class="space-y-4">
+                                        @foreach($sellerTickets as $ticket)
+                                            <div class="rounded-xl border-2 p-4 transition-shadow {{ $ticket->status === 'open' ? 'border-teal-200 bg-teal-50/50' : 'border-gray-200 bg-gray-50/30' }}">
+                                                <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                                                    <div>
+                                                        <h4 class="font-semibold text-gray-900">{{ $ticket->title }}</h4>
+                                                        @if($ticket->public_ticket_number)
+                                                            <p class="text-xs font-mono text-teal-700 mt-0.5">#{{ $ticket->public_ticket_number }}</p>
+                                                        @endif
+                                                    </div>
+                                                    <span class="px-3 py-1 text-xs font-semibold rounded-full
+                                                        {{ $ticket->status === 'open' ? 'bg-blue-100 text-blue-800' : '' }}
+                                                        {{ $ticket->status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' : '' }}
+                                                        {{ $ticket->status === 'resolved' ? 'bg-green-100 text-green-800' : '' }}
+                                                        {{ $ticket->status === 'closed' ? 'bg-gray-100 text-gray-800' : '' }}">
+                                                        {{ ucfirst(str_replace('_', ' ', $ticket->status)) }}
+                                                    </span>
+                                                </div>
+                                                <p class="text-gray-600 text-sm mb-2 whitespace-pre-wrap">{{ $ticket->message }}</p>
+                                                <p class="text-xs text-gray-400">Submitted {{ $ticket->created_at->diffForHumans() }}</p>
+                                                @if($ticket->admin_reply)
+                                                    <div class="mt-3 p-3 bg-white border border-teal-100 rounded-xl">
+                                                        <p class="text-xs font-semibold text-teal-800 mb-1">Admin reply</p>
+                                                        <p class="text-sm text-gray-700">{{ $ticket->admin_reply }}</p>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <div class="rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 py-10 text-center">
+                                        <span class="material-icons-round text-gray-300 text-4xl mb-2 block">confirmation_number</span>
+                                        <p class="text-gray-600 font-medium">No tickets yet</p>
+                                        <p class="text-gray-400 text-sm mt-1">Submit a ticket above and it will appear here.</p>
+                                    </div>
                                 @endif
                             </div>
-                            @endforeach
                         </div>
-                    @else
-                        <div class="bg-gray-50 rounded-lg p-6 text-center">
-                            <p class="text-gray-500">No tickets submitted yet.</p>
+                    </div>
+
+                    <div class="space-y-6">
+                        <div class="bg-white rounded-2xl border-2 border-gray-200 shadow-sm p-6">
+                            <div class="flex items-center gap-2 mb-4">
+                                <span class="material-icons-round text-xl" style="color: #0d9488;">lightbulb</span>
+                                <h4 class="font-bold text-gray-900">Quick Help</h4>
+                            </div>
+                            <div class="space-y-3 text-sm">
+                                <div class="flex items-start gap-3">
+                                    <span class="material-icons-round text-lg flex-shrink-0" style="color: #14b8a6;">check_circle</span>
+                                    <div>
+                                        <p class="font-semibold text-gray-900">Listings &amp; auctions</p>
+                                        <p class="text-gray-600 text-xs">Include listing or item number and auction status</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-3">
+                                    <span class="material-icons-round text-lg flex-shrink-0" style="color: #14b8a6;">check_circle</span>
+                                    <div>
+                                        <p class="font-semibold text-gray-900">Payouts</p>
+                                        <p class="text-gray-600 text-xs">Mention payout amount, date, or bank details issue</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-3">
+                                    <span class="material-icons-round text-lg flex-shrink-0" style="color: #14b8a6;">check_circle</span>
+                                    <div>
+                                        <p class="font-semibold text-gray-900">Account &amp; disputes</p>
+                                        <p class="text-gray-600 text-xs">Describe what happened and any reference IDs</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                    @endif
+
+                        <div class="bg-teal-50 rounded-2xl border-2 border-teal-200 p-6" style="background-color: #f0fdfa;">
+                            <div class="flex items-center gap-2 mb-4">
+                                <span class="material-icons-round text-teal-600 text-xl" style="color: #0d9488;">contact_support</span>
+                                <h4 class="font-bold text-gray-900">Need Immediate Help?</h4>
+                            </div>
+                            <p class="text-sm text-gray-700 mb-4">For urgent matters, our support team is available 24/7.</p>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex items-center gap-2 text-gray-700">
+                                    <span class="material-icons-round text-lg" style="color: #0d9488;">schedule</span>
+                                    <span class="font-medium text-gray-700">Response time: within 24 hours</span>
+                                </div>
+                                <div class="flex items-center gap-2 text-gray-700">
+                                    <span class="material-icons-round text-lg" style="color: #0d9488;">email</span>
+                                    <span class="font-medium text-gray-700">support@caymark.com</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-2xl border-2 border-dashed border-gray-200 p-6 text-center">
+                            <span class="material-icons-round text-gray-400 text-4xl mb-3 block">quiz</span>
+                            <p class="text-sm font-semibold text-gray-900 mb-1">Check Our FAQ</p>
+                            <p class="text-xs text-gray-500 mb-3">Find answers to common seller questions</p>
+                            <a href="#" class="inline-flex items-center gap-2 text-sm font-semibold hover:underline" style="color: #0d9488;">
+                                <span style="color: #0d9488;">View FAQ</span>
+                                <span class="material-icons-round text-sm" style="color: #0d9488;">arrow_forward</span>
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1491,6 +1634,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const tab = @json($activeTab ?? 'dashboard');
 
     showTab(tab);
+
+    if (tab === 'support') {
+        var banner = document.getElementById('seller-support-success-banner');
+        if (banner) banner.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
 
     if (tab === 'auctions') {
         const params = new URLSearchParams(window.location.search);

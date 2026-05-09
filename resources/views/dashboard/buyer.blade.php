@@ -896,10 +896,11 @@
                                     <div class="rounded-xl border-2 border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
                                         <p class="font-semibold mb-1">Please fix the following:</p>
                                         <ul class="list-disc list-inside space-y-1">
-                                            @foreach ($errors->only(['title', 'message']) as $messages)
-                                                @foreach ($messages as $err)
-                                                    <li>{{ $err }}</li>
-                                                @endforeach
+                                            @foreach ((array) ($errors->get('title') ?? []) as $err)
+                                                <li>{{ $err }}</li>
+                                            @endforeach
+                                            @foreach ((array) ($errors->get('message') ?? []) as $err)
+                                                <li>{{ $err }}</li>
                                             @endforeach
                                         </ul>
                                     </div>
