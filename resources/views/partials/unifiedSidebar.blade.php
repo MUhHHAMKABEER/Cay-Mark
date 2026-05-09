@@ -2,10 +2,9 @@
     $user = Auth::user();
     $role = $user->role ?? 'buyer';
     $currentRoute = request()->route()?->getName() ?? '';
-    
-    // Define menu items for each role
+
     $menuItems = [];
-    
+
     if ($role === 'admin') {
         $menuItems = [
             ['route' => 'admin.dashboard', 'icon' => 'dashboard', 'label' => 'Dashboard'],
@@ -29,10 +28,11 @@
             ['route' => 'seller.listings.create', 'icon' => 'add_box', 'label' => 'Submission', 'match_routes' => ['seller.listings.edit', 'seller.listings.update', 'seller.listings.success', 'seller.listings.store'], 'prefix_match' => false],
             ['route' => 'seller.auctions', 'icon' => 'gavel', 'label' => 'Auctions', 'match_routes' => ['seller.listings.show']],
             ['route' => 'seller.notifications', 'icon' => 'notifications', 'label' => 'Notifications'],
-            ['route' => 'seller.chat', 'icon' => 'mail', 'label' => 'Messaging Center', 'match_routes' => ['seller.chat.show', 'seller.chat.message']],
+            ['route' => 'messaging.index', 'icon' => 'mail', 'label' => 'Messaging Center', 'match_routes' => ['messaging.thread.show', 'seller.chat', 'seller.chat.show', 'seller.chat.message']],
             ['route' => 'seller.support', 'icon' => 'support_agent', 'label' => 'Customer Support'],
         ];
         $roleLabel = $user->business_license_path ? 'Business Seller' : 'Individual Seller';
+        $roleBadge = 'SELLER';
         $dashboardRoute = 'seller.dashboard';
     } else {
         $menuItems = [
@@ -42,153 +42,155 @@
             ['route' => 'buyer.auctions', 'icon' => 'gavel', 'label' => 'Auctions'],
             ['route' => 'buyer.saved-items', 'icon' => 'bookmark', 'label' => 'Saved Items', 'match_routes' => ['buyer.watchlist', 'watchlist.index']],
             ['route' => 'buyer.notifications', 'icon' => 'notifications', 'label' => 'Notifications'],
-            ['route' => 'buyer.messaging-center', 'icon' => 'mail', 'label' => 'Messaging Center', 'match_routes' => ['buyer.messages']],
+            ['route' => 'messaging.index', 'icon' => 'mail', 'label' => 'Messaging Center', 'match_routes' => ['messaging.thread.show', 'buyer.messaging-center', 'buyer.messages']],
             ['route' => 'buyer.customer-support', 'icon' => 'support_agent', 'label' => 'Customer Support'],
         ];
         $roleLabel = 'Buyer';
+        $roleBadge = 'BUYER';
         $dashboardRoute = 'buyer.dashboard';
     }
+
+    if (!isset($roleBadge)) {
+        $roleBadge = strtoupper($role);
+    }
+
+    // Default messaging routes to collapsed if user has no saved preference yet.
+    $defaultCollapsed = request()->routeIs('messaging.index', 'messaging.thread.show');
 @endphp
 
 <style>
     :root {
-        --primary: #4361ee;
-        --primary-light: #eef2ff;
-        --dark: #1e293b;
-        --light: #f8fafc;
-        --gray: #94a3b8;
-        --danger: #ef4444;
+        --cm-sidebar-width: 240px;
+        --cm-sidebar-collapsed: 70px;
+        --cm-navy: #0a1930;
+        --cm-navy-2: #1a365d;
+        --cm-blue: #2563eb;
+        --cm-blue-light: #eef2ff;
+        --cm-text: #1f2937;
+        --cm-text-muted: #6b7280;
+        --cm-icon: #64748b;
+        --cm-border: #e5e7eb;
+        --cm-border-soft: #f1f5f9;
+        --cm-hover-bg: #eef2f7;
+        --cm-danger: #dc2626;
+        --cm-danger-bg: #fef2f2;
+        --cm-radius: 10px;
+        --cm-ease: cubic-bezier(0.4, 0, 0.2, 1);
     }
 
+    /* Layout shell --------------------------------------------------------- */
+    body { transition: padding-left 0.3s var(--cm-ease); }
+
     .unified-sidebar {
-        width: 280px;
-        height: 100vh;
-        background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-        box-shadow: 2px 0 20px rgba(0, 0, 0, 0.08);
-        padding: 0;
-        display: flex;
-        flex-direction: column;
         position: fixed;
         left: 0;
         top: 0;
+        height: 100vh;
+        width: var(--cm-sidebar-width);
+        background: #ffffff;
+        color: var(--cm-text);
+        display: flex;
+        flex-direction: column;
         z-index: 100;
-        transition: all 0.3s ease;
-        border-right: 1px solid rgba(0, 0, 0, 0.08);
-        overflow: hidden;
+        box-shadow: 2px 0 16px rgba(15, 23, 42, 0.06);
+        border-right: 1px solid var(--cm-border-soft);
+        transition: width 0.3s var(--cm-ease), transform 0.3s var(--cm-ease);
+        overflow: visible;
     }
 
-    .unified-sidebar:hover {
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-    }
+    body.sidebar-collapsed .unified-sidebar { width: var(--cm-sidebar-collapsed); }
 
+    /* Collapse toggle ------------------------------------------------------ */
+    .sidebar-collapse-toggle {
+        position: absolute;
+        top: 28px;
+        right: -14px;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: #ffffff;
+        border: 1px solid var(--cm-border);
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.12);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: var(--cm-icon);
+        z-index: 110;
+        transition: background 0.15s var(--cm-ease), color 0.15s var(--cm-ease), box-shadow 0.15s var(--cm-ease);
+        padding: 0;
+    }
+    .sidebar-collapse-toggle:hover { background: var(--cm-blue-light); color: var(--cm-blue); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
+    .sidebar-collapse-toggle .material-icons-round { font-size: 18px; transition: transform 0.3s var(--cm-ease); }
+    body.sidebar-collapsed .sidebar-collapse-toggle .material-icons-round { transform: rotate(180deg); }
+
+    /* Logo ----------------------------------------------------------------- */
     .unified-sidebar .logo {
         display: flex;
         align-items: center;
-        padding: 2rem 1.5rem;
-        margin-bottom: 0;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-        background: white;
+        justify-content: center;
+        padding: 1.75rem 1.25rem 1.5rem;
+        border-bottom: 1px solid var(--cm-border-soft);
         flex-shrink: 0;
+        text-decoration: none;
+        background: #ffffff;
     }
+    .unified-sidebar .logo img.logo-full { height: 44px; width: auto; max-width: 100%; object-fit: contain; transition: opacity 0.2s var(--cm-ease); }
+    .unified-sidebar .logo img.logo-icon { height: 32px; width: 32px; object-fit: contain; display: none; }
 
-    .unified-sidebar .logo h1 {
-        font-size: 1.2rem;
-        font-weight: 700;
-        color: var(--dark);
-        letter-spacing: -0.5px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
+    body.sidebar-collapsed .unified-sidebar .logo { padding: 1.25rem 0.5rem 1.1rem; }
+    body.sidebar-collapsed .unified-sidebar .logo img.logo-full { display: none; }
+    body.sidebar-collapsed .unified-sidebar .logo img.logo-icon { display: block; }
 
-    .unified-sidebar .logo-dots {
-        width: 32px;
-        height: 32px;
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 4px;
-    }
-
-    .unified-sidebar .logo-dot {
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-    }
-
-    .unified-sidebar .logo-dot.blue {
-        background-color: var(--primary);
-    }
-
-    .unified-sidebar .logo-dot.yellow {
-        background-color: #f59e0b;
-    }
-
-    .unified-sidebar .logo-dot.red {
-        background-color: var(--danger);
-    }
-
-    .unified-sidebar .logo-dot.green {
-        background-color: #10b981;
-    }
-
+    /* User profile --------------------------------------------------------- */
     .unified-sidebar .user-profile {
         display: flex;
-        flex-direction: row;
         align-items: center;
-        gap: 0.875rem;
-        padding: 1.125rem 1.25rem;
-        margin-bottom: 0;
-        position: relative;
+        gap: 0.75rem;
+        padding: 1rem 1.1rem;
+        margin: 0;
+        border-bottom: 1px solid var(--cm-border-soft);
+        background: #ffffff;
         text-decoration: none;
         color: inherit;
-        background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
         flex-shrink: 0;
-        transition: background 0.2s ease, box-shadow 0.2s ease;
+        transition: background 0.15s var(--cm-ease);
     }
+    .unified-sidebar .user-profile:hover { background: var(--cm-hover-bg); text-decoration: none; }
 
-    .unified-sidebar .user-profile:hover {
-        background: #f1f5f9;
-        text-decoration: none;
-    }
-
-    /* Monogram — no profile photo */
     .unified-sidebar .user-profile-initials {
         flex-shrink: 0;
-        width: 2.75rem;
-        height: 2.75rem;
-        border-radius: 0.625rem;
-        display: flex;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #1a365d 0%, #2563eb 100%);
+        color: #ffffff;
+        display: inline-flex;
         align-items: center;
         justify-content: center;
-        font-size: 0.8125rem;
+        font-size: 0.875rem;
         font-weight: 700;
         letter-spacing: 0.04em;
-        color: #fff;
-        background: linear-gradient(145deg, #063466 0%, #1e40af 50%, #4361ee 100%);
-        box-shadow: 0 2px 8px rgba(6, 52, 102, 0.22);
-    }
-
-    .unified-sidebar .user-profile:hover .user-profile-initials {
-        box-shadow: 0 4px 12px rgba(6, 52, 102, 0.28);
+        box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
     }
 
     .unified-sidebar .user-profile-meta {
         display: flex;
         flex-direction: column;
         align-items: flex-start;
-        gap: 0.35rem;
+        gap: 0.3rem;
         min-width: 0;
         flex: 1;
+        opacity: 1;
+        transition: opacity 0.15s var(--cm-ease);
     }
 
     .unified-sidebar .user-name {
-        font-size: 0.9375rem;
-        font-weight: 600;
+        font-size: 0.95rem;
+        font-weight: 700;
         color: #0f172a;
         margin: 0;
-        letter-spacing: -0.02em;
-        line-height: 1.3;
+        line-height: 1.2;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -196,239 +198,281 @@
     }
 
     .unified-sidebar .user-role {
+        display: inline-flex;
+        align-items: center;
         font-size: 0.625rem;
         font-weight: 700;
-        text-transform: uppercase;
         letter-spacing: 0.08em;
-        color: #64748b;
-        background: #e2e8f0;
-        padding: 0.2rem 0.45rem;
-        border-radius: 0.25rem;
+        text-transform: uppercase;
+        color: #ffffff;
+        background: var(--cm-navy);
+        padding: 0.15rem 0.5rem;
+        border-radius: 4px;
+        line-height: 1.4;
         border: none;
         box-shadow: none;
     }
 
+    body.sidebar-collapsed .unified-sidebar .user-profile { justify-content: center; padding: 1rem 0.25rem; }
+    body.sidebar-collapsed .unified-sidebar .user-profile-meta { display: none; }
+
+    /* Navigation — scroll only inner wrapper so flyout tooltips are not clipped */
     .unified-sidebar nav {
         flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: visible;
+        padding: 0.85rem 0;
+    }
+    .unified-sidebar .sidebar-nav-scroll {
+        flex: 1;
+        min-height: 0;
         overflow-y: auto;
         overflow-x: hidden;
-        padding: 1rem 0;
     }
-    
-    /* Custom Scrollbar */
-    .unified-sidebar nav::-webkit-scrollbar {
-        width: 6px;
-    }
-    
-    .unified-sidebar nav::-webkit-scrollbar-track {
-        background: transparent;
-    }
-    
-    .unified-sidebar nav::-webkit-scrollbar-thumb {
-        background: rgba(0, 0, 0, 0.2);
-        border-radius: 10px;
-    }
-    
-    .unified-sidebar nav::-webkit-scrollbar-thumb:hover {
-        background: rgba(0, 0, 0, 0.3);
-    }
+    .unified-sidebar .sidebar-nav-scroll::-webkit-scrollbar { width: 6px; }
+    .unified-sidebar .sidebar-nav-scroll::-webkit-scrollbar-track { background: transparent; }
+    .unified-sidebar .sidebar-nav-scroll::-webkit-scrollbar-thumb { background: rgba(15, 23, 42, 0.15); border-radius: 10px; }
+    .unified-sidebar .sidebar-nav-scroll::-webkit-scrollbar-thumb:hover { background: rgba(15, 23, 42, 0.28); }
 
-    .unified-sidebar nav ul {
-        list-style: none;
-        padding: 0 1rem;
-        margin: 0;
-    }
-
-    .unified-sidebar nav li {
-        margin-bottom: 0.5rem;
-        position: relative;
-    }
+    .unified-sidebar nav ul { list-style: none; padding: 0 0.65rem; margin: 0; }
+    .unified-sidebar nav li { margin: 0 0 0.35rem; position: relative; }
 
     .unified-sidebar nav a {
+        position: relative;
         display: flex;
         align-items: center;
-        padding: 0.875rem 1.25rem;
-        border-radius: 12px;
-        color: #64748b;
+        gap: 0.85rem;
+        padding: 0.7rem 0.85rem;
+        border-radius: var(--cm-radius);
+        color: #4b5563;
         font-weight: 500;
-        font-size: 0.95rem;
+        font-size: 0.9rem;
         text-decoration: none;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        position: relative;
-        margin: 0 0.5rem;
-        border-left: none;
+        transition: background 0.15s var(--cm-ease), color 0.15s var(--cm-ease);
     }
-
-    .unified-sidebar nav a:hover {
-        background: linear-gradient(90deg, #eef2ff 0%, #f0f9ff 100%);
-        color: var(--primary);
-        transform: translateX(4px);
-        box-shadow: 0 2px 8px rgba(67, 97, 238, 0.15);
-    }
+    .unified-sidebar nav a:hover { background: var(--cm-hover-bg); color: #0f172a; text-decoration: none; }
+    .unified-sidebar nav a:hover .nav-icon-wrap .material-icons-round { color: #0f172a; }
 
     .unified-sidebar nav a.active {
-        background: linear-gradient(90deg, #eef2ff 0%, #f0f9ff 100%);
-        color: var(--primary);
-        font-weight: 600;
-        box-shadow: 0 2px 12px rgba(67, 97, 238, 0.2);
+        background: linear-gradient(135deg, var(--cm-navy) 0%, var(--cm-navy-2) 100%);
+        color: #ffffff;
+        font-weight: 700;
+        box-shadow: 0 2px 8px rgba(10, 25, 48, 0.18);
     }
+    .unified-sidebar nav a.active .nav-icon-wrap .material-icons-round { color: #ffffff; }
 
-    .unified-sidebar nav a.active::before {
-        content: '';
-        position: absolute;
-        left: 50%;
-        bottom: 0.35rem;
-        transform: translateX(-50%);
-        height: 3px;
-        width: min(70%, 8rem);
-        background: linear-gradient(90deg, var(--primary) 0%, #3b82f6 100%);
-        border-radius: 999px;
-        box-shadow: 0 1px 6px rgba(67, 97, 238, 0.35);
-    }
-
-    .unified-sidebar nav a i,
-    .unified-sidebar nav a .material-icons,
-    .unified-sidebar nav a .material-icons-round {
-        margin-right: 14px;
-        font-size: 1.4rem;
+    .unified-sidebar nav .nav-icon-wrap {
+        position: relative;
+        flex-shrink: 0;
         width: 24px;
         height: 24px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        flex-shrink: 0;
-        font-family: 'Material Icons Round', 'Material Icons', sans-serif;
-        font-weight: normal;
-        font-style: normal;
-        letter-spacing: normal;
-        text-rendering: optimizeLegibility;
-        -webkit-font-smoothing: antialiased;
     }
-    
-    .unified-sidebar nav a span:not(.material-icons):not(.material-icons-round):not(.sidebar-notification-badge) {
+    .unified-sidebar nav .nav-icon-wrap .material-icons-round {
+        font-size: 1.35rem;
+        color: var(--cm-icon);
+        transition: color 0.15s var(--cm-ease);
+        line-height: 1;
+    }
+    .unified-sidebar nav .nav-label {
         flex: 1;
         white-space: nowrap;
-    }
-    
-    .unified-sidebar .sidebar-notification-badge {
-        min-width: 20px;
-        height: 20px;
-        font-size: 0.7rem;
-        line-height: 1;
-        padding: 2px 6px;
-        box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
-        display: flex;
-    }
-    
-    .unified-sidebar .sidebar-notification-badge[style*="display: none"] {
-        display: none !important;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-family: inherit;
+        font-size: inherit;
     }
 
+    body.sidebar-collapsed .unified-sidebar nav ul { padding: 0 0.5rem; }
+    body.sidebar-collapsed .unified-sidebar nav a { justify-content: center; padding: 0.7rem 0.3rem; gap: 0; }
+    body.sidebar-collapsed .unified-sidebar nav .nav-label { display: none; }
+
+    /* Notification badge --------------------------------------------------- */
+    .unified-sidebar .sidebar-notification-badge {
+        position: absolute;
+        top: -4px;
+        right: -6px;
+        min-width: 16px;
+        height: 16px;
+        padding: 0 4px;
+        background: #ef4444;
+        color: #ffffff;
+        font-size: 0.6rem;
+        font-weight: 700;
+        line-height: 1;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid #ffffff;
+        box-shadow: 0 1px 3px rgba(239, 68, 68, 0.35);
+        pointer-events: none;
+    }
+    .unified-sidebar nav a.active .sidebar-notification-badge { border-color: var(--cm-navy); }
+    .unified-sidebar .sidebar-notification-badge[style*="display: none"] { display: none !important; }
+
+    /* Fixed flyout label (collapsed sidebar only) — positioned via JS */
+    .sidebar-flyout-tooltip {
+        position: fixed;
+        left: 0;
+        top: 0;
+        z-index: 10050;
+        max-width: min(280px, calc(100vw - 24px));
+        padding: 7px 12px;
+        font-size: 0.8125rem;
+        font-weight: 500;
+        line-height: 1.35;
+        color: #fafafa;
+        background: #2a2a2e;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 8px;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(0, 0, 0, 0.2);
+        pointer-events: none;
+        white-space: nowrap;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.12s ease, visibility 0.12s ease;
+    }
+    .sidebar-flyout-tooltip.is-visible {
+        opacity: 1;
+        visibility: visible;
+    }
+    .sidebar-flyout-tooltip::before {
+        content: '';
+        position: absolute;
+        right: 100%;
+        top: 50%;
+        transform: translateY(-50%);
+        margin-right: -1px;
+        border: 6px solid transparent;
+        border-right-color: #2a2a2e;
+    }
+    .sidebar-flyout-tooltip.sidebar-flyout-tooltip--caret-right::before {
+        right: auto;
+        left: 100%;
+        margin-right: 0;
+        margin-left: -1px;
+        border-right-color: transparent;
+        border-left-color: #2a2a2e;
+    }
+
+    /* Logout --------------------------------------------------------------- */
     .unified-sidebar .logout-section {
         margin-top: auto;
-        padding: 1.5rem;
-        border-top: 1px solid rgba(0, 0, 0, 0.08);
-        background: white;
+        padding: 0.75rem 0.65rem 1rem;
+        border-top: 1px solid var(--cm-border-soft);
+        background: #ffffff;
         flex-shrink: 0;
     }
+    .unified-sidebar .logout-section form { margin: 0; }
 
     .unified-sidebar .logout-btn {
+        position: relative;
         display: flex;
         align-items: center;
-        padding: 0.875rem 1.25rem;
-        border-radius: 12px;
-        color: #64748b;
-        font-weight: 500;
-        font-size: 0.95rem;
-        text-decoration: none;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        gap: 0.85rem;
+        padding: 0.7rem 0.85rem;
+        border-radius: var(--cm-radius);
+        color: var(--cm-danger);
+        font-weight: 600;
+        font-size: 0.9rem;
         background: none;
         border: none;
         cursor: pointer;
         width: 100%;
-        margin: 0 0.5rem;
+        text-align: left;
+        transition: background 0.15s var(--cm-ease), color 0.15s var(--cm-ease);
     }
-
-    .unified-sidebar .logout-btn:hover {
-        background: linear-gradient(90deg, #fef2f2 0%, #fee2e2 100%);
-        color: var(--danger);
-        transform: translateX(4px);
-        box-shadow: 0 2px 8px rgba(239, 68, 68, 0.15);
-    }
-
-    .unified-sidebar .logout-btn i,
-    .unified-sidebar .logout-btn .material-icons,
+    .unified-sidebar .logout-btn:hover { background: var(--cm-danger-bg); color: var(--cm-danger); }
     .unified-sidebar .logout-btn .material-icons-round {
-        margin-right: 14px;
-        font-size: 1.4rem;
+        font-size: 1.35rem;
+        color: var(--cm-danger);
+        flex-shrink: 0;
         width: 24px;
         height: 24px;
-        display: flex;
+        display: inline-flex;
         align-items: center;
         justify-content: center;
-        flex-shrink: 0;
+        line-height: 1;
     }
+    .unified-sidebar .logout-btn .logout-label { flex: 1; white-space: nowrap; }
 
-    /* Responsive adjustments */
+    body.sidebar-collapsed .unified-sidebar .logout-btn { justify-content: center; padding: 0.7rem 0.3rem; gap: 0; }
+    body.sidebar-collapsed .unified-sidebar .logout-btn .logout-label { display: none; }
+
+    /* Mobile drawer -------------------------------------------------------- */
+    .sidebar-mobile-toggle {
+        display: none;
+        position: fixed;
+        top: 12px;
+        left: 12px;
+        z-index: 95;
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        background: #ffffff;
+        border: 1px solid var(--cm-border);
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.12);
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: var(--cm-text);
+        padding: 0;
+    }
+    .sidebar-mobile-toggle .material-icons-round { font-size: 22px; }
+
+    .sidebar-backdrop {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.45);
+        z-index: 99;
+        opacity: 0;
+        transition: opacity 0.25s var(--cm-ease);
+    }
+    body.sidebar-mobile-open .sidebar-backdrop { display: block; opacity: 1; }
+
     @media (max-width: 768px) {
+        .sidebar-mobile-toggle { display: inline-flex; }
+        .sidebar-collapse-toggle { display: none; }
+
         .unified-sidebar {
-            width: 80px;
-            padding: 0;
-            align-items: center;
+            width: var(--cm-sidebar-width) !important;
+            transform: translateX(-100%);
+            box-shadow: 0 0 30px rgba(15, 23, 42, 0.2);
         }
+        body.sidebar-mobile-open .unified-sidebar { transform: translateX(0); }
 
-        .unified-sidebar .logo {
-            flex-direction: column;
-            align-items: center;
-            padding-bottom: 1rem;
-        }
-
-        .unified-sidebar .logo h1 span {
-            display: none;
-        }
-
-        .unified-sidebar .user-profile {
-            padding: 0.75rem 0.5rem;
-            justify-content: center;
-        }
-
-        .unified-sidebar .user-name,
-        .unified-sidebar .user-role {
-            display: none;
-        }
-
-        .unified-sidebar .user-profile-initials {
-            width: 2.375rem;
-            height: 2.375rem;
-            font-size: 0.75rem;
-        }
-
-        .unified-sidebar nav a span:not(.material-icons):not(.material-icons-round) {
-            display: none;
-        }
-
-        .unified-sidebar nav a i,
-        .unified-sidebar nav a .material-icons,
-        .unified-sidebar nav a .material-icons-round {
-            margin-right: 0;
-            font-size: 1.5rem;
-        }
-
-        .unified-sidebar .logout-btn span:last-child {
-            display: none;
-        }
-
-        .unified-sidebar .logout-btn i,
-        .unified-sidebar .logout-btn .material-icons,
-        .unified-sidebar .logout-btn .material-icons-round {
-            margin-right: 0;
-        }
+        body.sidebar-collapsed .unified-sidebar { width: var(--cm-sidebar-width) !important; }
+        body.sidebar-collapsed .unified-sidebar .logo img.logo-full { display: block; }
+        body.sidebar-collapsed .unified-sidebar .logo img.logo-icon { display: none; }
+        body.sidebar-collapsed .unified-sidebar .user-profile-meta { display: flex; }
+        body.sidebar-collapsed .unified-sidebar nav .nav-label { display: block; }
+        body.sidebar-collapsed .unified-sidebar .logout-btn .logout-label { display: block; }
+        body.sidebar-collapsed .unified-sidebar nav a { justify-content: flex-start; padding: 0.7rem 0.85rem; gap: 0.85rem; }
+        body.sidebar-collapsed .unified-sidebar .logout-btn { justify-content: flex-start; padding: 0.7rem 0.85rem; gap: 0.85rem; }
+        body.sidebar-collapsed .unified-sidebar .user-profile { justify-content: flex-start; padding: 1rem 1.1rem; }
     }
 </style>
 
-<aside class="unified-sidebar">
-    <a href="{{ route('welcome') }}" class="logo flex items-center justify-center no-underline">
-        <img src="{{ asset(config('logos.sidebar', 'Logos/Caymark Logo.png')) }}" alt="CayMark" class="h-14 w-auto max-w-full object-contain" />
+<button type="button" class="sidebar-mobile-toggle" id="sidebarMobileToggle" aria-label="Open menu">
+    <span class="material-icons-round">menu</span>
+</button>
+
+<div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
+
+<aside class="unified-sidebar" id="unifiedSidebar">
+    <button type="button" class="sidebar-collapse-toggle" id="sidebarCollapseToggle" aria-label="Collapse sidebar" title="Collapse sidebar">
+        <span class="material-icons-round">chevron_left</span>
+    </button>
+
+    <a href="{{ route('welcome') }}" class="logo" aria-label="CayMark home">
+        <img class="logo-full" src="{{ asset(config('logos.sidebar', 'Logos/Caymark Logo.png')) }}" alt="CayMark" />
+        <img class="logo-icon" src="{{ asset(config('logos.sidebar', 'Logos/Caymark Logo.png')) }}" alt="CayMark" />
     </a>
 
     @php
@@ -442,15 +486,16 @@
             $userInitials = '?';
         }
     @endphp
-    <a href="{{ route('profile.edit') }}" class="user-profile" title="{{ $displayName ?: 'Account' }} · {{ $roleLabel }}">
+    <a href="{{ route('profile.edit') }}" class="user-profile" data-sidebar-flyout="Account settings" title="{{ $displayName ?: 'Account' }} · {{ $roleLabel }}">
         <span class="user-profile-initials" aria-hidden="true">{{ $userInitials }}</span>
         <div class="user-profile-meta">
             <span class="user-name">{{ Str::ucfirst($user->name) }}</span>
-            <span class="user-role">{{ $roleLabel }}</span>
+            <span class="user-role">{{ $roleBadge }}</span>
         </div>
     </a>
 
     <nav>
+        <div class="sidebar-nav-scroll">
         <ul>
             @foreach($menuItems as $item)
                 @php
@@ -475,58 +520,206 @@
                             }
                         }
                     }
-                    
-                    // Build URL with tab parameter if needed
+
                     $url = '#';
                     if ($item['route'] !== '#') {
                         $url = route($item['route']);
                     }
-                @endphp
-                @php
                     $tourId = $role . '-' . \Illuminate\Support\Str::slug($item['label']);
+                    $unreadCount = 0;
+                    if ($item['icon'] === 'notifications' && isset($user)) {
+                        $unreadCount = $user->unreadNotifications()->count();
+                    }
                 @endphp
                 <li>
-                    <a href="{{ $url }}" 
-                       class="{{ $isActive ? 'active' : '' }} relative"
+                    <a href="{{ $url }}"
+                       class="{{ $isActive ? 'active' : '' }}"
                        data-tour-id="{{ $tourId }}"
+                       data-sidebar-flyout="{{ $item['label'] }}"
                        @if($item['route'] === '#') onclick="return false;" @endif>
-                        <span class="material-icons-round">{{ $item['icon'] }}</span>
-                        <span>{{ $item['label'] }}</span>
-                        @if($item['icon'] === 'notifications' && isset($user))
-                            @php
-                                $unreadCount = $user->unreadNotifications()->count();
-                            @endphp
-                            @if($unreadCount > 0)
-                                <span class="sidebar-notification-badge absolute right-3 top-1/2 -translate-y-1/2 min-w-[20px] h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center px-1.5" style="display: flex;">{{ $unreadCount > 99 ? '99+' : $unreadCount }}</span>
-                            @else
-                                <span class="sidebar-notification-badge absolute right-3 top-1/2 -translate-y-1/2 min-w-[20px] h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center px-1.5" style="display: none;">0</span>
+                        <span class="nav-icon-wrap">
+                            <span class="material-icons-round">{{ $item['icon'] }}</span>
+                            @if($item['icon'] === 'notifications' && isset($user))
+                                <span class="sidebar-notification-badge" style="display: {{ $unreadCount > 0 ? 'inline-flex' : 'none' }};">{{ $unreadCount > 99 ? '99+' : $unreadCount }}</span>
                             @endif
-                        @endif
+                        </span>
+                        <span class="nav-label">{{ $item['label'] }}</span>
                     </a>
                 </li>
             @endforeach
         </ul>
+        </div>
     </nav>
 
     <div class="logout-section">
         <form method="POST" action="{{ route('logout') }}">
             @csrf
-            <button type="submit" class="logout-btn" data-tour-id="{{ $role }}-logout" onclick="event.preventDefault(); this.closest('form').submit();">
+            <button type="submit" class="logout-btn" data-tour-id="{{ $role }}-logout" data-sidebar-flyout="Log out" onclick="event.preventDefault(); this.closest('form').submit();">
                 <span class="material-icons-round">logout</span>
-                <span>Log out</span>
+                <span class="logout-label">Log out</span>
             </button>
         </form>
     </div>
+
+    <div id="sidebarFlyoutTooltip" class="sidebar-flyout-tooltip" role="tooltip" hidden></div>
 </aside>
 
 <script>
-    // Smooth hover effects
-    document.querySelectorAll('.unified-sidebar nav li, .unified-sidebar .logout-btn').forEach(item => {
-        item.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateX(5px)';
+    (function () {
+        var STORAGE_KEY = 'caymark.sidebar.collapsed';
+        var defaultCollapsed = @json((bool) $defaultCollapsed);
+        var stored = null;
+        try { stored = window.localStorage.getItem(STORAGE_KEY); } catch (e) { stored = null; }
+
+        var collapsed;
+        if (stored === '1') {
+            collapsed = true;
+        } else if (stored === '0') {
+            collapsed = false;
+        } else {
+            collapsed = defaultCollapsed;
+        }
+
+        function applyCollapsed(state) {
+            document.body.classList.toggle('sidebar-collapsed', !!state);
+            var toggle = document.getElementById('sidebarCollapseToggle');
+            if (toggle) {
+                toggle.setAttribute('aria-label', state ? 'Expand sidebar' : 'Collapse sidebar');
+                toggle.setAttribute('title', state ? 'Expand sidebar' : 'Collapse sidebar');
+            }
+        }
+
+        applyCollapsed(collapsed);
+
+        document.addEventListener('DOMContentLoaded', function () {
+            var flyout = document.getElementById('sidebarFlyoutTooltip');
+            var navScroll = document.querySelector('.unified-sidebar .sidebar-nav-scroll');
+            var hideFlyoutTimer = null;
+
+            function hideFlyout() {
+                if (hideFlyoutTimer) {
+                    clearTimeout(hideFlyoutTimer);
+                    hideFlyoutTimer = null;
+                }
+                if (!flyout) return;
+                flyout.classList.remove('is-visible');
+                flyout.classList.remove('sidebar-flyout-tooltip--caret-right');
+                flyout.hidden = true;
+                flyout.textContent = '';
+                flyout.style.left = '';
+                flyout.style.top = '';
+            }
+
+            function shouldShowFlyout() {
+                return window.innerWidth > 768
+                    && document.body.classList.contains('sidebar-collapsed')
+                    && !document.body.classList.contains('sidebar-mobile-open');
+            }
+
+            function anchorRectFor(el) {
+                var wrap = el.querySelector('.nav-icon-wrap');
+                if (wrap) return wrap.getBoundingClientRect();
+                var initials = el.querySelector('.user-profile-initials');
+                if (initials) return initials.getBoundingClientRect();
+                var mi = el.querySelector('.material-icons-round');
+                if (mi) return mi.getBoundingClientRect();
+                return el.getBoundingClientRect();
+            }
+
+            function showFlyoutFor(el) {
+                if (!flyout || !shouldShowFlyout()) return;
+                var label = el.getAttribute('data-sidebar-flyout');
+                if (!label) return;
+
+                var rect = anchorRectFor(el);
+                flyout.textContent = label;
+                flyout.hidden = false;
+                flyout.classList.remove('is-visible', 'sidebar-flyout-tooltip--caret-right');
+                flyout.style.left = '-9999px';
+                flyout.style.top = '0';
+                flyout.style.opacity = '0';
+                flyout.style.visibility = 'visible';
+
+                var tw = flyout.offsetWidth;
+                var th = flyout.offsetHeight;
+                var gap = 10;
+                var pad = 12;
+                var left = rect.right + gap;
+                if (left + tw > window.innerWidth - pad) {
+                    left = rect.left - gap - tw;
+                    flyout.classList.add('sidebar-flyout-tooltip--caret-right');
+                }
+                left = Math.max(pad, Math.min(left, window.innerWidth - tw - pad));
+
+                var top = rect.top + rect.height / 2 - th / 2;
+                top = Math.max(pad, Math.min(top, window.innerHeight - th - pad));
+
+                flyout.style.left = left + 'px';
+                flyout.style.top = top + 'px';
+                flyout.style.opacity = '';
+                flyout.style.visibility = '';
+                requestAnimationFrame(function () {
+                    flyout.classList.add('is-visible');
+                });
+            }
+
+            document.querySelectorAll('.unified-sidebar [data-sidebar-flyout]').forEach(function (el) {
+                el.addEventListener('mouseenter', function () {
+                    if (hideFlyoutTimer) {
+                        clearTimeout(hideFlyoutTimer);
+                        hideFlyoutTimer = null;
+                    }
+                    showFlyoutFor(el);
+                });
+                el.addEventListener('mouseleave', function () {
+                    hideFlyoutTimer = setTimeout(hideFlyout, 100);
+                });
+                el.addEventListener('focus', function () {
+                    if (hideFlyoutTimer) {
+                        clearTimeout(hideFlyoutTimer);
+                        hideFlyoutTimer = null;
+                    }
+                    showFlyoutFor(el);
+                });
+                el.addEventListener('blur', function () {
+                    hideFlyoutTimer = setTimeout(hideFlyout, 100);
+                });
+            });
+
+            if (navScroll) {
+                navScroll.addEventListener('scroll', hideFlyout);
+            }
+            window.addEventListener('resize', hideFlyout);
+            window.addEventListener('scroll', hideFlyout, true);
+
+            var collapseToggle = document.getElementById('sidebarCollapseToggle');
+            if (collapseToggle) {
+                collapseToggle.addEventListener('click', function () {
+                    hideFlyout();
+                    collapsed = !document.body.classList.contains('sidebar-collapsed');
+                    applyCollapsed(collapsed);
+                    try { window.localStorage.setItem(STORAGE_KEY, collapsed ? '1' : '0'); } catch (e) {}
+                });
+            }
+
+            var mobileToggle = document.getElementById('sidebarMobileToggle');
+            var backdrop = document.getElementById('sidebarBackdrop');
+            function closeMobile() { document.body.classList.remove('sidebar-mobile-open'); }
+            function openMobile() { document.body.classList.add('sidebar-mobile-open'); }
+            if (mobileToggle) {
+                mobileToggle.addEventListener('click', function () {
+                    if (document.body.classList.contains('sidebar-mobile-open')) { closeMobile(); } else { openMobile(); }
+                });
+            }
+            if (backdrop) backdrop.addEventListener('click', closeMobile);
+            document.querySelectorAll('.unified-sidebar nav a').forEach(function (a) {
+                a.addEventListener('click', function () {
+                    if (window.innerWidth <= 768) closeMobile();
+                });
+            });
+            window.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') closeMobile();
+            });
         });
-        item.addEventListener('mouseleave', function() {
-            this.style.transform = 'translateX(0)';
-        });
-    });
+    })();
 </script>

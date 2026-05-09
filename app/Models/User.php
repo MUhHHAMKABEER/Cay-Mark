@@ -311,7 +311,7 @@ public function watchlist()
     }
 
     /**
-     * Get won auctions for buyer (payment completed)
+     * Won listings for this buyer (ended auction, highest active bid). Includes unpaid and paid.
      */
     public function getWonAuctions()
     {
@@ -341,13 +341,35 @@ public function watchlist()
             })
             ->values()
             ->map(function($listing) {
-                $invoice = $listing->invoices->first();
-                $listing->pending_invoice_id = $invoice?->id;
+                $buyerInvoices = $listing->invoices->where('buyer_id', $this->id)->sortByDesc('id')->values();
+                $paidInvoice = $buyerInvoices->firstWhere('payment_status', 'paid');
+                $unpaidInvoice = $buyerInvoices->first(function ($inv) {
+                    return ($inv->payment_status ?? '') !== 'paid';
+                });
+                $invoice = $unpaidInvoice ?? $paidInvoice ?? $buyerInvoices->first();
+
+                // Pay / checkout: any invoice that is not fully paid yet
+                $listing->pending_invoice_id = $unpaidInvoice?->id;
+                // Receipts, messaging, download: prefer paid row, else any
+                $listing->primary_invoice_id = $paidInvoice?->id ?? $unpaidInvoice?->id ?? $buyerInvoices->first()?->id;
+
                 $listing->final_price = $invoice
-                    ? ($invoice->winning_bid_amount ?? $listing->getUserHighestBid($this->id) ?? $listing->starting_price ?? 0)
-                    : ($listing->getUserHighestBid($this->id) ?? $listing->starting_price ?? 0);
-                $listing->payment_status = $invoice ? ($invoice->payment_status ?? 'pending') : 'pending';
+                    ? (float) ($invoice->winning_bid_amount ?? $listing->getUserHighestBid($this->id) ?? $listing->starting_price ?? 0)
+                    : (float) ($listing->getUserHighestBid($this->id) ?? $listing->starting_price ?? 0);
+
+                if ($paidInvoice && ! $unpaidInvoice) {
+                    $listing->payment_status = 'paid';
+                } elseif ($unpaidInvoice) {
+                    $listing->payment_status = 'pending';
+                } elseif ($invoice) {
+                    $listing->payment_status = $invoice->payment_status ?? 'pending';
+                } else {
+                    // Won on bids but no invoice row yet (invoice job not run or data gap)
+                    $listing->payment_status = 'awaiting_invoice';
+                }
+
                 $listing->total_amount_due = $invoice ? (float) $invoice->total_amount_due : null;
+
                 return $listing;
             });
     }

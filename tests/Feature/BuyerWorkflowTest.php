@@ -123,8 +123,7 @@ class BuyerWorkflowTest extends TestCase
             'cardholder_name' => 'Test Buyer',
         ]);
 
-        $processResponse->assertRedirect(route('buyer.auctions-won'));
-        $processResponse->assertSessionHas('success');
+        $processResponse->assertRedirect(route('buyer.payment.success', $invoice));
 
         $invoice->refresh();
         $this->assertSame('paid', $invoice->payment_status);

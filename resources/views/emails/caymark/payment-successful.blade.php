@@ -32,6 +32,21 @@
             margin: 20px 0;
             border-radius: 5px;
         }
+        .pickup-box {
+            background: #fef3c7;
+            border: 2px solid #fbbf24;
+            padding: 18px 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .pickup-code {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: #1e40af;
+            letter-spacing: 0.06em;
+            font-family: 'Courier New', monospace;
+            margin: 8px 0 0 0;
+        }
         .button {
             display: inline-block;
             background: #2563eb;
@@ -54,29 +69,38 @@
         <h1>CayMark</h1>
         <p>Island Exchange & Auction House</p>
     </div>
-    
+
     <div class="content">
-        <h2>Payment Successful – {{ $invoice->item_name ?? '[VEHICLE_NAME]' }}</h2>
-        
+        <h2 style="margin-top: 0;">Payment</h2>
+
         <div class="success-box">
-            <p style="margin: 0;"><strong>Your payment for {{ $invoice->item_name ?? '[VEHICLE_NAME]' }} has been successfully processed.</strong></p>
+            <p style="margin: 0;"><strong>Your payment has been successful.</strong></p>
         </div>
-        
-        <p>Your invoice is available in your CayMark dashboard.</p>
-        
-        <p>Pickup coordination will occur through the Messaging Center.</p>
-        
+
+        <p>Your payment for <strong>{{ $invoice->item_name ?? '[VEHICLE_NAME]' }}</strong> has been processed.</p>
+
+        <p>Please proceed to the <strong>Messaging Center</strong> to arrange pickup details with your seller.</p>
+
         <div style="text-align: center;">
-            <a href="{{ route('buyer.auctions-won') }}" class="button">View Invoice</a>
+            <a href="{{ $messaging_center_url ?? route('messaging.index') }}" class="button">Open Messaging Center</a>
         </div>
-        
+
+        @if(!empty($pickup_code))
+            <div class="pickup-box">
+                <p style="margin: 0; font-size: 0.75rem; font-weight: 700; color: #92400e; text-transform: uppercase; letter-spacing: 0.06em;">Pickup Code</p>
+                <p class="pickup-code">{{ $pickup_code }}</p>
+                <p style="margin: 12px 0 0 0; color: #78350f; font-size: 0.95rem;">Provide this code to the seller after vehicle transfer to complete this sale.</p>
+            </div>
+        @endif
+
+        <p style="font-size: 0.9rem; color: #4b5563;">You can also view this purchase and your pickup code anytime from your CayMark dashboard under <strong>My Auctions</strong> (Won).</p>
+
         <p>Best regards,<br>The CayMark Team</p>
     </div>
-    
+
     <div class="footer">
         <p>This is an automated email. Please do not reply to this message.</p>
         <p>&copy; {{ date('Y') }} CayMark. All rights reserved.</p>
     </div>
 </body>
 </html>
-

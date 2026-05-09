@@ -971,18 +971,18 @@
 
                 <div class="flex justify-end">
                     <button type="button" id="btn-continue-to-photos" onclick="typeof showSection === 'function' && showSection(2)" class="btn-primary">
-                        Continue to Photos & Media <i class="fas fa-arrow-right ml-2"></i>
+                        Continue to Photos <i class="fas fa-arrow-right ml-2"></i>
                     </button>
                 </div>
             </div>
 
-            <!-- SECTION 2: PHOTOS & MEDIA -->
+            <!-- SECTION 2: PHOTOS -->
             <div id="section2" class="form-section" style="display: @if(session('error_section') === 'section2') block; border: 2px solid #ef4444; border-radius: 12px; @else none; @endif">
                 <div class="section-header">
                     <div class="section-icon">2</div>
                     <div>
-                        <h2 class="text-xl font-bold text-gray-900">Upload Photos & Media</h2>
-                        <p class="text-xs text-gray-600">{{ $isEdit ? 'Replace by choosing new photos below, or keep current.' : 'Add high-quality photos and video of your vehicle' }}</p>
+                        <h2 class="text-xl font-bold text-gray-900">Upload Photos</h2>
+                        <p class="text-xs text-gray-600">{{ $isEdit ? 'Replace by choosing new photos below, or keep current.' : 'Add high-quality photos of your vehicle' }}</p>
                     </div>
                 </div>
                 @if($isEdit && $listing->images->count() > 0)
@@ -1034,21 +1034,6 @@
                             <i class="fas fa-exclamation-triangle mr-1"></i> MINIMUM 5 REQUIRED PHOTOS.
                         </p>
                     </div>
-                </div>
-
-                <!-- Video Upload -->
-                <div class="mb-4">
-                    <label class="form-label">UPLOAD VIDEO <span class="text-red-500">*</span></label>
-                    <p class="text-xs text-gray-600 mb-2">Engine bay — Video must be 20 seconds to 1 minute long. Required for all listings.</p>
-                    <div class="file-upload-box" id="videoUploadBox">
-                        <input type="file" name="video" id="video_input" @if(!$isEdit) required @endif accept="video/mp4,video/quicktime,video/x-msvideo,video/webm" class="file-upload-input">
-                        <div class="file-upload-inner">
-                            <div class="file-upload-icon"><i class="fas fa-video"></i></div>
-                            <div class="file-upload-btn-text">{{ $isEdit ? 'Replace Video' : 'Choose Video' }}</div>
-                            <div class="file-upload-status" id="videoStatus">{{ $isEdit ? 'Keep current or choose new' : 'No video chosen' }}</div>
-                        </div>
-                    </div>
-                    <div id="videoPreview" class="mt-2"></div>
                 </div>
 
                 <div class="flex flex-col sm:flex-row gap-4 justify-between">
@@ -2155,37 +2140,6 @@
         });
     });
 
-    // Video upload preview + duration validation
-    var videoInput = document.getElementById('video_input');
-    if (videoInput) {
-        videoInput.addEventListener('change', function(e) {
-            var file = e.target.files[0];
-            var statusEl = document.getElementById('videoStatus');
-            var previewEl = document.getElementById('videoPreview');
-            var box = document.getElementById('videoUploadBox');
-            if (previewEl) previewEl.innerHTML = '';
-            if (!file) {
-                if (statusEl) statusEl.textContent = 'No video chosen';
-                if (box) box.classList.remove('has-file');
-                return;
-            }
-            if (statusEl) statusEl.textContent = file.name + ' (' + (file.size / (1024*1024)).toFixed(1) + ' MB)';
-            if (box) box.classList.add('has-file');
-            var video = document.createElement('video');
-            video.preload = 'metadata';
-            video.onloadedmetadata = function() {
-                window.URL.revokeObjectURL(video.src);
-                var dur = video.duration;
-                if (dur < 20 || dur > 60) {
-                    alert('Video must be between 20 seconds and 1 minute. Your video is ' + Math.round(dur) + ' seconds.');
-                    videoInput.value = '';
-                    if (statusEl) statusEl.textContent = 'No video chosen';
-                    if (box) box.classList.remove('has-file');
-                }
-            };
-            video.src = URL.createObjectURL(file);
-        });
-    }
 </script>
 @endsection
 

@@ -47,7 +47,6 @@ class SellerListingUpdateRequest extends FormRequest
             'additional_notes' => 'nullable|string',
             'cover_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
             'photos.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
-            'video' => 'nullable|file|mimes:mp4,mov,avi,webm|max:102400',
             'auction_duration' => 'required|in:5,7,14,21,28',
             'starting_price' => 'nullable|numeric|min:0',
             'reserve_price' => 'nullable|numeric|min:0',

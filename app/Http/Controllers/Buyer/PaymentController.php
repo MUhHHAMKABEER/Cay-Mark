@@ -36,11 +36,29 @@ class PaymentController extends Controller
         $user = Auth::user();
         $invoice = Invoice::where('id', $invoiceId)
             ->where('buyer_id', $user->id)
-            ->where('payment_status', 'pending')
+            ->whereIn('payment_status', ['pending', 'overdue', 'partial'])
             ->with(['listing.images', 'seller'])
             ->firstOrFail();
 
         return view('Buyer.payment-checkout-single', compact('invoice'));
+    }
+
+    /**
+     * Immediate post-payment confirmation (pickup code + next steps).
+     */
+    public function paymentSuccess(Invoice $invoice)
+    {
+        $user = Auth::user();
+        if ((int) $invoice->buyer_id !== (int) $user->id) {
+            abort(403);
+        }
+        if ($invoice->payment_status !== 'paid') {
+            return redirect()->route('buyer.payment.checkout-single', $invoice->id);
+        }
+
+        $invoice->load(['listing.images', 'seller']);
+
+        return view('Buyer.payment-success', compact('invoice'));
     }
 
     /**
@@ -70,12 +88,18 @@ class PaymentController extends Controller
      */
     protected function sendPaymentNotifications(Invoice $invoice, $buyer, Payment $payment)
     {
+        $invoice->loadMissing('listing');
+        $pickupCode = $invoice->listing?->pickupCodeDisplay();
+        $messagingCenterUrl = route('messaging.thread.show', $invoice->id);
+
         // Buyer notification
         try {
             Mail::send('emails.caymark.payment-successful', [
                 'invoice' => $invoice,
                 'buyer' => $buyer,
                 'payment' => $payment,
+                'pickup_code' => $pickupCode,
+                'messaging_center_url' => $messagingCenterUrl,
             ], function ($message) use ($buyer, $invoice) {
                 $message->to($buyer->email, $buyer->name)
                     ->subject('Payment Successful – ' . ($invoice->item_name ?? '[VEHICLE_NAME]'));
@@ -99,35 +123,4 @@ class PaymentController extends Controller
         }
     }
 
-    /**
-     * Unlock post-auction messaging thread when payment clears (per PDF requirements).
-     * Creates thread if it doesn't exist and unlocks it.
-     */
-    protected function unlockPostAuctionThread(Invoice $invoice): void
-    {
-        try {
-            $thread = PostAuctionThread::firstOrCreate(
-                ['invoice_id' => $invoice->id],
-                [
-                    'listing_id' => $invoice->listing_id,
-                    'buyer_id' => $invoice->buyer_id,
-                    'seller_id' => $invoice->seller_id,
-                    'is_unlocked' => false,
-                ]
-            );
-
-            // Unlock the thread
-            $thread->unlock();
-
-            Log::info('Post-auction thread unlocked after payment', [
-                'thread_id' => $thread->id,
-                'invoice_id' => $invoice->id,
-            ]);
-
-            // TODO: Send dashboard notifications to both buyer and seller
-            // that messaging thread is now available
-        } catch (\Exception $e) {
-            Log::error('Failed to unlock post-auction thread: ' . $e->getMessage());
-        }
-    }
 }

@@ -32,7 +32,6 @@ use App\Http\Controllers\Buyer\SupportController;
 use App\Http\Controllers\Buyer\PurchaseController;
 use App\Http\Controllers\Seller\ListingController;
 use App\Http\Controllers\Buyer\MarketplaceController;
-use App\Http\Controllers\Buyer\BuyerMessageController;
 use App\Http\Controllers\Buyer\NotificationController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\TwoFactorController;
@@ -90,7 +89,6 @@ Route::get('/dashboard/seller', function (Request $request) {
 Route::post('/dashboard/seller/update-payout', [App\Http\Controllers\Seller\SellerDashboardController::class, 'updatePayout'])->middleware(['auth', 'seller'])->name('seller-dashboard.update-payout');
 Route::post('/dashboard/seller/change-password', [App\Http\Controllers\Seller\SellerDashboardController::class, 'changePassword'])->middleware(['auth', 'seller'])->name('seller-dashboard.change-password');
 Route::post('/dashboard/seller/update-email', [App\Http\Controllers\Seller\SellerDashboardController::class, 'updateEmail'])->middleware(['auth', 'seller'])->name('seller-dashboard.update-email');
-Route::post('/dashboard/seller/update-phone', [App\Http\Controllers\Seller\SellerDashboardController::class, 'updatePhone'])->middleware(['auth', 'seller'])->name('seller-dashboard.update-phone');
 Route::post('/dashboard/seller/confirm-pickup/{listingId}', [App\Http\Controllers\Seller\SellerDashboardController::class, 'confirmPickup'])->middleware(['auth', 'seller'])->name('seller-dashboard.confirm-pickup');
 
 Route::get('/dashboard/buyer', function (Request $request) {
@@ -180,21 +178,15 @@ Route::middleware(['auth', 'buyer'])->prefix('buyer')->group(function () {
     Route::get('/bids', fn () => redirect()->route('buyer.auctions'))->name('buyer.bids');
     Route::get('/watchlist', [WatchlistController::class, 'index'])->name('buyer.watchlist');
     Route::get('/purchases', fn () => redirect()->to(route('buyer.auctions').'?section=won'))->name('buyer.purchases');
+    Route::get('/purchases/{invoice}', [App\Http\Controllers\Buyer\PurchaseController::class, 'show'])->name('buyer.purchase.show');
     Route::get('/auctions-won', fn () => redirect()->to(route('buyer.auctions').'?section=won'))->name('buyer.auctions-won');
     Route::get('/invoices/{invoice}/download', [App\Http\Controllers\Buyer\PurchaseController::class, 'downloadInvoice'])->name('buyer.invoice.download');
 
-    // Post-Auction Messaging & Pickup Coordination
-    Route::get('/post-auction/thread/{invoiceId}', [App\Http\Controllers\PostAuctionMessageController::class, 'showThread'])->name('post-auction.thread');
-    Route::post('/post-auction/thread/{threadId}/send-pickup-details', [App\Http\Controllers\PostAuctionMessageController::class, 'sendPickupDetails'])->name('post-auction.send-pickup-details');
-    Route::post('/post-auction/thread/{threadId}/accept-pickup', [App\Http\Controllers\PostAuctionMessageController::class, 'acceptPickupDetails'])->name('post-auction.accept-pickup');
-    Route::post('/post-auction/thread/{threadId}/request-change', [App\Http\Controllers\PostAuctionMessageController::class, 'requestPickupChange'])->name('post-auction.request-change');
-    Route::post('/post-auction/change-request/{changeRequestId}/respond', [App\Http\Controllers\PostAuctionMessageController::class, 'respondToChangeRequest'])->name('post-auction.respond-change');
-    Route::post('/post-auction/thread/{threadId}/authorize-third-party', [App\Http\Controllers\PostAuctionMessageController::class, 'authorizeThirdPartyPickup'])->name('post-auction.authorize-third-party');
-    Route::post('/post-auction/thread/{threadId}/confirm-pickup', [App\Http\Controllers\PostAuctionMessageController::class, 'confirmPickupWithPin'])->name('post-auction.confirm-pickup');
-    Route::post('/post-auction/thread/{threadId}/seller-phone', [App\Http\Controllers\PostAuctionMessageController::class, 'updateSellerPhone'])->name('post-auction.seller-phone');
+    // (Messaging Center routes are registered globally below under /messaging.)
 
     // Payment Checkout (Path A: Single item, Path B: Multiple items)
     Route::get('/payment/checkout/{invoiceId}', [App\Http\Controllers\Buyer\PaymentController::class, 'checkoutSingle'])->name('buyer.payment.checkout-single');
+    Route::get('/payment/success/{invoice}', [App\Http\Controllers\Buyer\PaymentController::class, 'paymentSuccess'])->name('buyer.payment.success');
     Route::post('/payment/checkout/multiple', [App\Http\Controllers\Buyer\PaymentController::class, 'checkoutMultiple'])->name('buyer.payment.checkout-multiple');
     Route::post('/payment/process', [App\Http\Controllers\Buyer\PaymentController::class, 'processPayment'])->name('buyer.payment.process');
 
@@ -403,6 +395,43 @@ Route::post('/listing/{id}/buy', [CheckoutController::class, 'buyNow'])->name('l
 
 
 // Buyer and Seller routes are now in routes/buyer.php and routes/seller.php
+
+// Messaging Center (post-auction pickup coordination) — buyer + seller share these routes;
+// the controller verifies the authenticated user is the buyer or seller of the invoice.
+Route::middleware('auth')->prefix('messaging')->name('messaging.')->group(function () {
+    Route::get('/', [App\Http\Controllers\MessagingCenterController::class, 'index'])->name('index');
+    Route::get('/thread/{invoiceId}', [App\Http\Controllers\MessagingCenterController::class, 'show'])->name('thread.show');
+
+    Route::post('/thread/{threadId}/send-pickup-details',   [App\Http\Controllers\MessagingCenterController::class, 'sendPickupDetails'])->name('thread.send-pickup-details');
+    Route::post('/thread/{threadId}/accept-pickup',         [App\Http\Controllers\MessagingCenterController::class, 'acceptPickupDetails'])->name('thread.accept-pickup');
+    Route::post('/thread/{threadId}/request-change',        [App\Http\Controllers\MessagingCenterController::class, 'requestPickupChange'])->name('thread.request-change');
+    Route::post('/thread/{threadId}/request-location',      [App\Http\Controllers\MessagingCenterController::class, 'requestLocationChange'])->name('thread.request-location');
+    Route::post('/thread/{threadId}/request-delivery',      [App\Http\Controllers\MessagingCenterController::class, 'requestDelivery'])->name('thread.request-delivery');
+    Route::post('/change-request/{id}/respond',             [App\Http\Controllers\MessagingCenterController::class, 'respondToChangeRequest'])->name('change.respond');
+    Route::post('/delivery-request/{id}/respond',           [App\Http\Controllers\MessagingCenterController::class, 'respondToDeliveryRequest'])->name('delivery.respond');
+    Route::post('/thread/{threadId}/authorize-third-party', [App\Http\Controllers\MessagingCenterController::class, 'authorizeThirdPartyPickup'])->name('thread.authorize-third-party');
+    Route::post('/thread/{threadId}/confirm-pickup',        [App\Http\Controllers\MessagingCenterController::class, 'confirmPickupWithPin'])->name('thread.confirm-pickup');
+    Route::post('/thread/{threadId}/seller-phone',          [App\Http\Controllers\MessagingCenterController::class, 'updateSellerPhone'])->name('thread.seller-phone');
+
+    // extra actions surfaced by the mockups
+    Route::post('/thread/{threadId}/other-request',          [App\Http\Controllers\MessagingCenterController::class, 'otherRequest'])->name('thread.other-request');
+    Route::post('/thread/{threadId}/report-issue',           [App\Http\Controllers\MessagingCenterController::class, 'reportIssue'])->name('thread.report-issue');
+    Route::post('/thread/{threadId}/request-assistance',     [App\Http\Controllers\MessagingCenterController::class, 'requestAssistance'])->name('thread.request-assistance');
+    Route::post('/thread/{threadId}/resend-schedule',        [App\Http\Controllers\MessagingCenterController::class, 'resendSchedule'])->name('thread.resend-schedule');
+    Route::post('/thread/{threadId}/mark-ready-for-pickup',  [App\Http\Controllers\MessagingCenterController::class, 'markReadyForPickup'])->name('thread.mark-ready');
+    Route::post('/thread/{threadId}/confirm-sale-completed', [App\Http\Controllers\MessagingCenterController::class, 'confirmSaleCompleted'])->name('thread.confirm-sale');
+});
+
+// Back-compat: legacy post-auction.thread URL redirects to the new Messaging Center route.
+Route::redirect('/buyer/post-auction/thread/{invoiceId}', '/messaging/thread/{invoiceId}')
+    ->name('post-auction.thread');
+
+// Admin: flagged messaging threads dashboard
+Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(function () {
+    Route::get('/messaging-flags',                [App\Http\Controllers\Admin\MessagingFlagController::class, 'index'])->name('messaging.flags.index');
+    Route::get('/messaging-flags/{threadId}',     [App\Http\Controllers\Admin\MessagingFlagController::class, 'show'])->name('messaging.flags.show');
+    Route::post('/messaging-flags/{threadId}/unflag', [App\Http\Controllers\Admin\MessagingFlagController::class, 'unflag'])->name('messaging.flags.unflag');
+});
 
 // Include modular route files
 require __DIR__.'/seller.php';

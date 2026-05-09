@@ -62,10 +62,23 @@
             <p style="margin: 0;"><strong>Your payment for {{ $invoice->item_name ?? '[VEHICLE_NAME]' }} has been successfully processed.</strong></p>
         </div>
         
+        <p>Please proceed to the <strong>Messaging Center</strong> to arrange pickup details with your seller.</p>
+
+        @if(!empty($pickup_code))
+            <div style="background: #fef3c7; border: 2px solid #fbbf24; padding: 18px 20px; margin: 20px 0; border-radius: 8px;">
+                <p style="margin: 0; font-size: 0.75rem; font-weight: 700; color: #92400e; text-transform: uppercase;">Pickup Code</p>
+                <p style="font-size: 1.5rem; font-weight: 800; color: #1e40af; font-family: 'Courier New', monospace; margin: 8px 0 0 0;">{{ $pickup_code }}</p>
+                <p style="margin: 12px 0 0 0; color: #78350f; font-size: 0.95rem;">Provide this code to the seller after vehicle transfer to complete this sale.</p>
+            </div>
+        @endif
+
         <p>Your invoice is available in your CayMark dashboard.</p>
-        
+
         <div style="text-align: center;">
-            <a href="{{ route('buyer.auctions-won') }}" class="button">View Invoice</a>
+            <a href="{{ $messaging_center_url ?? route('messaging.index') }}" class="button">Messaging Center</a>
+        </div>
+        <div style="text-align: center;">
+            <a href="{{ route('buyer.auctions-won') }}" class="button" style="margin-top: 8px; background: #374151;">View auctions won</a>
         </div>
         
         <p>Best regards,<br>The CayMark Team</p>

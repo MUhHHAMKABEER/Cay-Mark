@@ -501,166 +501,294 @@
                 @endif
             </div>
 
-            <!-- USER TAB -->
-            <div id="content-user" class="tab-content p-6">
-                <h2 class="text-xl font-bold text-gray-900 mb-6">Account Information</h2>
-
-                <!-- Full Name / Business Name -->
-                @if($user->business_license_path)
-                    <div class="mb-6">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Business Name</label>
-                        <div class="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3">
-                            <span class="text-gray-900">{{ $user->name }}</span>
+            <!-- USER TAB (layout matches buyer account tab) -->
+            <div id="content-user" class="tab-content hidden p-6" style="height: 100%; overflow-y: auto;">
+                <div class="mb-8">
+                    <div class="flex items-center gap-3 mb-1">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                            <span class="material-icons-round text-white text-xl">person</span>
                         </div>
-                        <p class="text-sm text-gray-500 mt-1">Cannot be changed</p>
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-900 tracking-tight">Account Information</h2>
+                            <p class="text-sm text-gray-500">Manage your profile, payouts, and security settings</p>
+                        </div>
                     </div>
-                @else
-                    <div class="mb-6">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-                        <div class="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3">
-                            <span class="text-gray-900">{{ $user->name }}</span>
-                        </div>
-                        <p class="text-sm text-gray-500 mt-1">Cannot be changed</p>
+                </div>
+
+                @if(session('success'))
+                    <div class="flex items-center gap-3 rounded-xl bg-emerald-50 border border-emerald-200/80 px-4 py-3 mb-6 text-emerald-800 shadow-sm">
+                        <span class="material-icons-round text-emerald-600 text-xl">check_circle</span>
+                        <span class="font-medium">{{ session('success') }}</span>
+                    </div>
+                @endif
+                @if($errors->any())
+                    <div class="flex items-start gap-3 rounded-xl bg-red-50 border border-red-200/80 px-4 py-3 mb-6 text-red-800 shadow-sm">
+                        <span class="material-icons-round text-red-600 text-xl flex-shrink-0">error</span>
+                        <ul class="list-disc list-inside text-sm">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
                     </div>
                 @endif
 
-                <!-- Email Address (editable with verification) -->
-                <div class="mb-6">
-                    @php $emailChangePending = session('email_change_pending') || (new \App\Services\EmailChangeVerificationService())->hasPendingChange($user); @endphp
-                    @if($emailChangePending)
-                        @php $pendingNew = session('email_change_new') ?? (new \App\Services\EmailChangeVerificationService())->getPendingNewEmail($user); @endphp
-                        <form method="POST" action="{{ route('seller.dashboard.update-email') }}" class="space-y-3">
-                            @csrf
-                            <input type="hidden" name="email" value="{{ $pendingNew }}">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Verify email change</label>
-                            <p class="text-sm text-gray-600">We sent a verification code to <strong>{{ $user->email }}</strong>. Enter it below to confirm the change to <strong>{{ $pendingNew }}</strong>.</p>
-                            <div class="flex flex-wrap items-end gap-3">
-                                <div class="flex-1 min-w-[140px] max-w-[200px]">
-                                    <input type="text" name="code" value="{{ old('code') }}" placeholder="000000" maxlength="6" pattern="[0-9]*" inputmode="numeric" required
-                                        class="w-full border border-gray-300 rounded-lg px-4 py-2.5 font-mono text-lg text-center tracking-widest focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                    @error('code')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
+                <div class="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden">
+                    <div class="p-6 md:p-8 space-y-6">
+                        @php
+                            $sellerDialRows = collect(config('phone_country_codes', []))->sortBy('label')->values();
+                            $sellerMatchRows = collect(config('phone_country_codes', []))->sortByDesc(fn ($r) => strlen((string) ($r['code'] ?? '')))->values();
+                            $sellerPhoneDigits = preg_replace('/\D/', '', (string) ($user->phone ?? ''));
+                            $sellerDefaultCountry = '1';
+                            $sellerDefaultNational = '';
+                            foreach ($sellerMatchRows as $row) {
+                                $cc = (string) ($row['code'] ?? '');
+                                if ($cc !== '' && $sellerPhoneDigits !== '' && str_starts_with($sellerPhoneDigits, $cc)) {
+                                    $sellerDefaultCountry = $cc;
+                                    $sellerDefaultNational = substr($sellerPhoneDigits, strlen($cc)) ?: '';
+                                    break;
+                                }
+                            }
+                            if ($sellerPhoneDigits !== '' && $sellerDefaultNational === '' && strlen($sellerPhoneDigits) >= 10) {
+                                $sellerDefaultCountry = '1';
+                                $sellerDefaultNational = strlen($sellerPhoneDigits) === 11 && str_starts_with($sellerPhoneDigits, '1')
+                                    ? substr($sellerPhoneDigits, 1)
+                                    : $sellerPhoneDigits;
+                            }
+                        @endphp
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Full Name / Business Name -->
+                            <div class="group">
+                                <label class="flex items-center gap-2 text-sm font-semibold text-gray-600 mb-2">
+                                    <span class="material-icons-round text-gray-400 text-lg group-focus-within:text-blue-600 transition-colors">badge</span>
+                                    @if($user->business_license_path)
+                                        Business Name
+                                    @else
+                                        Full Name
+                                    @endif
+                                </label>
+                                <div class="flex items-center gap-3 rounded-xl bg-slate-50/80 border border-gray-200 px-4 py-3.5">
+                                    <span class="material-icons-round text-gray-400 text-xl">person_outline</span>
+                                    <span class="text-gray-900 font-medium">{{ $user->name }}</span>
                                 </div>
-                                <button type="submit" class="px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200 font-medium">Confirm change</button>
+                                <p class="text-xs text-gray-400 mt-1.5">Display name on your account (cannot be changed here)</p>
                             </div>
-                            <p class="text-xs text-gray-500">Code expires in 15 minutes.</p>
-                        </form>
-                    @else
-                        <form method="POST" action="{{ route('seller.dashboard.update-email') }}" class="space-y-3">
-                            @csrf
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Registered Email Address</label>
-                            <div class="flex flex-wrap items-end gap-3">
-                                <div class="flex-1 min-w-[200px]">
-                                    <input type="email" name="email" value="{{ old('email', $user->email) }}" required
-                                        class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('email') border-red-500 @enderror">
-                                    @error('email')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
-                                </div>
-                                <button type="submit" class="px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200 font-medium">Send verification code</button>
-                            </div>
-                            <p class="text-sm text-gray-500">A code will be sent to your current email to approve the change.</p>
-                        </form>
-                    @endif
-                </div>
 
-                <!-- Phone Number (editable) -->
-                <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
-                    <form method="POST" action="{{ route('seller.dashboard.update-phone') }}" class="flex flex-wrap items-end gap-3">
-                        @csrf
-                        <div class="flex-1 min-w-[200px]">
-                            <input type="text" name="phone" value="{{ old('phone', $user->phone) }}" placeholder="Your phone number"
-                                class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('phone') border-red-500 @enderror">
-                            @error('phone')
-                                <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-                        <button type="submit" class="px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200 font-medium">
-                            Save
-                        </button>
-                    </form>
-                    <p class="text-sm text-gray-500 mt-1">Update your registered phone number</p>
-                </div>
+                            <!-- Phone -->
+                            <div class="group">
+                                <label class="flex items-center gap-2 text-sm font-semibold text-gray-600 mb-2">
+                                    <span class="material-icons-round text-gray-400 text-lg group-focus-within:text-blue-600 transition-colors">phone</span>
+                                    Phone Number
+                                    <span class="ml-1 text-[11px] font-semibold text-red-500 uppercase tracking-wide">(required to list)</span>
+                                </label>
+                                <div class="rounded-xl bg-slate-50/80 border border-gray-200 px-4 py-4 space-y-3">
+                                    <div class="flex items-center justify-between gap-3">
+                                        <div class="text-sm">
+                                            <p class="text-gray-500 text-xs mb-0.5">Current</p>
+                                            <p class="text-gray-900 font-medium" id="seller_dashboard_phone_display">{{ ($user->phone && $sellerPhoneDigits !== '') ? '+'.$sellerPhoneDigits : 'Not set' }}</p>
+                                        </div>
+                                        <div id="seller-dash-phone-verified-badge" class="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-semibold
+                                            {{ $user->phone_verified_at ? 'bg-green-50 text-green-700 border border-green-200' : 'hidden bg-yellow-50 text-yellow-700 border border-yellow-200' }}">
+                                            <svg class="w-3.5 h-3.5 mr-1" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                            </svg>
+                                            <span>{{ $user->phone_verified_at ? 'Verified' : 'Not verified' }}</span>
+                                        </div>
+                                    </div>
 
-                <!-- Account Type -->
-                <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Account Type</label>
-                    <div class="bg-gray-50 border border-gray-300 rounded-lg px-4 py-3">
-                        <span class="text-gray-900 font-semibold">
-                            {{ $user->business_license_path ? 'Business Seller' : 'Individual Seller' }}
-                        </span>
-                    </div>
-                </div>
-
-                <!-- Password Management -->
-                <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Password Management</label>
-                    <button onclick="showPasswordModal()" 
-                            class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-medium transition duration-200">
-                        Change Password
-                    </button>
-                    <p class="text-sm text-gray-500 mt-2">Password is not displayed.</p>
-                </div>
-
-                <!-- Uploaded Documents -->
-                <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-4">Uploaded Documents</label>
-                    @if($documents->count() > 0)
-                        <div class="space-y-4">
-                            @foreach($documents as $document)
-                                <div class="bg-gray-50 border border-gray-300 rounded-lg p-4">
-                                    <div class="flex items-center justify-between">
+                                    <div class="grid grid-cols-1 md:grid-cols-[minmax(10rem,14rem),minmax(0,1.5fr),auto] gap-3 items-end">
                                         <div>
-                                            <p class="font-medium text-gray-900">
-                                                @if($document->doc_type === 'business_license')
-                                                    Business License
-                                                @else
-                                                    {{ ucfirst(str_replace('_', ' ', $document->doc_type)) }}
+                                            <label class="block text-xs font-semibold text-gray-600 mb-1">Country / area code</label>
+                                            <select id="seller_dash_phone_country" class="w-full px-3 py-2.5 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm">
+                                                @foreach ($sellerDialRows as $row)
+                                                    <option value="{{ $row['code'] }}" @if((string)($row['code'] ?? '') === $sellerDefaultCountry) selected @endif>{{ $row['label'] }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="min-w-[180px]">
+                                            <label class="block text-xs font-semibold text-gray-600 mb-1">Phone Number</label>
+                                            <input type="tel" id="seller_dash_phone_input" value="{{ old('seller_phone_local', $sellerDefaultNational) }}"
+                                                placeholder="National number (no country code)"
+                                                class="w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                                inputmode="numeric" pattern="[0-9]*" maxlength="15" autocomplete="tel-national">
+                                        </div>
+                                        <div class="flex md:block">
+                                            <button type="button" id="seller-dash-send-code-btn"
+                                                class="w-full md:w-auto px-4 py-2.5 rounded-xl bg-gray-200 text-gray-800 text-sm font-semibold hover:bg-gray-300 transition whitespace-nowrap">
+                                                Send code
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" id="seller_dash_phone_full" value="">
+
+                                    <div id="seller-dash-phone-verify-row" class="grid grid-cols-1 md:grid-cols-[minmax(0,1.5fr),auto] gap-3 items-end hidden">
+                                        <div>
+                                            <label class="block text-xs font-semibold text-gray-600 mb-1">Verification code</label>
+                                            <input type="text" id="seller_dash_phone_code_input" placeholder="6-digit code" maxlength="6" inputmode="numeric" pattern="[0-9]*"
+                                                class="w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+                                            <p class="text-[11px] text-gray-500 mt-1">Code expires in 5 minutes.</p>
+                                        </div>
+                                        <div class="flex md:block">
+                                            <button type="button" id="seller-dash-verify-phone-btn"
+                                                class="w-full md:w-auto px-4 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition whitespace-nowrap">
+                                                Verify &amp; Save
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    @if(!$user->phone || !$user->phone_verified_at)
+                                        <p class="text-[11px] text-red-500 mt-1.5">
+                                            You must add and verify a phone number before you can submit listings.
+                                        </p>
+                                    @else
+                                        <p class="text-[11px] text-gray-400 mt-1.5">
+                                            Verified phone is used for security, payouts, and pickup coordination.
+                                        </p>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <!-- Account Type -->
+                            <div class="group">
+                                <label class="flex items-center gap-2 text-sm font-semibold text-gray-600 mb-2">
+                                    <span class="material-icons-round text-gray-400 text-lg">workspace_premium</span>
+                                    Account Type
+                                </label>
+                                <div class="flex items-center gap-3 rounded-xl bg-slate-50/80 border border-gray-200 px-4 py-3.5">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-semibold bg-blue-100 text-blue-800">
+                                        {{ $user->business_license_path ? 'Business Seller' : 'Individual Seller' }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Uploaded Documents -->
+                        <div class="pt-2 border-t border-gray-100">
+                            <label class="flex items-center gap-2 text-sm font-semibold text-gray-600 mb-3">
+                                <span class="material-icons-round text-gray-400 text-lg">folder_open</span>
+                                Uploaded Documents
+                            </label>
+                            @if(isset($documents) && $documents->count() > 0)
+                                <div class="space-y-3">
+                                    @foreach($documents as $document)
+                                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 rounded-xl bg-slate-50/80 border border-gray-200 px-4 py-3">
+                                            <div>
+                                                <span class="text-gray-900 font-medium">
+                                                    @if($document->doc_type === 'business_license')
+                                                        Business License
+                                                    @else
+                                                        {{ ucfirst(str_replace('_', ' ', $document->doc_type ?? 'Document')) }}
+                                                    @endif
+                                                </span>
+                                                @if($user->relationship_to_business && $document->doc_type === 'business_license')
+                                                    <p class="text-xs text-gray-500 mt-1">
+                                                        Relationship: {{ ucfirst(str_replace('_', ' ', $user->relationship_to_business)) }}
+                                                    </p>
                                                 @endif
-                                            </p>
-                                            @if($user->relationship_to_business && $document->doc_type === 'business_license')
-                                                <p class="text-sm text-gray-600 mt-1">
-                                                    Relationship: {{ ucfirst(str_replace('_', ' ', $user->relationship_to_business)) }}
-                                                </p>
+                                            </div>
+                                            @if($document->path ?? null)
+                                                <a href="{{ asset('storage/' . $document->path) }}" target="_blank" rel="noopener" class="text-blue-600 hover:text-blue-800 text-sm font-medium shrink-0">View</a>
+                                            @else
+                                                <span class="text-gray-400 text-sm">—</span>
                                             @endif
                                         </div>
-                                        @if($document->path)
-                                            <a href="{{ asset('storage/' . $document->path) }}" 
-                                               target="_blank" 
-                                               class="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                                                View
-                                            </a>
-                                        @endif
-                                    </div>
+                                    @endforeach
                                 </div>
-                            @endforeach
+                                <p class="text-xs text-gray-400 mt-2">Documents uploaded during registration. To update, contact support.</p>
+                            @else
+                                <div class="rounded-xl border-2 border-dashed border-gray-200 bg-gray-50/50 p-6 text-center">
+                                    <p class="text-gray-500 text-sm">No documents uploaded yet.</p>
+                                </div>
+                            @endif
                         </div>
-                        <p class="text-sm text-gray-500 mt-4">Documents are view-only.</p>
-                    @else
-                        <div class="bg-gray-50 border border-gray-300 rounded-lg p-6 text-center">
-                            <p class="text-gray-500">No documents uploaded yet.</p>
-                        </div>
-                    @endif
-                </div>
 
-                <!-- Payout Settings -->
-                <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-4">Payout Settings</label>
-                    @if($payoutMethod)
-                        <div class="bg-gray-50 border border-gray-300 rounded-lg p-4 mb-4">
-                            <div class="space-y-2">
-                                <p><span class="font-medium">Bank Name:</span> {{ $payoutMethod->bank_name }}</p>
-                                <p><span class="font-medium">Account Holder:</span> {{ $payoutMethod->account_holder_name }}</p>
-                                <p><span class="font-medium">Account Number:</span> ****{{ substr($payoutMethod->account_number, -4) }}</p>
-                                @if($payoutMethod->routing_number)
-                                    <p><span class="font-medium">Routing Number:</span> ****{{ substr($payoutMethod->routing_number, -4) }}</p>
-                                @endif
+                        <!-- Email -->
+                        <div class="pt-2 border-t border-gray-100">
+                            @php $emailChangePending = session('email_change_pending') || (new \App\Services\EmailChangeVerificationService())->hasPendingChange($user); @endphp
+                            @if($emailChangePending)
+                                @php $pendingNew = session('email_change_new') ?? (new \App\Services\EmailChangeVerificationService())->getPendingNewEmail($user); @endphp
+                                <form method="POST" action="{{ route('seller.dashboard.update-email') }}" class="group">
+                                    @csrf
+                                    <input type="hidden" name="email" value="{{ $pendingNew }}">
+                                    <label class="flex items-center gap-2 text-sm font-semibold text-gray-600 mb-2">
+                                        <span class="material-icons-round text-gray-400 text-lg">mail</span>
+                                        Verify email change
+                                    </label>
+                                    <p class="text-sm text-gray-600 mb-3">We sent a verification code to <strong>{{ $user->email }}</strong>. Enter it below to confirm the change to <strong>{{ $pendingNew }}</strong>.</p>
+                                    <div class="flex flex-col sm:flex-row gap-3">
+                                        <div class="flex-1 max-w-[200px]">
+                                            <input type="text" name="code" value="{{ old('code') }}" placeholder="000000" maxlength="6" pattern="[0-9]*" inputmode="numeric" required
+                                                class="w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-gray-900 font-mono text-xl text-center tracking-widest placeholder-gray-400 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all">
+                                            @error('code')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
+                                        </div>
+                                        <button type="submit" class="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3.5 rounded-xl font-semibold shadow-lg shadow-blue-600/20 hover:shadow-blue-600/30 transition-all duration-200">
+                                            <span class="material-icons-round text-lg">check_circle</span>
+                                            Confirm change
+                                        </button>
+                                    </div>
+                                    <p class="text-xs text-gray-400 mt-1.5">Code expires in 15 minutes. <a href="{{ route('seller.account') }}" class="text-blue-600 hover:underline">Cancel</a></p>
+                                </form>
+                            @else
+                                <form method="POST" action="{{ route('seller.dashboard.update-email') }}" class="group">
+                                    @csrf
+                                    <label class="flex items-center gap-2 text-sm font-semibold text-gray-600 mb-2">
+                                        <span class="material-icons-round text-gray-400 text-lg group-focus-within:text-blue-600 transition-colors">mail</span>
+                                        Email Address
+                                    </label>
+                                    <div class="flex flex-col sm:flex-row gap-3">
+                                        <div class="flex-1">
+                                            <input type="email" name="email" value="{{ old('email', $user->email) }}" required
+                                                class="w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-gray-900 font-medium placeholder-gray-400 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all @error('email') border-red-500 @enderror">
+                                            @error('email')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
+                                        </div>
+                                        <button type="submit" class="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3.5 rounded-xl font-semibold shadow-lg shadow-blue-600/20 hover:shadow-blue-600/30 transition-all duration-200">
+                                            <span class="material-icons-round text-lg">send</span>
+                                            Send verification code
+                                        </button>
+                                    </div>
+                                    <p class="text-xs text-gray-400 mt-1.5">A code will be sent to your current email to approve the change.</p>
+                                </form>
+                            @endif
+                        </div>
+
+                        <!-- Password -->
+                        <div class="pt-2 border-t border-gray-100">
+                            <div class="group">
+                                <label class="flex items-center gap-2 text-sm font-semibold text-gray-600 mb-2">
+                                    <span class="material-icons-round text-gray-400 text-lg">lock</span>
+                                    Password
+                                </label>
+                                <div class="rounded-xl border-2 border-dashed border-gray-200 bg-gray-50/50 p-4">
+                                    <p class="text-sm text-gray-500 mb-3">Your password is encrypted and never displayed.</p>
+                                    <button type="button" onclick="showPasswordModal()"
+                                        class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl border-2 border-gray-300 bg-white text-gray-700 font-semibold hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50/50 transition-all duration-200">
+                                        <span class="material-icons-round text-lg">key</span>
+                                        Change Password
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                    @endif
-                    <button onclick="showPayoutModal()" 
-                            class="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition duration-200">
-                        {{ $payoutMethod ? 'Update Payout Settings' : 'Add Payout Settings' }}
-                    </button>
-                    <p class="text-sm text-gray-500 mt-2">Payout details must be entered before any earnings can be released.</p>
+
+                        <!-- Payout (seller-only; styled to match card sections) -->
+                        <div class="pt-2 border-t border-gray-100">
+                            <label class="flex items-center gap-2 text-sm font-semibold text-gray-600 mb-3">
+                                <span class="material-icons-round text-gray-400 text-lg">account_balance_wallet</span>
+                                Payout Settings
+                            </label>
+                            @if($payoutMethod)
+                                <div class="rounded-xl bg-slate-50/80 border border-gray-200 px-4 py-3.5 mb-4 space-y-2 text-sm text-gray-700">
+                                    <p><span class="font-semibold text-gray-900">Bank:</span> {{ $payoutMethod->bank_name }}</p>
+                                    <p><span class="font-semibold text-gray-900">Account holder:</span> {{ $payoutMethod->account_holder_name }}</p>
+                                    <p><span class="font-semibold text-gray-900">Account number:</span> ****{{ substr($payoutMethod->account_number, -4) }}</p>
+                                    @if($payoutMethod->routing_number)
+                                        <p><span class="font-semibold text-gray-900">Routing number:</span> ****{{ substr($payoutMethod->routing_number, -4) }}</p>
+                                    @endif
+                                </div>
+                            @endif
+                            <button type="button" onclick="showPayoutModal()"
+                                class="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3.5 rounded-xl font-semibold shadow-lg shadow-blue-600/20 hover:shadow-blue-600/30 transition-all duration-200">
+                                <span class="material-icons-round text-lg">payments</span>
+                                {{ $payoutMethod ? 'Update payout settings' : 'Add payout settings' }}
+                            </button>
+                            <p class="text-xs text-gray-400 mt-2">Payout details must be on file before earnings can be released.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -1182,42 +1310,24 @@
 
             <!-- MESSAGING CENTER TAB -->
             <div id="content-messaging" class="tab-content hidden p-6">
-                <h2 class="text-xl font-bold text-gray-900 mb-6">Messaging Center</h2>
-                <p class="text-gray-600 mb-4">Post-payment pickup coordination threads with buyers.</p>
-
-                @if($messagingThreads->count() > 0)
-                    <div class="space-y-4">
-                        @foreach($messagingThreads as $thread)
-                            <div class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition duration-200">
-                                <div class="flex items-center space-x-4">
-                                    <div class="h-20 w-20 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
-                                        @if($thread->listing->images->first())
-                                            <img src="{{ asset('storage/' . $thread->listing->images->first()->image_path) }}" 
-                                                 alt="{{ $thread->listing->make }} {{ $thread->listing->model }}" 
-                                                 class="w-full h-full object-cover">
-                                        @endif
-                                    </div>
-                                    <div class="flex-1">
-                                        <h3 class="text-lg font-semibold text-gray-900">
-                                            {{ $thread->listing->year }} {{ $thread->listing->make }} {{ $thread->listing->model }}
-                                        </h3>
-                                        <p class="text-sm text-gray-600">Buyer: {{ $thread->buyer->name }}</p>
-                                    </div>
-                                    <div>
-                                        <a href="{{ route('post-auction.thread', $thread->invoice->id) }}" 
-                                           class="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition duration-200">
-                                            View Thread
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        @endforeach
+                <h2 class="text-xl font-bold text-gray-900 mb-2">Messaging Center</h2>
+                <p class="text-gray-600 mb-6">Post-payment pickup coordination with buyers.</p>
+                <div class="bg-gradient-to-br from-blue-50 via-white to-teal-50 border-2 border-teal-200 rounded-2xl p-8 text-center">
+                    <div class="w-16 h-16 bg-teal-600 rounded-2xl flex items-center justify-center mx-auto mb-4" style="background-color:#0d9488;">
+                        <span class="material-icons-round text-white" style="font-size: 2rem;">forum</span>
                     </div>
-                @else
-                    <div class="text-center py-12 bg-gray-50 rounded-lg">
-                        <p class="text-gray-500 text-lg">No messaging threads available. Messaging Center unlocks after payment is completed.</p>
-                    </div>
-                @endif
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">All your sales in one place</h3>
+                    <p class="text-sm text-gray-600 max-w-md mx-auto mb-6">
+                        Send pickup schedules, respond to buyer requests, and confirm pickup with the buyer's PIN.
+                        @if(($messagingThreads ?? collect())->count() > 0)
+                            You currently have <strong class="text-gray-900">{{ $messagingThreads->count() }}</strong> active sale{{ $messagingThreads->count() === 1 ? '' : 's' }}.
+                        @endif
+                    </p>
+                    <a href="{{ route('messaging.index') }}" class="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white font-semibold px-6 py-3 rounded-xl shadow-lg shadow-teal-600/30 transition" style="background-color:#0d9488; color:#fff;">
+                        Open Messaging Center
+                        <span class="material-icons-round" style="font-size: 1.1rem;">arrow_forward</span>
+                    </a>
+                </div>
             </div>
 
             <!-- CUSTOMER SUPPORT TAB -->
@@ -1655,6 +1765,111 @@ document.addEventListener('DOMContentLoaded', function() {
         // Initialize charts with delay in case user switches to dashboard
         setTimeout(initializeCharts, 100);
     }
+
+    // Seller account: phone SMS verification (country code + national number)
+    (function() {
+        var sendBtn = document.getElementById('seller-dash-send-code-btn');
+        var verifyBtn = document.getElementById('seller-dash-verify-phone-btn');
+        var phoneInput = document.getElementById('seller_dash_phone_input');
+        var countrySelect = document.getElementById('seller_dash_phone_country');
+        var phoneFull = document.getElementById('seller_dash_phone_full');
+        var codeInput = document.getElementById('seller_dash_phone_code_input');
+        var verifyRow = document.getElementById('seller-dash-phone-verify-row');
+        var verifiedBadge = document.getElementById('seller-dash-phone-verified-badge');
+        var phoneDisplay = document.getElementById('seller_dashboard_phone_display');
+        if (!sendBtn || !verifyBtn || !phoneInput || !countrySelect) return;
+
+        var csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ||
+            document.querySelector('input[name="_token"]')?.value || '';
+        var sendUrl = '{{ route("registration.phone.send-code") }}';
+        var verifyUrl = '{{ route("registration.phone.verify") }}';
+
+        function getFullPhone() {
+            var code = (countrySelect && countrySelect.value) ? String(countrySelect.value).trim() : '';
+            var num = (phoneInput && phoneInput.value) ? String(phoneInput.value).trim().replace(/^0+/, '') : '';
+            if (!code || !num) return '';
+            return '+' + code + num;
+        }
+
+        function setFullPhoneInput() {
+            if (phoneFull) phoneFull.value = getFullPhone();
+        }
+
+        sendBtn.addEventListener('click', function() {
+            var phone = getFullPhone();
+            if (!phone) {
+                alert('Please select your country code and enter your phone number (without the country prefix).');
+                return;
+            }
+            setFullPhoneInput();
+            sendBtn.disabled = true;
+            sendBtn.textContent = 'Sending…';
+            fetch(sendUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ phone: phone })
+            }).then(function(r) { return r.json(); }).then(function(data) {
+                sendBtn.disabled = false;
+                sendBtn.textContent = 'Send code';
+                if (data.success) {
+                    if (verifyRow) verifyRow.classList.remove('hidden');
+                    if (codeInput) { codeInput.value = ''; codeInput.focus(); }
+                    alert(data.message || 'Verification code sent. It expires in 5 minutes.');
+                } else {
+                    alert(data.message || 'Could not send SMS. Please check the number and try again.');
+                }
+            }).catch(function() {
+                sendBtn.disabled = false;
+                sendBtn.textContent = 'Send code';
+                alert('Something went wrong while sending SMS. Please try again.');
+            });
+        });
+
+        verifyBtn.addEventListener('click', function() {
+            var phone = getFullPhone();
+            var code = codeInput ? codeInput.value.trim() : '';
+            if (!phone || !code) {
+                alert('Please enter the 6-digit code from your SMS.');
+                return;
+            }
+            verifyBtn.disabled = true;
+            verifyBtn.textContent = 'Verifying…';
+            fetch(verifyUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ phone: phone, code: code })
+            }).then(function(r) { return r.json(); }).then(function(data) {
+                verifyBtn.disabled = false;
+                verifyBtn.textContent = 'Verify & Save';
+                if (data.success) {
+                    var digits = String(data.phone || '').replace(/\D/g, '');
+                    if (phoneDisplay) phoneDisplay.textContent = digits ? ('+' + digits) : phone;
+                    if (verifiedBadge) {
+                        verifiedBadge.classList.remove('hidden');
+                        verifiedBadge.classList.remove('bg-yellow-50', 'text-yellow-700', 'border-yellow-200');
+                        verifiedBadge.classList.add('bg-green-50', 'text-green-700', 'border-green-200');
+                        var span = verifiedBadge.querySelector('span');
+                        if (span) span.textContent = 'Verified';
+                    }
+                    alert(data.message || 'Phone number verified and saved to your account.');
+                } else {
+                    alert(data.message || 'Verification failed. Please check the code and try again.');
+                }
+            }).catch(function() {
+                verifyBtn.disabled = false;
+                verifyBtn.textContent = 'Verify & Save';
+                alert('Verification failed. Please try again.');
+            });
+        });
+    })();
 });
 
 // Auction Section Navigation

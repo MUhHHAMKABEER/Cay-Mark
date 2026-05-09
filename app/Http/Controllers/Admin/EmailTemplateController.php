@@ -228,8 +228,18 @@ class EmailTemplateController extends Controller
 
         $templatesWithData = [
             'auction-won-invoice' => ['invoice' => $invoice],
-            'payment-successful' => ['invoice' => $invoice],
-            'payment-successful-invoice' => ['invoice' => $invoice],
+            'payment-successful' => [
+                'invoice' => $invoice,
+                'buyer' => $user,
+                'payment' => $payment,
+                'pickup_code' => 'CM-8392',
+                'messaging_center_url' => url('/messaging/thread/1'),
+            ],
+            'payment-successful-invoice' => [
+                'invoice' => $invoice,
+                'pickup_code' => 'CM-8392',
+                'messaging_center_url' => url('/messaging/thread/1'),
+            ],
             'payment-reminder-6hours' => ['invoice' => $invoice],
             'payment-reminder-24hours' => ['invoice' => $invoice],
             'payment-reminder-48hours' => ['invoice' => $invoice],

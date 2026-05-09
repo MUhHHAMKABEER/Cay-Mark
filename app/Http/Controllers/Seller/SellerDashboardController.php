@@ -15,7 +15,6 @@ use App\Http\Requests\SellerDashboardUpdatePayoutRequest;
 use App\Http\Requests\SellerDashboardChangePasswordRequest;
 use App\Http\Requests\SellerDashboardConfirmPickupRequest;
 use App\Http\Requests\SellerDashboardUpdateEmailRequest;
-use App\Http\Requests\SellerDashboardUpdatePhoneRequest;
 use App\Services\EmailChangeVerificationService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
@@ -123,17 +122,6 @@ class SellerDashboardController extends Controller
         }
         return back()->with('success', 'A verification code has been sent to your current email address. Enter the code below to confirm the change.')
             ->with('email_change_pending', true)->with('email_change_new', $request->input('email'));
-    }
-
-    /**
-     * Update phone number
-     */
-    public function updatePhone(SellerDashboardUpdatePhoneRequest $request)
-    {
-        $request->user()->update([
-            'phone' => $request->input('phone') ?: null,
-        ]);
-        return back()->with('success', 'Phone number updated successfully.');
     }
 
     /**

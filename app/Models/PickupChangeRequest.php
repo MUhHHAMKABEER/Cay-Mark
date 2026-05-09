@@ -9,12 +9,19 @@ class PickupChangeRequest extends Model
 {
     use HasFactory;
 
+    public const TYPE_DATE_TIME = 'date_time';
+
+    public const TYPE_LOCATION = 'location';
+
     protected $fillable = [
         'thread_id',
         'pickup_detail_id',
         'buyer_id',
+        'request_type',
         'requested_pickup_date',
         'requested_pickup_time',
+        'requested_location',
+        'additional_notes',
         'status',
         'countered_pickup_date',
         'countered_pickup_time',
@@ -31,33 +38,26 @@ class PickupChangeRequest extends Model
         'responded_at' => 'datetime',
     ];
 
-    /**
-     * Change request belongs to thread
-     */
     public function thread()
     {
         return $this->belongsTo(PostAuctionThread::class, 'thread_id');
     }
 
-    /**
-     * Change request belongs to pickup detail
-     */
     public function pickupDetail()
     {
         return $this->belongsTo(PickupDetail::class, 'pickup_detail_id');
     }
 
-    /**
-     * Change request belongs to buyer
-     */
     public function buyer()
     {
         return $this->belongsTo(User::class, 'buyer_id');
     }
 
-    /**
-     * Approve the change request
-     */
+    public function isLocationRequest(): bool
+    {
+        return $this->request_type === self::TYPE_LOCATION;
+    }
+
     public function approve(): void
     {
         $this->update([
@@ -65,23 +65,38 @@ class PickupChangeRequest extends Model
             'responded_at' => now(),
         ]);
 
-        // Update pickup detail with new date/time
-        $this->pickupDetail->update([
-            'pickup_date' => $this->requested_pickup_date ?? $this->pickupDetail->pickup_date,
-            'pickup_time' => $this->requested_pickup_time ?? $this->pickupDetail->pickup_time,
+        $detail = $this->pickupDetail;
+        if (! $detail) {
+            return;
+        }
+
+        $payload = [
+            'pickup_date' => $this->requested_pickup_date ?? $detail->pickup_date,
+            'pickup_time' => $this->requested_pickup_time ?? $detail->pickup_time,
             'status' => 'confirmed',
-        ]);
+        ];
+
+        if ($this->isLocationRequest() && ! empty($this->requested_location)) {
+            $payload['street_address'] = $this->requested_location;
+        }
+
+        $detail->update($payload);
     }
 
-    /**
-     * Counter with new date/time
-     */
     public function counter($date, $time): void
     {
         $this->update([
             'status' => 'countered',
             'countered_pickup_date' => $date,
             'countered_pickup_time' => $time,
+            'responded_at' => now(),
+        ]);
+    }
+
+    public function reject(): void
+    {
+        $this->update([
+            'status' => 'rejected',
             'responded_at' => now(),
         ]);
     }

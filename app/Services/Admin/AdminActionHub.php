@@ -136,11 +136,17 @@ class AdminActionHub
         AdminActivityLog::log('payment.status_updated', 'payment', (int) $payment->id, ['status' => $oldStatus], ['status' => $request->status]);
 
         if ($request->status === 'completed' && $payment->invoice) {
+            $inv = $payment->invoice->loadMissing('listing');
+            $pickupCode = $inv->listing?->pickupCodeDisplay();
+            $messagingCenterUrl = route('messaging.thread.show', $inv->id);
+
             try {
                 \Mail::send('emails.caymark.payment-successful', [
-                    'invoice' => $payment->invoice,
+                    'invoice' => $inv,
                     'buyer' => $payment->user,
                     'payment' => $payment,
+                    'pickup_code' => $pickupCode,
+                    'messaging_center_url' => $messagingCenterUrl,
                 ], function ($message) use ($payment) {
                     $message->to($payment->user->email, $payment->user->name)
                         ->subject('Payment Successful – ' . ($payment->invoice->item_name ?? '[VEHICLE_NAME]'));

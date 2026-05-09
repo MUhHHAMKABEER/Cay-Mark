@@ -222,6 +222,20 @@
                             <span class="inline-block bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">
                                 WON
                             </span>
+                            <div class="mt-4 flex flex-col gap-2">
+                                <a href="{{ route('buyer.purchase.show', $invoice) }}" class="block w-full text-center px-4 py-2 rounded-lg font-medium text-sm bg-white border-2 border-blue-600 text-blue-700 hover:bg-blue-50 transition">
+                                    View purchase &amp; pickup code
+                                </a>
+                                @if(($invoice->payment_status ?? '') === 'paid')
+                                    <a href="{{ route('messaging.thread.show', $invoice->id) }}" class="block w-full text-center px-4 py-2 rounded-lg font-medium text-sm bg-blue-600 text-white hover:bg-blue-700 transition">
+                                        Messaging Center
+                                    </a>
+                                @elseif(($invoice->payment_status ?? '') !== 'paid')
+                                    <a href="{{ route('buyer.payment.checkout-single', $invoice->id) }}" class="block w-full text-center px-4 py-2 rounded-lg font-medium text-sm bg-amber-500 text-white hover:bg-amber-600 transition">
+                                        Complete payment
+                                    </a>
+                                @endif
+                            </div>
                         </div>
                     </div>
                 @endforeach

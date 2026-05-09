@@ -54,6 +54,10 @@ return [
         'sid' => env('TWILIO_SID'),
         'token' => env('TWILIO_AUTH_TOKEN'),
         'from' => env('TWILIO_FROM'),
+        // Path to cacert.pem (e.g. from https://curl.se/ca/cacert.pem) — fixes Windows/WAMP cURL "unable to get local issuer certificate"
+        'cainfo' => env('TWILIO_CAINFO'),
+        // Local only: bypass SSL verify for Twilio API (insecure; never enable in production)
+        'insecure_skip_verify' => filter_var(env('TWILIO_INSECURE_SSL_SKIP_VERIFY', false), FILTER_VALIDATE_BOOLEAN),
     ],
 
 ];

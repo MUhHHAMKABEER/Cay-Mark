@@ -38,7 +38,7 @@ class RegisteredUserController extends Controller
      */
     public function sendPhoneVerificationCode(Request $request)
     {
-        $request->validate(['phone' => 'required|string|max:20']);
+        $request->validate(['phone' => 'required|string|max:32']);
         $phone = preg_replace('/\D/', '', trim($request->phone));
         if (strlen($phone) < 10) {
             return response()->json(['success' => false, 'message' => 'Invalid phone number.']);
@@ -64,7 +64,7 @@ class RegisteredUserController extends Controller
      */
     public function verifyPhoneCode(Request $request)
     {
-        $request->validate(['phone' => 'required|string|max:20', 'code' => 'required|string|size:6']);
+        $request->validate(['phone' => 'required|string|max:32', 'code' => 'required|string|size:6']);
         $phone = preg_replace('/\D/', '', trim($request->phone));
         $code = preg_replace('/\D/', '', trim($request->code));
         $user = $request->user();
@@ -95,7 +95,7 @@ class RegisteredUserController extends Controller
      */
     public function sendGuestPhoneCode(Request $request)
     {
-        $request->validate(['phone' => 'required|string|max:20']);
+        $request->validate(['phone' => 'required|string|max:32']);
         $phone = preg_replace('/\D/', '', trim($request->phone));
         if (strlen($phone) < 10) {
             return response()->json(['success' => false, 'message' => 'Invalid phone number.']);
@@ -121,7 +121,7 @@ class RegisteredUserController extends Controller
      */
     public function verifyGuestPhoneCode(Request $request)
     {
-        $request->validate(['phone' => 'required|string|max:20', 'code' => 'required|string|size:6']);
+        $request->validate(['phone' => 'required|string|max:32', 'code' => 'required|string|size:6']);
         $phone = preg_replace('/\D/', '', trim($request->phone));
         $code = preg_replace('/\D/', '', trim($request->code));
         $sessionId = $request->session()->getId();

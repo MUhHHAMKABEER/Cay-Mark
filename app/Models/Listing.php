@@ -370,6 +370,26 @@ public function invoices()
     }
 
     /**
+     * Format stored pickup PIN for buyer-facing copy (e.g. CM-0839).
+     */
+    public static function formatPickupPinForBuyer(?string $pin): ?string
+    {
+        if ($pin === null || $pin === '') {
+            return null;
+        }
+
+        return 'CM-' . str_pad((string) $pin, 4, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Buyer-facing pickup code for UI and email, or null if no active PIN.
+     */
+    public function pickupCodeDisplay(): ?string
+    {
+        return static::formatPickupPinForBuyer($this->pickup_pin);
+    }
+
+    /**
      * Verify pickup PIN (per PDF requirements).
      * PINs are single-use only and expire after successful validation.
      */
@@ -753,14 +773,6 @@ public function invoices()
             $listing->cover_photo_id = $coverId;
         }
 
-        // Handle video upload
-        if ($request->hasFile('video')) {
-            $video = $request->file('video');
-            $videoName = 'VIDEO_' . $listing->id . '_' . microtime(true) . '.' . $video->getClientOriginalExtension();
-            $video->move(public_path('uploads/listings'), $videoName);
-            $listing->video_path = $videoName;
-        }
-
         $listing->save();
 
         return $listing;
@@ -813,13 +825,6 @@ public function invoices()
 
         if ($request->hasFile('cover_photo') || $request->hasFile('photos')) {
             $this->replaceImages($request);
-        }
-
-        if ($request->hasFile('video')) {
-            $video = $request->file('video');
-            $videoName = 'VIDEO_' . $this->id . '_' . microtime(true) . '.' . $video->getClientOriginalExtension();
-            $video->move(public_path('uploads/listings'), $videoName);
-            $this->update(['video_path' => $videoName]);
         }
     }
 

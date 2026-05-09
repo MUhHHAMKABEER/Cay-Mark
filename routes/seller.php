@@ -34,8 +34,6 @@ Route::prefix('seller')->name('seller.')->middleware(['auth', 'seller'])->group(
         ->name('dashboard.change-password');
     Route::post('/dashboard/update-email', [App\Http\Controllers\Seller\SellerDashboardController::class, 'updateEmail'])
         ->name('dashboard.update-email');
-    Route::post('/dashboard/update-phone', [App\Http\Controllers\Seller\SellerDashboardController::class, 'updatePhone'])
-        ->name('dashboard.update-phone');
     Route::post('/dashboard/confirm-pickup/{listingId}', [App\Http\Controllers\Seller\SellerDashboardController::class, 'confirmPickup'])
         ->name('dashboard.confirm-pickup');
 

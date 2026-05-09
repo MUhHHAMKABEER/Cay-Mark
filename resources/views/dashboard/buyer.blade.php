@@ -142,6 +142,27 @@
                             </div>
 
                             <!-- Phone Number (required to bid, with SMS verification like register page) -->
+                            @php
+                                $buyerDialRows = collect(config('phone_country_codes', []))->sortBy('label')->values();
+                                $buyerMatchRows = collect(config('phone_country_codes', []))->sortByDesc(fn ($r) => strlen((string) ($r['code'] ?? '')))->values();
+                                $buyerPhoneDigits = preg_replace('/\D/', '', (string) ($user->phone ?? ''));
+                                $dashPhoneCountry = '1';
+                                $dashPhoneNational = '';
+                                foreach ($buyerMatchRows as $row) {
+                                    $cc = (string) ($row['code'] ?? '');
+                                    if ($cc !== '' && $buyerPhoneDigits !== '' && str_starts_with($buyerPhoneDigits, $cc)) {
+                                        $dashPhoneCountry = $cc;
+                                        $dashPhoneNational = substr($buyerPhoneDigits, strlen($cc)) ?: '';
+                                        break;
+                                    }
+                                }
+                                if ($buyerPhoneDigits !== '' && $dashPhoneNational === '' && strlen($buyerPhoneDigits) >= 10) {
+                                    $dashPhoneCountry = '1';
+                                    $dashPhoneNational = strlen($buyerPhoneDigits) === 11 && str_starts_with($buyerPhoneDigits, '1')
+                                        ? substr($buyerPhoneDigits, 1)
+                                        : $buyerPhoneDigits;
+                                }
+                            @endphp
                             <div class="group">
                                 <label class="flex items-center gap-2 text-sm font-semibold text-gray-600 mb-2">
                                     <span class="material-icons-round text-gray-400 text-lg group-focus-within:text-blue-600 transition-colors">phone</span>
@@ -152,7 +173,7 @@
                                     <div class="flex items-center justify-between gap-3">
                                         <div class="text-sm">
                                             <p class="text-gray-500 text-xs mb-0.5">Current</p>
-                                            <p class="text-gray-900 font-medium" id="dashboard_phone_display">{{ $user->phone ?? 'Not set' }}</p>
+                                            <p class="text-gray-900 font-medium" id="dashboard_phone_display">{{ ($user->phone && $buyerPhoneDigits !== '') ? '+'.$buyerPhoneDigits : ($user->phone ?? 'Not set') }}</p>
                                         </div>
                                         <div id="dash-phone-verified-badge" class="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-semibold
                                             {{ $user->phone_verified_at ? 'bg-green-50 text-green-700 border border-green-200' : 'hidden bg-yellow-50 text-yellow-700 border border-yellow-200' }}">
@@ -163,20 +184,18 @@
                                         </div>
                                     </div>
 
-                                    <div class="grid grid-cols-1 md:grid-cols-[auto,minmax(0,1.5fr),auto] gap-3 items-end">
-                                        <div class="w-32">
-                                            <label class="block text-xs font-semibold text-gray-600 mb-1">Country</label>
-                                            @php
-                                                $dashPhoneCountry = '1';
-                                            @endphp
+                                    <div class="grid grid-cols-1 md:grid-cols-[minmax(10rem,14rem),minmax(0,1.5fr),auto] gap-3 items-end">
+                                        <div>
+                                            <label class="block text-xs font-semibold text-gray-600 mb-1">Country / area code</label>
                                             <select id="dash_phone_country" class="w-full px-3 py-2.5 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm">
-                                                <option value="1" @if($dashPhoneCountry === '1') selected @endif>+1</option>
-                                                <option value="92" @if($dashPhoneCountry === '92') selected @endif>+92</option>
+                                                @foreach ($buyerDialRows as $row)
+                                                    <option value="{{ $row['code'] }}" @if((string)($row['code'] ?? '') === $dashPhoneCountry) selected @endif>{{ $row['label'] }}</option>
+                                                @endforeach
                                             </select>
                                         </div>
                                         <div class="min-w-[180px]">
                                             <label class="block text-xs font-semibold text-gray-600 mb-1">Phone Number</label>
-                                            <input type="tel" id="dash_phone_input" placeholder="e.g. 2425551234"
+                                            <input type="tel" id="dash_phone_input" value="{{ $dashPhoneNational }}" placeholder="National number (no country code)"
                                                 class="w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                                                 inputmode="numeric" pattern="[0-9]*" maxlength="15">
                                         </div>
@@ -433,7 +452,7 @@
                             </div>
                             <h3 class="text-lg font-bold text-gray-900 mb-2">No Active Bids</h3>
                             <p class="text-gray-500 text-sm max-w-sm mx-auto mb-4">You don't have any active bids at the moment. Start bidding on auctions to see them here.</p>
-                            <a href="{{ route('buyer.auctions') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-all">
+                            <a href="{{ route('Auction.index') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-all">
                                 <span class="material-icons-round text-lg">search</span>
                                 Browse Auctions
                             </a>
@@ -446,7 +465,13 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             @foreach($wonAuctions as $listing)
                                 @php
-                                    $statusText = ($listing->payment_status ?? null) === 'paid' ? 'Purchase Complete' : 'Payment Pending';
+                                    if (($listing->payment_status ?? null) === 'paid') {
+                                        $statusText = 'Purchase Complete';
+                                    } elseif (($listing->payment_status ?? null) === 'awaiting_invoice') {
+                                        $statusText = 'Awaiting invoice';
+                                    } else {
+                                        $statusText = 'Payment Pending';
+                                    }
                                 @endphp
                                 <div class="group bg-white rounded-2xl border-2 border-emerald-200 overflow-hidden shadow-sm hover:shadow-xl hover:border-emerald-300 transition-all duration-300">
                                     <div class="relative h-52 bg-gradient-to-br from-emerald-50 to-green-100 overflow-hidden">
@@ -478,16 +503,32 @@
                                             <span class="material-icons-round text-sm">check_circle</span>
                                             <span>{{ $statusText }}</span>
                                         </div>
-                                        @php $wonInvoiceId = $listing->pending_invoice_id ?? $listing->invoices->first()?->id; @endphp
-                                        @if($wonInvoiceId)
-                                            @if(($listing->payment_status ?? null) !== 'paid')
-                                                <a href="{{ route('buyer.payment.checkout-single', ['invoiceId' => $wonInvoiceId]) }}" class="block w-full text-center px-4 py-2.5 rounded-lg font-semibold text-sm mb-2 transition-all duration-200 hover:opacity-90" style="background-color: #059669; color: #ffffff;">
-                                                    Make Payment
-                                                </a>
-                                            @endif
-                                            <a href="{{ route('buyer.invoice.download', $wonInvoiceId) }}" class="block w-full text-center py-2.5 rounded-lg border-2 font-semibold text-sm transition-all duration-200" style="border-color: #6b7280; color: #374151;">
+                                        @php
+                                            $checkoutInvoiceId = $listing->pending_invoice_id;
+                                            $primaryInvoiceId = $listing->primary_invoice_id ?? null;
+                                        @endphp
+                                        @if($checkoutInvoiceId && ($listing->payment_status ?? null) === 'pending')
+                                            <a href="{{ route('buyer.payment.checkout-single', ['invoiceId' => $checkoutInvoiceId]) }}" class="block w-full text-center px-4 py-2.5 rounded-lg font-semibold text-sm mb-2 transition-all duration-200 hover:opacity-90" style="background-color: #059669; color: #ffffff;">
+                                                Make Payment
+                                            </a>
+                                        @elseif(($listing->payment_status ?? null) === 'paid' && $primaryInvoiceId)
+                                            <a href="{{ route('buyer.purchase.show', $primaryInvoiceId) }}" class="block w-full text-center px-4 py-2.5 rounded-lg font-semibold text-sm mb-2 border-2 border-blue-600 text-blue-700 hover:bg-blue-50 transition-all duration-200">
+                                                View purchase &amp; pickup code
+                                            </a>
+                                            <a href="{{ route('messaging.thread.show', $primaryInvoiceId) }}" class="block w-full text-center px-4 py-2.5 rounded-lg font-semibold text-sm mb-2 bg-teal-600 text-white hover:bg-teal-700 transition-all duration-200">
+                                                Messaging Center
+                                            </a>
+                                            <a href="{{ route('buyer.invoice.download', $primaryInvoiceId) }}" class="block w-full text-center py-2.5 rounded-lg border-2 font-semibold text-sm transition-all duration-200" style="border-color: #6b7280; color: #374151;">
                                                 Download Invoice
                                             </a>
+                                        @elseif(($listing->payment_status ?? null) === 'awaiting_invoice')
+                                            <p class="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-2 text-left">
+                                                Your win is on file, but the payment invoice is not available yet. Refresh later or contact support with item <span class="font-mono font-semibold">#{{ $listing->item_number ?? $listing->id }}</span>.
+                                            </p>
+                                        @elseif(($listing->payment_status ?? null) === 'pending' && ! $checkoutInvoiceId)
+                                            <p class="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-2 text-left">
+                                                Payment is pending, but no checkout link was found. Contact support with item <span class="font-mono font-semibold">#{{ $listing->item_number ?? $listing->id }}</span>.
+                                            </p>
                                         @endif
                                     </div>
                                 </div>
@@ -649,7 +690,7 @@
                         </div>
                         <h3 class="text-lg font-bold text-gray-900 mb-2">No Saved Items Yet</h3>
                         <p class="text-gray-500 text-sm max-w-sm mx-auto mb-4">Save auctions you're interested in to track them easily. Click the bookmark icon on any auction to add it here.</p>
-                        <a href="{{ route('buyer.auctions') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-all">
+                        <a href="{{ route('Auction.index') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-all">
                             <span class="material-icons-round text-lg">search</span>
                             Browse Auctions
                         </a>
@@ -821,32 +862,24 @@
 
             <!-- MESSAGING CENTER TAB -->
             <div id="content-messaging" class="tab-content hidden p-6">
-                <h2 class="text-xl font-bold text-gray-900 mb-6">Messaging Center</h2>
-                <p class="text-gray-600 mb-4">Post-payment pickup coordination threads with sellers.</p>
-                @if($messagingThreads->count() > 0)
-                    <div class="space-y-4">
-                        @foreach($messagingThreads as $thread)
-                            <div class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition duration-200">
-                                <div class="flex items-center space-x-4">
-                                    <div class="h-20 w-20 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
-                                        @if($thread->listing && $thread->listing->images->first())
-                                            <img src="{{ str_contains($thread->listing->images->first()->image_path, '/') ? asset($thread->listing->images->first()->image_path) : asset('uploads/listings/' . $thread->listing->images->first()->image_path) }}" alt="" class="w-full h-full object-cover">
-                                        @endif
-                                    </div>
-                                    <div class="flex-1">
-                                        <h3 class="text-lg font-semibold text-gray-900">{{ $thread->listing->year ?? '' }} {{ $thread->listing->make ?? '' }} {{ $thread->listing->model ?? 'Item' }}</h3>
-                                        <p class="text-sm text-gray-600">Seller: {{ $thread->seller->name ?? '—' }}</p>
-                                    </div>
-                                    @if($thread->invoice)
-                                        <a href="{{ route('post-auction.thread', $thread->invoice->id) }}" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700">View Thread</a>
-                                    @endif
-                                </div>
-                            </div>
-                        @endforeach
+                <h2 class="text-xl font-bold text-gray-900 mb-2">Messaging Center</h2>
+                <p class="text-gray-600 mb-6">Post-payment pickup coordination with sellers.</p>
+                <div class="bg-gradient-to-br from-blue-50 via-white to-teal-50 border-2 border-teal-200 rounded-2xl p-8 text-center">
+                    <div class="w-16 h-16 bg-teal-600 rounded-2xl flex items-center justify-center mx-auto mb-4" style="background-color:#0d9488;">
+                        <span class="material-icons-round text-white" style="font-size: 2rem;">forum</span>
                     </div>
-                @else
-                    <div class="text-center py-12 bg-gray-50 rounded-lg"><p class="text-gray-500 text-lg">No messaging threads. Messaging unlocks after payment.</p></div>
-                @endif
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">All your transactions in one place</h3>
+                    <p class="text-sm text-gray-600 max-w-md mx-auto mb-6">
+                        Coordinate pickup or delivery, share schedules and confirm completion — all securely inside CayMark.
+                        @if(($messagingThreads ?? collect())->count() > 0)
+                            You currently have <strong class="text-gray-900">{{ $messagingThreads->count() }}</strong> active transaction{{ $messagingThreads->count() === 1 ? '' : 's' }}.
+                        @endif
+                    </p>
+                    <a href="{{ route('messaging.index') }}" class="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white font-semibold px-6 py-3 rounded-xl shadow-lg shadow-teal-600/30 transition" style="background-color:#0d9488; color:#fff;">
+                        Open Messaging Center
+                        <span class="material-icons-round" style="font-size: 1.1rem;">arrow_forward</span>
+                    </a>
+                </div>
             </div>
 
             <!-- CUSTOMER SUPPORT TAB -->

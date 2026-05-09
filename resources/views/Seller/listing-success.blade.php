@@ -4,6 +4,31 @@
 
 @section('content')
 <style>
+    /* Scroll within dashboard main (layout uses height:100vh + overflow:hidden on .main-content) */
+    .listing-success-page-scroll {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    .listing-success-page-scroll::-webkit-scrollbar {
+        width: 10px;
+    }
+    .listing-success-page-scroll::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 6px;
+    }
+    .listing-success-page-scroll::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 6px;
+    }
+    .listing-success-page-scroll::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
+
     @keyframes checkmark {
         0% { stroke-dashoffset: 100; }
         100% { stroke-dashoffset: 0; }
@@ -205,6 +230,7 @@
     }
 </style>
 
+<div class="listing-success-page-scroll">
 <div class="success-container">
     <div class="success-card">
         <!-- Success Icon -->
@@ -274,5 +300,6 @@
             </a>
         </div>
     </div>
+</div>
 </div>
 @endsection

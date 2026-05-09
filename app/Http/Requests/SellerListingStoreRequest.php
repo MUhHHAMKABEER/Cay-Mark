@@ -55,11 +55,10 @@ class SellerListingStoreRequest extends FormRequest
             'secondary_damage' => 'nullable|string',
             'additional_notes' => 'nullable|string',
 
-            // SECTION 2 - Photos & Media
+            // SECTION 2 - Photos
             'cover_photo' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
             'photos' => 'required|array|min:5',
             'photos.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:5120',
-            'video' => 'required|file|mimes:mp4,mov,avi,webm|max:102400',
 
             // SECTION 3 - Auction Settings
             'auction_duration' => 'required|in:5,7,14,21,28',
@@ -96,7 +95,7 @@ class SellerListingStoreRequest extends FormRequest
             'run_and_drive.required' => 'Please indicate if the vehicle can run and drive.',
             'run_and_drive.in' => 'Invalid selection for Run & Drive.',
 
-            // Section 2 - Photos & Media
+            // Section 2 - Photos
             'cover_photo.required' => 'Cover photo is required. Please upload a cover image for your listing.',
             'cover_photo.image' => 'Cover photo must be an image file (JPEG, PNG, JPG, GIF, or WEBP).',
             'cover_photo.mimes' => 'Cover photo must be in JPEG, PNG, JPG, GIF, or WEBP format.',
@@ -106,9 +105,6 @@ class SellerListingStoreRequest extends FormRequest
             'photos.*.max' => 'One or more photos exceed 5MB size limit. Please compress your images and try again.',
             'photos.required' => 'At least 5 additional photos are required.',
             'photos.min' => 'You must upload at least 5 additional photos (rear, left side, right side, dashboard, VIN label).',
-            'video.required' => 'A video of the engine bay is required for all listings.',
-            'video.mimes' => 'Video must be in MP4, MOV, AVI, or WEBM format.',
-            'video.max' => 'Video size must not exceed 100MB.',
 
             // Section 3 - Auction Settings
             'auction_duration.required' => 'Please select the auction duration (5, 7, 14, 21, or 28 days).',

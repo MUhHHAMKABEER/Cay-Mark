@@ -14,6 +14,7 @@ class ThirdPartyPickup extends Model
         'buyer_id',
         'authorized_name',
         'pickup_type',
+        'additional_notes',
         'is_active',
         'authorized_at',
     ];

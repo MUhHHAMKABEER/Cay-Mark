@@ -13,7 +13,7 @@ class BuyerPaymentOps
 
         $invoices = \App\Models\Invoice::whereIn('id', $request->invoice_ids)
             ->where('buyer_id', $user->id)
-            ->where('payment_status', 'pending')
+            ->whereIn('payment_status', ['pending', 'overdue', 'partial'])
             ->with(['listing.images', 'seller'])
             ->get();
 
@@ -49,7 +49,7 @@ class BuyerPaymentOps
 
         $invoices = \App\Models\Invoice::whereIn('id', $request->invoice_ids)
             ->where('buyer_id', $user->id)
-            ->where('payment_status', 'pending')
+            ->whereIn('payment_status', ['pending', 'overdue', 'partial'])
             ->with(['listing', 'seller'])
             ->get();
 
@@ -113,18 +113,28 @@ class BuyerPaymentOps
                 $notificationService->sendPickupInfo($invoice->seller, $invoice->listing);
             }
 
+            if ($invoices->count() === 1) {
+                return redirect()->route('buyer.payment.success', $invoices->first());
+            }
+
             return redirect()->route('buyer.auctions-won')
-                ->with('success', 'Payment processed successfully! Sellers have been notified.');
+                ->with('success', 'Payment processed successfully! Pickup codes and next steps were sent to your email for each purchase.');
         });
     }
 
     protected static function sendPaymentNotifications($invoice, $buyer, $payment)
     {
+        $invoice->loadMissing('listing');
+        $pickupCode = $invoice->listing?->pickupCodeDisplay();
+        $messagingCenterUrl = route('messaging.thread.show', $invoice->id);
+
         try {
             \Mail::send('emails.caymark.payment-successful', [
                 'invoice' => $invoice,
                 'buyer' => $buyer,
                 'payment' => $payment,
+                'pickup_code' => $pickupCode,
+                'messaging_center_url' => $messagingCenterUrl,
             ], function ($message) use ($buyer, $invoice) {
                 $message->to($buyer->email, $buyer->name)
                     ->subject('Payment Successful – ' . ($invoice->item_name ?? '[VEHICLE_NAME]'));

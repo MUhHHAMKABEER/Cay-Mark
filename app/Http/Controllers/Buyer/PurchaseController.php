@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Buyer;
 
 use App\Http\Controllers\Controller;
+use App\Models\Invoice;
 use App\Services\InvoiceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -25,6 +26,21 @@ class PurchaseController extends Controller
         $invoices = $this->invoiceService->getBuyerInvoices($user);
 
         return view('Buyer.auctions-won', compact('invoices'));
+    }
+
+    /**
+     * Buyer transaction / purchase detail (pickup code, invoice, messaging).
+     */
+    public function show(Invoice $invoice)
+    {
+        $user = Auth::user();
+        if ((int) $invoice->buyer_id !== (int) $user->id) {
+            abort(403);
+        }
+
+        $invoice->load(['listing.images', 'seller']);
+
+        return view('Buyer.purchase-detail', compact('invoice'));
     }
 
     /**
