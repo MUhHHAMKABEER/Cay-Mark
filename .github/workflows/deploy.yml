@@ -11,7 +11,7 @@ jobs:
     steps:
 
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -22,7 +22,7 @@ jobs:
         run: composer install --no-dev --optimize-autoloader
 
       - name: Setup Node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
 
@@ -110,8 +110,10 @@ jobs:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
+          port: 21
+          protocol: ftps
           local-dir: ./
-          server-dir: /public_html/caymark/
+          server-dir: /caymark/
           exclude: |
             **/.git*
             **/.git*/**
