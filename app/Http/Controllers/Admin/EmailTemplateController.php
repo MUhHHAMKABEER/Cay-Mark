@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Models\SupportTicket;
 use App\Http\Requests\AdminEmailTemplateUpdateRequest;
 use Illuminate\Support\Facades\File;
 use App\Services\Admin\AdminEmailTemplateOps;
@@ -11,12 +11,17 @@ use Carbon\Carbon;
 
 class EmailTemplateController extends Controller
 {
+    private function transactionalTemplatesPath(): string
+    {
+        return resource_path('views/emails/caymark');
+    }
+
     /**
      * Email Template Management - List all templates
      */
     public function index()
     {
-        $templatesPath = resource_path('views/emails');
+        $templatesPath = $this->transactionalTemplatesPath();
         $templates = [];
 
         if (File::exists($templatesPath)) {
@@ -35,13 +40,14 @@ class EmailTemplateController extends Controller
             }
         }
 
-        // Group by category
+        // Group by category (names match Blade files under resources/views/emails/caymark/)
         $categories = [
             'General User' => ['registration-step1', 'registration-complete'],
             'Buyer' => ['auction-won-invoice', 'payment-reminder-6hours', 'payment-reminder-24hours', 'payment-reminder-48hours', 'payment-successful'],
-            'Seller' => ['listing-submitted', 'listing-approved', 'listing-rejected', 'auction-ended-sold', 'payout-processing-started', 'auction-ending-soon-24h', 'auction-ending-soon-1h'],
+            'Seller' => ['listing-submitted', 'listing-approved', 'listing-rejected', 'auction-ended-sold', 'payout-processing-started', 'seller-payout', 'payout-status-updated', 'auction-ending-soon-24h', 'auction-ending-soon-1h'],
             'Payment & Invoice' => ['payment-successful-invoice'],
-            'Account & Security' => ['password-reset', 'password-changed', 'account-deactivated', 'account-reactivated', 'email-updated', 'confirm-email'],
+            'Account & Security' => ['password-reset', 'password-changed', 'account-deactivated', 'account-reactivated', 'email-updated', 'email-change-verification', 'confirm-email'],
+            'Support' => ['support-ticket-zoho-inbound', 'support-ticket-received-user'],
         ];
 
         $emailFailures = $this->getRecentEmailFailures();
@@ -105,7 +111,7 @@ class EmailTemplateController extends Controller
      */
     public function edit($templateName)
     {
-        $templatePath = resource_path("views/emails/{$templateName}.blade.php");
+        $templatePath = $this->transactionalTemplatesPath().DIRECTORY_SEPARATOR.$templateName.'.blade.php';
 
         if (!File::exists($templatePath)) {
             return redirect()->route('admin.email-templates')
@@ -168,13 +174,13 @@ class EmailTemplateController extends Controller
      */
     public function preview($templateName)
     {
-        $templatePath = resource_path("views/emails/{$templateName}.blade.php");
+        $templatePath = $this->transactionalTemplatesPath().DIRECTORY_SEPARATOR.$templateName.'.blade.php';
         if (!File::exists($templatePath)) {
             return redirect()->route('admin.email-templates')->with('error', 'Template not found.');
         }
 
         $data = $this->getPreviewDataForTemplate($templateName);
-        return view("emails.{$templateName}", $data);
+        return view("emails.caymark.{$templateName}", $data);
     }
 
     /**
@@ -212,6 +218,14 @@ class EmailTemplateController extends Controller
         ];
         $winningBidAmount = 15000.00;
 
+        $supportTicketPreview = new SupportTicket([
+            'title' => 'General Inquiry',
+            'message' => "Preview message line one.\nLine two.",
+            'public_ticket_number' => '123456',
+        ]);
+        $supportTicketPreview->id = 1;
+        $supportTicketPreview->created_at = now();
+
         $templatesWithData = [
             'auction-won-invoice' => ['invoice' => $invoice],
             'payment-successful' => ['invoice' => $invoice],
@@ -229,6 +243,8 @@ class EmailTemplateController extends Controller
             'registration-step1' => ['user' => $user],
             'registration-complete' => ['user' => $user],
             'payout-processing-started' => ['payout' => (object) ['id' => 1], 'listing' => $listing],
+            'seller-payout' => ['payout' => $payment, 'seller' => $seller],
+            'payout-status-updated' => ['payout' => (object) ['status' => 'sent', 'transaction_reference' => 'REF-PREVIEW'], 'seller' => $seller],
             'password-reset' => ['resetUrl' => url('/reset-password/preview-token'), 'token' => 'preview-token'],
             'password-changed' => [],
             'confirm-email' => ['verificationUrl' => url('/verify-email/1/preview-hash'), 'id' => 1, 'hash' => 'preview-hash'],
@@ -236,6 +252,8 @@ class EmailTemplateController extends Controller
             'email-change-verification' => ['new_email' => 'new@example.com', 'code' => '123456', 'minutes' => 15],
             'account-deactivated' => [],
             'account-reactivated' => [],
+            'support-ticket-zoho-inbound' => ['ticket' => $supportTicketPreview, 'user' => $user],
+            'support-ticket-received-user' => ['ticket' => $supportTicketPreview, 'user' => $user],
         ];
 
         return $templatesWithData[$templateName] ?? [];
@@ -252,7 +270,7 @@ class EmailTemplateController extends Controller
             return back()->with('error', 'Default template not available.');
         }
 
-        $templatePath = resource_path("views/emails/{$templateName}.blade.php");
+        $templatePath = $this->transactionalTemplatesPath().DIRECTORY_SEPARATOR.$templateName.'.blade.php';
         File::put($templatePath, $defaultContent);
 
         return back()->with('success', 'Template restored to default.');

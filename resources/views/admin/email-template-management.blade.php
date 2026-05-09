@@ -145,7 +145,7 @@
                 <span class="material-icons-round text-gray-400 text-4xl">mail_outline</span>
             </div>
             <h3 class="text-lg font-semibold text-gray-900 mb-2">No email templates found</h3>
-            <p class="text-gray-500 text-sm max-w-sm mx-auto">Templates are stored in <code class="bg-gray-100 px-1.5 py-0.5 rounded text-xs">resources/views/emails/</code>. Add Blade files there to see them here.</p>
+            <p class="text-gray-500 text-sm max-w-sm mx-auto">Transactional templates live in <code class="bg-gray-100 px-1.5 py-0.5 rounded text-xs">resources/views/emails/caymark/</code> (CayMark branded HTML). Add or edit <code class="bg-gray-100 px-1.5 py-0.5 rounded text-xs">*.blade.php</code> files there; code references them as <code class="bg-gray-100 px-1.5 py-0.5 rounded text-xs">emails.caymark.{name}</code>.</p>
         </div>
     @endif
 </div>

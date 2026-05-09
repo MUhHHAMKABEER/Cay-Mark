@@ -148,7 +148,7 @@ class PayoutService
     protected function sendPayoutEmail(Payout $payout, User $seller): void
     {
         try {
-            Mail::send('emails.seller-payout', [
+            Mail::send('emails.caymark.seller-payout', [
                 'payout' => $payout,
                 'seller' => $seller,
             ], function ($message) use ($seller, $payout) {

@@ -33,9 +33,10 @@
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Public #</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Message</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
@@ -45,7 +46,8 @@
                 <tbody class="bg-white divide-y divide-gray-200">
                     @forelse($tickets as $ticket)
                     <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">#{{ $ticket->id }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-mono font-semibold text-gray-900">{{ $ticket->public_ticket_number ? '#'.$ticket->public_ticket_number : '—' }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $ticket->id }}</td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm font-medium text-gray-900">{{ $ticket->user->name ?? 'Unknown' }}</div>
                             <div class="text-xs text-gray-500">{{ $ticket->user->email ?? '' }}</div>
@@ -71,7 +73,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="px-6 py-12 text-center text-gray-500">
+                        <td colspan="8" class="px-6 py-12 text-center text-gray-500">
                             <i class="fas fa-ticket-alt text-4xl mb-3 text-gray-300"></i>
                             <p>No support tickets</p>
                         </td>

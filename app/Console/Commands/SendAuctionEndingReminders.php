@@ -76,7 +76,7 @@ class SendAuctionEndingReminders extends Command
     protected function sendReminder(Listing $listing, string $type, string $template, string $subject)
     {
         try {
-            Mail::send('emails.' . $template, [
+            Mail::send('emails.caymark.' . $template, [
                 'listing' => $listing,
                 'seller' => $listing->seller,
             ], function ($message) use ($listing, $subject) {

@@ -239,7 +239,7 @@ class AdminController extends Controller
 
         // Send approval email to seller
         try {
-            \Mail::send('emails.listing-approved', [
+            \Mail::send('emails.caymark.listing-approved', [
                 'listing' => $listing,
                 'seller' => $listing->seller,
             ], function ($message) use ($listing) {
@@ -963,7 +963,7 @@ class AdminController extends Controller
         
         // Send approval email to seller
         try {
-            \Mail::send('emails.listing-approved', [
+            \Mail::send('emails.caymark.listing-approved', [
                 'listing' => $listing,
                 'seller' => $listing->seller,
             ], function ($message) use ($listing) {

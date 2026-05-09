@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Buyer;
 
 use App\Http\Controllers\Controller;
+use App\Models\SupportTicket;
+use App\Models\User;
 use App\Services\Buyer\BuyerDashboardService;
 use App\Services\Buyer\BuyerDashboardOps;
 use App\Repositories\Buyer\BuyerRepository;
@@ -37,7 +39,11 @@ class BuyerDashboardController extends Controller
         $dashboardData = $this->dashboardService->getDashboardData($user);
 
         return view('dashboard.buyer', array_merge(
-            ['user' => $user, 'activeTab' => $activeTab],
+            [
+                'user' => $user,
+                'activeTab' => $activeTab,
+                'supportCategories' => SupportTicket::categoryOptionsForRole(User::ROLE_BUYER),
+            ],
             $dashboardData
         ));
     }

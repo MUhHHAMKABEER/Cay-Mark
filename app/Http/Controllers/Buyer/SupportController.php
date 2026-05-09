@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Buyer;
 
 use App\Http\Controllers\Controller;
+use App\Models\SupportTicket;
+use App\Models\User;
 use Illuminate\Http\Request;
 use App\Http\Requests\BuyerSupportStoreRequest;
 use Illuminate\Support\Facades\Auth;
@@ -16,7 +18,9 @@ class SupportController extends Controller
     public function index()
     {
         $user = Auth::user();
-        return view('buyer.customer-support', compact('user'));
+        $supportCategories = SupportTicket::categoryOptionsForRole(User::ROLE_BUYER);
+
+        return view('buyer.customer-support', compact('user', 'supportCategories'));
     }
 
     /**

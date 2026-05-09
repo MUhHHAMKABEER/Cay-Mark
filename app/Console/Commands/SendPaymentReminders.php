@@ -91,7 +91,7 @@ class SendPaymentReminders extends Command
     protected function sendReminder(Invoice $invoice, string $type, string $template, string $subject)
     {
         try {
-            Mail::send('emails.' . $template, [
+            Mail::send('emails.caymark.' . $template, [
                 'invoice' => $invoice,
                 'buyer' => $invoice->buyer,
             ], function ($message) use ($invoice, $subject) {

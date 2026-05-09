@@ -33,16 +33,17 @@
                 <label class="block text-sm font-medium text-gray-700 mb-2">Ticket Title</label>
                 <select name="title" required class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     <option value="">Select issue type...</option>
-                    @foreach(\App\Models\SupportTicket::TITLE_OPTIONS as $option)
+                    @foreach($supportCategories as $option)
                         <option value="{{ $option }}" {{ old('title') === $option ? 'selected' : '' }}>{{ $option }}</option>
                     @endforeach
                 </select>
             </div>
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Message</label>
-                <textarea name="message" rows="6" required
-                          placeholder="Please provide detailed information about your issue or inquiry..."
+                <textarea name="message" rows="6" required maxlength="800"
+                          placeholder="Please provide detailed information (10–800 characters)..."
                           class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">{{ old('message') }}</textarea>
+                <p class="text-xs text-gray-500 mt-1">Message must be between 10 and 800 characters.</p>
             </div>
             <button type="submit" class="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition duration-200">
                 Submit Ticket

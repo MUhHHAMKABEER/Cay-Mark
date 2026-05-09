@@ -9,6 +9,11 @@
 .notifications-scrollbar::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 6px; }
 .notifications-scrollbar::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 6px; }
 .notifications-scrollbar::-webkit-scrollbar-thumb:hover { background: #64748b; }
+.customer-support-scrollbar { max-height: calc(100vh - 140px); overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
+.customer-support-scrollbar::-webkit-scrollbar { width: 10px; }
+.customer-support-scrollbar::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 6px; }
+.customer-support-scrollbar::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 6px; }
+.customer-support-scrollbar::-webkit-scrollbar-thumb:hover { background: #64748b; }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <div class="w-full h-full bg-gray-50" style="min-height: calc(100vh - 0px); padding: 0;">
@@ -845,7 +850,13 @@
             </div>
 
             <!-- CUSTOMER SUPPORT TAB -->
-            <div id="content-support" class="tab-content hidden p-6">
+            <div id="content-support" class="tab-content hidden p-6 customer-support-scrollbar">
+                @if (session('success'))
+                    <div id="support-success-banner" class="flex items-center gap-3 rounded-xl bg-emerald-50 border-2 border-emerald-200 px-4 py-3 mb-6 text-emerald-900 shadow-sm" role="status">
+                        <span class="material-icons-round text-emerald-600 text-xl flex-shrink-0">check_circle</span>
+                        <span class="font-medium">{{ session('success') }}</span>
+                    </div>
+                @endif
                 <!-- Header -->
                 <div class="mb-8">
                     <div class="flex items-center gap-3 mb-1">
@@ -881,23 +892,45 @@
                             </div>
                             <form method="POST" action="{{ route('buyer.customer-support.submit') }}" class="p-6 space-y-5">
                                 @csrf
+                                @if ($errors->has('title') || $errors->has('message'))
+                                    <div class="rounded-xl border-2 border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                                        <p class="font-semibold mb-1">Please fix the following:</p>
+                                        <ul class="list-disc list-inside space-y-1">
+                                            @foreach ($errors->only(['title', 'message']) as $messages)
+                                                @foreach ($messages as $err)
+                                                    <li>{{ $err }}</li>
+                                                @endforeach
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                @endif
                                 <div class="group">
                                     <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                                        <span class="material-icons-round text-gray-400 text-lg group-focus-within:text-teal-600 transition-colors">title</span>
-                                        Ticket Title
+                                        <span class="material-icons-round text-gray-400 text-lg group-focus-within:text-teal-600 transition-colors">category</span>
+                                        Ticket category
                                     </label>
-                                    <input type="text" name="title" required placeholder="Brief description of your issue"
-                                        class="w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-gray-900 font-medium placeholder-gray-400 focus:bg-white focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 transition-all">
-                                    <p class="text-xs text-gray-400 mt-1.5">Be specific to help us assist you faster</p>
+                                    <select name="title" required class="w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-gray-900 font-medium focus:bg-white focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 transition-all">
+                                        <option value="">Select issue type…</option>
+                                        @foreach ($supportCategories as $option)
+                                            <option value="{{ $option }}" {{ old('title') === $option ? 'selected' : '' }}>{{ $option }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('title')
+                                        <p class="text-xs text-red-600 mt-1.5">{{ $message }}</p>
+                                    @enderror
+                                    <p class="text-xs text-gray-400 mt-1.5">Choose the option that best matches your issue</p>
                                 </div>
                                 <div class="group">
                                     <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
                                         <span class="material-icons-round text-gray-400 text-lg group-focus-within:text-teal-600 transition-colors">description</span>
                                         Message
                                     </label>
-                                    <textarea name="message" rows="8" required placeholder="Describe your issue in detail..."
-                                        class="w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-gray-900 font-medium placeholder-gray-400 focus:bg-white focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 transition-all resize-none"></textarea>
-                                    <p class="text-xs text-gray-400 mt-1.5">Include any relevant details, auction numbers, or error messages</p>
+                                    <textarea name="message" rows="8" required maxlength="800" placeholder="Describe your issue in detail (10–800 characters)…"
+                                        class="w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-gray-900 font-medium placeholder-gray-400 focus:bg-white focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 transition-all resize-none">{{ old('message') }}</textarea>
+                                    @error('message')
+                                        <p class="text-xs text-red-600 mt-1.5">{{ $message }}</p>
+                                    @enderror
+                                    <p class="text-xs text-gray-400 mt-1.5">10–800 characters. Include relevant details, auction numbers, or error messages.</p>
                                 </div>
                                 <div class="pt-2">
                                     <button type="submit" class="w-full inline-flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-700 text-white px-6 py-3.5 rounded-xl font-semibold shadow-lg shadow-teal-600/30 hover:shadow-teal-600/40 transition-all duration-200" style="background-color: #0d9488; color: #ffffff;">
@@ -1046,6 +1079,10 @@ document.addEventListener('DOMContentLoaded', function() {
     var tab = @json($activeTab ?? 'dashboard');
         showTab(tab);
     if (tab === 'auctions') showAuctionSection(new URLSearchParams(window.location.search).get('section') || 'current');
+    if (tab === 'support') {
+        var banner = document.getElementById('support-success-banner');
+        if (banner) banner.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
     setInterval(updateCountdowns, 1000);
     updateCountdowns();
 

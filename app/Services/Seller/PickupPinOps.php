@@ -24,7 +24,7 @@ class PickupPinOps
             $payout = $payoutService->createPayoutAfterPickup($invoice, $listing);
 
             try {
-                \Mail::send('emails.payout-processing-started', [
+                \Mail::send('emails.caymark.payout-processing-started', [
                     'payout' => $payout,
                     'seller' => $user,
                     'listing' => $listing,

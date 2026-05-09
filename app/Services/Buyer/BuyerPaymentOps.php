@@ -121,7 +121,7 @@ class BuyerPaymentOps
     protected static function sendPaymentNotifications($invoice, $buyer, $payment)
     {
         try {
-            \Mail::send('emails.payment-successful', [
+            \Mail::send('emails.caymark.payment-successful', [
                 'invoice' => $invoice,
                 'buyer' => $buyer,
                 'payment' => $payment,
@@ -134,7 +134,7 @@ class BuyerPaymentOps
         }
 
         try {
-            \Mail::send('emails.seller-payment-received', [
+            \Mail::send('emails.caymark.seller-payment-received', [
                 'invoice' => $invoice,
                 'seller' => $invoice->seller,
                 'payment' => $payment,

@@ -29,7 +29,7 @@ class AdminActionHub
 
         // Send rejection email to seller
         try {
-            \Mail::send('emails.listing-rejected', [
+            \Mail::send('emails.caymark.listing-rejected', [
                 'listing' => $listing,
                 'seller' => $listing->seller,
                 'rejectionReason' => $request->rejection_reason,
@@ -137,7 +137,7 @@ class AdminActionHub
 
         if ($request->status === 'completed' && $payment->invoice) {
             try {
-                \Mail::send('emails.payment-successful', [
+                \Mail::send('emails.caymark.payment-successful', [
                     'invoice' => $payment->invoice,
                     'buyer' => $payment->user,
                     'payment' => $payment,
@@ -178,7 +178,7 @@ class AdminActionHub
         ]);
 
         try {
-            \Mail::send('emails.listing-rejected', [
+            \Mail::send('emails.caymark.listing-rejected', [
                 'listing' => $listing,
                 'seller' => $listing->seller,
                 'rejectionReason' => $request->rejection_reason,
@@ -210,7 +210,7 @@ class AdminActionHub
 
         if (in_array($request->status, ['sent', 'paid_successfully'])) {
             try {
-                \Mail::send('emails.payout-status-updated', [
+                \Mail::send('emails.caymark.payout-status-updated', [
                     'payout' => $payout,
                     'seller' => $payout->seller,
                 ], function ($message) use ($payout) {

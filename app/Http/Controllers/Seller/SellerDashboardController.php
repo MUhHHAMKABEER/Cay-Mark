@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Seller;
 
 use App\Http\Controllers\Controller;
+use App\Models\SupportTicket;
+use App\Models\User;
 use App\Services\Seller\SellerDashboardService;
 use App\Repositories\Seller\SellerRepository;
 use App\Models\Listing;
@@ -76,6 +78,7 @@ class SellerDashboardController extends Controller
         return view('dashboard.seller', array_merge([
             'user' => $user,
             'activeTab' => $activeTab,
+            'supportCategories' => SupportTicket::categoryOptionsForRole(User::ROLE_SELLER),
         ], $dashboardData));
     }
 

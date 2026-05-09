@@ -169,7 +169,7 @@ class InvoiceService
     protected function sendInvoiceEmail(Invoice $invoice, User $buyer): void
     {
         try {
-            Mail::send('emails.auction-won-invoice', [
+            Mail::send('emails.caymark.auction-won-invoice', [
                 'invoice' => $invoice,
                 'buyer' => $buyer,
             ], function ($message) use ($buyer, $invoice) {
@@ -357,7 +357,7 @@ class InvoiceService
     protected function sendAuctionEndedEmail(Listing $listing, Bid $winningBid): void
     {
         try {
-            Mail::send('emails.auction-ended-sold', [
+            Mail::send('emails.caymark.auction-ended-sold', [
                 'listing' => $listing,
                 'seller' => $listing->seller,
                 'winningBidAmount' => $winningBid->amount,

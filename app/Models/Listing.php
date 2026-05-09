@@ -878,7 +878,7 @@ public function invoices()
     protected static function dispatchSideEffects(self $listing, $actor): void
     {
         try {
-            Mail::send('emails.listing-submitted', [
+            Mail::send('emails.caymark.listing-submitted', [
                 'listing' => $listing,
                 'user' => $actor,
             ], function ($message) use ($actor, $listing) {

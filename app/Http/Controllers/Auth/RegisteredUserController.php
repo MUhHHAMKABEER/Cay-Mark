@@ -1108,7 +1108,7 @@ public function step3(Request $request)
     private function sendRegistrationStep1Email(User $user)
     {
         try {
-            Mail::send('emails.registration-step1', ['user' => $user], function ($message) use ($user) {
+            Mail::send('emails.caymark.registration-step1', ['user' => $user], function ($message) use ($user) {
                 $message->to($user->email, $user->name)
                     ->subject('Complete Your Registration - CayMark');
             });
@@ -1123,7 +1123,7 @@ public function step3(Request $request)
     private function sendRegistrationCompleteEmail(User $user)
     {
         try {
-            Mail::send('emails.registration-complete', ['user' => $user], function ($message) use ($user) {
+            Mail::send('emails.caymark.registration-complete', ['user' => $user], function ($message) use ($user) {
                 $message->to($user->email, $user->name)
                     ->subject('Welcome to CayMark - Registration Successful');
             });

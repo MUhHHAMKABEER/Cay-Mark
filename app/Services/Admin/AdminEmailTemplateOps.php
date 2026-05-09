@@ -16,7 +16,7 @@ class AdminEmailTemplateOps
             'button_url' => 'nullable|string',
         ]);
 
-        $path = resource_path('views/emails/' . $templateName . '.blade.php');
+        $path = resource_path('views/emails/caymark/'.$templateName.'.blade.php');
         if (!file_exists($path)) {
             return back()->with('error', 'Template not found.');
         }

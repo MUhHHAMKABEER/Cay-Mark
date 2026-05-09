@@ -36,7 +36,7 @@ class BasicDashboardOps
         $user->save();
 
         try {
-            \Mail::send('emails.password-changed', [
+            \Mail::send('emails.caymark.password-changed', [
                 'user' => $user,
             ], function ($message) use ($user) {
                 $message->to($user->email, $user->name)

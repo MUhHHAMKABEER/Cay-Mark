@@ -28,7 +28,7 @@ class PasswordController extends Controller
 
         // Send password changed email
         try {
-            Mail::send('emails.password-changed', [
+            Mail::send('emails.caymark.password-changed', [
                 'user' => $request->user(),
             ], function ($message) use ($request) {
                 $message->to($request->user()->email, $request->user()->name)

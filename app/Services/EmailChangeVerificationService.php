@@ -31,7 +31,7 @@ class EmailChangeVerificationService
             'expires_at' => now()->addMinutes(self::TTL_MINUTES)->timestamp,
         ], now()->addMinutes(self::TTL_MINUTES));
 
-        Mail::send('emails.email-change-verification', [
+        Mail::send('emails.caymark.email-change-verification', [
             'user' => $user,
             'code' => $code,
             'new_email' => $newEmail,
