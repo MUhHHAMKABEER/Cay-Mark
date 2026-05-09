@@ -189,4 +189,59 @@ class Invoice extends Model
         $this->is_overdue = false;
         $this->save();
     }
+
+    /**
+     * Admin Sales / Payouts table: pipeline phase and badge classes.
+     *
+     * @return array{key: string, label: string, badge_class: string}
+     */
+    public function adminSalesPayoutPipelineStatus(): array
+    {
+        $listing = $this->relationLoaded('listing') ? $this->listing : $this->listing()->first();
+        $payout = $this->relationLoaded('payout') ? $this->payout : $this->payout()->first();
+
+        if ($this->payment_status === 'pending') {
+            return [
+                'key' => 'awaiting_payment',
+                'label' => 'Awaiting Payment',
+                'badge_class' => 'bg-amber-50 text-amber-800 border border-amber-200',
+            ];
+        }
+
+        if ($this->payment_status === 'paid') {
+            if ($listing && ! $listing->pickup_confirmed) {
+                return [
+                    'key' => 'payment_received',
+                    'label' => 'Payment Received',
+                    'badge_class' => 'bg-sky-50 text-sky-800 border border-sky-200',
+                ];
+            }
+
+            if ($payout && in_array($payout->status, ['sent', 'paid_successfully'], true)) {
+                $dateForLabel = $payout->completed_at
+                    ? $payout->completed_at->format('M j, Y')
+                    : ($payout->date_sent
+                        ? \Carbon\Carbon::parse($payout->date_sent)->format('M j, Y')
+                        : ($payout->payout_processed_at?->format('M j, Y') ?? now()->format('M j, Y')));
+
+                return [
+                    'key' => 'closed',
+                    'label' => 'Closed — '.$dateForLabel,
+                    'badge_class' => 'bg-emerald-50 text-emerald-800 border border-emerald-200',
+                ];
+            }
+
+            return [
+                'key' => 'ready_for_payout',
+                'label' => 'Ready for Payout',
+                'badge_class' => 'bg-blue-50 text-blue-800 border border-blue-200',
+            ];
+        }
+
+        return [
+            'key' => 'other',
+            'label' => ucfirst((string) $this->payment_status),
+            'badge_class' => 'bg-slate-100 text-slate-700 border border-slate-200',
+        ];
+    }
 }

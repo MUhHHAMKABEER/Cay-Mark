@@ -10,7 +10,7 @@
         ['route' => 'admin.listing-review', 'icon' => 'fact_check', 'label' => 'Listing Review'],
         ['route' => 'admin.active-listings', 'icon' => 'directions_car', 'label' => 'Active Auctions'],
         ['route' => 'admin.boosts-addons', 'icon' => 'rocket_launch', 'label' => 'Boosts & Add-ons'],
-        ['route' => 'admin.payments', 'icon' => 'account_balance_wallet', 'label' => 'Payment Management'],
+        ['route' => 'admin.payments', 'icon' => 'account_balance_wallet', 'label' => 'Sales / Payouts'],
         ['route' => 'admin.pending-payments', 'icon' => 'payments', 'label' => 'Pending Payments'],
         ['route' => 'admin.disputes', 'icon' => 'gavel', 'label' => 'Disputes Center'],
         ['route' => 'admin.support-tickets', 'icon' => 'support_agent', 'label' => 'Support Tickets'],

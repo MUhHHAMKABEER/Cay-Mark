@@ -11,6 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // SQLite cannot drop a column that is still referenced by an index on that column.
+        if (Schema::getConnection()->getDriverName() === 'sqlite') {
+            Schema::getConnection()->statement('DROP INDEX IF EXISTS payouts_status_index');
+        }
+
         Schema::table('payouts', function (Blueprint $table) {
             // Add buyer name (optional per PDF)
             $table->string('buyer_name')->nullable()->after('seller_id');

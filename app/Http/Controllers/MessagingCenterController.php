@@ -52,7 +52,7 @@ class MessagingCenterController extends Controller
     {
         $user = Auth::user();
         $threads = PostAuctionThread::with([
-            'invoice',
+            'invoice.payout',
             'listing.images',
             'buyer',
             'seller',
@@ -92,7 +92,7 @@ class MessagingCenterController extends Controller
                     'listing.images',
                     'buyer',
                     'seller',
-                    'invoice',
+                    'invoice.payout',
                     'latestPickupDetail',
                     'changeRequests' => fn ($q) => $q->whereIn('status', ['pending', 'countered'])->latest(),
                     'deliveryRequests' => fn ($q) => $q->latest(),
@@ -184,6 +184,12 @@ class MessagingCenterController extends Controller
 
         if ($user->id !== $thread->seller_id) {
             abort(403, 'Only the seller can update contact phone.');
+        }
+
+        if ($thread->pickup_confirmed) {
+            return back()->withErrors([
+                'seller_contact_phone' => 'Pick-up is confirmed — this thread is read-only. Contact details can no longer be changed here.',
+            ]);
         }
 
         $request->validate(['seller_contact_phone' => 'nullable|string|max:32']);

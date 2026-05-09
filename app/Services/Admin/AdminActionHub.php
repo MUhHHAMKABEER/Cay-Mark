@@ -205,12 +205,32 @@ class AdminActionHub
         $payout = \App\Models\Payout::findOrFail($payoutId);
 
         $oldStatus = $payout->status;
-        $payout->update([
+
+        $updates = [
             'status' => $request->status,
             'transaction_reference' => $request->transaction_reference,
             'date_sent' => $request->date_sent,
             'finance_notes' => $request->finance_notes,
-        ]);
+        ];
+
+        if (in_array($request->status, ['sent', 'paid_successfully'], true)) {
+            if (! $payout->payout_processed_at) {
+                $updates['payout_processed_at'] = now();
+            }
+        }
+
+        if ($request->status === 'paid_successfully' && auth()->check()) {
+            $updates['completed_by_user_id'] = auth()->id();
+            $updates['completed_at'] = now();
+            $meta = array_merge($payout->metadata ?? [], [
+                'completed_by_admin_name' => auth()->user()->name,
+                'completed_by_admin_id' => auth()->id(),
+                'payout_completed_at' => now()->toIso8601String(),
+            ]);
+            $updates['metadata'] = $meta;
+        }
+
+        $payout->update($updates);
 
         AdminActivityLog::log('payout.status_updated', 'payout', (int) $payout->id, ['status' => $oldStatus], ['status' => $request->status]);
 

@@ -108,7 +108,7 @@
             <div class="mt-4 space-y-2">
                 <a href="{{ route('admin.listing-review') }}" class="block text-sm hover:underline">Review Listings</a>
                 <a href="{{ route('admin.users') }}" class="block text-sm hover:underline">Manage Users</a>
-                <a href="{{ route('admin.payments') }}" class="block text-sm hover:underline">View Payments</a>
+                <a href="{{ route('admin.payments') }}" class="block text-sm hover:underline">Sales / Payouts</a>
             </div>
         </div>
     </div>

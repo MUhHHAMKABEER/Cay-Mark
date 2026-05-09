@@ -536,6 +536,12 @@ class PostAuctionOps
             abort(403, 'Only seller can confirm pickup.');
         }
 
+        if ($thread->pickup_confirmed) {
+            return back()->withErrors([
+                'pickup_pin' => 'Pick-up is already confirmed for this sale. Messaging is read-only.',
+            ]);
+        }
+
         $validated = $request->validated();
         $listing = $thread->listing;
 
@@ -548,7 +554,7 @@ class PostAuctionOps
             ]);
         }
 
-        return back()->with('success', 'Pickup confirmed! Transaction is closed and payout has been initiated.');
+        return back()->with('success', 'Pick-up confirmed. Messaging is now read-only while CayMark processes the seller payout.');
     }
 
     // ====================================================================
@@ -703,16 +709,14 @@ class PostAuctionOps
             return back()->withErrors(['error' => 'Pickup must be confirmed before marking the sale completed.']);
         }
 
-        $thread->forceFill(['buyer_completion_confirmed_at' => now()])->save();
+        // Buyer completion is recorded automatically when the seller confirms the PIN; thread is read-only after that.
+        if ($thread->buyer_completion_confirmed_at) {
+            return back()->with('success', 'Your side is already recorded for this sale.');
+        }
 
-        MessagingThreadEvent::record(
-            $thread, $user,
-            MessagingThreadEvent::TYPE_SALE_COMPLETED_CONFIRMED,
-            [],
-            countsAsExchange: false,
-        );
-
-        return back()->with('success', 'Thanks for confirming. The transaction is complete on your end.');
+        return back()->withErrors([
+            'error' => 'This conversation is read-only after pick-up is confirmed. No further confirmations are required.',
+        ]);
     }
 
     // ====================================================================
@@ -728,7 +732,7 @@ class PostAuctionOps
     {
         if ($thread->pickup_confirmed) {
             return back()->withErrors([
-                'thread' => 'This conversation is closed. The pickup has been confirmed and no further actions are accepted.',
+                'thread' => 'Messaging is locked for this sale. Pick-up is confirmed — you can review the history, but no new messages or actions are accepted.',
             ]);
         }
         return null;

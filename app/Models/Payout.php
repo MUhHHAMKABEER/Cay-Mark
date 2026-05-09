@@ -30,6 +30,8 @@ class Payout extends Model
         'notes',
         'finance_notes',
         'metadata',
+        'completed_by_user_id',
+        'completed_at',
     ];
 
     protected $casts = [
@@ -65,6 +67,14 @@ class Payout extends Model
     public function seller()
     {
         return $this->belongsTo(User::class, 'seller_id');
+    }
+
+    /**
+     * Admin user who marked the payout as completed (wire sent).
+     */
+    public function completedBy()
+    {
+        return $this->belongsTo(User::class, 'completed_by_user_id');
     }
 
     /**

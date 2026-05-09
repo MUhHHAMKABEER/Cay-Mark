@@ -312,18 +312,6 @@
             @endif
         </div>
     @endif
-
-    @if ($isBuyer && $activeThread->pickup_confirmed && ! $activeThread->buyer_completion_confirmed_at)
-        <div style="margin-top: 1.25rem;">
-            <form method="POST" action="{{ route('messaging.thread.confirm-sale', $activeThread->id) }}">
-                @csrf
-                <button type="submit" class="btn btn-accept" style="background:#10b981; color:#fff; border:none; padding: 0.75rem 1.5rem; border-radius: 12px; font-weight: 600; cursor: pointer; font-size: 0.95rem;">
-                    <span class="material-icons-round" style="font-size:1.1rem; vertical-align:middle;">verified</span>
-                    Confirm Sale Completed
-                </button>
-            </form>
-        </div>
-    @endif
 </div>
 
 <div class="footer-card">

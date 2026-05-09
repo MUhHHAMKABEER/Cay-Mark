@@ -117,6 +117,56 @@ class PostPickupCompletionTest extends TestCase
         $response->assertSessionHasErrors('thread');
     }
 
+    public function test_seller_cannot_update_phone_after_pickup_confirmed(): void
+    {
+        [$seller, $buyer, $listing, $invoice] = $this->buildPaidSale();
+
+        $thread = PostAuctionThread::create([
+            'invoice_id' => $invoice->id,
+            'listing_id' => $listing->id,
+            'buyer_id' => $buyer->id,
+            'seller_id' => $seller->id,
+            'is_unlocked' => true,
+            'unlocked_at' => now(),
+            'pickup_confirmed' => true,
+            'pickup_confirmed_at' => now(),
+        ]);
+
+        $this->actingAs($seller);
+
+        $response = $this->post(route('messaging.thread.seller-phone', $thread->id), [
+            'seller_contact_phone' => '555-0100',
+        ]);
+
+        $response->assertSessionHasErrors('seller_contact_phone');
+    }
+
+    public function test_duplicate_pickup_pin_submission_is_rejected(): void
+    {
+        [$seller, $buyer, $listing, $invoice] = $this->buildPaidSale();
+        $listing->generatePickupPin();
+        $pin = $listing->fresh()->pickup_pin;
+
+        $thread = PostAuctionThread::create([
+            'invoice_id' => $invoice->id,
+            'listing_id' => $listing->id,
+            'buyer_id' => $buyer->id,
+            'seller_id' => $seller->id,
+            'is_unlocked' => true,
+            'unlocked_at' => now(),
+        ]);
+
+        $this->actingAs($seller);
+        $this->post(route('messaging.thread.confirm-pickup', $thread->id), [
+            'pickup_pin' => $pin,
+        ])->assertSessionHasNoErrors();
+
+        $second = $this->post(route('messaging.thread.confirm-pickup', $thread->id), [
+            'pickup_pin' => $pin,
+        ]);
+        $second->assertSessionHasErrors('pickup_pin');
+    }
+
     /**
      * Build a sold listing + paid invoice for a buyer / seller pair.
      *

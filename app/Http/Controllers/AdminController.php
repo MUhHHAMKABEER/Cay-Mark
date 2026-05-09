@@ -23,6 +23,8 @@ use App\Http\Requests\AdminCloseUnpaidAuctionRequest;
 use App\Models\AdminActivityLog;
 use App\Models\Invoice;
 use App\Services\Admin\AdminActionHub;
+use App\Services\CommissionService;
+use Illuminate\Database\Eloquent\Builder;
 
 class AdminController extends Controller
 {
@@ -676,41 +678,134 @@ class AdminController extends Controller
     }
 
     /**
-     * Payment Management - Complete System
+     * Sales / Payouts — auction invoices (buyer payment → pickup → seller payout).
      */
     public function payments(Request $request)
     {
-        $query = Payment::with(['user', 'invoice', 'listing']);
+        $query = $this->salesPayoutInvoicesQuery($request);
 
-        // Filters
-        if ($request->has('status') && in_array($request->status, ['pending', 'completed', 'failed', 'pending_release', 'held'])) {
-            $query->where('status', $request->status);
+        if ($request->query('export') === 'csv') {
+            return $this->exportSalesPayoutsCsv(clone $query);
         }
 
-        if ($request->has('buyer_id')) {
-            $query->where('user_id', $request->buyer_id);
+        $sort = $request->get('sort', 'newest');
+        $this->applySalesPayoutSort($query, $sort);
+
+        $invoices = $query->paginate(20)->withQueryString();
+        $tab = $request->get('tab', 'all');
+
+        return view('admin.payment-management', [
+            'invoices' => $invoices,
+            'tab' => $tab,
+            'sort' => $sort,
+            'commissionService' => app(CommissionService::class),
+        ]);
+    }
+
+    /**
+     * @return Builder<\App\Models\Invoice>
+     */
+    protected function salesPayoutInvoicesQuery(Request $request): Builder
+    {
+        $query = Invoice::query()
+            ->whereNotNull('listing_id')
+            ->with(['listing', 'seller.payoutMethod', 'buyer', 'payout']);
+
+        $tab = $request->get('tab', 'all');
+        if ($tab === 'awaiting_payment') {
+            $query->where('payment_status', 'pending');
+        } elseif ($tab === 'payment_received') {
+            $query->where('payment_status', 'paid')
+                ->where(function ($q) {
+                    $q->whereDoesntHave('payout')
+                        ->orWhereHas('payout', function ($p) {
+                            $p->whereNotIn('status', ['sent', 'paid_successfully']);
+                        });
+                });
+        } elseif ($tab === 'closed') {
+            $query->whereHas('payout', function ($p) {
+                $p->whereIn('status', ['sent', 'paid_successfully']);
+            });
         }
 
-        if ($request->has('date_from')) {
-            $query->whereDate('created_at', '>=', $request->date_from);
+        if ($request->filled('q')) {
+            $raw = trim((string) $request->input('q'));
+            $term = '%'.addcslashes($raw, '%_\\').'%';
+            $query->where(function ($q) use ($term, $raw) {
+                $q->where('invoice_number', 'like', $term)
+                    ->orWhere('item_id', 'like', $term)
+                    ->orWhere('item_name', 'like', $term);
+                if ($raw !== '' && ctype_digit($raw)) {
+                    $q->orWhere('listing_id', (int) $raw);
+                }
+                $q->orWhereHas('seller', function ($s) use ($term) {
+                    $s->where('name', 'like', $term)->orWhere('email', 'like', $term);
+                });
+                $q->orWhereHas('listing', function ($l) use ($term) {
+                    $l->where('item_number', 'like', $term);
+                });
+            });
         }
 
-        if ($request->has('date_to')) {
-            $query->whereDate('created_at', '<=', $request->date_to);
+        return $query;
+    }
+
+    /**
+     * @param  Builder<\App\Models\Invoice>  $query
+     */
+    protected function applySalesPayoutSort(Builder $query, string $sort): void
+    {
+        switch ($sort) {
+            case 'oldest':
+                $query->orderBy('created_at', 'asc');
+                break;
+            case 'sale_high':
+                $query->orderByDesc('winning_bid_amount')->orderByDesc('id');
+                break;
+            case 'sale_low':
+                $query->orderBy('winning_bid_amount')->orderByDesc('id');
+                break;
+            default:
+                $query->orderByDesc('created_at');
         }
+    }
 
-        $payments = $query->orderBy('created_at', 'desc')->paginate(20);
-                            
-        $paymentStats = [
-            'total_revenue' => Payment::where('status', 'completed')->sum('amount'),
-            'pending_release' => Payment::where('status', 'pending_release')->sum('amount'),
-            'held' => Payment::where('status', 'held')->sum('amount'),
-            'completed' => Payment::where('status', 'completed')->count(),
-            'failed' => Payment::where('status', 'failed')->count(),
-            'pending' => Payment::where('status', 'pending')->count(),
-        ];
+    /**
+     * @param  Builder<\App\Models\Invoice>  $query
+     */
+    protected function exportSalesPayoutsCsv(Builder $query): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $this->applySalesPayoutSort($query, request()->get('sort', 'newest'));
+        $filename = 'sales-payouts-'.date('Y-m-d-His').'.csv';
 
-        return view('admin.payment-management', compact('payments', 'paymentStats'));
+        return response()->streamDownload(function () use ($query) {
+            $out = fopen('php://output', 'w');
+            fwrite($out, "\xEF\xBB\xBF");
+            fputcsv($out, ['Item ID', 'Seller', 'Sale Price', 'Payout', 'Status']);
+            $commission = app(CommissionService::class);
+            $query->with(['listing', 'seller.payoutMethod', 'payout']);
+            foreach ($query->cursor() as $invoice) {
+                $listing = $invoice->listing;
+                $itemId = $invoice->item_id
+                    ?? ($listing?->item_number ?: ('CM'.str_pad((string) ($listing?->id ?? $invoice->listing_id), 6, '0', STR_PAD_LEFT)));
+                $sellerName = $invoice->seller?->name ?? '—';
+                $sale = number_format((float) $invoice->winning_bid_amount, 2, '.', '');
+                $payout = $invoice->payout;
+                if ($payout) {
+                    $payoutStr = number_format((float) $payout->net_payout, 2, '.', '');
+                } elseif ($invoice->payment_status === 'paid') {
+                    $est = $commission->calculateSellerPayout((float) $invoice->winning_bid_amount);
+                    $payoutStr = '~'.number_format((float) $est['net_payout'], 2, '.', '');
+                } else {
+                    $payoutStr = '';
+                }
+                $status = $invoice->adminSalesPayoutPipelineStatus()['label'];
+                fputcsv($out, [$itemId, $sellerName, $sale, $payoutStr, $status]);
+            }
+            fclose($out);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
     }
 
     /**

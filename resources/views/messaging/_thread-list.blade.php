@@ -16,14 +16,24 @@
                 : null;
             $title = trim(($listing->year ?? '') . ' ' . ($listing->make ?? '') . ' ' . ($listing->model ?? '')) ?: 'Listing #' . $thread->listing_id;
 
-            if ($thread->pickup_confirmed) {
-                $pillCopy = 'Sold • Completed'; $pillClass = 'pill-completed';
+            $payout = $invoice?->payout;
+            $payoutComplete = $payout && in_array($payout->status, ['sent', 'paid_successfully'], true);
+
+            if ($payoutComplete) {
+                $pillCopy = 'Closed • Paid out';
+                $pillClass = 'pill-completed';
+            } elseif ($thread->pickup_confirmed) {
+                $pillCopy = 'Read-only • Pick-up done';
+                $pillClass = 'pill-paid';
             } elseif ($invoice && $invoice->payment_status !== 'paid') {
-                $pillCopy = 'Awaiting Payment'; $pillClass = 'pill-pending';
+                $pillCopy = 'Awaiting Payment';
+                $pillClass = 'pill-pending';
             } elseif (! $thread->latestPickupDetail) {
-                $pillCopy = 'Awaiting Seller Schedule'; $pillClass = 'pill-pending';
+                $pillCopy = 'Awaiting Seller Schedule';
+                $pillClass = 'pill-pending';
             } else {
-                $pillCopy = 'Payment Completed'; $pillClass = 'pill-paid';
+                $pillCopy = 'Payment Received';
+                $pillClass = 'pill-paid';
             }
             $isActive = $invoice && $activeId === $invoice->id;
         @endphp
