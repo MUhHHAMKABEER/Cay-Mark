@@ -109,7 +109,7 @@ jobs:
           protocol: ftps
           local-dir: ./
           log-level: verbose
-          server-dir: /caymark/
+          server-dir: /domains/360webcoders.com/public_html/caymark/
           exclude: |
             **/.git*
             **/.git*/**
