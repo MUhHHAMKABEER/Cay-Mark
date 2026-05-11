@@ -180,7 +180,102 @@
                         </div>
                     </div>
 
-                    <!-- Phone verification removed from signup — enforced before bidding/listing -->
+                    @php
+                        $registrationDialRows = config('phone_country_codes', []);
+                        $regPhoneVerified = session('registration_phone_verified') && session('registration_verified_phone');
+                        $regVerifiedDigits = (string) session('registration_verified_phone', '');
+                        $regDisplayCountry = '1242';
+                        $regDisplayNational = '';
+                        if ($regPhoneVerified && $regVerifiedDigits !== '') {
+                            $sortedDial = collect($registrationDialRows)->sortByDesc(function ($r) {
+                                return strlen((string) ($r['code'] ?? ''));
+                            });
+                            foreach ($sortedDial as $row) {
+                                $c = (string) ($row['code'] ?? '');
+                                if ($c !== '' && str_starts_with($regVerifiedDigits, $c)) {
+                                    $regDisplayCountry = $c;
+                                    $regDisplayNational = substr($regVerifiedDigits, strlen($c)) ?: '';
+                                    break;
+                                }
+                            }
+                            if ($regDisplayNational === '' && $regVerifiedDigits !== '') {
+                                $regDisplayNational = $regVerifiedDigits;
+                            }
+                        }
+                    @endphp
+
+                    <!-- Mobile phone: SMS verification (same guest flow as dashboard) -->
+                    <div class="group">
+                        <div class="flex items-center gap-2 text-sm font-bold text-gray-700 mb-2">
+                            <svg class="h-5 w-5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                            </svg>
+                            <span>Mobile number <span class="text-red-500">*</span></span>
+                        </div>
+                        <div class="rounded-2xl border-2 border-gray-200 bg-gradient-to-br from-gray-50/80 to-blue-50/30 p-5 space-y-4">
+                            <p class="text-xs text-gray-600">Choose your country / area code and enter your mobile number. We send a 6-digit SMS code (same verification flow as your CayMark account settings).</p>
+                            <div class="grid grid-cols-1 md:grid-cols-[minmax(10rem,14rem),minmax(0,1fr),auto] gap-4 items-end">
+                                <div>
+                                    <label for="reg_phone_country" class="block text-xs font-bold text-gray-600 mb-1.5">Country / area code</label>
+                                    <select id="reg_phone_country" name="phone_country"
+                                        class="w-full pl-3 pr-3 py-3.5 rounded-xl border-2 border-gray-200 focus:border-[#063466] focus:ring-4 focus:ring-[#063466]/10 transition-all text-gray-900 font-medium @if ($regPhoneVerified) bg-gray-100 cursor-not-allowed @endif"
+                                        @if ($regPhoneVerified) disabled @endif>
+                                        @foreach ($registrationDialRows as $row)
+                                            <option value="{{ $row['code'] }}" @selected((string) ($row['code'] ?? '') === $regDisplayCountry)>{{ $row['label'] }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="min-w-0">
+                                    <label for="reg_phone_input" class="block text-xs font-bold text-gray-600 mb-1.5">Phone number</label>
+                                    <input type="tel" id="reg_phone_input" name="phone_local"
+                                        value="{{ old('phone_local', $regDisplayNational) }}"
+                                        placeholder="National number (no country code)"
+                                        class="w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 focus:border-[#063466] focus:ring-4 focus:ring-[#063466]/10 transition-all text-gray-900 font-medium @if ($regPhoneVerified) bg-gray-100 cursor-not-allowed @endif"
+                                        inputmode="numeric" pattern="[0-9]*" maxlength="15" autocomplete="tel-national"
+                                        @if ($regPhoneVerified) readonly @endif>
+                                </div>
+                                <div class="flex md:block">
+                                    <button type="button" id="reg-send-code-btn"
+                                        class="w-full md:w-auto px-5 py-3.5 rounded-xl bg-gray-200 text-gray-900 text-sm font-bold hover:bg-gray-300 transition whitespace-nowrap @if ($regPhoneVerified) hidden @endif">
+                                        Send code
+                                    </button>
+                                </div>
+                            </div>
+                            <input type="hidden" name="phone_full" id="reg_phone_full" value="{{ $regPhoneVerified ? '+'.$regVerifiedDigits : old('phone_full', '') }}">
+                            <input type="hidden" name="phone_verified" id="reg_phone_verified" value="{{ $regPhoneVerified ? '1' : '0' }}">
+
+                            <div id="reg-phone-verify-row" class="grid grid-cols-1 md:grid-cols-[minmax(0,1fr),auto] gap-4 items-end @if ($regPhoneVerified) hidden @endif">
+                                <div>
+                                    <label for="reg_phone_code_input" class="block text-xs font-bold text-gray-600 mb-1.5">Verification code</label>
+                                    <input type="text" id="reg_phone_code_input" placeholder="6-digit code" maxlength="6" inputmode="numeric" pattern="[0-9]*"
+                                        class="w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 focus:border-[#063466] focus:ring-4 focus:ring-[#063466]/10 transition-all text-gray-900 font-medium"
+                                        autocomplete="one-time-code">
+                                    <p class="text-[11px] text-gray-500 mt-1.5">Code expires in 5 minutes.</p>
+                                </div>
+                                <div class="flex md:block">
+                                    <button type="button" id="reg-verify-phone-btn"
+                                        class="w-full md:w-auto px-5 py-3.5 rounded-xl bg-[#063466] text-white text-sm font-bold hover:bg-[#1e3a8a] transition whitespace-nowrap">
+                                        Verify
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div id="reg-phone-verified-badge" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold bg-green-50 text-green-800 border border-green-200 @if (! $regPhoneVerified) hidden @endif">
+                                <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                                Phone verified
+                            </div>
+                            @error('phone')
+                                <p class="text-sm text-red-600 mt-1 flex items-center">
+                                    <svg class="w-4 h-4 mr-1 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                    </svg>
+                                    {{ $message }}
+                                </p>
+                            @enderror
+                        </div>
+                    </div>
 
                     <!-- Password Fields -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -275,9 +370,9 @@
                         @enderror
                     </div>
 
-                    <!-- Submit Button: active by default; disabled only after Send code until Verify succeeds -->
-                    <div class="pt-4 relative" id="reg-submit-wrap">
-                        <button type="submit" id="reg-submit-btn"
+                    <!-- Submit: enabled only after SMS verification (or session already verified after validation errors) -->
+                    <div class="pt-4 relative @if (! $regPhoneVerified) reg-pending-verify @endif" id="reg-submit-wrap">
+                        <button type="submit" id="reg-submit-btn" @if (! $regPhoneVerified) disabled @endif
                             class="reg-submit-btn w-full bg-gradient-to-r from-[#063466] to-[#1e3a8a] text-white px-8 py-5 rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none disabled:hover:shadow-xl">
                             <span class="relative z-10 flex items-center justify-center">
                                 <span>Create My Account</span>
@@ -288,7 +383,7 @@
                             <div class="absolute inset-0 bg-gradient-to-r from-[#1e3a8a] to-[#2563eb] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                         </button>
                         <span id="reg-hover-tooltip" class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-4 py-2 bg-gray-800 text-white text-sm rounded-lg whitespace-nowrap opacity-0 pointer-events-none transition-opacity duration-200 z-20">
-                            <span id="reg-typewriter-text" class="inline-block overflow-hidden whitespace-nowrap border-r-2 border-white w-0">First verify the code</span>
+                            <span id="reg-typewriter-text" class="inline-block overflow-hidden whitespace-nowrap border-r-2 border-white w-0">Verify your phone first</span>
                         </span>
                         <p class="text-center text-gray-500 text-sm mt-4">
                             Already have an account? 
@@ -382,13 +477,13 @@
         opacity: 1;
     }
     #reg-submit-wrap.reg-pending-verify:hover #reg-typewriter-text.reg-typewriter-on {
-        animation: reg-typewriter 1.4s steps(22) forwards;
+        animation: reg-typewriter 1.4s steps(23) forwards;
     }
     #reg-submit-wrap.reg-pending-verify .reg-submit-btn {
         background: linear-gradient(to right, #9ca3af, #6b7280);
     }
     @keyframes reg-typewriter {
-        to { width: 22ch; }
+        to { width: 23ch; }
     }
 </style>
 
@@ -419,20 +514,62 @@
         var verifyRow = document.getElementById('reg-phone-verify-row');
         var verifiedBadge = document.getElementById('reg-phone-verified-badge');
         var hiddenVerified = document.getElementById('reg_phone_verified');
+        var submitBtn = document.getElementById('reg-submit-btn');
+        var submitWrap = document.getElementById('reg-submit-wrap');
         var sendUrl = '{{ route("register.phone.send-code") }}';
         var verifyUrl = '{{ route("register.phone.verify") }}';
         var csrf = document.querySelector('input[name="_token"]');
-        if (!sendBtn || !verifyBtn || !phoneInput || !csrf) return;
+        if (!csrf) return;
 
         function getFullPhone() {
-            var code = (countrySelect && countrySelect.value) ? countrySelect.value.trim() : '';
-            var num = (phoneInput && phoneInput.value) ? phoneInput.value.trim().replace(/^0+/, '') : '';
+            var code = (countrySelect && !countrySelect.disabled && countrySelect.value) ? countrySelect.value.trim() : '';
+            var num = (phoneInput && !phoneInput.readOnly && phoneInput.value) ? phoneInput.value.trim().replace(/^0+/, '') : '';
             if (!code || !num) return '';
             return '+' + code + num;
         }
         function setFullPhoneInput() {
             if (phoneFull) phoneFull.value = getFullPhone();
         }
+
+        function applyVerifiedUi() {
+            if (verifiedBadge) verifiedBadge.classList.remove('hidden');
+            if (hiddenVerified) hiddenVerified.value = '1';
+            if (verifyRow) verifyRow.classList.add('hidden');
+            if (phoneInput) phoneInput.readOnly = true;
+            if (countrySelect) countrySelect.disabled = true;
+            if (sendBtn) sendBtn.classList.add('hidden');
+            if (submitBtn) submitBtn.disabled = false;
+            if (submitWrap) submitWrap.classList.remove('reg-pending-verify');
+        }
+
+        if (hiddenVerified && hiddenVerified.value === '1') {
+            applyVerifiedUi();
+        } else {
+            if (submitBtn) submitBtn.disabled = true;
+            if (submitWrap) submitWrap.classList.add('reg-pending-verify');
+        }
+
+        var step1Form = document.getElementById('step1-form');
+        if (step1Form) {
+            step1Form.addEventListener('submit', function(e) {
+                var hv = document.getElementById('reg_phone_verified');
+                if (!hv || hv.value !== '1') {
+                    e.preventDefault();
+                    alert('Please verify your phone number with the SMS code before creating your account.');
+                    return;
+                }
+                var phoneFullEl = document.getElementById('reg_phone_full');
+                if (phoneFullEl && countrySelect && phoneInput && phoneInput.value.trim() && !phoneInput.readOnly) {
+                    var code = countrySelect.disabled ? '' : countrySelect.value.trim();
+                    var num = phoneInput.value.trim().replace(/^0+/, '');
+                    if (code && num) phoneFullEl.value = '+' + code + num;
+                } else if (phoneFullEl && hiddenVerified && hiddenVerified.value === '1' && !phoneFullEl.value.trim()) {
+                    setFullPhoneInput();
+                }
+            });
+        }
+
+        if (!sendBtn || !verifyBtn || !phoneInput) return;
 
         sendBtn.addEventListener('click', function() {
             var phone = getFullPhone();
@@ -453,8 +590,6 @@
                 if (data.success) {
                     if (verifyRow) verifyRow.classList.remove('hidden');
                     if (codeInput) { codeInput.value = ''; codeInput.focus(); }
-                    var submitBtn = document.getElementById('reg-submit-btn');
-                    var submitWrap = document.getElementById('reg-submit-wrap');
                     if (submitBtn) submitBtn.disabled = true;
                     if (submitWrap) submitWrap.classList.add('reg-pending-verify');
                     alert(data.message || 'Code sent.');
@@ -486,15 +621,8 @@
                 verifyBtn.disabled = false;
                 verifyBtn.textContent = 'Verify';
                 if (data.success) {
-                    if (verifiedBadge) verifiedBadge.classList.remove('hidden');
-                    if (hiddenVerified) hiddenVerified.value = '1';
-                    if (verifyRow) verifyRow.classList.add('hidden');
-                    if (phoneInput) phoneInput.readOnly = true;
-                    if (countrySelect) countrySelect.disabled = true;
-                    var submitBtn = document.getElementById('reg-submit-btn');
-                    var submitWrap = document.getElementById('reg-submit-wrap');
-                    if (submitBtn) { submitBtn.disabled = false; }
-                    if (submitWrap) submitWrap.classList.remove('reg-pending-verify');
+                    setFullPhoneInput();
+                    applyVerifiedUi();
                 } else {
                     alert(data.message || 'Invalid or expired code.');
                 }
@@ -505,17 +633,6 @@
             });
         });
 
-        var step1Form = document.getElementById('step1-form');
-        if (step1Form) {
-            step1Form.addEventListener('submit', function() {
-                var phoneFullEl = document.getElementById('reg_phone_full');
-                if (phoneFullEl && countrySelect && phoneInput && phoneInput.value.trim()) {
-                    var code = countrySelect.value.trim();
-                    var num = phoneInput.value.trim().replace(/^0+/, '');
-                    if (code && num) phoneFullEl.value = '+' + code + num;
-                }
-            });
-        }
     })();
     (function() {
         var submitWrap = document.getElementById('reg-submit-wrap');

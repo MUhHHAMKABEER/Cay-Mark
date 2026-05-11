@@ -12,6 +12,11 @@ return [
     |
     */
 
+    /*
+    | Display phone for Messaging Center "Need Help?" and similar UI (not SMS).
+    */
+    'phone' => env('SUPPORT_PHONE', '242 806 6275'),
+
     'inbox' => env('SUPPORT_INBOX', 'support@caymark.com'),
 
     'mail_from' => env('SUPPORT_MAIL_FROM', 'support@caymark.com'),

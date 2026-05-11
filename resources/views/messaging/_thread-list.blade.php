@@ -23,7 +23,7 @@
                 $pillCopy = 'Closed • Paid out';
                 $pillClass = 'pill-completed';
             } elseif ($thread->pickup_confirmed) {
-                $pillCopy = 'Read-only • Pick-up done';
+                $pillCopy = 'Pick-up done';
                 $pillClass = 'pill-paid';
             } elseif ($invoice && $invoice->payment_status !== 'paid') {
                 $pillCopy = 'Awaiting Payment';
@@ -48,7 +48,6 @@
             <div class="meta">
                 <div class="title">{{ $title }}</div>
                 <span class="pill {{ $pillClass }}">{{ $pillCopy }}</span>
-                <div class="date">{{ $thread->updated_at?->format('M d, Y') }}</div>
             </div>
         </a>
     @empty

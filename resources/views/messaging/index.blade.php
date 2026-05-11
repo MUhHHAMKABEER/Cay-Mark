@@ -21,7 +21,6 @@
     .thread-card img { width: 64px; height: 64px; border-radius: 10px; object-fit: cover; flex-shrink: 0; background: #e2e8f0; }
     .thread-card .meta { min-width: 0; flex: 1; }
     .thread-card .title { font-size: 0.875rem; font-weight: 600; color: #0f172a; line-height: 1.25; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .thread-card .date { font-size: 0.7rem; color: #94a3b8; margin-top: 4px; }
 
     .pill { display: inline-flex; align-items: center; gap: 4px; font-size: 0.65rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.04em; }
     .pill-paid { background: #ccfbf1; color: #0f766e; }

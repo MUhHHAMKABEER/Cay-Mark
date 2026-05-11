@@ -185,7 +185,7 @@ class RegisteredUserController extends Controller
     }
 
     /**
-     * Step 1: Basic account creation only (name, email, password, terms).
+     * Step 1: Basic account creation (name, email, SMS-verified phone, password, terms).
      * Creates user account immediately and redirects to Default Dashboard.
      */
     public function step1(Request $request)
@@ -196,11 +196,24 @@ class RegisteredUserController extends Controller
             'email' => 'required|email|unique:users,email',
             'password' => ['required', 'confirmed', 'max:15', Password::defaults()],
             'agree_terms' => 'required|accepted',
-            'phone' => 'nullable|string|max:20',
-            'phone_verified' => 'nullable|in:0,1',
+            'phone_full' => 'nullable|string|max:32',
         ], [
             'agree_terms.accepted' => 'You must agree to CayMark\'s Terms and Privacy Policy to create an account.',
         ]);
+
+        $sessionDigits = (string) $request->session()->get('registration_verified_phone', '');
+        if (! $request->session()->get('registration_phone_verified') || $sessionDigits === '') {
+            throw ValidationException::withMessages([
+                'phone' => ['Please verify your mobile number with the SMS code before continuing.'],
+            ]);
+        }
+
+        $postedDigits = preg_replace('/\D/', '', (string) $request->input('phone_full', ''));
+        if ($postedDigits === '' || $postedDigits !== $sessionDigits) {
+            throw ValidationException::withMessages([
+                'phone' => ['The phone number does not match your verified number. Request a new code if you changed the number.'],
+            ]);
+        }
 
         DB::beginTransaction();
 

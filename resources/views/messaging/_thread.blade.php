@@ -12,7 +12,7 @@
     $pinCode = $listing?->pickupCodeDisplay();
     $pendingChangeRequests = $activeThread->changeRequests->whereIn('status', ['pending'])->values();
     $pendingDeliveryRequests = $activeThread->deliveryRequests->where('status', 'pending')->values();
-    $supportPhone = config('support.phone', config('support.inbox', 'support@caymark.com'));
+    $supportPhone = config('support.phone', '242 806 6275');
     $supportEmail = config('support.inbox', 'support@caymark.com');
     $exchangesUsed = (int) $activeThread->exchanges_count;
     $maxExchanges = PostAuctionThread::MAX_EXCHANGES;
