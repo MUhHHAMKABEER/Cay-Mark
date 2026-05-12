@@ -58,6 +58,8 @@ return [
         'cainfo' => env('TWILIO_CAINFO'),
         // Local only: bypass SSL verify for Twilio API (insecure; never enable in production)
         'insecure_skip_verify' => filter_var(env('TWILIO_INSECURE_SSL_SKIP_VERIFY', false), FILTER_VALIDATE_BOOLEAN),
+        // Extra Twilio logging (SMS attempt details, full stack on failure). Disable after troubleshooting.
+        'debug' => filter_var(env('TWILIO_DEBUG', false), FILTER_VALIDATE_BOOLEAN),
     ],
 
 ];

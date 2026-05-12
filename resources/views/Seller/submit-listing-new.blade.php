@@ -506,6 +506,40 @@
     .photo-preview-item .photo-preview-remove:hover {
         background: #dc2626;
     }
+    .photo-preview-add-tile {
+        position: relative;
+        aspect-ratio: 1;
+        border-radius: 10px;
+        border: 2px dashed #10b981;
+        background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+        color: #047857;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.35rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-align: center;
+        padding: 0.5rem;
+        transition: border-color 0.2s, background 0.2s, color 0.2s;
+    }
+    .photo-preview-add-tile:hover {
+        border-color: #059669;
+        background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+        color: #065f46;
+    }
+    .photo-preview-add-tile .fa-plus {
+        font-size: 1.35rem;
+        opacity: 0.9;
+    }
+    .photo-preview-add-tile .add-hint {
+        font-size: 0.65rem;
+        font-weight: 600;
+        opacity: 0.85;
+        line-height: 1.2;
+    }
     .cover-photo-remove-wrap { margin-top: 0.5rem; }
     .cover-photo-remove-btn {
         display: inline-flex;
@@ -1029,6 +1063,7 @@
                                 <div class="file-upload-status" id="photoCount">0 photos selected</div>
                             </div>
                         </div>
+                        <input type="file" id="photos_add_more_input" multiple accept="image/*" tabindex="-1" aria-hidden="true" style="position:absolute;left:-9999px;top:0;width:1px;height:1px;opacity:0;overflow:hidden;">
                         <div id="photoPreview" class="photo-preview-grid mt-2"></div>
                         <p id="photoWarning" class="text-xs text-amber-600 mt-1" style="display: none;">
                             <i class="fas fa-exclamation-triangle mr-1"></i> MINIMUM 5 REQUIRED PHOTOS.
@@ -2100,33 +2135,49 @@
         var count = additionalPhotosFiles.length;
         if (photoCountEl) photoCountEl.textContent = count + ' photo' + (count !== 1 ? 's' : '') + ' selected';
         if (photosUploadBox) photosUploadBox.classList.toggle('has-file', count > 0);
-        if (photoWarningEl) photoWarningEl.style.display = (count > 0 && count < 7) ? 'block' : 'none';
+        if (photoWarningEl) photoWarningEl.style.display = (count > 0 && count < 5) ? 'block' : 'none';
         if (!photoPreviewEl) return;
+        photoPreviewEl.querySelectorAll('img[data-object-url]').forEach(function(img) {
+            var u = img.getAttribute('data-object-url');
+            if (u) URL.revokeObjectURL(u);
+        });
         photoPreviewEl.innerHTML = '';
         additionalPhotosFiles.forEach(function(file, index) {
-            var reader = new FileReader();
-            reader.onload = function(ev) {
-                var div = document.createElement('div');
-                div.className = 'photo-preview-item';
-                var img = document.createElement('img');
-                img.src = ev.target.result;
-                img.alt = 'Preview';
-                div.appendChild(img);
-                var btn = document.createElement('button');
-                btn.type = 'button';
-                btn.className = 'photo-preview-remove';
-                btn.setAttribute('aria-label', 'Remove photo');
-                btn.innerHTML = '&times;';
-                btn.addEventListener('click', function() {
-                    additionalPhotosFiles.splice(index, 1);
-                    setAdditionalPhotosInput(additionalPhotosFiles);
-                    renderAdditionalPhotosPreviews();
-                });
-                div.appendChild(btn);
-                photoPreviewEl.appendChild(div);
-            };
-            reader.readAsDataURL(file);
+            var div = document.createElement('div');
+            div.className = 'photo-preview-item';
+            var url = URL.createObjectURL(file);
+            var img = document.createElement('img');
+            img.src = url;
+            img.alt = 'Preview';
+            img.setAttribute('data-object-url', url);
+            div.appendChild(img);
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'photo-preview-remove';
+            btn.setAttribute('aria-label', 'Remove photo');
+            btn.innerHTML = '&times;';
+            btn.addEventListener('click', function() {
+                URL.revokeObjectURL(url);
+                additionalPhotosFiles.splice(index, 1);
+                setAdditionalPhotosInput(additionalPhotosFiles);
+                renderAdditionalPhotosPreviews();
+            });
+            div.appendChild(btn);
+            photoPreviewEl.appendChild(div);
         });
+        if (additionalPhotosFiles.length < 10) {
+            var remaining = 10 - additionalPhotosFiles.length;
+            var addBtn = document.createElement('button');
+            addBtn.type = 'button';
+            addBtn.className = 'photo-preview-add-tile';
+            addBtn.setAttribute('aria-label', 'Add more photos, up to ' + remaining + ' more');
+            addBtn.innerHTML = '<i class="fas fa-plus" aria-hidden="true"></i><span>Add photos</span><span class="add-hint">Up to ' + remaining + ' more</span>';
+            addBtn.addEventListener('click', function() {
+                var addInput = document.getElementById('photos_add_more_input');
+                if (addInput) addInput.click();
+            });
+            photoPreviewEl.appendChild(addBtn);
+        }
     }
 
     if (photosInputEl) {
@@ -2141,6 +2192,27 @@
         setAdditionalPhotosInput(additionalPhotosFiles);
         renderAdditionalPhotosPreviews();
     });
+    }
+
+    var photosAddMoreInput = document.getElementById('photos_add_more_input');
+    if (photosAddMoreInput) {
+        photosAddMoreInput.addEventListener('change', function(e) {
+            var picked = Array.from(e.target.files || []);
+            e.target.value = '';
+            if (!picked.length) return;
+            var room = 10 - additionalPhotosFiles.length;
+            if (room <= 0) {
+                alert('Maximum 10 additional photos allowed.');
+                return;
+            }
+            if (picked.length > room) {
+                alert('You can add up to ' + room + ' more photo(s). Extra files were not added.');
+                picked = picked.slice(0, room);
+            }
+            additionalPhotosFiles = additionalPhotosFiles.concat(picked);
+            setAdditionalPhotosInput(additionalPhotosFiles);
+            renderAdditionalPhotosPreviews();
+        });
     }
 
     // Auto-uppercase all text inputs
