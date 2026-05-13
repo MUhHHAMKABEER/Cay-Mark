@@ -1149,6 +1149,12 @@ class AdminController extends Controller
         $withdrawal->status = 'completed';
         $withdrawal->save();
 
+        try {
+            (new \App\Services\NotificationService())->depositWithdrawalApproved($user, (float) $withdrawal->amount);
+        } catch (\Exception $e) {
+            \Log::error('Withdrawal approval notification failed: '.$e->getMessage());
+        }
+
         // TODO: Process actual payment transfer (bank transfer, etc.)
 
         return back()->with('success', 'Withdrawal approved and processed.');
@@ -1175,6 +1181,15 @@ class AdminController extends Controller
         // Update withdrawal status
         $withdrawal->status = 'cancelled';
         $withdrawal->save();
+
+        try {
+            $withdrawal->loadMissing('user');
+            if ($withdrawal->user) {
+                (new \App\Services\NotificationService())->depositWithdrawalRejected($withdrawal->user, (float) $withdrawal->amount);
+            }
+        } catch (\Exception $e) {
+            \Log::error('Withdrawal rejection notification failed: '.$e->getMessage());
+        }
 
         return back()->with('success', 'Withdrawal request rejected. Funds returned to available balance.');
     }
@@ -1788,6 +1803,15 @@ class AdminController extends Controller
             'status' => $request->status,
             'replied_at' => now(),
         ]);
+
+        try {
+            $ticket->loadMissing('user');
+            if ($ticket->user) {
+                (new \App\Services\NotificationService())->supportTicketResponded($ticket->user, $ticket);
+            }
+        } catch (\Exception $e) {
+            \Log::error('Support ticket reply in-app notification failed: '.$e->getMessage());
+        }
 
         return back()->with('success', 'Reply sent successfully.');
     }

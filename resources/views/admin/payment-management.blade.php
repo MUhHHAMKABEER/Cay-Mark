@@ -136,6 +136,8 @@
                                             'account' => $pm?->account_number ?? '',
                                             'routing' => $pm?->routing_number ?? '',
                                             'swift' => $pm?->swift_number ?? '',
+                                            'country' => $pm?->country ?? '',
+                                            'card_last4' => ($pm && $pm->card_number && strlen($pm->card_number) >= 4) ? substr($pm->card_number, -4) : '',
                                             'extra' => $pm?->additional_instructions ?? '',
                                         ]), ENT_QUOTES, 'UTF-8');
                                     @endphp
@@ -345,6 +347,8 @@
         if (payload.account) lines.push('<p><span class="text-slate-500 font-sans">Account</span><br>' + esc(payload.account) + '</p>');
         if (payload.routing) lines.push('<p><span class="text-slate-500 font-sans">Routing / transfer</span><br>' + esc(payload.routing) + '</p>');
         if (payload.swift) lines.push('<p><span class="text-slate-500 font-sans">SWIFT</span><br>' + esc(payload.swift) + '</p>');
+        if (payload.country) lines.push('<p><span class="text-slate-500 font-sans">Region</span><br>' + esc(payload.country) + '</p>');
+        if (payload.card_last4) lines.push('<p><span class="text-slate-500 font-sans">Payout card</span><br>****' + esc(payload.card_last4) + '</p>');
         if (payload.extra) lines.push('<p><span class="text-slate-500 font-sans">Instructions</span><br>' + esc(payload.extra) + '</p>');
         if (!lines.length) {
             lines.push('<p class="text-amber-800 font-sans">No payout method on file for this seller. Confirm only after you have verified banking details elsewhere.</p>');

@@ -26,3 +26,5 @@ Schedule::command('caymark:send-payment-reminders')->everyFiveMinutes();
 
 // Schedule auction ending soon reminder emails (24h, 1h)
 Schedule::command('caymark:send-auction-ending-reminders')->everyFiveMinutes();
+
+Schedule::command('caymark:send-subscription-notifications')->dailyAt('08:00');

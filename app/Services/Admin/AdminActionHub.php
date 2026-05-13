@@ -196,6 +196,17 @@ class AdminActionHub
             \Log::error('Failed to send rejection email: ' . $e->getMessage());
         }
 
+        try {
+            $listing->loadMissing('seller');
+            if ($listing->seller) {
+                $ns = new \App\Services\NotificationService();
+                $ns->listingRejected($listing->seller, $listing);
+                $ns->editingUnavailableListingRejected($listing->seller, $listing);
+            }
+        } catch (\Exception $e) {
+            \Log::error('Failed to send listing rejection in-app notifications: '.$e->getMessage());
+        }
+
         return back()->with('success', 'Listing rejected successfully.');
     }
 

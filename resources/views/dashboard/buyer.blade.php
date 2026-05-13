@@ -146,7 +146,7 @@
                                 $buyerDialRows = collect(config('phone_country_codes', []))->sortBy('label')->values();
                                 $buyerMatchRows = collect(config('phone_country_codes', []))->sortByDesc(fn ($r) => strlen((string) ($r['code'] ?? '')))->values();
                                 $buyerPhoneDigits = preg_replace('/\D/', '', (string) ($user->phone ?? ''));
-                                $dashPhoneCountry = '1';
+                                $dashPhoneCountry = '1242';
                                 $dashPhoneNational = '';
                                 foreach ($buyerMatchRows as $row) {
                                     $cc = (string) ($row['code'] ?? '');
@@ -157,10 +157,15 @@
                                     }
                                 }
                                 if ($buyerPhoneDigits !== '' && $dashPhoneNational === '' && strlen($buyerPhoneDigits) >= 10) {
-                                    $dashPhoneCountry = '1';
-                                    $dashPhoneNational = strlen($buyerPhoneDigits) === 11 && str_starts_with($buyerPhoneDigits, '1')
-                                        ? substr($buyerPhoneDigits, 1)
-                                        : $buyerPhoneDigits;
+                                    $dashPhoneCountry = '1242';
+                                    if (str_starts_with($buyerPhoneDigits, '1242')) {
+                                        $dashPhoneNational = substr($buyerPhoneDigits, 4) ?: $buyerPhoneDigits;
+                                    } elseif (strlen($buyerPhoneDigits) === 11 && str_starts_with($buyerPhoneDigits, '1')) {
+                                        $dashPhoneCountry = '1';
+                                        $dashPhoneNational = substr($buyerPhoneDigits, 1);
+                                    } else {
+                                        $dashPhoneNational = $buyerPhoneDigits;
+                                    }
                                 }
                             @endphp
                             <div class="group">
@@ -1076,7 +1081,7 @@
                                 </div>
                                 <div class="flex items-center gap-2 text-gray-700">
                                     <span class="material-icons-round text-lg" style="color: #0d9488;">email</span>
-                                    <span class="font-medium text-gray-700">support@caymark.com</span>
+                                    <span class="font-medium text-gray-700">{{ config('support.inbox', 'support@caymark.co') }}</span>
                                 </div>
                             </div>
                         </div>
@@ -1217,19 +1222,30 @@ document.addEventListener('DOMContentLoaded', function() {
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': csrfToken,
-                    'Accept': 'application/json'
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
+                credentials: 'same-origin',
                 body: JSON.stringify({ phone: phone })
-            }).then(function(r) { return r.json(); }).then(function(data) {
+            }).then(function(r) {
+                return r.text().then(function(t) {
+                    var j = {};
+                    try { j = t ? JSON.parse(t) : {}; } catch (e) {}
+                    return { ok: r.ok, status: r.status, data: j };
+                });
+            }).then(function(res) {
                 sendBtn.disabled = false;
                 sendBtn.textContent = 'Send code';
-                if (data.success) {
+                if (res.ok && res.data && res.data.success) {
                     if (verifyRow) verifyRow.classList.remove('hidden');
                     if (codeInput) { codeInput.value = ''; codeInput.focus(); }
-                    alert(data.message || 'Verification code sent. It expires in 5 minutes.');
-                } else {
-                    alert(data.message || 'Could not send SMS. Please check the number and try again.');
+                    alert(res.data.message || 'Verification code sent. It expires in 5 minutes.');
+                    return;
                 }
+                var errMsg = (res.data && res.data.message) ||
+                    (res.data && res.data.errors && res.data.errors.phone && res.data.errors.phone[0]) ||
+                    ('Could not send SMS (HTTP ' + res.status + '). Check you are logged in, then try again.');
+                alert(errMsg);
             }).catch(function() {
                 sendBtn.disabled = false;
                 sendBtn.textContent = 'Send code';
@@ -1251,14 +1267,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': csrfToken,
-                    'Accept': 'application/json'
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
+                credentials: 'same-origin',
                 body: JSON.stringify({ phone: phone, code: code })
-            }).then(function(r) { return r.json(); }).then(function(data) {
+            }).then(function(r) {
+                return r.text().then(function(t) {
+                    var j = {};
+                    try { j = t ? JSON.parse(t) : {}; } catch (e) {}
+                    return { ok: r.ok, status: r.status, data: j };
+                });
+            }).then(function(res) {
                 verifyBtn.disabled = false;
                 verifyBtn.textContent = 'Verify & Save';
-                if (data.success) {
-                    if (phoneDisplay) phoneDisplay.textContent = data.phone || phone;
+                if (res.ok && res.data && res.data.success) {
+                    if (phoneDisplay) phoneDisplay.textContent = res.data.phone || phone;
                     if (verifiedBadge) {
                         verifiedBadge.classList.remove('hidden');
                         verifiedBadge.classList.remove('bg-yellow-50', 'text-yellow-700', 'border-yellow-200');
@@ -1266,10 +1290,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         var span = verifiedBadge.querySelector('span');
                         if (span) span.textContent = 'Verified';
                     }
-                    alert(data.message || 'Phone number verified and saved to your account.');
-                } else {
-                    alert(data.message || 'Verification failed. Please check the code and try again.');
+                    alert(res.data.message || 'Phone number verified and saved to your account.');
+                    return;
                 }
+                var errMsg = (res.data && res.data.message) ||
+                    (res.data && res.data.errors && res.data.errors.code && res.data.errors.code[0]) ||
+                    ('Verification failed (HTTP ' + res.status + ').');
+                alert(errMsg);
             }).catch(function() {
                 verifyBtn.disabled = false;
                 verifyBtn.textContent = 'Verify & Save';

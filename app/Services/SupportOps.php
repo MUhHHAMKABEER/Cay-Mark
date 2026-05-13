@@ -39,6 +39,15 @@ class SupportOps
         self::notifySupportInbox($ticket, $user);
         self::notifyUserReceipt($ticket, $user);
 
+        try {
+            (new \App\Services\NotificationService())->supportTicketSubmitted($user, $ticket);
+        } catch (Throwable $e) {
+            Log::error('Support ticket in-app notification failed', [
+                'ticket_id' => $ticket->id,
+                'exception' => $e->getMessage(),
+            ]);
+        }
+
         return back()->with('success', 'Support ticket submitted successfully. We will respond soon.');
     }
 

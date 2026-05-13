@@ -13,7 +13,7 @@
     $pendingChangeRequests = $activeThread->changeRequests->whereIn('status', ['pending'])->values();
     $pendingDeliveryRequests = $activeThread->deliveryRequests->where('status', 'pending')->values();
     $supportPhone = config('support.phone', '242 806 6275');
-    $supportEmail = config('support.inbox', 'support@caymark.com');
+    $supportEmail = config('support.inbox', 'support@caymark.co');
     $exchangesUsed = (int) $activeThread->exchanges_count;
     $maxExchanges = PostAuctionThread::MAX_EXCHANGES;
     $canAcceptOrChange = $latestPickup && in_array($latestPickup->status, ['pending', 'change_requested']) && ! $activeThread->pickup_confirmed;

@@ -92,6 +92,19 @@ class InvoiceService
             $notificationService = new \App\Services\NotificationService();
             $notificationService->invoiceAvailable($buyer, $invoice);
 
+            try {
+                $listing->loadMissing('seller');
+                if ($listing->seller) {
+                    $notificationService->awaitingBuyerPayment($listing->seller, $listing);
+                    $notificationService->reservePriceMet($listing->seller, $listing, $winningAmount);
+                }
+            } catch (\Exception $e) {
+                Log::error('[generateInvoiceForAuctionWin] Seller notifications failed', [
+                    'listing_id' => $listing->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+
             // NOTE: Payout is NOT created here anymore
             // Payout is created AFTER seller confirms pickup with PIN (per PDF requirements)
 

@@ -17,9 +17,9 @@ return [
     */
     'phone' => env('SUPPORT_PHONE', '242 806 6275'),
 
-    'inbox' => env('SUPPORT_INBOX', 'support@caymark.com'),
+    'inbox' => env('SUPPORT_INBOX', 'support@caymark.co'),
 
-    'mail_from' => env('SUPPORT_MAIL_FROM', 'support@caymark.com'),
+    'mail_from' => env('SUPPORT_MAIL_FROM', 'support@caymark.co'),
 
     'mail_from_name' => env('SUPPORT_MAIL_FROM_NAME', 'CayMark Support'),
 

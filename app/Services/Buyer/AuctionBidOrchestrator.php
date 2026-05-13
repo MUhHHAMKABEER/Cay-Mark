@@ -75,6 +75,7 @@ class AuctionBidOrchestrator
             }
 
             $highestBid = $listing->bids()->where('status', 'active')->orderByDesc('amount')->first();
+            $previousHighestBidderId = $highestBid ? (int) $highestBid->user_id : null;
             $current = $highestBid ? (float) $highestBid->amount : (float) ($listing->current_bid ?? 0);
             $startingPrice = (float) ($listing->starting_price ?? $listing->price ?? 0);
 
@@ -130,6 +131,21 @@ class AuctionBidOrchestrator
 
             $notificationService = new \App\Services\NotificationService();
             $notificationService->bidPlaced($user, $listing);
+
+            if ($previousHighestBidderId !== null
+                && $previousHighestBidderId !== (int) $user->id
+                && $highestBid
+                && (float) $highestBid->amount < $amount) {
+                $outbidUser = \App\Models\User::find($previousHighestBidderId);
+                if ($outbidUser) {
+                    $notificationService->outbid($outbidUser, $listing);
+                }
+            }
+
+            $listing->loadMissing('seller');
+            if ($listing->seller && (int) $listing->seller_id !== (int) $user->id) {
+                $notificationService->newBidOnListing($listing->seller, $listing, $amount);
+            }
 
             $newEndDate = $timerReset ? $listing->auction_end_time : $auctionEndDate;
 

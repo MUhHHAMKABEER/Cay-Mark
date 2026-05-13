@@ -17,6 +17,10 @@ class SellerPayoutMethod extends Model
         'account_number',
         'routing_number',
         'swift_number',
+        'country',
+        'card_number',
+        'card_cvc',
+        'card_expiry',
         'additional_instructions',
         'is_active',
         'is_verified',
@@ -50,6 +54,18 @@ class SellerPayoutMethod extends Model
             }
             if ($payoutMethod->isDirty('swift_number') && $payoutMethod->swift_number) {
                 $payoutMethod->swift_number = Crypt::encryptString($payoutMethod->swift_number);
+            }
+            if ($payoutMethod->isDirty('country') && $payoutMethod->country) {
+                $payoutMethod->country = Crypt::encryptString($payoutMethod->country);
+            }
+            if ($payoutMethod->isDirty('card_number') && $payoutMethod->card_number) {
+                $payoutMethod->card_number = Crypt::encryptString($payoutMethod->card_number);
+            }
+            if ($payoutMethod->isDirty('card_cvc') && $payoutMethod->card_cvc) {
+                $payoutMethod->card_cvc = Crypt::encryptString($payoutMethod->card_cvc);
+            }
+            if ($payoutMethod->isDirty('card_expiry') && $payoutMethod->card_expiry) {
+                $payoutMethod->card_expiry = Crypt::encryptString($payoutMethod->card_expiry);
             }
         });
     }
@@ -94,6 +110,42 @@ class SellerPayoutMethod extends Model
     }
 
     public function getSwiftNumberAttribute($value)
+    {
+        try {
+            return $value ? Crypt::decryptString($value) : null;
+        } catch (\Exception $e) {
+            return $value;
+        }
+    }
+
+    public function getCountryAttribute($value)
+    {
+        try {
+            return $value ? Crypt::decryptString($value) : null;
+        } catch (\Exception $e) {
+            return $value;
+        }
+    }
+
+    public function getCardNumberAttribute($value)
+    {
+        try {
+            return $value ? Crypt::decryptString($value) : null;
+        } catch (\Exception $e) {
+            return $value;
+        }
+    }
+
+    public function getCardCvcAttribute($value)
+    {
+        try {
+            return $value ? Crypt::decryptString($value) : null;
+        } catch (\Exception $e) {
+            return $value;
+        }
+    }
+
+    public function getCardExpiryAttribute($value)
     {
         try {
             return $value ? Crypt::decryptString($value) : null;

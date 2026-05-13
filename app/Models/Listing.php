@@ -252,6 +252,14 @@ class Listing extends Model
     }
 
     /**
+     * Dedupe rows for auction ending reminder emails / in-app sends.
+     */
+    public function auctionReminderDispatches()
+    {
+        return $this->hasMany(ListingAuctionReminderDispatch::class);
+    }
+
+    /**
      * Check if the listing is expired.
      */
     public function isExpired()

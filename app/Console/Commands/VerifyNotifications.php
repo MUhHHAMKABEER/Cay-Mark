@@ -4,84 +4,88 @@ namespace App\Console\Commands;
 
 use App\Services\NotificationService;
 use Illuminate\Console\Command;
+use Illuminate\Support\Str;
 
 class VerifyNotifications extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
     protected $signature = 'caymark:verify-notifications';
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Verify all 21 master in-app notifications are implemented and triggered';
+    protected $description = 'Verify every catalog notification template has a matching NotificationService method';
 
     /**
-     * Master list: method name in NotificationService => human label.
+     * Template keys in config/notifications.php that do not map cleanly via Str::camel().
      *
      * @var array<string, string>
      */
-    protected static $expectedMethods = [
-        'registrationCompleted'       => '1. Registration Completed',
-        'welcomeToCayMark'             => '2. Welcome to CayMark',
-        'bidPlaced'                   => '3. Successful Bid Placed',
-        'auctionWin'                  => '4. Auction Win',
-        'paymentReminder6Hours'       => '5. Payment Reminder — 6 Hours',
-        'paymentReminder24Hours'      => '6. Payment Reminder — 24 Hours',
-        'paymentFinalWarning48Hours'  => '7. Final Payment Warning — 48 Hours',
-        'paymentSuccessful'           => '8. Payment Successful',
-        'pickupInstructionsAvailable'=> '9. Pickup Instructions Available',
-        'pickupPinIssued'             => '10. Pickup PIN Issued',
-        'pickupRescheduleApproved'    => '11. Pickup Reschedule — Approved',
-        'pickupRescheduleRejected'    => '12. Pickup Reschedule — Rejected',
-        'pickupCompleted'             => '13. Pickup Completed',
-        'listingSubmitted'            => '14. Listing Submitted',
-        'listingApproved'             => '15. Listing Approved',
-        'auctionSold'                 => '16. Auction Sold',
-        'sendPickupInfo'              => '17. Send Pickup Info',
-        'transactionCompletedPayoutPending' => '18. Transaction Completed — Payout Pending',
-        'auctionEndingSoon'           => '19. Auction Ending Soon',
-        'invoiceAvailable'            => '20. Invoice Available',
-        'suspiciousLoginDetected'    => '21. Suspicious Login Detected',
+    protected const TEMPLATE_KEY_TO_METHOD = [
+        'welcome' => 'welcomeToCayMark',
+        'auction_won' => 'auctionWin',
+        'payment_reminder_6h' => 'paymentReminder6Hours',
+        'payment_reminder_24h' => 'paymentReminder24Hours',
+        'payment_final_warning_48h' => 'paymentFinalWarning48Hours',
+        'login_new_device' => 'loginFromNewDevice',
+        'login_attempt_unsuccessful' => 'loginAttemptUnsuccessful',
     ];
 
     /**
-     * Execute the console command.
+     * Legacy / alias methods that must remain on the service (not tied to a catalog template key).
+     *
+     * @var list<string>
      */
+    protected const REQUIRED_EXTRA_METHODS = [
+        'suspiciousLoginDetected',
+    ];
+
     public function handle(): int
     {
-        $this->info('Verifying Master In-App Notification List (21 notifications)...');
+        $templates = config('notifications.templates', []);
+        if (! is_array($templates) || $templates === []) {
+            $this->error('config/notifications.php has no templates.');
+
+            return Command::FAILURE;
+        }
+
+        $this->info('Verifying notification catalog ↔ NotificationService methods...');
         $this->newLine();
 
-        $service = new NotificationService();
+        $service = new NotificationService;
         $missing = [];
         $found = 0;
 
-        foreach (self::$expectedMethods as $method => $label) {
+        foreach (array_keys($templates) as $templateKey) {
+            $method = self::TEMPLATE_KEY_TO_METHOD[$templateKey] ?? Str::camel($templateKey);
+            $label = $templateKey.' → '.$method;
             if (method_exists($service, $method)) {
                 $this->line("  <info>✓</info> {$label}");
                 $found++;
             } else {
-                $this->line("  <error>✗</error> {$label} (method: {$method})");
-                $missing[] = $method;
+                $this->line("  <error>✗</error> {$label}");
+                $missing[] = $label;
+            }
+        }
+
+        foreach (self::REQUIRED_EXTRA_METHODS as $method) {
+            $label = '(legacy) '.$method;
+            if (method_exists($service, $method)) {
+                $this->line("  <info>✓</info> {$label}");
+                $found++;
+            } else {
+                $this->line("  <error>✗</error> {$label}");
+                $missing[] = $label;
             }
         }
 
         $this->newLine();
-        $total = count(self::$expectedMethods);
 
-        if (count($missing) === 0) {
-            $this->info("All {$total} notifications verified.");
-            $this->comment('See docs/IN_APP_NOTIFICATIONS_MASTER_LIST.md for trigger locations.');
-            return Command::SUCCESS;
+        if ($missing !== []) {
+            $this->error('Missing '.count($missing).' item(s): '.implode('; ', $missing));
+
+            return Command::FAILURE;
         }
 
-        $this->error('Missing ' . count($missing) . ' notification method(s): ' . implode(', ', $missing));
-        return Command::FAILURE;
+        $this->info("All {$found} notification checks passed.");
+        $this->comment('See docs/IN_APP_NOTIFICATIONS_MASTER_LIST.md for triggers and channels.');
+
+        return Command::SUCCESS;
     }
 }

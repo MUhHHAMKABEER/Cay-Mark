@@ -26,7 +26,21 @@
     }
     // Notification bar: for registered users only (buyers, sellers, or users who haven't selected role yet)
     $showNotificationBar = !$isGuest;
-    $unreadNotificationCount = $user ? $user->unreadNotifications()->count() : 0;
+    $latestUnreadNotification = ($user && method_exists($user, 'unreadNotifications'))
+        ? $user->unreadNotifications()->orderByDesc('created_at')->first()
+        : null;
+    $latestNotificationFullText = null;
+    if ($latestUnreadNotification && is_array($latestUnreadNotification->data)) {
+        $latestNotificationFullText = $latestUnreadNotification->data['message'] ?? null;
+    }
+    if (! is_string($latestNotificationFullText) || trim($latestNotificationFullText) === '') {
+        $latestNotificationFullText = $latestUnreadNotification
+            ? 'You have an unread notification.'
+            : null;
+    }
+    $latestNotificationBarText = $latestNotificationFullText
+        ? \Illuminate\Support\Str::limit(trim($latestNotificationFullText), 160)
+        : null;
 @endphp
 
 <!-- Top Header Bar (white for all users, same as normal dashboard) -->
@@ -234,17 +248,17 @@
             <div class="flex items-center justify-center gap-2 text-sm text-white flex-wrap">
                 <span class="w-2 h-2 bg-white rounded-full animate-pulse flex-shrink-0"></span>
                 @if($isBuyer)
-                    <a href="{{ route('buyer.messaging-center') }}" class="hover:underline font-medium">
-                        @if($unreadNotificationCount > 0)
-                            <span>{{ $unreadNotificationCount }} new notification{{ $unreadNotificationCount !== 1 ? 's' : '' }} — bid confirmations, outbid alerts, new bids on watched listings, payment required, new listings to checkout</span>
+                    <a href="{{ route('buyer.messaging-center') }}" class="hover:underline font-medium text-center max-w-4xl" @if($latestNotificationFullText) title="{{ e($latestNotificationFullText) }}" @endif>
+                        @if($latestUnreadNotification)
+                            <span>{{ $latestNotificationBarText }}</span>
                         @else
                             <span>Notification center — bid confirmations &amp; updates, alerts on watched/owned listings, payment required, new listings to checkout</span>
                         @endif
                     </a>
                 @elseif($isSeller)
-                    <a href="{{ route('seller.notifications') }}" class="hover:underline font-medium">
-                        @if($unreadNotificationCount > 0)
-                            <span>{{ $unreadNotificationCount }} new notification{{ $unreadNotificationCount !== 1 ? 's' : '' }} — new bids, listing activity, payment required, reminder to create listings</span>
+                    <a href="{{ route('seller.notifications') }}" class="hover:underline font-medium text-center max-w-4xl" @if($latestNotificationFullText) title="{{ e($latestNotificationFullText) }}" @endif>
+                        @if($latestUnreadNotification)
+                            <span>{{ $latestNotificationBarText }}</span>
                         @else
                             <span>Notification center — new bids on your listings, listing status updates, payment required, create new listing</span>
                         @endif

@@ -314,6 +314,12 @@ class ListingController extends Controller
         if ($listing->status === 'sold') {
             return redirect()->route('seller.auctions')->with('error', 'Cannot delete a sold listing.');
         }
+        if ($listing->listing_method === 'auction' && $listing->status === 'approved') {
+            try {
+                (new \App\Services\NotificationService())->auctionClosedBySeller($user, $listing);
+            } catch (\Throwable $e) {
+            }
+        }
         $listing->delete();
         return redirect()->route('seller.auctions')->with('success', 'Listing removed.');
     }

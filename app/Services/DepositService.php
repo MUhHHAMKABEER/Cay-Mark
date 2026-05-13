@@ -85,6 +85,12 @@ class DepositService
             $wallet->updateTotalBalance();
             $wallet->save();
 
+            try {
+                (new NotificationService)->depositReceived($user, $amount);
+            } catch (\Throwable $e) {
+                Log::error('depositReceived notification failed: '.$e->getMessage());
+            }
+
             return $deposit;
         });
     }

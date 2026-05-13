@@ -12,6 +12,11 @@ class DepositWithdrawalOps
 
         try {
             $depositService->requestWithdrawal($user, $amount, $request->notes);
+            try {
+                (new \App\Services\NotificationService())->depositRefundRequestSubmitted($user, $amount);
+            } catch (\Throwable $e) {
+            }
+
             return redirect()->back()->with('success', 'Withdrawal request submitted. Pending admin approval.');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', $e->getMessage());

@@ -18,6 +18,11 @@ class BuyerDashboardOps
             if (!$ok) {
                 return back()->withErrors(['code' => 'Invalid or expired verification code. Please request a new code.'])->withInput();
             }
+            try {
+                (new \App\Services\NotificationService())->emailUpdated($user);
+            } catch (\Throwable $e) {
+            }
+
             return back()->with('success', 'Email address updated successfully. Please verify your new email when you receive the link.');
         }
 
@@ -36,6 +41,12 @@ class BuyerDashboardOps
         $user = \Illuminate\Support\Facades\Auth::user();
         $user->password = \Illuminate\Support\Facades\Hash::make($request->password);
         $user->save();
+
+        try {
+            (new \App\Services\NotificationService())->passwordChanged($user);
+        } catch (\Throwable $e) {
+            // non-fatal
+        }
 
         return back()->with('success', 'Password changed successfully.');
     }

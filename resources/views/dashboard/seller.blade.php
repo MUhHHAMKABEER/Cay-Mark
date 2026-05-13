@@ -584,7 +584,7 @@
                             $sellerDialRows = collect(config('phone_country_codes', []))->sortBy('label')->values();
                             $sellerMatchRows = collect(config('phone_country_codes', []))->sortByDesc(fn ($r) => strlen((string) ($r['code'] ?? '')))->values();
                             $sellerPhoneDigits = preg_replace('/\D/', '', (string) ($user->phone ?? ''));
-                            $sellerDefaultCountry = '1';
+                            $sellerDefaultCountry = '1242';
                             $sellerDefaultNational = '';
                             foreach ($sellerMatchRows as $row) {
                                 $cc = (string) ($row['code'] ?? '');
@@ -595,10 +595,16 @@
                                 }
                             }
                             if ($sellerPhoneDigits !== '' && $sellerDefaultNational === '' && strlen($sellerPhoneDigits) >= 10) {
-                                $sellerDefaultCountry = '1';
-                                $sellerDefaultNational = strlen($sellerPhoneDigits) === 11 && str_starts_with($sellerPhoneDigits, '1')
-                                    ? substr($sellerPhoneDigits, 1)
-                                    : $sellerPhoneDigits;
+                                if (str_starts_with($sellerPhoneDigits, '1242')) {
+                                    $sellerDefaultCountry = '1242';
+                                    $sellerDefaultNational = substr($sellerPhoneDigits, 4) ?: $sellerPhoneDigits;
+                                } elseif (strlen($sellerPhoneDigits) === 11 && str_starts_with($sellerPhoneDigits, '1')) {
+                                    $sellerDefaultCountry = '1';
+                                    $sellerDefaultNational = substr($sellerPhoneDigits, 1);
+                                } else {
+                                    $sellerDefaultCountry = '1242';
+                                    $sellerDefaultNational = $sellerPhoneDigits;
+                                }
                             }
                         @endphp
 
@@ -825,7 +831,13 @@
                                 <div class="rounded-xl bg-slate-50/80 border border-gray-200 px-4 py-3.5 mb-4 space-y-2 text-sm text-gray-700">
                                     <p><span class="font-semibold text-gray-900">Bank:</span> {{ $payoutMethod->bank_name }}</p>
                                     <p><span class="font-semibold text-gray-900">Account holder:</span> {{ $payoutMethod->account_holder_name }}</p>
-                                    <p><span class="font-semibold text-gray-900">Account number:</span> ****{{ substr($payoutMethod->account_number, -4) }}</p>
+                                    <p><span class="font-semibold text-gray-900">Bank account:</span> ****{{ strlen($payoutMethod->account_number ?? '') >= 4 ? substr($payoutMethod->account_number, -4) : '****' }}</p>
+                                    @if($payoutMethod->card_number)
+                                        <p><span class="font-semibold text-gray-900">Card on file:</span> ****{{ substr($payoutMethod->card_number, -4) }}</p>
+                                    @endif
+                                    @if($payoutMethod->country)
+                                        <p><span class="font-semibold text-gray-900">Region:</span> {{ $payoutMethod->country }}</p>
+                                    @endif
                                     @if($payoutMethod->routing_number)
                                         <p><span class="font-semibold text-gray-900">Routing number:</span> ****{{ substr($payoutMethod->routing_number, -4) }}</p>
                                     @endif
@@ -1639,7 +1651,7 @@
                                 </div>
                                 <div class="flex items-center gap-2 text-gray-700">
                                     <span class="material-icons-round text-lg" style="color: #0d9488;">email</span>
-                                    <span class="font-medium text-gray-700">support@caymark.com</span>
+                                    <span class="font-medium text-gray-700">{{ config('support.inbox', 'support@caymark.co') }}</span>
                                 </div>
                             </div>
                         </div>
@@ -1764,31 +1776,75 @@ document.getElementById('deleteListingModal') && document.getElementById('delete
                 @csrf
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Bank Name *</label>
-                        <input type="text" 
-                               name="bank_name" 
-                               value="{{ $payoutMethod->bank_name ?? '' }}"
-                               required
-                               class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Account Holder Name *</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Account holder name *</label>
                         <input type="text" 
                                name="account_holder_name" 
                                value="{{ $payoutMethod->account_holder_name ?? '' }}"
                                required
+                               autocomplete="name"
                                class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Account Number {{ $payoutMethod ? '' : '*' }}</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Bank account number {{ $payoutMethod ? '' : '*' }}</label>
                         @if($payoutMethod)
-                            <p class="text-xs text-gray-500 mb-1">Currently: ****{{ substr($payoutMethod->account_number, -4) }}</p>
+                            <p class="text-xs text-gray-500 mb-1">Currently: ****{{ strlen($payoutMethod->account_number ?? '') >= 4 ? substr($payoutMethod->account_number, -4) : '****' }}</p>
                         @endif
                         <input type="text" 
                                name="account_number" 
                                value=""
+                               inputmode="numeric"
+                               autocomplete="off"
                                placeholder="{{ $payoutMethod ? 'Leave blank to keep current' : 'Required' }}"
                                {{ !$payoutMethod ? 'required' : '' }}
+                               class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div class="md:col-span-2 border-t border-gray-100 pt-3 mt-1">
+                        <p class="text-sm font-medium text-gray-800 mb-2">Payout debit card</p>
+                        <p class="text-xs text-gray-500 mb-3">Card number, CVC, and expiry are encrypted. Use the name of the cardholder above if it matches this card.</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Card number {{ $payoutMethod ? '' : '*' }}</label>
+                        @if($payoutMethod && $payoutMethod->card_number)
+                            <p class="text-xs text-gray-500 mb-1">Currently: ****{{ substr($payoutMethod->card_number, -4) }}</p>
+                        @endif
+                        <input type="text"
+                               name="card_number"
+                               value=""
+                               inputmode="numeric"
+                               autocomplete="cc-number"
+                               placeholder="{{ $payoutMethod ? 'Leave blank to keep current' : '12–19 digits' }}"
+                               {{ !$payoutMethod ? 'required' : '' }}
+                               class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">CVC {{ $payoutMethod ? '' : '*' }}</label>
+                        <input type="password"
+                               name="card_cvc"
+                               value=""
+                               inputmode="numeric"
+                               maxlength="4"
+                               autocomplete="cc-csc"
+                               placeholder="{{ $payoutMethod ? 'Leave blank to keep current' : '3 or 4 digits' }}"
+                               {{ !$payoutMethod ? 'required' : '' }}
+                               class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Expiry (MM/YY) {{ $payoutMethod ? '' : '*' }}</label>
+                        <input type="text"
+                               name="card_expiry"
+                               value=""
+                               maxlength="5"
+                               autocomplete="cc-exp"
+                               placeholder="{{ $payoutMethod ? 'Leave blank to keep current' : 'e.g. 09/28' }}"
+                               {{ !$payoutMethod ? 'required' : '' }}
+                               class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Bank name *</label>
+                        <input type="text" 
+                               name="bank_name" 
+                               value="{{ $payoutMethod->bank_name ?? '' }}"
+                               required
                                class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     </div>
                     <div>
@@ -1817,7 +1873,7 @@ document.getElementById('deleteListingModal') && document.getElementById('delete
                         <label class="block text-sm font-medium text-gray-700 mb-2">Country / Payout Region *</label>
                         <input type="text" 
                                name="country" 
-                               value="Bahamas"
+                               value="{{ old('country', optional($payoutMethod)->country ?? 'Bahamas') }}"
                                required
                                class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     </div>
@@ -1865,6 +1921,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const tab = @json($activeTab ?? 'dashboard');
 
     showTab(tab);
+
+    @if(session('open_payout_modal'))
+    if (typeof showPayoutModal === 'function') {
+        showPayoutModal();
+    }
+    @endif
 
     if (tab === 'support') {
         var banner = document.getElementById('seller-support-success-banner');
@@ -1930,19 +1992,30 @@ document.addEventListener('DOMContentLoaded', function() {
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': csrfToken,
-                    'Accept': 'application/json'
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
+                credentials: 'same-origin',
                 body: JSON.stringify({ phone: phone })
-            }).then(function(r) { return r.json(); }).then(function(data) {
+            }).then(function(r) {
+                return r.text().then(function(t) {
+                    var j = {};
+                    try { j = t ? JSON.parse(t) : {}; } catch (e) {}
+                    return { ok: r.ok, status: r.status, data: j };
+                });
+            }).then(function(res) {
                 sendBtn.disabled = false;
                 sendBtn.textContent = 'Send code';
-                if (data.success) {
+                if (res.ok && res.data && res.data.success) {
                     if (verifyRow) verifyRow.classList.remove('hidden');
                     if (codeInput) { codeInput.value = ''; codeInput.focus(); }
-                    alert(data.message || 'Verification code sent. It expires in 5 minutes.');
-                } else {
-                    alert(data.message || 'Could not send SMS. Please check the number and try again.');
+                    alert(res.data.message || 'Verification code sent. It expires in 5 minutes.');
+                    return;
                 }
+                var errMsg = (res.data && res.data.message) ||
+                    (res.data && res.data.errors && res.data.errors.phone && res.data.errors.phone[0]) ||
+                    ('Could not send SMS (HTTP ' + res.status + '). Check you are logged in, then try again.');
+                alert(errMsg);
             }).catch(function() {
                 sendBtn.disabled = false;
                 sendBtn.textContent = 'Send code';
@@ -1964,14 +2037,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': csrfToken,
-                    'Accept': 'application/json'
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
+                credentials: 'same-origin',
                 body: JSON.stringify({ phone: phone, code: code })
-            }).then(function(r) { return r.json(); }).then(function(data) {
+            }).then(function(r) {
+                return r.text().then(function(t) {
+                    var j = {};
+                    try { j = t ? JSON.parse(t) : {}; } catch (e) {}
+                    return { ok: r.ok, status: r.status, data: j };
+                });
+            }).then(function(res) {
                 verifyBtn.disabled = false;
                 verifyBtn.textContent = 'Verify & Save';
-                if (data.success) {
-                    var digits = String(data.phone || '').replace(/\D/g, '');
+                if (res.ok && res.data && res.data.success) {
+                    var digits = String(res.data.phone || '').replace(/\D/g, '');
                     if (phoneDisplay) phoneDisplay.textContent = digits ? ('+' + digits) : phone;
                     if (verifiedBadge) {
                         verifiedBadge.classList.remove('hidden');
@@ -1980,10 +2061,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         var span = verifiedBadge.querySelector('span');
                         if (span) span.textContent = 'Verified';
                     }
-                    alert(data.message || 'Phone number verified and saved to your account.');
-                } else {
-                    alert(data.message || 'Verification failed. Please check the code and try again.');
+                    alert(res.data.message || 'Phone number verified and saved to your account.');
+                    return;
                 }
+                var errMsg = (res.data && res.data.message) ||
+                    (res.data && res.data.errors && res.data.errors.code && res.data.errors.code[0]) ||
+                    ('Verification failed (HTTP ' + res.status + ').');
+                alert(errMsg);
             }).catch(function() {
                 verifyBtn.disabled = false;
                 verifyBtn.textContent = 'Verify & Save';

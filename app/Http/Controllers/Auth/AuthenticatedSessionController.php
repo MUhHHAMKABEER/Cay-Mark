@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
 use RuntimeException;
@@ -54,7 +55,7 @@ class AuthenticatedSessionController extends Controller
                 $user->save();
                 Auth::login($user, $remember);
                 $request->session()->regenerate();
-                return $this->redirectAfterLogin($user);
+                return $this->redirectAfterLogin($user, $request);
             }
             return back()->withErrors([
                 'email' => __('auth.failed'),
@@ -63,7 +64,20 @@ class AuthenticatedSessionController extends Controller
 
         if ($attempt) {
             $request->session()->regenerate();
-            return $this->redirectAfterLogin(Auth::user());
+            $user = Auth::user();
+            if (! $user instanceof User) {
+                return back()->withErrors(['email' => __('auth.failed')])->onlyInput('email');
+            }
+
+            return $this->redirectAfterLogin($user, $request);
+        }
+
+        $failedUser = User::where('email', $request->input('email'))->first();
+        if ($failedUser && Cache::add('login_fail_notify:'.$failedUser->id, 1, now()->addHour())) {
+            try {
+                (new \App\Services\NotificationService())->loginAttemptUnsuccessful($failedUser);
+            } catch (\Throwable $e) {
+            }
         }
 
         return back()->withErrors([
@@ -74,8 +88,29 @@ class AuthenticatedSessionController extends Controller
     /**
      * Redirect user to the correct dashboard by role.
      */
-    private function redirectAfterLogin($user): RedirectResponse
+    private function redirectAfterLogin(User $user, Request $request): RedirectResponse
     {
+        $currentIp = (string) $request->ip();
+        if ($user->last_login_ip && $user->last_login_ip !== $currentIp) {
+            try {
+                (new \App\Services\NotificationService())->loginFromNewDevice($user);
+            } catch (\Throwable $e) {
+            }
+        }
+
+        if (! $user->registration_complete) {
+            $cacheKey = 'complete_registration_prompt:'.$user->id.':'.now()->format('Y-m-d');
+            if (Cache::add($cacheKey, 1, now()->endOfDay())) {
+                try {
+                    (new \App\Services\NotificationService())->completeRegistrationReminder($user);
+                } catch (\Throwable $e) {
+                }
+            }
+        }
+
+        $user->last_login_ip = $currentIp;
+        $user->saveQuietly();
+
         $role = strtolower(trim($user->role ?? ''));
         $redirectTo = route('dashboard');
         if ($role === 'admin') {

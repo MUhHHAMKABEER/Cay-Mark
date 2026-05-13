@@ -112,6 +112,11 @@ class SellerDashboardController extends Controller
             if (!$ok) {
                 return back()->withErrors(['code' => 'Invalid or expired verification code. Please request a new code.'])->withInput();
             }
+            try {
+                (new \App\Services\NotificationService())->emailUpdated($user);
+            } catch (\Throwable $e) {
+            }
+
             return back()->with('success', 'Email address updated successfully. Please verify your new email when you receive the link.');
         }
 

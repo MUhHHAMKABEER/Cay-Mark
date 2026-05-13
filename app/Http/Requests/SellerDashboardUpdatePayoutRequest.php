@@ -22,6 +22,9 @@ class SellerDashboardUpdatePayoutRequest extends FormRequest
             'swift_code' => 'nullable|string|max:255', // alias for backward compatibility
             'bank_address' => 'nullable|string|max:255',
             'country' => 'nullable|string|max:255',
+            'card_number' => 'nullable|string|max:23',
+            'card_cvc' => 'nullable|string|max:4',
+            'card_expiry' => ['nullable', 'string', 'max:5', 'regex:/^(0[1-9]|1[0-2])\/\d{2}$/'],
         ];
     }
 }

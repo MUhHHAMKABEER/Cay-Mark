@@ -3,13 +3,10 @@
 namespace App\Http\Controllers\Seller;
 
 use App\Http\Controllers\Controller;
-use App\Models\SellerPayoutMethod;
-use App\Models\Listing;
-use Illuminate\Http\Request;
 use App\Http\Requests\SellerPayoutMethodStoreRequest;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Crypt;
+use App\Models\SellerPayoutMethod;
 use App\Services\Seller\PayoutMethodOps;
+use Illuminate\Support\Facades\Auth;
 
 class PayoutMethodController extends Controller
 {
@@ -18,10 +15,9 @@ class PayoutMethodController extends Controller
      */
     public function create()
     {
-        $user = Auth::user();
-        $payoutMethod = SellerPayoutMethod::where('user_id', $user->id)->first();
-
-        return view('Seller.payout-method-setup', compact('payoutMethod'));
+        return redirect()
+            ->route('seller.account')
+            ->with('open_payout_modal', true);
     }
 
     /**

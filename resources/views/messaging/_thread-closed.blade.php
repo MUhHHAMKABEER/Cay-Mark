@@ -94,7 +94,7 @@
     <div class="help">
         <span class="help-title">Need Help?</span>
         <span class="help-row"><span class="material-icons-round">phone</span> {{ config('support.phone', '242 806 6275') }}</span>
-        <span class="help-row"><span class="material-icons-round">email</span> {{ config('support.inbox', 'support@caymark.com') }}</span>
+        <span class="help-row"><span class="material-icons-round">email</span> {{ config('support.inbox', 'support@caymark.co') }}</span>
     </div>
     <div class="exchange-counter" style="color:#64748b;">
         <span class="material-icons-round" style="font-size:1rem; vertical-align:middle;">visibility</span>
