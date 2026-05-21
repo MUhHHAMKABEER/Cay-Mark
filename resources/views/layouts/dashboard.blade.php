@@ -252,6 +252,7 @@
             }
         });
     </script>
+    @include('partials.phone-digits-only-script')
     @stack('scripts')
 </body>
 

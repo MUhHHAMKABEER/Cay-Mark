@@ -49,7 +49,11 @@ class ListingController extends Controller
         sort($makes); // Sort alphabetically
 
         $user = Auth::user();
-        return view('Seller.submit-listing-new', compact('user'));
+        $maxYear = (int) date('Y') + 1;
+        $isIndividualSeller = $user->activeSubscription?->package
+            && (float) $user->activeSubscription->package->price === 25.00;
+
+        return view('Seller.submit-listing-new', compact('user', 'maxYear', 'isIndividualSeller'));
     }
 
     public function store(SellerListingStoreRequest $request)
@@ -76,15 +80,18 @@ class ListingController extends Controller
             return back()->withErrors(['reserve_price' => 'Reserve Price must be greater than or equal to Starting Bid. Please adjust your pricing.'])->withInput();
         }
 
-        // Validate photos (cover + 5-10 additional)
         $photos = $request->file('photos', []);
-        $totalPhotos = count($photos) + 1; // +1 for cover photo
-        
+        $totalPhotos = count($photos) + ($request->hasFile('cover_photo') ? 1 : 0);
+
         if (count($photos) < 5) {
-            return back()->withErrors(['photos' => 'You need to upload at least 5 additional photos (plus 1 cover photo = 6 total minimum). Currently you have ' . count($photos) . ' additional photo(s).'])->withInput();
+            return back()->withErrors(['photos' => 'You need at least 6 photos total (1 cover + 5 additional). Currently you have ' . $totalPhotos . ' photo(s).'])->withInput()->with('error_section', 'section2');
         }
-        if ($totalPhotos > 11) {
-            return back()->withErrors(['photos' => 'Maximum 10 additional photos allowed (plus 1 cover photo = 11 total). You have uploaded ' . $totalPhotos . ' photos. Please remove ' . ($totalPhotos - 11) . ' photo(s).'])->withInput();
+        if ($totalPhotos > 15) {
+            return back()->withErrors(['photos' => 'Maximum 15 photos allowed (1 cover + 14 additional). You have uploaded ' . $totalPhotos . '.'])->withInput()->with('error_section', 'section2');
+        }
+
+        if (!$request->boolean('vin_decode_success')) {
+            $validated['vin'] = null;
         }
 
         // Check for duplicate VIN if provided
@@ -146,9 +153,9 @@ class ListingController extends Controller
      */
     private function detectErrorSection($errors)
     {
-        $section1Fields = ['title_status', 'island', 'color', 'interior_color', 'primary_damage', 'keys_available', 'odometer', 'odometer_estimated', 'vin', 'make', 'model', 'year'];
-        $section2Fields = ['cover_photo', 'photos'];
-        $section3Fields = ['auction_duration', 'starting_price', 'reserve_price', 'buy_now_price', 'payment_method'];
+        $section1Fields = ['make', 'model', 'year', 'vehicle_type', 'island', 'color', 'interior_color', 'vin', 'identifier_kind'];
+        $section2Fields = ['title_status', 'is_salvaged', 'run_and_drive', 'engine_starts', 'keys_available', 'primary_damage', 'secondary_damage', 'cover_photo', 'photos', 'engine_video', 'additional_notes'];
+        $section3Fields = ['auction_duration', 'starting_price', 'reserve_price', 'buy_now_price', 'cardholder_name', 'card_number', 'card_expiry', 'card_cvc', 'terms_accepted'];
         
         // Handle both MessageBag object and array
         $errorKeys = [];
@@ -280,7 +287,11 @@ class ListingController extends Controller
         if ($listing->status === 'sold') {
             return redirect()->route('seller.auctions')->with('error', 'Sold listings cannot be edited.');
         }
-        return view('Seller.submit-listing-new', compact('listing', 'user'));
+        $maxYear = (int) date('Y') + 1;
+        $isIndividualSeller = $user->activeSubscription?->package
+            && (float) $user->activeSubscription->package->price === 25.00;
+
+        return view('Seller.submit-listing-new', compact('listing', 'user', 'maxYear', 'isIndividualSeller'));
     }
 
     /**
@@ -299,6 +310,9 @@ class ListingController extends Controller
         }
         if ($request->reserve_price && $request->starting_price && $request->reserve_price < $request->starting_price) {
             return back()->withErrors(['reserve_price' => 'Reserve Price must be greater than or equal to Starting Bid.'])->withInput();
+        }
+        if (!$request->boolean('vin_decode_success')) {
+            $validated['vin'] = null;
         }
         $listing->updateFromSellerInput($request, $validated);
         return redirect()->route('seller.listings.show', $listing->id)->with('success', 'Listing updated successfully.');

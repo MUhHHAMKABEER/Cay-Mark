@@ -190,7 +190,7 @@
                             <span class="info-label">Title Status</span>
                             <span class="info-value">{{ $listing->title_status_display }}</span>
                         </div>
-                        <div class="info-item"><span class="info-label">VIN</span><span class="info-value font-mono">{{ $listing->vin ?? 'N/A' }}</span></div>
+                        <div class="info-item"><span class="info-label">VIN</span><span class="info-value font-mono">{{ $listing->maskedVinOrHin() }}</span></div>
                     </div>
                 </div>
 

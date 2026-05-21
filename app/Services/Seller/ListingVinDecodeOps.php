@@ -36,7 +36,7 @@ class ListingVinDecodeOps
             ]);
             return response()->json([
                 'success' => false,
-                'message' => 'VEHICLE/HULL NUMBER NOT FOUND. PLEASE ENTER DETAILS MANUALLY.',
+                'message' => 'Invalid entry. Please try again.',
             ], 500);
         }
 
@@ -58,7 +58,7 @@ class ListingVinDecodeOps
         ]);
         return response()->json([
             'success' => false,
-            'message' => $result['message'],
+            'message' => 'Invalid entry. Please try again.',
         ]);
     }
 }

@@ -51,7 +51,9 @@ class Listing extends Model
         'secondary_damage',
         'keys_available',
         'run_and_drive',
+        'engine_starts',
         'video_path',
+        'additional_notes',
         'engine_type',
         'cylinders',
         'hull_material',
@@ -671,11 +673,19 @@ public function invoices()
         $actor = $context['actor'];
         $request = $context['request'];
 
+        $cardNumber = preg_replace('/\D/', '', (string) $request->input('card_number', ''));
+        $last4 = strlen($cardNumber) >= 4 ? substr($cardNumber, -4) : null;
+
         $paymentModel::create([
             'user_id' => $actor->id,
             'amount' => 25.00,
-            'method' => $request->payment_method ?? 'credit_card',
+            'method' => 'credit_card',
             'status' => 'completed',
+            'metadata' => [
+                'cardholder_name' => $request->input('cardholder_name'),
+                'card_last4' => $last4,
+                'card_expiry' => $request->input('card_expiry'),
+            ],
         ]);
 
         return $context;
@@ -702,16 +712,7 @@ public function invoices()
         $duplicateVinFlag = $context['duplicate'] ?? false;
         $actor = $context['actor'];
 
-        // Normalize transmission to match database enum
-        $transmission = null;
-        if (!empty($p['transmission'])) {
-            $tUpper = strtoupper(trim($p['transmission']));
-            if (stripos($tUpper, 'AUTOMATIC') !== false || stripos($tUpper, 'AUTO') !== false) {
-                $transmission = 'automatic';
-            } elseif (stripos($tUpper, 'MANUAL') !== false) {
-                $transmission = 'manual';
-            }
-        }
+        $transmission = static::normalizeTransmission($p['transmission'] ?? null);
 
         return static::create([
             'seller_id' => $actor->id,
@@ -737,6 +738,8 @@ public function invoices()
             'secondary_damage' => $p['secondary_damage'] ?? null,
             'keys_available' => ($p['keys_available'] ?? null) === 'yes',
             'run_and_drive' => $p['run_and_drive'] ?? null,
+            'engine_starts' => $p['engine_starts'] ?? null,
+            'additional_notes' => $p['additional_notes'] ?? null,
             'engine_type' => $p['engine_size'] ?? null,
             'cylinders' => $p['cylinders'] ?? null,
             'starting_price' => $p['starting_price'] ?? null,
@@ -794,9 +797,45 @@ public function invoices()
             $listing->cover_photo_id = $coverId;
         }
 
+        if ($request->hasFile('engine_video')) {
+            $video = $request->file('engine_video');
+            $videoName = 'ENGINE_' . microtime(true) . '_' . uniqid() . '.' . $video->getClientOriginalExtension();
+            if ($video->move(public_path('uploads/listings'), $videoName)) {
+                $listing->video_path = $videoName;
+            }
+        }
+
         $listing->save();
 
         return $listing;
+    }
+
+    public static function normalizeTransmission(?string $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        $tUpper = strtoupper(trim($value));
+        if (str_contains($tUpper, 'CVT')) {
+            return 'cvt';
+        }
+        if (str_contains($tUpper, 'SEMI')) {
+            return 'semi-automatic';
+        }
+        if (str_contains($tUpper, 'AUTOMATIC') || str_contains($tUpper, 'AUTO')) {
+            return 'automatic';
+        }
+        if (str_contains($tUpper, 'MANUAL')) {
+            return 'manual';
+        }
+
+        return strtolower($value);
+    }
+
+    public function maskedVinOrHin(): string
+    {
+        return \App\Helpers\ListingDisplayHelper::maskedIdentifier($this->vin);
     }
 
     /**
@@ -804,15 +843,7 @@ public function invoices()
      */
     public function updateFromSellerInput(Request $request, array $payload): void
     {
-        $transmission = null;
-        if (!empty($payload['transmission'])) {
-            $tUpper = strtoupper(trim($payload['transmission']));
-            if (stripos($tUpper, 'AUTOMATIC') !== false || stripos($tUpper, 'AUTO') !== false) {
-                $transmission = 'automatic';
-            } elseif (stripos($tUpper, 'MANUAL') !== false) {
-                $transmission = 'manual';
-            }
-        }
+        $transmission = static::normalizeTransmission($payload['transmission'] ?? null);
 
         $duration = (int) ($payload['auction_duration'] ?? 0);
         $this->update([
@@ -835,6 +866,8 @@ public function invoices()
             'secondary_damage' => $payload['secondary_damage'] ?? null,
             'keys_available' => ($payload['keys_available'] ?? null) === 'yes',
             'run_and_drive' => $payload['run_and_drive'] ?? null,
+            'engine_starts' => $payload['engine_starts'] ?? null,
+            'additional_notes' => $payload['additional_notes'] ?? null,
             'engine_type' => $payload['engine_size'] ?? null,
             'cylinders' => $payload['cylinders'] ?? null,
             'starting_price' => $payload['starting_price'] ?? null,
@@ -843,6 +876,15 @@ public function invoices()
             'odometer' => isset($payload['odometer']) && $payload['odometer'] !== '' ? (int) $payload['odometer'] : null,
             'odometer_estimated' => !empty($payload['odometer_estimated']),
         ]);
+
+        if ($request->hasFile('engine_video')) {
+            $video = $request->file('engine_video');
+            $videoName = 'ENGINE_' . microtime(true) . '_' . uniqid() . '.' . $video->getClientOriginalExtension();
+            if ($video->move(public_path('uploads/listings'), $videoName)) {
+                $this->video_path = $videoName;
+                $this->save();
+            }
+        }
 
         if ($request->hasFile('cover_photo') || $request->hasFile('photos')) {
             $this->replaceImages($request);

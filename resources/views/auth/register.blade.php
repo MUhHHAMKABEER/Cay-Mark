@@ -227,10 +227,10 @@
                                 </div>
                                 <div class="min-w-0">
                                     <label for="reg_phone_input" class="block text-xs font-bold text-gray-600 mb-1.5">Phone number</label>
-                                    <input type="tel" id="reg_phone_input" name="phone_local"
+                                    <input type="text" id="reg_phone_input" name="phone_local"
                                         value="{{ old('phone_local', $regDisplayNational) }}"
                                         placeholder="National number (no country code)"
-                                        class="w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 focus:border-[#063466] focus:ring-4 focus:ring-[#063466]/10 transition-all text-gray-900 font-medium @if ($regPhoneVerified) bg-gray-100 cursor-not-allowed @endif"
+                                        class="js-digits-only w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 focus:border-[#063466] focus:ring-4 focus:ring-[#063466]/10 transition-all text-gray-900 font-medium @if ($regPhoneVerified) bg-gray-100 cursor-not-allowed @endif"
                                         inputmode="numeric" pattern="[0-9]*" maxlength="15" autocomplete="tel-national"
                                         @if ($regPhoneVerified) readonly @endif>
                                 </div>
@@ -652,5 +652,7 @@
         });
     })();
 </script>
+
+@include('partials.phone-digits-only-script')
 
 @endsection

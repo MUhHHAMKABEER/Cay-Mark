@@ -659,9 +659,9 @@
                                         </div>
                                         <div class="min-w-[180px]">
                                             <label class="block text-xs font-semibold text-gray-600 mb-1">Phone Number</label>
-                                            <input type="tel" id="seller_dash_phone_input" value="{{ old('seller_phone_local', $sellerDefaultNational) }}"
+                                            <input type="text" id="seller_dash_phone_input" value="{{ old('seller_phone_local', $sellerDefaultNational) }}"
                                                 placeholder="National number (no country code)"
-                                                class="w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                                class="js-digits-only w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                                                 inputmode="numeric" pattern="[0-9]*" maxlength="15" autocomplete="tel-national">
                                         </div>
                                         <div class="flex md:block">
@@ -677,7 +677,7 @@
                                         <div>
                                             <label class="block text-xs font-semibold text-gray-600 mb-1">Verification code</label>
                                             <input type="text" id="seller_dash_phone_code_input" placeholder="6-digit code" maxlength="6" inputmode="numeric" pattern="[0-9]*"
-                                                class="w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+                                                class="js-digits-only w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
                                             <p class="text-[11px] text-gray-500 mt-1">Code expires in 5 minutes.</p>
                                         </div>
                                         <div class="flex md:block">

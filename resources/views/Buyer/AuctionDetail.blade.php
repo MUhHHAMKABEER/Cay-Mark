@@ -619,15 +619,7 @@
                         <div class="info-item">
                             <span class="info-label">Odometer</span>
                             <span class="info-value">
-                                @if($listing->odometer)
-                                    {{ number_format($listing->odometer) }} mi
-                                    @if($listing->odometer_estimated)
-                                        <span class="text-amber-600 font-medium">(Estimated)</span>
-                                        <span class="material-icons text-base text-gray-400 cursor-help align-middle ml-0.5" title="This is an estimated odometer reading and may be subject to change." style="font-size: 16px;">info</span>
-                                    @endif
-                                @else
-                                    N/A
-                                @endif
+                                {{ \App\Helpers\ListingDisplayHelper::formatOdometer($listing->odometer, (bool) $listing->odometer_estimated) }}
                             </span>
                         </div>
                         <div class="info-item">
@@ -641,11 +633,7 @@
                         @auth
                         <div class="info-item">
                             <span class="info-label">VIN</span>
-                            @php
-                                $vin = $listing->vin ?? '';
-                                $vinMasked = $vin ? (strlen($vin) > 7 ? substr($vin, 0, 4) . '•••••••' . substr($vin, -3) : substr($vin, 0, 4) . '•••••••') : 'N/A';
-                            @endphp
-                            <span class="info-value">{{ $vinMasked }}</span>
+                            <span class="info-value">{{ $listing->maskedVinOrHin() }}</span>
                         </div>
                         @endauth
                     </div>

@@ -114,7 +114,15 @@
     <div class="video-overlay"></div>
 
 
-    @yield('content')
+    <main class="relative z-10 min-h-screen flex flex-col items-center justify-center py-12 px-4">
+        <div class="w-full max-w-md">
+            @hasSection('content')
+                @yield('content')
+            @else
+                {{ $slot }}
+            @endif
+        </div>
+    </main>
 
 
 

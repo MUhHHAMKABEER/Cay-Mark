@@ -7,118 +7,105 @@ use Illuminate\Validation\Rule;
 
 class SellerListingStoreRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
-        // Authorization is handled elsewhere (middleware / guards)
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     */
     public function rules(): array
     {
         $user = $this->user();
         $userPackage = $user?->activeSubscription?->package;
         $isIndividualSeller = $userPackage && ((float) $userPackage->price === 25.00);
+        $maxYear = (int) date('Y') + 1;
+        $damageKeys = array_keys(config('listing_damage_types.allowed', []));
 
-        return [
-            // VIN/HIN (optional if manual entry)
+        $rules = [
+            'identifier_kind' => ['required', Rule::in(['vehicle', 'marine'])],
             'vin' => 'nullable|string|max:17',
+            'vin_decode_success' => 'nullable|boolean',
 
-            // Manual fields (required if VIN decode fails)
-            'make' => 'nullable|string',
-            'model' => 'nullable|string',
-            'year' => 'nullable|string',
-            'trim' => 'nullable|string',
-            'engine_size' => 'nullable|string',
-            'cylinders' => 'nullable|string',
-            'drive_type' => 'nullable|string',
-            'fuel_type' => 'nullable|string',
-            'transmission' => 'nullable|string',
-            'vehicle_type' => 'nullable|string',
+            'make' => 'required|string|max:100',
+            'model' => 'required|string|max:100',
+            'year' => ['required', 'integer', 'min:1995', "max:{$maxYear}"],
+            'trim' => 'nullable|string|max:100',
+            'engine_size' => 'nullable|numeric|min:0',
+            'cylinders' => 'nullable|numeric|min:0',
+            'drive_type' => ['nullable', Rule::in(array_keys(config('listing_drive_types.allowed', [])))],
+            'fuel_type' => ['nullable', Rule::in(config('listing_fuel_types.allowed', []))],
+            'transmission' => ['nullable', Rule::in(config('listing_transmissions.allowed', []))],
+            'vehicle_type' => 'required|string|max:100',
 
-            // Required condition fields
-            'title_status' => 'required|in:yes,no',
             'island' => 'required|string',
             'color' => ['required', 'string', Rule::in(config('listing_colors.allowed', []))],
             'interior_color' => ['required', 'string', Rule::in(config('listing_colors.allowed', []))],
-            'primary_damage' => 'required|string',
-            'keys_available' => 'required|in:yes,no',
-            'is_salvaged' => 'required|in:0,1',
-            'run_and_drive' => 'required|in:yes,no',
             'odometer' => 'nullable|integer|min:0|max:9999999',
             'odometer_estimated' => 'nullable|boolean',
-            'secondary_damage' => 'nullable|string',
-            'additional_notes' => 'nullable|string',
 
-            // SECTION 2 - Photos
+            'title_status' => 'required|in:yes,no',
+            'is_salvaged' => 'required|in:0,1',
+            'run_and_drive' => 'required|in:yes,no',
+            'engine_starts' => 'required|in:yes,no',
+            'keys_available' => 'required|in:yes,no',
+            'primary_damage' => ['required', 'string', Rule::in($damageKeys)],
+            'secondary_damage' => ['required', 'string', Rule::in($damageKeys)],
+            'additional_notes' => 'nullable|string|max:300',
+
             'cover_photo' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
-            'photos' => 'required|array|min:5',
+            'photos' => 'required|array|min:5|max:14',
             'photos.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:5120',
 
-            // SECTION 3 - Auction Settings
-            'auction_duration' => 'required|in:5,7,14,21,28',
-            'starting_price' => 'nullable|numeric|min:0',
+            'auction_duration' => 'required|in:3,5,7,14,21,28',
+            'starting_price' => 'required|numeric|min:0.01',
             'reserve_price' => 'nullable|numeric|min:0',
             'buy_now_price' => 'nullable|numeric|min:0',
 
-            // Payment (Individual Sellers only)
-            'payment_method' => $isIndividualSeller ? 'required|string' : 'nullable',
+            'terms_accepted' => 'accepted',
         ];
+
+        if ($isIndividualSeller) {
+            $rules['cardholder_name'] = 'required|string|max:120';
+            $rules['card_number'] = 'required|string|regex:/^\d{13,19}$/';
+            $rules['card_expiry'] = ['required', 'string', 'regex:/^(0[1-9]|1[0-2])\/\d{2}$/'];
+            $rules['card_cvc'] = 'required|string|regex:/^\d{3,4}$/';
+        }
+
+        if ($this->input('engine_starts') === 'yes') {
+            $rules['engine_video'] = 'required|file|mimes:mp4,webm,mov|max:51200';
+        }
+
+        return $rules;
     }
 
-    /**
-     * Get custom messages for validator errors.
-     */
     public function messages(): array
     {
         return [
-            // Section 1 - Vehicle Information
-            'title_status.required' => 'Please select the title status (Yes/No) for your vehicle.',
-            'title_status.in' => 'Invalid title status selected. Please choose Yes or No.',
-            'island.required' => 'Please select the island location where your vehicle is located.',
-            'color.required' => 'Please select the exterior color of your vehicle.',
-            'color.in' => 'Please select a valid exterior color.',
-            'interior_color.required' => 'Please select the interior color of your vehicle.',
-            'interior_color.in' => 'Please select a valid interior color.',
-            'primary_damage.required' => 'Please select the primary damage type for your vehicle.',
-            'keys_available.required' => 'Please indicate if keys are available for your vehicle.',
-            'keys_available.in' => 'Invalid selection. Please choose Yes or No for keys availability.',
-            'odometer.integer' => 'Odometer must be a whole number (miles).',
-            'odometer.min' => 'Odometer cannot be negative.',
-            'odometer.max' => 'Odometer value is too high. Please enter a valid reading.',
-
-            'run_and_drive.required' => 'Please indicate if the vehicle can run and drive.',
-            'run_and_drive.in' => 'Invalid selection for Run & Drive.',
-
-            // Section 2 - Photos
-            'cover_photo.required' => 'Cover photo is required. Please upload a cover image for your listing.',
-            'cover_photo.image' => 'Cover photo must be an image file (JPEG, PNG, JPG, GIF, or WEBP).',
-            'cover_photo.mimes' => 'Cover photo must be in JPEG, PNG, JPG, GIF, or WEBP format.',
-            'cover_photo.max' => 'Cover photo size must not exceed 5MB. Please compress your image and try again.',
-            'photos.*.image' => 'One or more photos are not valid image files. Please upload only image files.',
-            'photos.*.mimes' => 'Photos must be in JPEG, PNG, JPG, GIF, or WEBP format.',
-            'photos.*.max' => 'One or more photos exceed 5MB size limit. Please compress your images and try again.',
-            'photos.required' => 'At least 5 additional photos are required.',
-            'photos.min' => 'You must upload at least 5 additional photos (rear, left side, right side, dashboard, VIN label).',
-
-            // Section 3 - Auction Settings
-            'auction_duration.required' => 'Please select the auction duration (5, 7, 14, 21, or 28 days).',
-            'auction_duration.in' => 'Invalid auction duration selected. Please choose 5, 7, 14, 21, or 28 days.',
-            'starting_price.numeric' => 'Starting price must be a valid number.',
-            'starting_price.min' => 'Starting price cannot be negative.',
-            'reserve_price.numeric' => 'Reserve price must be a valid number.',
-            'reserve_price.min' => 'Reserve price cannot be negative.',
-            'buy_now_price.numeric' => 'Buy Now price must be a valid number.',
-            'buy_now_price.min' => 'Buy Now price cannot be negative.',
-
-            // Payment
-            'payment_method.required' => 'Payment method is required for Individual Sellers. Please select a payment method.',
+            'make.required' => 'Make is required.',
+            'model.required' => 'Model is required.',
+            'year.required' => 'Year is required.',
+            'vehicle_type.required' => 'Vehicle type is required.',
+            'island.required' => 'Please select the island location.',
+            'color.required' => 'Please select the exterior color.',
+            'interior_color.required' => 'Please select the interior color.',
+            'photos.min' => 'You must upload at least 6 photos total (1 cover + 5 additional).',
+            'photos.max' => 'You may upload at most 15 photos total (1 cover + 14 additional).',
+            'starting_price.required' => 'Starting bid is required.',
+            'starting_price.min' => 'Starting bid must be greater than $0.',
+            'engine_video.required' => 'An engine video (30–60 seconds) is required when Starts is Yes.',
+            'terms_accepted.accepted' => 'You must accept the terms before submitting.',
+            'cardholder_name.required' => 'Cardholder name is required.',
+            'card_number.required' => 'Card number is required.',
+            'card_expiry.required' => 'Card expiration date is required.',
+            'card_cvc.required' => 'Card security code is required.',
         ];
     }
-}
 
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('card_number')) {
+            $this->merge([
+                'card_number' => preg_replace('/\D/', '', (string) $this->input('card_number')),
+            ]);
+        }
+    }
+}

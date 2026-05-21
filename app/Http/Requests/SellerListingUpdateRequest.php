@@ -12,46 +12,46 @@ class SellerListingUpdateRequest extends FormRequest
         return true;
     }
 
-    /**
-     * Same as store but cover_photo and photos are optional (keep existing if not provided).
-     */
     public function rules(): array
     {
-        $user = $this->user();
-        $userPackage = $user?->activeSubscription?->package;
-        $isIndividualSeller = $userPackage && ((float) $userPackage->price === 25.00);
+        $maxYear = (int) date('Y') + 1;
+        $damageKeys = array_keys(config('listing_damage_types.allowed', []));
 
         return [
+            'identifier_kind' => ['nullable', Rule::in(['vehicle', 'marine'])],
             'vin' => 'nullable|string|max:17',
-            'make' => 'nullable|string',
-            'model' => 'nullable|string',
-            'year' => 'nullable|string',
-            'trim' => 'nullable|string',
-            'engine_size' => 'nullable|string',
-            'cylinders' => 'nullable|string',
-            'drive_type' => 'nullable|string',
-            'fuel_type' => 'nullable|string',
-            'transmission' => 'nullable|string',
-            'vehicle_type' => 'nullable|string',
-            'title_status' => 'required|in:yes,no',
+            'make' => 'required|string|max:100',
+            'model' => 'required|string|max:100',
+            'year' => ['required', 'integer', 'min:1995', "max:{$maxYear}"],
+            'trim' => 'nullable|string|max:100',
+            'engine_size' => 'nullable|numeric|min:0',
+            'cylinders' => 'nullable|numeric|min:0',
+            'drive_type' => ['nullable', Rule::in(array_keys(config('listing_drive_types.allowed', [])))],
+            'fuel_type' => ['nullable', Rule::in(config('listing_fuel_types.allowed', []))],
+            'transmission' => ['nullable', Rule::in(config('listing_transmissions.allowed', []))],
+            'vehicle_type' => 'required|string|max:100',
             'island' => 'required|string',
             'color' => ['required', 'string', Rule::in(config('listing_colors.allowed', []))],
             'interior_color' => ['required', 'string', Rule::in(config('listing_colors.allowed', []))],
-            'primary_damage' => 'required|string',
-            'keys_available' => 'required|in:yes,no',
+            'title_status' => 'required|in:yes,no',
             'is_salvaged' => 'required|in:0,1',
             'run_and_drive' => 'required|in:yes,no',
+            'engine_starts' => 'required|in:yes,no',
+            'keys_available' => 'required|in:yes,no',
+            'primary_damage' => ['required', 'string', Rule::in($damageKeys)],
+            'secondary_damage' => ['required', 'string', Rule::in($damageKeys)],
             'odometer' => 'nullable|integer|min:0|max:9999999',
             'odometer_estimated' => 'nullable|boolean',
-            'secondary_damage' => 'nullable|string',
-            'additional_notes' => 'nullable|string',
+            'additional_notes' => 'nullable|string|max:300',
             'cover_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'photos' => 'nullable|array|max:14',
             'photos.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
-            'auction_duration' => 'required|in:5,7,14,21,28',
-            'starting_price' => 'nullable|numeric|min:0',
+            'engine_video' => 'nullable|file|mimes:mp4,webm,mov|max:51200',
+            'auction_duration' => 'required|in:3,5,7,14,21,28',
+            'starting_price' => 'required|numeric|min:0.01',
             'reserve_price' => 'nullable|numeric|min:0',
             'buy_now_price' => 'nullable|numeric|min:0',
-            'payment_method' => 'nullable|string',
+            'terms_accepted' => 'accepted',
         ];
     }
 }
