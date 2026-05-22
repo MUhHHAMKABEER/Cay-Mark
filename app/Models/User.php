@@ -305,6 +305,10 @@ public function watchlist()
         $totalListings = $this->listings()->count();
         $activeListings = $this->listings()
             ->whereIn('status', ['approved', 'active'])
+            ->where(function ($q) {
+                $q->whereNull('auction_end_time')
+                  ->orWhere('auction_end_time', '>=', now());
+            })
             ->count();
         $soldListings = $this->listings()
             ->where('status', 'sold')

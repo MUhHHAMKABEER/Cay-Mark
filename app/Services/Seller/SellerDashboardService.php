@@ -12,6 +12,7 @@ use App\Models\UserDocument;
 use Carbon\Carbon;
 use App\Services\UserActivityTimelineService;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class SellerDashboardService
 {
@@ -286,12 +287,200 @@ class SellerDashboardService
     }
 
     /**
+     * Get the seller's active subscription with package info.
+     */
+    public function getActiveSubscription(User $user): ?object
+    {
+        return $user->subscriptions()
+            ->with('package')
+            ->where('status', 'active')
+            ->where('ends_at', '>=', now())
+            ->latest('ends_at')
+            ->first();
+    }
+
+    /**
+     * Count listings awaiting admin approval.
+     */
+    public function getPendingListingsCount(User $user): int
+    {
+        return $user->listings()->where('status', 'pending')->count();
+    }
+
+    /**
+     * Count listings with status 'sold' as completed sales.
+     */
+    public function getCompletedSalesCount(User $user): int
+    {
+        return $user->listings()->where('status', 'sold')->count();
+    }
+
+    /**
+     * Total lifetime payouts that have been successfully sent/processed.
+     */
+    public function getTotalEarnings(User $user): float
+    {
+        return (float) \App\Models\Payout::where('seller_id', $user->id)
+            ->whereIn('status', ['sent', 'paid_successfully'])
+            ->sum('net_payout');
+    }
+
+    /**
+     * Sum of paid invoices not yet backed by a completed payout (still to be received).
+     */
+    public function getToBeReceived(User $user): float
+    {
+        return (float) Invoice::where('seller_id', $user->id)
+            ->where('payment_status', 'paid')
+            ->whereDoesntHave('payout', fn ($q) => $q->whereIn('status', ['sent', 'paid_successfully']))
+            ->sum('winning_bid_amount');
+    }
+
+    /**
+     * Auction-only activity feed (bids, approvals, endings, rejections).
+     * Excludes messaging, pickup scheduling, and support updates.
+     */
+    public function getRecentAuctionActivity(User $user): Collection
+    {
+        $entries = collect();
+
+        Bid::whereHas('listing', fn ($q) => $q->where('seller_id', $user->id))
+            ->with('listing')
+            ->latest()
+            ->take(10)
+            ->get()
+            ->each(function ($bid) use ($entries) {
+                $l = $bid->listing;
+                if (!$l) return;
+                $entries->push([
+                    'type'        => 'bid',
+                    'icon'        => 'gavel',
+                    'color'       => 'blue',
+                    'description' => 'New bid of $' . number_format((float) $bid->amount, 0) . ' on ' . $l->year . ' ' . $l->make . ' ' . $l->model,
+                    'timestamp'   => $bid->created_at,
+                ]);
+            });
+
+        $user->listings()
+            ->whereIn('status', ['approved', 'active'])
+            ->latest('updated_at')
+            ->take(5)
+            ->get()
+            ->each(function ($l) use ($entries) {
+                $entries->push([
+                    'type'        => 'approved',
+                    'icon'        => 'check_circle',
+                    'color'       => 'green',
+                    'description' => 'Auction approved: ' . $l->year . ' ' . $l->make . ' ' . $l->model,
+                    'timestamp'   => $l->updated_at,
+                ]);
+            });
+
+        $user->listings()
+            ->whereIn('status', ['sold', 'ended_no_sale'])
+            ->latest('updated_at')
+            ->take(5)
+            ->get()
+            ->each(function ($l) use ($entries) {
+                $isBuyNow = $l->buy_now_price && $l->status === 'sold';
+                $entries->push([
+                    'type'        => $isBuyNow ? 'buynow' : 'ended',
+                    'icon'        => $isBuyNow ? 'shopping_cart' : 'timer_off',
+                    'color'       => $isBuyNow ? 'purple' : 'orange',
+                    'description' => ($isBuyNow ? 'Buy Now purchase completed: ' : 'Auction ended: ') . $l->year . ' ' . $l->make . ' ' . $l->model,
+                    'timestamp'   => $l->updated_at,
+                ]);
+            });
+
+        $user->listings()
+            ->where('status', 'rejected')
+            ->latest('updated_at')
+            ->take(3)
+            ->get()
+            ->each(function ($l) use ($entries) {
+                $entries->push([
+                    'type'        => 'rejected',
+                    'icon'        => 'cancel',
+                    'color'       => 'red',
+                    'description' => 'Listing rejected: ' . $l->year . ' ' . $l->make . ' ' . $l->model,
+                    'timestamp'   => $l->updated_at,
+                ]);
+            });
+
+        return $entries->sortByDesc('timestamp')->take(8)->values();
+    }
+
+    /**
+     * Top 4 active listings by view count then bid count (for dashboard preview).
+     */
+    public function getTopActiveListings(User $user): Collection
+    {
+        return $user->listings()
+            ->whereIn('status', ['approved', 'active'])
+            ->with(['images'])
+            ->withCount('bids')
+            ->orderByDesc('view_count')
+            ->orderByDesc('bids_count')
+            ->take(4)
+            ->get();
+    }
+
+    /**
+     * Time-series data for the Performance Insights chart (week / month / year).
+     */
+    public function getPerformanceInsightsData(User $user): array
+    {
+        $result = [];
+
+        foreach (['week' => 7, 'month' => 30, 'year' => 12] as $period => $count) {
+            $isYear = ($period === 'year');
+            $labels = $bids = $watchlistAdds = $sales = [];
+
+            for ($i = $count - 1; $i >= 0; $i--) {
+                if ($isYear) {
+                    $date  = Carbon::now()->subMonths($i);
+                    $start = $date->copy()->startOfMonth();
+                    $end   = $date->copy()->endOfMonth();
+                    $labels[] = $date->format('M Y');
+                } else {
+                    $date  = Carbon::now()->subDays($i);
+                    $start = $date->copy()->startOfDay();
+                    $end   = $date->copy()->endOfDay();
+                    $labels[] = $date->format($period === 'week' ? 'D' : 'M d');
+                }
+
+                $bids[] = Bid::whereHas('listing', fn ($q) => $q->where('seller_id', $user->id))
+                    ->whereBetween('created_at', [$start, $end])
+                    ->count();
+
+                $watchlistAdds[] = DB::table('watchlists')
+                    ->join('listings', 'listings.id', '=', 'watchlists.listing_id')
+                    ->where('listings.seller_id', $user->id)
+                    ->whereBetween('watchlists.created_at', [$start, $end])
+                    ->count();
+
+                $sales[] = Invoice::where('seller_id', $user->id)
+                    ->where('payment_status', 'paid')
+                    ->whereBetween('paid_at', [$start, $end])
+                    ->count();
+            }
+
+            $result[$period] = compact('labels', 'bids', 'watchlistAdds', 'sales');
+        }
+
+        $result['total_views'] = (int) $user->listings()->sum('view_count');
+
+        return $result;
+    }
+
+    /**
      * Get all dashboard data
      */
     public function getDashboardData(User $user): array
     {
         return [
             'currentAuctions' => $this->getCurrentAuctions($user),
+            'endedAuctions' => $user->listings()->endedNotSoldForSeller($user->id)->with(['images', 'bids'])->get()->map(function($l) { $l->current_bid = $l->getCurrentBid(); return $l; }),
             'pastAuctions' => $this->getPastAuctions($user),
             'wonAuctions' => $this->getWonAuctions($user),
             'rejectedListings' => $this->getRejectedListings($user),
@@ -309,6 +498,15 @@ class SellerDashboardService
             'averageSalePriceData' => $this->getAverageSalePriceData($user),
             'bidActivityData' => $this->getBidActivityData($user),
             'activityTimeline' => $this->activityTimelineService->buildFor($user),
+            // Business Seller dashboard extras
+            'activeSubscription'      => $this->getActiveSubscription($user),
+            'pendingListingsCount'    => $this->getPendingListingsCount($user),
+            'completedSalesCount'     => $this->getCompletedSalesCount($user),
+            'totalEarnings'           => $this->getTotalEarnings($user),
+            'toBeReceived'            => $this->getToBeReceived($user),
+            'recentAuctionActivity'   => $this->getRecentAuctionActivity($user),
+            'topActiveListings'       => $this->getTopActiveListings($user),
+            'performanceInsightsData' => $this->getPerformanceInsightsData($user),
         ];
     }
 }

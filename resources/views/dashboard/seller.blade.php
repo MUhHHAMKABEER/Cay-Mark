@@ -257,299 +257,735 @@
         <div class="bg-white rounded-xl shadow-sm h-full" style="min-height: calc(100vh - 60px);">
             <!-- DASHBOARD TAB (Main Overview with Charts) -->
             <div id="content-dashboard" class="tab-content p-4" style="display: none; height: 100%; overflow-y: auto;">
-                <!-- Header Section: Business vs Individual Seller -->
-                <div class="mb-4">
-                    <div class="flex flex-wrap items-center gap-3 mb-2">
-                        <h2 class="text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 bg-clip-text text-transparent">
-                            {{ $user->business_license_path ? 'Business Seller' : 'Individual Seller' }} Dashboard
-                        </h2>
-                        @if($user->business_license_path)
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800">Business Account</span>
-                        @else
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">Individual Seller</span>
-                        @endif
-                    </div>
-                    <p class="text-gray-600 text-sm">{{ $user->business_license_path ? 'Manage your business listings, payouts, and buyer coordination.' : 'Your sales summary and listing status at a glance.' }}</p>
-                </div>
-
-                <x-ui.profile-completion :user="$user" class="mb-4" />
-
                 @if(!$user->business_license_path)
-                {{-- INDIVIDUAL SELLER: Only Total Revenue, Active Auction, Pending Payout, Items Sold, Status Overview --}}
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-                    <div class="bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 rounded-xl shadow-xl p-4 text-white transform hover:scale-105 transition-all duration-300 relative overflow-hidden">
-                        <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
-                        <div class="relative z-10">
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="material-icons-round text-3xl opacity-80">attach_money</span>
-                                <span class="text-xs font-semibold bg-white/20 px-2 py-0.5 rounded-full">Revenue</span>
-                            </div>
-                            <p class="text-blue-100 text-xs font-medium mb-1">Total Revenue</p>
-                            <p class="text-3xl font-bold mb-0.5">${{ number_format($auctionSummary['total_sales_revenue'] ?? 0, 0) }}</p>
-                            <p class="text-xs text-blue-100 opacity-75">All time earnings</p>
+                {{-- ═══ CASUAL / INDIVIDUAL SELLER DASHBOARD ═══ --}}
+                @php
+                    $casualUnread        = isset($notifications) ? $notifications->whereNull('read_at')->count() : 0;
+                    $casualPendingPayout = collect($pendingPayouts ?? [])->sum('net_payout');
+                    $casualActivity      = $recentAuctionActivity ?? [];
+                    $casualListings      = $topActiveListings ?? collect();
+                @endphp
+
+                <!-- ── Welcome Header ── -->
+                <div class="flex items-center justify-between mb-5">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-900 tracking-tight">
+                            Welcome Back, {{ $user->name }}! 👋
+                        </h2>
+                        <div class="flex flex-wrap items-center gap-2 mt-2">
+                            <span class="inline-flex items-center px-3 py-1 bg-gray-100 rounded-full text-xs font-semibold text-gray-600">
+                                Casual Seller Account
+                            </span>
+                            <a href="{{ route('enterprise-seller') }}"
+                               class="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-gray-300 hover:border-indigo-400 hover:bg-indigo-50 rounded-full text-xs font-semibold text-gray-700 hover:text-indigo-700 transition-all duration-200 shadow-sm">
+                                <span class="material-icons-round" style="font-size:13px">arrow_upward</span>
+                                Upgrade to Business Seller
+                            </a>
                         </div>
                     </div>
-                    <div class="bg-gradient-to-br from-purple-500 via-pink-500 to-rose-600 rounded-xl shadow-xl p-4 text-white transform hover:scale-105 transition-all duration-300 relative overflow-hidden">
-                        <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
-                        <div class="relative z-10">
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="material-icons-round text-3xl opacity-80">gavel</span>
-                                <span class="text-xs font-semibold bg-white/20 px-2 py-0.5 rounded-full">Active</span>
-                            </div>
-                            <p class="text-purple-100 text-xs font-medium mb-1">Active Auctions</p>
-                            <p class="text-3xl font-bold mb-0.5">{{ $auctionSummary['current_count'] ?? 0 }}</p>
-                            <p class="text-xs text-purple-100 opacity-75">Currently live</p>
-                        </div>
-                    </div>
-                    <div class="bg-gradient-to-br from-amber-500 via-orange-500 to-red-600 rounded-xl shadow-xl p-4 text-white transform hover:scale-105 transition-all duration-300 relative overflow-hidden" style="background: linear-gradient(to bottom right, #f59e0b, #f97316, #dc2626);">
-                        <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
-                        <div class="relative z-10">
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="material-icons-round text-3xl opacity-80 text-white">account_balance_wallet</span>
-                                <span class="text-xs font-semibold bg-white/20 px-2 py-0.5 rounded-full text-white">Payout</span>
-                            </div>
-                            <p class="text-white text-xs font-medium mb-1">Pending Payout</p>
-                            <p class="text-3xl font-bold mb-0.5 text-white">${{ number_format(collect($pendingPayouts ?? [])->sum('net_payout'), 0) }}</p>
-                            <p class="text-xs text-white opacity-90">{{ count($pendingPayouts ?? []) }} pending</p>
-                        </div>
-                    </div>
-                    <div class="bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 rounded-xl shadow-xl p-4 text-white transform hover:scale-105 transition-all duration-300 relative overflow-hidden" style="background: linear-gradient(to bottom right, #10b981, #059669, #0d9488);">
-                        <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
-                        <div class="relative z-10">
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="material-icons-round text-3xl opacity-80 text-white">check_circle</span>
-                                <span class="text-xs font-semibold bg-white/20 px-2 py-0.5 rounded-full text-white">Sold</span>
-                            </div>
-                            <p class="text-white text-xs font-medium mb-1">Items Sold</p>
-                            <p class="text-3xl font-bold mb-0.5 text-white">{{ $auctionSummary['total_items_sold'] ?? 0 }}</p>
-                            <p class="text-xs text-white opacity-90">Total sold</p>
-                        </div>
-                    </div>
+                    <button onclick="showTab('content-notifications')"
+                            class="relative w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors duration-200"
+                            title="Notifications">
+                        <span class="material-icons-round text-gray-600" style="font-size:20px">notifications</span>
+                        @if($casualUnread > 0)
+                            <span class="absolute top-1 right-1 min-w-[16px] h-4 bg-red-500 rounded-full flex items-center justify-center text-white font-bold px-0.5 leading-none" style="font-size:9px">{{ $casualUnread > 9 ? '9+' : $casualUnread }}</span>
+                        @endif
+                    </button>
                 </div>
-                <!-- Status Overview (Individual Seller only) – full width so area feels filled -->
-                <div class="w-full">
-                    <div class="bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-lg border border-gray-200 p-6 hover:shadow-xl transition-all duration-300 flex flex-col lg:flex-row lg:items-center lg:gap-8">
-                        <div class="flex items-center justify-between mb-3 lg:mb-0 lg:flex-shrink-0 lg:w-48">
-                            <div>
-                                <h3 class="text-lg font-bold text-gray-900">Status Overview</h3>
-                                <p class="text-xs text-gray-500">Listing distribution</p>
+
+                <!-- ── Row 1: Quick Stats (left) + Finances Overview (right) ── -->
+                <div class="grid grid-cols-1 lg:grid-cols-5 gap-4 mb-4">
+
+                    <!-- Quick Stats — 3 cards -->
+                    <div class="lg:col-span-3 grid grid-cols-3 gap-3">
+                        <!-- Active Listings -->
+                        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col gap-2">
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                                    <span class="material-icons-round text-blue-600" style="font-size:16px">trending_up</span>
+                                </div>
+                                <span class="text-xs font-semibold text-gray-500">Active Listings</span>
                             </div>
-                            <div class="bg-purple-100 rounded-lg p-1.5">
-                                <span class="material-icons-round text-purple-600 text-lg">pie_chart</span>
-                            </div>
+                            <p class="text-3xl font-bold text-gray-900 leading-none">{{ $auctionSummary['current_count'] ?? 0 }}</p>
+                            <p class="text-xs text-gray-400">Live listings</p>
                         </div>
-                        <div class="flex-1 min-h-[280px] lg:min-h-[320px]">
-                            <canvas id="listingStatusChart"></canvas>
+                        <!-- Pending -->
+                        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col gap-2">
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+                                    <span class="material-icons-round text-amber-500" style="font-size:16px">schedule</span>
+                                </div>
+                                <span class="text-xs font-semibold text-gray-500">Pending</span>
+                            </div>
+                            <p class="text-3xl font-bold text-amber-500 leading-none">{{ $pendingListingsCount ?? 0 }}</p>
+                            <p class="text-xs text-gray-400">Awaiting approval</p>
+                        </div>
+                        <!-- Sold -->
+                        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col gap-2">
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                                    <span class="material-icons-round text-emerald-500" style="font-size:16px">check_circle</span>
+                                </div>
+                                <span class="text-xs font-semibold text-gray-500">Sold</span>
+                            </div>
+                            <p class="text-3xl font-bold text-emerald-500 leading-none">{{ $completedSalesCount ?? 0 }}</p>
+                            <p class="text-xs text-gray-400">Completed sales</p>
                         </div>
                     </div>
-                </div>
+
+                    <!-- Finances Overview -->
+                    <div class="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-sm font-bold text-gray-900">Finances Overview</h3>
+                            <span class="material-icons-round text-gray-400" style="font-size:18px">arrow_forward</span>
+                        </div>
+                        <!-- Total Earnings -->
+                        <div class="mb-3">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="text-sm font-medium text-gray-700">Total Earnings</span>
+                                    <div class="relative group/te">
+                                        <span class="material-icons-round text-gray-400 cursor-help" style="font-size:14px">info</span>
+                                        <div class="pointer-events-none absolute left-5 -top-1 z-20 w-52 rounded-lg bg-gray-900 text-white text-xs px-3 py-2 opacity-0 group-hover/te:opacity-100 transition-opacity duration-200 shadow-xl">
+                                            Total amount paid out to you by Caymark.
+                                        </div>
+                                    </div>
+                                </div>
+                                <span class="text-base font-bold text-emerald-600">${{ number_format($totalEarnings ?? 0, 2) }}</span>
+                            </div>
+                            <p class="text-xs text-gray-400 mt-0.5">Total amount paid out to you by Caymark.</p>
+                        </div>
+                        <div class="border-t border-gray-100 pt-3">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="text-sm font-medium text-gray-700">Pending Payout</span>
+                                    <div class="relative group/pp">
+                                        <span class="material-icons-round text-gray-400 cursor-help" style="font-size:14px">info</span>
+                                        <div class="pointer-events-none absolute left-5 -top-1 z-20 w-52 rounded-lg bg-gray-900 text-white text-xs px-3 py-2 opacity-0 group-hover/pp:opacity-100 transition-opacity duration-200 shadow-xl">
+                                            Funds currently awaiting payout processing.
+                                        </div>
+                                    </div>
+                                </div>
+                                <span class="text-base font-bold text-amber-500">${{ number_format($casualPendingPayout, 2) }}</span>
+                            </div>
+                            <p class="text-xs text-gray-400 mt-0.5">Funds currently awaiting payout processing.</p>
+                        </div>
+                    </div>
+
+                </div>{{-- end row 1 --}}
+
+                <!-- ── Row 2: Recent Activity (left) + Grow Your Business (right) ── -->
+                <div class="grid grid-cols-1 lg:grid-cols-5 gap-4 mb-4">
+
+                    <!-- Recent Activity -->
+                    <div class="lg:col-span-3 bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-sm font-bold text-gray-900 flex items-center gap-2">
+                                <span class="material-icons-round text-blue-500" style="font-size:16px">bolt</span>
+                                Recent Activity
+                            </h3>
+                            <button onclick="showTab('content-auctions')" class="text-xs font-semibold text-blue-600 hover:text-blue-800 transition-colors">View All Activity</button>
+                        </div>
+                        @if(count($casualActivity) === 0)
+                            <div class="flex flex-col items-center justify-center py-8 text-center">
+                                <span class="material-icons-round text-gray-300 mb-2" style="font-size:36px">history</span>
+                                <p class="text-sm text-gray-400">No auction activity yet.</p>
+                            </div>
+                        @else
+                            <div class="divide-y divide-gray-50">
+                                @foreach($casualActivity as $casualEvent)
+                                    <div class="flex items-center gap-3 py-2.5">
+                                        <div class="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center
+                                            @if(($casualEvent['color'] ?? '') === 'blue') bg-blue-100
+                                            @elseif(($casualEvent['color'] ?? '') === 'green') bg-green-100
+                                            @elseif(($casualEvent['color'] ?? '') === 'purple') bg-purple-100
+                                            @elseif(($casualEvent['color'] ?? '') === 'orange') bg-orange-100
+                                            @elseif(($casualEvent['color'] ?? '') === 'red') bg-red-100
+                                            @else bg-gray-100 @endif">
+                                            <span class="material-icons-round
+                                                @if(($casualEvent['color'] ?? '') === 'blue') text-blue-600
+                                                @elseif(($casualEvent['color'] ?? '') === 'green') text-green-600
+                                                @elseif(($casualEvent['color'] ?? '') === 'purple') text-purple-600
+                                                @elseif(($casualEvent['color'] ?? '') === 'orange') text-orange-600
+                                                @elseif(($casualEvent['color'] ?? '') === 'red') text-red-600
+                                                @else text-gray-500 @endif"
+                                                style="font-size:13px">{{ $casualEvent['icon'] ?? 'circle' }}</span>
+                                        </div>
+                                        <p class="flex-1 text-sm text-gray-700 leading-snug">{{ $casualEvent['description'] ?? '' }}</p>
+                                        <span class="flex-shrink-0 text-xs text-gray-400 whitespace-nowrap">
+                                            @if(isset($casualEvent['timestamp']))
+                                                {{ ($casualEvent['timestamp'] instanceof \Carbon\Carbon ? $casualEvent['timestamp'] : \Carbon\Carbon::parse($casualEvent['timestamp']))->diffForHumans() }}
+                                            @endif
+                                        </span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
+
+                    <!-- Grow Your Business CTA -->
+                    <div class="lg:col-span-2 bg-indigo-50 rounded-2xl border border-indigo-100 p-5 flex flex-col items-center justify-center text-center gap-3">
+                        <div class="w-16 h-16 rounded-full bg-indigo-200/60 flex items-center justify-center mb-1">
+                            <span class="material-icons-round text-indigo-600" style="font-size:32px">local_offer</span>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-bold text-gray-900 mb-1">Grow Your Business</h3>
+                            <p class="text-sm text-gray-500 leading-relaxed">Upgrade to Business Seller and get more listings, analytics, and features.</p>
+                        </div>
+                        <a href="{{ route('enterprise-seller') }}"
+                           class="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-colors duration-200 shadow-sm">
+                            Upgrade Now
+                        </a>
+                    </div>
+
+                </div>{{-- end row 2 --}}
+
+                <!-- ── Row 3: My Listings (full width) ── -->
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-sm font-bold text-gray-900 flex items-center gap-2">
+                            <span class="material-icons-round text-gray-500" style="font-size:17px">directions_car</span>
+                            My Listings
+                        </h3>
+                        <div class="flex items-center gap-2">
+                            <a href="{{ route('seller.auctions') }}" class="text-xs font-semibold text-blue-600 hover:text-blue-800 transition-colors">View All Listings</a>
+                            <a href="{{ route('seller.listings.create') }}"
+                               class="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-colors duration-200">
+                                <span class="material-icons-round" style="font-size:13px">add</span>
+                                Create Listing
+                            </a>
+                        </div>
+                    </div>
+                    @if($casualListings->isEmpty())
+                        <div class="flex flex-col items-center justify-center py-12 text-center">
+                            <span class="material-icons-round text-gray-300 mb-2" style="font-size:48px">directions_car</span>
+                            <p class="text-sm text-gray-400 mb-3">No active listings yet.</p>
+                            <a href="{{ route('seller.listings.create') }}"
+                               class="inline-flex items-center gap-1 text-sm font-semibold text-blue-600 hover:text-blue-800">
+                                <span class="material-icons-round" style="font-size:15px">add</span>
+                                Create your first listing
+                            </a>
+                        </div>
+                    @else
+                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                            @foreach($casualListings as $cl)
+                            @php
+                                $clImage  = $cl->images->first()?->path ?? null;
+                                $clTitle  = trim(implode(' ', array_filter([$cl->year, $cl->make, $cl->model]))) ?: 'Vehicle #' . $cl->id;
+                                $clTopBid = $cl->bids()->max('amount');
+                            @endphp
+                            <a href="{{ route('seller.listings.show', $cl->id) }}"
+                               class="bg-white rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-md overflow-hidden transition-all duration-200 group block">
+                                <!-- Image -->
+                                <div class="relative w-full" style="padding-top:62%">
+                                    @if($clImage)
+                                        <img src="{{ asset('storage/' . $clImage) }}" alt="{{ $clTitle }}"
+                                             class="absolute inset-0 w-full h-full object-cover">
+                                    @else
+                                        <div class="absolute inset-0 bg-gray-100 flex items-center justify-center">
+                                            <span class="material-icons-round text-gray-400" style="font-size:32px">directions_car</span>
+                                        </div>
+                                    @endif
+                                    <!-- LIVE badge -->
+                                    <span class="absolute top-2 left-2 px-2 py-0.5 bg-emerald-500 text-white text-[10px] font-bold rounded-md tracking-wide">LIVE</span>
+                                    <!-- Menu dots -->
+                                    <button onclick="event.preventDefault()" class="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/30 hover:bg-black/50 flex items-center justify-center transition-colors">
+                                        <span class="material-icons-round text-white" style="font-size:14px">more_horiz</span>
+                                    </button>
+                                </div>
+                                <!-- Card body -->
+                                <div class="p-3">
+                                    <p class="text-sm font-bold text-gray-900 truncate group-hover:text-blue-700 mb-2">{{ $clTitle }}</p>
+                                    <div class="grid grid-cols-2 gap-x-2 mb-2">
+                                        <p class="text-[11px] text-gray-400 font-medium">Current Bid</p>
+                                        <p class="text-[11px] text-gray-400 font-medium">Time Left</p>
+                                        <p class="text-sm font-bold text-emerald-600">
+                                            @if($clTopBid) ${{ number_format($clTopBid, 0) }} @else <span class="text-gray-400 font-normal text-xs">No bids</span> @endif
+                                        </p>
+                                        <p class="text-sm font-semibold text-gray-800">
+                                            @if($cl->ends_at)
+                                                <span class="dash-countdown" data-ends="{{ $cl->ends_at->toIso8601String() }}">—</span>
+                                            @else —
+                                            @endif
+                                        </p>
+                                    </div>
+                                    <div class="flex items-center gap-3 pt-2 border-t border-gray-100">
+                                        <span class="flex items-center gap-1 text-[11px] text-gray-400">
+                                            <span class="material-icons-round" style="font-size:12px">visibility</span>
+                                            {{ number_format($cl->view_count ?? 0) }} Views
+                                        </span>
+                                        <span class="flex items-center gap-1 text-[11px] text-gray-400">
+                                            <span class="material-icons-round" style="font-size:12px">gavel</span>
+                                            {{ $cl->bids_count ?? 0 }} Bids
+                                        </span>
+                                    </div>
+                                </div>
+                            </a>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>{{-- end My Listings --}}
                 @else
-                {{-- BUSINESS SELLER: Full dashboard (existing) --}}
-                <!-- Top Stats Cards Row (Horizontal) -->
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-                    <div class="bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 rounded-xl shadow-xl p-4 text-white transform hover:scale-105 transition-all duration-300 relative overflow-hidden">
-                        <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
-                        <div class="relative z-10">
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="material-icons-round text-3xl opacity-80">attach_money</span>
-                                <span class="text-xs font-semibold bg-white/20 px-2 py-0.5 rounded-full">Revenue</span>
-                            </div>
-                            <p class="text-blue-100 text-xs font-medium mb-1">Total Revenue</p>
-                            <p class="text-3xl font-bold mb-0.5">${{ number_format($auctionSummary['total_sales_revenue'] ?? 0, 0) }}</p>
-                            <p class="text-xs text-blue-100 opacity-75">All time earnings</p>
+                {{-- BUSINESS SELLER: Professional Dashboard --}}
+                @php
+                    $perfData = $performanceInsightsData ?? [];
+                    $unreadCount = isset($notifications) ? $notifications->whereNull('read_at')->count() : 0;
+                @endphp
+
+                <!-- ── Dashboard Header: Welcome + Plan + Notification Bell ── -->
+                <div class="flex items-start justify-between mb-5">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-900 tracking-tight">
+                            Welcome back, {{ $user->name }}!
+                        </h2>
+                        <p class="text-sm text-gray-500 mt-0.5">Here's what's happening with your account today.</p>
+                        <div class="flex flex-wrap items-center gap-3 mt-3">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 border border-blue-200 rounded-full text-sm font-semibold text-blue-800">
+                                <span class="material-icons-round" style="font-size:14px">workspace_premium</span>
+                                Business Seller Plan
+                            </span>
+                            @if(isset($activeSubscription) && $activeSubscription)
+                                <span class="inline-flex items-center gap-1.5 text-sm text-gray-600 font-medium">
+                                    <span class="material-icons-round text-gray-400" style="font-size:14px">event</span>
+                                    Expires: {{ $activeSubscription->ends_at->format('M d, Y') }}
+                                </span>
+                            @endif
                         </div>
                     </div>
-                    <div class="bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 rounded-xl shadow-xl p-4 text-white transform hover:scale-105 transition-all duration-300 relative overflow-hidden" style="background: linear-gradient(to bottom right, #10b981, #059669, #0d9488);">
-                        <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
-                        <div class="relative z-10">
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="material-icons-round text-3xl opacity-80 text-white">check_circle</span>
-                                <span class="text-xs font-semibold bg-white/20 px-2 py-0.5 rounded-full text-white">Sales</span>
-                            </div>
-                            <p class="text-white text-xs font-medium mb-1">Items Sold</p>
-                            <p class="text-3xl font-bold mb-0.5 text-white">{{ $auctionSummary['total_items_sold'] ?? 0 }}</p>
-                            <p class="text-xs text-white opacity-90">{{ $salesConversionData['conversion_rate'] ?? 0 }}% conversion</p>
-                        </div>
-                    </div>
-                    <div class="bg-gradient-to-br from-purple-500 via-pink-500 to-rose-600 rounded-xl shadow-xl p-4 text-white transform hover:scale-105 transition-all duration-300 relative overflow-hidden">
-                        <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
-                        <div class="relative z-10">
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="material-icons-round text-3xl opacity-80">gavel</span>
-                                <span class="text-xs font-semibold bg-white/20 px-2 py-0.5 rounded-full">Active</span>
-                            </div>
-                            <p class="text-purple-100 text-xs font-medium mb-1">Active Auctions</p>
-                            <p class="text-3xl font-bold mb-0.5">{{ $auctionSummary['current_count'] ?? 0 }}</p>
-                            <p class="text-xs text-purple-100 opacity-75">Currently live</p>
-                        </div>
-                    </div>
-                    <div class="bg-gradient-to-br from-amber-500 via-orange-500 to-red-600 rounded-xl shadow-xl p-4 text-white transform hover:scale-105 transition-all duration-300 relative overflow-hidden" style="background: linear-gradient(to bottom right, #f59e0b, #f97316, #dc2626);">
-                        <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12"></div>
-                        <div class="relative z-10">
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="material-icons-round text-3xl opacity-80 text-white">inventory_2</span>
-                                <span class="text-xs font-semibold bg-white/20 px-2 py-0.5 rounded-full text-white">Total</span>
-                            </div>
-                            <p class="text-white text-xs font-medium mb-1">Total Listings</p>
-                            <p class="text-3xl font-bold mb-0.5 text-white">{{ $auctionSummary['total_listings'] ?? 0 }}</p>
-                            <p class="text-xs text-white opacity-90">All listings</p>
-                        </div>
-                    </div>
+                    <a href="{{ route('seller.notifications') }}"
+                       class="relative flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-xl bg-gray-100 hover:bg-gray-200 transition"
+                       title="Notifications">
+                        <span class="material-icons-round text-gray-600 text-xl">notifications</span>
+                        @if($unreadCount > 0)
+                            <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"></span>
+                        @endif
+                    </a>
                 </div>
 
-                <!-- Secondary Stats Row (Horizontal) -->
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg shadow-md border border-blue-200 p-4 hover:shadow-lg transition-all duration-300">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-blue-700 text-xs font-medium">Avg. Sale Price</span>
-                            <span class="material-icons-round text-blue-600 text-lg">trending_up</span>
-                        </div>
-                        <p class="text-xl font-bold text-blue-900">${{ number_format($averageSalePriceData['average'] ?? 0, 0) }}</p>
-                        <p class="text-xs text-blue-600 mt-0.5">Based on {{ $averageSalePriceData['count'] ?? 0 }} sales</p>
-                    </div>
-                    <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-lg shadow-md border border-green-200 p-4 hover:shadow-lg transition-all duration-300">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-green-700 text-xs font-medium">Conversion Rate</span>
-                            <span class="material-icons-round text-green-600 text-lg">percent</span>
-                        </div>
-                        <p class="text-xl font-bold text-green-900">{{ $salesConversionData['conversion_rate'] ?? 0 }}%</p>
-                        <p class="text-xs text-green-600 mt-0.5">{{ $salesConversionData['sold'] ?? 0 }} of {{ $salesConversionData['total'] ?? 0 }} sold</p>
-                    </div>
-                    <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg shadow-md border border-purple-200 p-4 hover:shadow-lg transition-all duration-300">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-purple-700 text-xs font-medium">Highest Sale</span>
-                            <span class="material-icons-round text-purple-600 text-lg">arrow_upward</span>
-                        </div>
-                        <p class="text-xl font-bold text-purple-900">${{ number_format($averageSalePriceData['highest'] ?? 0, 0) }}</p>
-                        <p class="text-xs text-purple-600 mt-0.5">Best performing listing</p>
-                    </div>
-                    <div class="bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg shadow-md border border-amber-200 p-4 hover:shadow-lg transition-all duration-300">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-amber-700 text-xs font-medium">Pending Payout</span>
-                            <span class="material-icons-round text-amber-600 text-lg">account_balance_wallet</span>
-                        </div>
-                        <p class="text-xl font-bold text-amber-900">${{ number_format(collect($pendingPayouts ?? [])->sum('net_payout'), 0) }}</p>
-                        <p class="text-xs text-amber-600 mt-0.5">{{ count($pendingPayouts ?? []) }} payout(s) pending</p>
-                    </div>
-                </div>
+                <!-- ── Main two-column layout ── -->
+                <div class="grid grid-cols-1 xl:grid-cols-5 gap-4">
 
-                <!-- Main Charts Row (Horizontal Layout) -->
-                <div class="grid grid-cols-1 xl:grid-cols-3 gap-4 mb-4">
-                    <!-- Revenue Trend Chart -->
-                    <div class="xl:col-span-2 bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-lg border border-gray-200 p-4 hover:shadow-xl transition-all duration-300">
-                        <div class="flex items-center justify-between mb-3">
-                            <div>
-                                <h3 class="text-lg font-bold text-gray-900">Revenue Trend</h3>
-                                <p class="text-xs text-gray-500">Last 6 months performance</p>
-                            </div>
-                            <div class="bg-blue-100 rounded-lg p-1.5">
-                                <span class="material-icons-round text-blue-600 text-lg">show_chart</span>
-                            </div>
-                        </div>
-                        <div class="h-64">
-                            <canvas id="revenueChart"></canvas>
-                        </div>
-                    </div>
+                    <!-- LEFT COLUMN (3/5): Stats → Activity → Auctions → Quick Actions -->
+                    <div class="xl:col-span-3 space-y-4">
 
-                    <!-- Listing Status Chart -->
-                    <div class="bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-lg border border-gray-200 p-4 hover:shadow-xl transition-all duration-300">
-                        <div class="flex items-center justify-between mb-3">
-                            <div>
-                                <h3 class="text-lg font-bold text-gray-900">Status Overview</h3>
-                                <p class="text-xs text-gray-500">Listing distribution</p>
+                        <!-- Quick Stats Row -->
+                        <div class="grid grid-cols-3 gap-3">
+                            <!-- Active -->
+                            <div class="bg-white border border-blue-100 rounded-xl p-4 shadow-sm">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="material-icons-round text-blue-500" style="font-size:18px">bolt</span>
+                                    <span class="text-xs font-semibold text-blue-600 uppercase tracking-wide">Active</span>
+                                </div>
+                                <p class="text-3xl font-extrabold text-gray-900 leading-none">{{ $auctionSummary['current_count'] ?? 0 }}</p>
+                                <p class="text-xs text-gray-500 mt-1">Live auctions</p>
                             </div>
-                            <div class="bg-purple-100 rounded-lg p-1.5">
-                                <span class="material-icons-round text-purple-600 text-lg">pie_chart</span>
+                            <!-- Pending -->
+                            <div class="bg-white border border-amber-100 rounded-xl p-4 shadow-sm">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="material-icons-round text-amber-500" style="font-size:18px">hourglass_top</span>
+                                    <span class="text-xs font-semibold text-amber-600 uppercase tracking-wide">Pending</span>
+                                </div>
+                                <p class="text-3xl font-extrabold text-gray-900 leading-none">{{ $pendingListingsCount ?? 0 }}</p>
+                                <p class="text-xs text-gray-500 mt-1">Awaiting approval / payment</p>
+                            </div>
+                            <!-- Sold -->
+                            <div class="bg-white border border-green-100 rounded-xl p-4 shadow-sm">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="material-icons-round text-green-500" style="font-size:18px">check_circle</span>
+                                    <span class="text-xs font-semibold text-green-600 uppercase tracking-wide">Sold</span>
+                                </div>
+                                <p class="text-3xl font-extrabold text-gray-900 leading-none">{{ $completedSalesCount ?? 0 }}</p>
+                                <p class="text-xs text-gray-500 mt-1">Completed auctions</p>
                             </div>
                         </div>
-                        <div class="h-64">
-                            <canvas id="listingStatusChart"></canvas>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Pending vs Completed Payouts Section -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
-                    <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-4">
-                        <h3 class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-                            <span class="material-icons-round text-amber-600">schedule</span>
-                            Pending Payouts
-                        </h3>
-                        @if(isset($pendingPayouts) && $pendingPayouts->count() > 0)
-                            <div class="space-y-2 max-h-48 overflow-y-auto">
-                                @foreach($pendingPayouts as $payout)
-                                    <div class="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
-                                        <div>
-                                            <p class="font-medium text-gray-900 text-sm">{{ $payout->item_title ?? 'Sale #' . $payout->payout_number }}</p>
-                                            <p class="text-xs text-gray-500">{{ $payout->payout_generated_at?->format('M j, Y') }}</p>
+                        <!-- Recent Activity -->
+                        <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="font-bold text-gray-900 flex items-center gap-2 text-sm">
+                                    <span class="material-icons-round text-blue-500" style="font-size:18px">timeline</span>
+                                    Recent Activity
+                                </h3>
+                                <a href="{{ route('seller.auctions') }}"
+                                   class="text-xs text-blue-600 hover:underline font-semibold">View All Activity</a>
+                            </div>
+                            @if(isset($recentAuctionActivity) && $recentAuctionActivity->isNotEmpty())
+                                <div class="space-y-3">
+                                    @foreach($recentAuctionActivity as $activity)
+                                        @php
+                                            $cm = [
+                                                'blue'   => ['bg' => 'bg-blue-50',   'text' => 'text-blue-600'],
+                                                'green'  => ['bg' => 'bg-green-50',  'text' => 'text-green-600'],
+                                                'orange' => ['bg' => 'bg-orange-50', 'text' => 'text-orange-500'],
+                                                'red'    => ['bg' => 'bg-red-50',    'text' => 'text-red-600'],
+                                                'purple' => ['bg' => 'bg-purple-50', 'text' => 'text-purple-600'],
+                                            ];
+                                            $c = $cm[$activity['color']] ?? $cm['blue'];
+                                        @endphp
+                                        <div class="flex items-start gap-3">
+                                            <div class="w-8 h-8 {{ $c['bg'] }} rounded-lg flex items-center justify-center flex-shrink-0">
+                                                <span class="material-icons-round {{ $c['text'] }}" style="font-size:16px">{{ $activity['icon'] }}</span>
+                                            </div>
+                                            <div class="flex-1 min-w-0">
+                                                <p class="text-sm text-gray-800 font-medium leading-snug">{{ $activity['description'] }}</p>
+                                                <p class="text-xs text-gray-400 mt-0.5">{{ $activity['timestamp']->diffForHumans() }}</p>
+                                            </div>
                                         </div>
-                                        <span class="font-bold text-amber-700">${{ number_format($payout->net_payout, 2) }}</span>
+                                    @endforeach
+                                </div>
+                            @else
+                                <p class="text-sm text-gray-400 italic">No recent auction activity yet.</p>
+                            @endif
+                        </div>
+
+                        <!-- Auctions Preview (top 4 by activity) -->
+                        <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+                            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                                <div>
+                                    <h3 class="font-bold text-gray-900 text-sm">Your Auctions</h3>
+                                    @if(isset($topActiveListings) && $topActiveListings->isNotEmpty())
+                                        <p class="text-xs text-gray-400">Showing top activity</p>
+                                    @endif
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <a href="{{ route('seller.auctions') }}"
+                                       class="text-xs text-blue-600 hover:underline font-semibold">View All Auctions</a>
+                                    <a href="{{ route('seller.listings.create') }}"
+                                       class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition hover:opacity-90"
+                                       style="background: linear-gradient(135deg, #063466 0%, #1e3a8a 100%);">
+                                        <span class="material-icons-round" style="font-size:14px">add</span>
+                                        Create Listing
+                                    </a>
+                                </div>
+                            </div>
+                            @if(isset($topActiveListings) && $topActiveListings->isNotEmpty())
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                    @foreach($topActiveListings as $tl)
+                                        @php
+                                            $tlImg = $tl->images->first();
+                                            $tlUrl = $tlImg ? (str_contains($tlImg->image_path ?? '', '/') ? asset($tlImg->image_path) : asset('uploads/listings/' . $tlImg->image_path)) : null;
+                                            $tlEnd = $tl->auction_end_time ?? ($tl->auction_start_time ? \Carbon\Carbon::parse($tl->auction_start_time)->addDays($tl->auction_duration ?? 7) : null);
+                                        @endphp
+                                        <div class="border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition group">
+                                            <div class="relative h-24 bg-gray-100 overflow-hidden">
+                                                @if($tlUrl)
+                                                    <img src="{{ $tlUrl }}"
+                                                         alt="{{ $tl->make }}"
+                                                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                                                @else
+                                                    <div class="w-full h-full flex items-center justify-center">
+                                                        <span class="material-icons-round text-gray-300 text-3xl">directions_car</span>
+                                                    </div>
+                                                @endif
+                                                <span class="absolute top-1.5 left-1.5 bg-green-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-md leading-none">LIVE</span>
+                                                <button class="absolute top-1.5 right-1.5 w-5 h-5 flex items-center justify-center rounded-full bg-white/70">
+                                                    <span class="material-icons-round text-gray-500" style="font-size:13px">star_border</span>
+                                                </button>
+                                            </div>
+                                            <div class="p-2.5">
+                                                <p class="text-xs font-semibold text-gray-900 truncate leading-tight">{{ $tl->year }} {{ $tl->make }} {{ $tl->model }}</p>
+                                                <p class="text-sm font-bold text-blue-700 mt-0.5">${{ number_format($tl->current_bid ?? $tl->starting_price ?? 0, 0) }}</p>
+                                                @if($tlEnd && $tlEnd->isFuture())
+                                                    <p class="text-xs text-gray-400 mt-0.5 dash-countdown" data-end="{{ $tlEnd->toIso8601String() }}">—</p>
+                                                @endif
+                                                <div class="flex items-center gap-2 mt-1.5 text-xs text-gray-400">
+                                                    <span class="flex items-center gap-0.5">
+                                                        <span class="material-icons-round" style="font-size:11px">visibility</span>
+                                                        {{ number_format($tl->view_count ?? 0) }}
+                                                    </span>
+                                                    <span class="flex items-center gap-0.5">
+                                                        <span class="material-icons-round" style="font-size:11px">gavel</span>
+                                                        {{ $tl->bids_count ?? 0 }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @else
+                                <div class="text-center py-8 text-gray-400">
+                                    <span class="material-icons-round text-4xl mb-2 block">inventory_2</span>
+                                    <p class="text-sm">No live auctions right now.</p>
+                                    <a href="{{ route('seller.listings.create') }}" class="text-sm text-blue-600 hover:underline mt-1 inline-block font-medium">Create your first listing</a>
+                                </div>
+                            @endif
+                        </div>
+
+                    </div>{{-- /LEFT COLUMN --}}
+
+                    <!-- RIGHT COLUMN (2/5): Finances → Performance Insights → Quick Actions -->
+                    <div class="xl:col-span-2 space-y-4">
+
+                        <!-- Finances Panel -->
+                        <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="font-bold text-gray-900 flex items-center gap-2 text-sm">
+                                    <span class="material-icons-round text-green-500" style="font-size:18px">account_balance_wallet</span>
+                                    Finances
+                                </h3>
+                                <a href="{{ route('seller.account') }}"
+                                   class="text-xs text-blue-600 hover:underline font-semibold flex items-center gap-0.5">
+                                    View Finances
+                                    <span class="material-icons-round" style="font-size:14px">arrow_forward</span>
+                                </a>
+                            </div>
+                            <div class="space-y-3">
+                                <!-- Total Earnings -->
+                                <div class="flex items-center justify-between py-2 border-b border-gray-100">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-sm font-semibold text-gray-700">Total Earnings</span>
+                                        <span class="relative group cursor-help">
+                                            <span class="material-icons-round text-gray-300 hover:text-gray-500 transition" style="font-size:15px">info_outline</span>
+                                            <span class="absolute left-6 -top-1 w-52 bg-gray-800 text-white text-xs rounded-lg px-3 py-2 hidden group-hover:block z-20 shadow-xl leading-relaxed">
+                                                Total amount successfully paid out to you by Caymark.
+                                            </span>
+                                        </span>
                                     </div>
+                                    <span class="text-base font-bold text-green-600">${{ number_format($totalEarnings ?? 0, 0) }}</span>
+                                </div>
+                                <!-- To Be Received -->
+                                <div class="flex items-center justify-between py-2 border-b border-gray-100">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-sm font-semibold text-gray-700">To Be Received</span>
+                                        <span class="relative group cursor-help">
+                                            <span class="material-icons-round text-gray-300 hover:text-gray-500 transition" style="font-size:15px">info_outline</span>
+                                            <span class="absolute left-6 -top-1 w-52 bg-gray-800 text-white text-xs rounded-lg px-3 py-2 hidden group-hover:block z-20 shadow-xl leading-relaxed">
+                                                Completed sales awaiting buyer confirmation or payout processing.
+                                            </span>
+                                        </span>
+                                    </div>
+                                    <span class="text-base font-bold text-blue-600">${{ number_format($toBeReceived ?? 0, 0) }}</span>
+                                </div>
+                                <!-- Pending Payout -->
+                                <div class="flex items-center justify-between py-2">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-sm font-semibold text-gray-700">Pending Payout</span>
+                                        <span class="relative group cursor-help">
+                                            <span class="material-icons-round text-gray-300 hover:text-gray-500 transition" style="font-size:15px">info_outline</span>
+                                            <span class="absolute left-6 -top-1 w-52 bg-gray-800 text-white text-xs rounded-lg px-3 py-2 hidden group-hover:block z-20 shadow-xl leading-relaxed">
+                                                Funds being processed for payout.
+                                            </span>
+                                        </span>
+                                    </div>
+                                    <span class="text-base font-bold text-amber-600">${{ number_format(collect($pendingPayouts ?? [])->sum('net_payout'), 0) }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Performance Insights -->
+                        <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="font-bold text-gray-900 flex items-center gap-2 text-sm">
+                                    <span class="material-icons-round text-blue-500" style="font-size:18px">trending_up</span>
+                                    Performance Insights
+                                </h3>
+                                <select id="perf-period-select"
+                                        onchange="updateInsightsChart()"
+                                        class="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-gray-50 text-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-400 cursor-pointer">
+                                    <option value="week">This Week</option>
+                                    <option value="month">This Month</option>
+                                    <option value="year">This Year</option>
+                                </select>
+                            </div>
+                            <!-- Metric Tabs -->
+                            <div class="flex flex-wrap gap-1 mb-3">
+                                @foreach(['views' => 'Views', 'bids' => 'Bids', 'watchlist_adds' => 'Watchlist Adds', 'sales' => 'Sales'] as $metric => $label)
+                                    <button type="button"
+                                            onclick="switchInsightsMetric('{{ $metric }}')"
+                                            id="insights-tab-{{ $metric }}"
+                                            class="px-2.5 py-1 text-xs font-semibold rounded-lg transition-all {{ $metric === 'bids' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-100' }}">
+                                        {{ $label }}
+                                    </button>
                                 @endforeach
                             </div>
-                            <p class="text-sm text-amber-700 mt-2 font-medium">Total: ${{ number_format($pendingPayouts->sum('net_payout'), 2) }}</p>
-                        @else
-                            <p class="text-gray-500 text-sm">No pending payouts.</p>
-                        @endif
-                    </div>
-                    <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-4">
-                        <h3 class="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-                            <span class="material-icons-round text-green-600">check_circle</span>
-                            Completed Payouts
-                        </h3>
-                        @if(isset($completedPayouts) && $completedPayouts->count() > 0)
-                            <div class="space-y-2 max-h-48 overflow-y-auto">
-                                @foreach($completedPayouts as $payout)
-                                    <div class="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
-                                        <div>
-                                            <p class="font-medium text-gray-900 text-sm">{{ $payout->item_title ?? 'Sale #' . $payout->payout_number }}</p>
-                                            <p class="text-xs text-gray-500">{{ $payout->payout_processed_at?->format('M j, Y') }}</p>
-                                        </div>
-                                        <span class="font-bold text-green-700">${{ number_format($payout->net_payout, 2) }}</span>
+                            <!-- Chart Canvas -->
+                            <div class="relative h-36">
+                                <canvas id="insightsChart"></canvas>
+                            </div>
+                            <!-- Summary strip -->
+                            <div class="mt-3 pt-3 border-t border-gray-100 flex items-end justify-between">
+                                <div>
+                                    <p id="insights-summary-label" class="text-xs text-gray-500 font-medium">Total Bids</p>
+                                    <p id="insights-summary-value" class="text-2xl font-extrabold text-gray-900 leading-tight">—</p>
+                                    <p id="insights-summary-sub" class="text-xs text-gray-400 mt-0.5">—</p>
+                                </div>
+                                <div id="insights-views-total" class="hidden text-right">
+                                    <p class="text-xs text-gray-500">Total Views (all time)</p>
+                                    <p class="text-xl font-bold text-gray-900">{{ number_format($performanceInsightsData['total_views'] ?? 0) }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quick Actions -->
+                        <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+                            <h3 class="font-bold text-gray-900 text-sm mb-3">Quick Actions</h3>
+                            <div class="space-y-1">
+                                <a href="{{ route('seller.listings.create') }}"
+                                   class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-gray-50 transition group">
+                                    <div class="w-9 h-9 bg-blue-50 rounded-lg flex items-center justify-center group-hover:bg-blue-100 transition">
+                                        <span class="material-icons-round text-blue-600" style="font-size:18px">add_circle_outline</span>
                                     </div>
-                                @endforeach
+                                    <div>
+                                        <p class="text-sm font-semibold text-gray-900">Create New Listing</p>
+                                        <p class="text-xs text-gray-400">Start a new auction</p>
+                                    </div>
+                                </a>
+                                <a href="{{ route('seller.auctions') }}"
+                                   class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-gray-50 transition group">
+                                    <div class="w-9 h-9 bg-purple-50 rounded-lg flex items-center justify-center group-hover:bg-purple-100 transition">
+                                        <span class="material-icons-round text-purple-600" style="font-size:18px">gavel</span>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-semibold text-gray-900">View My Auctions</p>
+                                        <p class="text-xs text-gray-400">Manage your active listings</p>
+                                    </div>
+                                </a>
+                                <a href="{{ route('messaging.index') }}"
+                                   class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-gray-50 transition group">
+                                    <div class="w-9 h-9 bg-teal-50 rounded-lg flex items-center justify-center group-hover:bg-teal-100 transition">
+                                        <span class="material-icons-round text-teal-600" style="font-size:18px">forum</span>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-semibold text-gray-900">Messaging Center</p>
+                                        <p class="text-xs text-gray-400">View your conversations</p>
+                                    </div>
+                                    @if(($messagingThreads ?? collect())->count() > 0)
+                                        <span class="flex-shrink-0 min-w-5 h-5 px-1 bg-teal-600 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                                            {{ min(($messagingThreads ?? collect())->count(), 9) }}
+                                        </span>
+                                    @endif
+                                </a>
+                                <a href="{{ route('seller.account') }}"
+                                   class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-gray-50 transition group">
+                                    <div class="w-9 h-9 bg-amber-50 rounded-lg flex items-center justify-center group-hover:bg-amber-100 transition">
+                                        <span class="material-icons-round text-amber-600" style="font-size:18px">bar_chart</span>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-semibold text-gray-900">Reports</p>
+                                        <p class="text-xs text-gray-400">View your performance</p>
+                                    </div>
+                                </a>
                             </div>
-                            <a href="{{ route('seller.payouts') }}" class="text-sm text-blue-600 hover:underline mt-2 inline-block">View all payouts →</a>
-                        @else
-                            <p class="text-gray-500 text-sm">No completed payouts yet.</p>
-                        @endif
-                    </div>
-                </div>
+                        </div>
 
-                <!-- Second Charts Row (Horizontal) -->
-                <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                    <!-- Auction Performance Chart -->
-                    <div class="bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-lg border border-gray-200 p-4 hover:shadow-xl transition-all duration-300">
-                        <div class="flex items-center justify-between mb-3">
-                            <div>
-                                <h3 class="text-lg font-bold text-gray-900">Auction Activity</h3>
-                                <p class="text-xs text-gray-500">Last 30 days performance</p>
-                            </div>
-                            <div class="bg-green-100 rounded-lg p-1.5">
-                                <span class="material-icons-round text-green-600 text-lg">bar_chart</span>
-                            </div>
-                        </div>
-                        <div class="h-72">
-                            <canvas id="auctionPerformanceChart"></canvas>
-                        </div>
-                    </div>
+                    </div>{{-- /RIGHT COLUMN --}}
+                </div>{{-- /grid --}}
 
-                    <!-- Bid Activity Chart -->
-                    <div class="bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-lg border border-gray-200 p-4 hover:shadow-xl transition-all duration-300">
-                        <div class="flex items-center justify-between mb-3">
-                            <div>
-                                <h3 class="text-lg font-bold text-gray-900">Bid Activity</h3>
-                                <p class="text-xs text-gray-500">Last 7 days bid trends</p>
-                            </div>
-                            <div class="bg-orange-100 rounded-lg p-1.5">
-                                <span class="material-icons-round text-orange-600 text-lg">timeline</span>
-                            </div>
-                        </div>
-                        <div class="h-72">
-                            <canvas id="bidActivityChart"></canvas>
-                        </div>
-                    </div>
-                </div>
+                <!-- Performance Insights JS data + chart init -->
+                <script>
+                (function () {
+                    const perfData = @json($perfData);
+                    let currentPeriod = 'week';
+                    let currentMetric = 'bids';
+                    let insightsChart = null;
+
+                    function getMetricData(period, metric) {
+                        const pd = perfData[period] || {};
+                        if (metric === 'bids') return pd.bids || [];
+                        if (metric === 'watchlist_adds') return pd.watchlistAdds || [];
+                        if (metric === 'sales') return pd.sales || [];
+                        return []; // views — handled separately
+                    }
+
+                    function getMetricLabel(metric) {
+                        return { views: 'Views', bids: 'Bids', watchlist_adds: 'Watchlist Adds', sales: 'Sales' }[metric] || metric;
+                    }
+
+                    function sumArr(arr) { return (arr || []).reduce((a, b) => a + b, 0); }
+
+                    function buildChart() {
+                        const ctx = document.getElementById('insightsChart');
+                        if (!ctx) return;
+                        if (insightsChart) insightsChart.destroy();
+
+                        const isViews = currentMetric === 'views';
+                        const pd = perfData[currentPeriod] || {};
+                        const labels = pd.labels || [];
+                        const values = isViews ? labels.map(() => 0) : getMetricData(currentPeriod, currentMetric);
+
+                        insightsChart = new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels,
+                                datasets: [{
+                                    data: values,
+                                    borderColor: '#2563eb',
+                                    backgroundColor: 'rgba(37,99,235,0.08)',
+                                    borderWidth: 2,
+                                    pointRadius: labels.length > 15 ? 0 : 3,
+                                    pointHoverRadius: 5,
+                                    fill: true,
+                                    tension: 0.4,
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
+                                scales: {
+                                    x: { grid: { display: false }, ticks: { font: { size: 10 }, maxTicksLimit: 7 } },
+                                    y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 10 }, precision: 0 } }
+                                }
+                            }
+                        });
+
+                        // Update summary strip
+                        const total = isViews ? (perfData.total_views || 0) : sumArr(values);
+                        document.getElementById('insights-summary-label').textContent = 'Total ' + getMetricLabel(currentMetric);
+                        document.getElementById('insights-summary-value').textContent = total.toLocaleString();
+                        document.getElementById('insights-summary-sub').textContent = currentPeriod === 'week' ? 'This week' : currentPeriod === 'month' ? 'This month' : 'This year';
+                        document.getElementById('insights-views-total').classList.toggle('hidden', !isViews);
+                    }
+
+                    window.updateInsightsChart = function () {
+                        currentPeriod = document.getElementById('perf-period-select').value;
+                        buildChart();
+                    };
+
+                    window.switchInsightsMetric = function (metric) {
+                        currentMetric = metric;
+                        ['views', 'bids', 'watchlist_adds', 'sales'].forEach(m => {
+                            const btn = document.getElementById('insights-tab-' + m);
+                            if (!btn) return;
+                            if (m === metric) {
+                                btn.className = btn.className.replace(/text-gray-\d+\s+hover:[^\s]+\s+hover:[^\s]+/g, '').trim();
+                                btn.classList.add('bg-blue-600', 'text-white', 'shadow-sm');
+                            } else {
+                                btn.classList.remove('bg-blue-600', 'text-white', 'shadow-sm');
+                                btn.classList.add('text-gray-500', 'hover:text-gray-800', 'hover:bg-gray-100');
+                            }
+                        });
+                        buildChart();
+                    };
+
+                    // Mini countdown timers for auction cards
+                    function fmtCountdown(ms) {
+                        if (ms <= 0) return 'Ended';
+                        const s = Math.floor(ms / 1000);
+                        const d = Math.floor(s / 86400);
+                        const h = Math.floor((s % 86400) / 3600);
+                        const m = Math.floor((s % 3600) / 60);
+                        if (d > 0) return d + 'd ' + h + 'h left';
+                        if (h > 0) return h + 'h ' + m + 'm left';
+                        return m + 'm ' + (s % 60) + 's left';
+                    }
+
+                    function tickCountdowns() {
+                        document.querySelectorAll('.dash-countdown[data-end]').forEach(function (el) {
+                            const end = new Date(el.dataset.end).getTime();
+                            el.textContent = fmtCountdown(end - Date.now());
+                        });
+                    }
+
+                    // Expose buildChart so initializeCharts() can call it after the tab is shown
+                    window._buildInsightsChart = buildChart;
+
+                    document.addEventListener('DOMContentLoaded', function () {
+                        tickCountdowns();
+                        setInterval(tickCountdowns, 30000);
+                    });
+                })();
+                </script>
                 @endif
 
                 @if(!empty($activityTimeline))
@@ -559,312 +995,312 @@
                 @endif
             </div>
 
-            <!-- USER TAB (layout matches buyer account tab) -->
+            <!-- USER TAB — Account Settings -->
             <div id="content-user" class="tab-content hidden p-6" style="height: 100%; overflow-y: auto;">
-                <div class="mb-8">
-                    <div class="flex items-center gap-3 mb-1">
-                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
-                            <span class="material-icons-round text-white text-xl">person</span>
-                        </div>
-                        <div>
-                            <h2 class="text-2xl font-bold text-gray-900 tracking-tight">Account Information</h2>
-                            <p class="text-sm text-gray-500">Manage your profile, payouts, and security settings</p>
-                        </div>
+                @php
+                    $emailSvc        = new \App\Services\EmailChangeVerificationService();
+                    $emailPending    = session('email_change_pending') || $emailSvc->hasPendingChange($user);
+                    $emailPendingNew = session('email_change_new') ?? $emailSvc->getPendingNewEmail($user);
+                    // Show Renew button only within 30 days of expiry or already expired
+                    $showRenew = isset($activeSubscription) && $activeSubscription &&
+                                 $activeSubscription->ends_at->diffInDays(now(), false) >= -30;
+                @endphp
+
+                <!-- Page header -->
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                        <span class="material-icons-round text-white text-xl">manage_accounts</span>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-900 tracking-tight">Account Settings</h2>
+                        <p class="text-sm text-gray-500">Manage your profile, security, and payout information</p>
                     </div>
                 </div>
 
-                <x-ui.profile-completion :user="$user" class="mb-6" />
-
+                <!-- Flash messages -->
                 @if(session('success'))
-                    <div class="flex items-center gap-3 rounded-xl bg-emerald-50 border border-emerald-200/80 px-4 py-3 mb-6 text-emerald-800 shadow-sm">
-                        <span class="material-icons-round text-emerald-600 text-xl">check_circle</span>
-                        <span class="font-medium">{{ session('success') }}</span>
+                    <div class="flex items-center gap-3 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 mb-5 text-emerald-800">
+                        <span class="material-icons-round text-emerald-600">check_circle</span>
+                        <span class="font-medium text-sm">{{ session('success') }}</span>
                     </div>
                 @endif
                 @if($errors->any())
-                    <div class="flex items-start gap-3 rounded-xl bg-red-50 border border-red-200/80 px-4 py-3 mb-6 text-red-800 shadow-sm">
-                        <span class="material-icons-round text-red-600 text-xl flex-shrink-0">error</span>
-                        <ul class="list-disc list-inside text-sm">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
+                    <div class="flex items-start gap-3 rounded-xl bg-red-50 border border-red-200 px-4 py-3 mb-5 text-red-800">
+                        <span class="material-icons-round text-red-600 flex-shrink-0">error</span>
+                        <ul class="list-disc list-inside text-sm space-y-0.5">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
                     </div>
                 @endif
 
-                <div class="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden">
-                    <div class="p-6 md:p-8 space-y-6">
-                        @php
-                            $sellerDialRows = collect(config('phone_country_codes', []))->sortBy('label')->values();
-                            $sellerMatchRows = collect(config('phone_country_codes', []))->sortByDesc(fn ($r) => strlen((string) ($r['code'] ?? '')))->values();
-                            $sellerPhoneDigits = preg_replace('/\D/', '', (string) ($user->phone ?? ''));
+                @php
+                    $sellerDialRows = collect(config('phone_country_codes', []))->sortBy('label')->values();
+                    $sellerMatchRows = collect(config('phone_country_codes', []))->sortByDesc(fn ($r) => strlen((string) ($r['code'] ?? '')))->values();
+                    $sellerPhoneDigits = preg_replace('/\D/', '', (string) ($user->phone ?? ''));
+                    $sellerDefaultCountry = '1242';
+                    $sellerDefaultNational = '';
+                    foreach ($sellerMatchRows as $row) {
+                        $cc = (string) ($row['code'] ?? '');
+                        if ($cc !== '' && $sellerPhoneDigits !== '' && str_starts_with($sellerPhoneDigits, $cc)) {
+                            $sellerDefaultCountry = $cc;
+                            $sellerDefaultNational = substr($sellerPhoneDigits, strlen($cc)) ?: '';
+                            break;
+                        }
+                    }
+                    if ($sellerPhoneDigits !== '' && $sellerDefaultNational === '' && strlen($sellerPhoneDigits) >= 10) {
+                        if (str_starts_with($sellerPhoneDigits, '1242')) {
                             $sellerDefaultCountry = '1242';
-                            $sellerDefaultNational = '';
-                            foreach ($sellerMatchRows as $row) {
-                                $cc = (string) ($row['code'] ?? '');
-                                if ($cc !== '' && $sellerPhoneDigits !== '' && str_starts_with($sellerPhoneDigits, $cc)) {
-                                    $sellerDefaultCountry = $cc;
-                                    $sellerDefaultNational = substr($sellerPhoneDigits, strlen($cc)) ?: '';
-                                    break;
-                                }
-                            }
-                            if ($sellerPhoneDigits !== '' && $sellerDefaultNational === '' && strlen($sellerPhoneDigits) >= 10) {
-                                if (str_starts_with($sellerPhoneDigits, '1242')) {
-                                    $sellerDefaultCountry = '1242';
-                                    $sellerDefaultNational = substr($sellerPhoneDigits, 4) ?: $sellerPhoneDigits;
-                                } elseif (strlen($sellerPhoneDigits) === 11 && str_starts_with($sellerPhoneDigits, '1')) {
-                                    $sellerDefaultCountry = '1';
-                                    $sellerDefaultNational = substr($sellerPhoneDigits, 1);
-                                } else {
-                                    $sellerDefaultCountry = '1242';
-                                    $sellerDefaultNational = $sellerPhoneDigits;
-                                }
-                            }
-                        @endphp
+                            $sellerDefaultNational = substr($sellerPhoneDigits, 4) ?: $sellerPhoneDigits;
+                        } elseif (strlen($sellerPhoneDigits) === 11 && str_starts_with($sellerPhoneDigits, '1')) {
+                            $sellerDefaultCountry = '1';
+                            $sellerDefaultNational = substr($sellerPhoneDigits, 1);
+                        } else {
+                            $sellerDefaultCountry = '1242';
+                            $sellerDefaultNational = $sellerPhoneDigits;
+                        }
+                    }
+                @endphp
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <!-- Full Name / Business Name -->
-                            <div class="group">
-                                <label class="flex items-center gap-2 text-sm font-semibold text-gray-600 mb-2">
-                                    <span class="material-icons-round text-gray-400 text-lg group-focus-within:text-blue-600 transition-colors">badge</span>
-                                    @if($user->business_license_path)
-                                        Business Name
-                                    @else
-                                        Full Name
-                                    @endif
-                                </label>
-                                <div class="flex items-center gap-3 rounded-xl bg-slate-50/80 border border-gray-200 px-4 py-3.5">
-                                    <span class="material-icons-round text-gray-400 text-xl">person_outline</span>
-                                    <span class="text-gray-900 font-medium">{{ $user->name }}</span>
-                                </div>
-                                <p class="text-xs text-gray-400 mt-1.5">Display name on your account (cannot be changed here)</p>
-                            </div>
+                <div class="space-y-5">
 
-                            <!-- Phone -->
-                            <div class="group">
-                                <label class="flex items-center gap-2 text-sm font-semibold text-gray-600 mb-2">
-                                    <span class="material-icons-round text-gray-400 text-lg group-focus-within:text-blue-600 transition-colors">phone</span>
-                                    Phone Number
-                                    <span class="ml-1 text-[11px] font-semibold text-red-500 uppercase tracking-wide">(required to list)</span>
-                                </label>
-                                <div class="rounded-xl bg-slate-50/80 border border-gray-200 px-4 py-4 space-y-3">
-                                    <div class="flex items-center justify-between gap-3">
-                                        <div class="text-sm">
-                                            <p class="text-gray-500 text-xs mb-0.5">Current</p>
-                                            <p class="text-gray-900 font-medium" id="seller_dashboard_phone_display">{{ ($user->phone && $sellerPhoneDigits !== '') ? '+'.$sellerPhoneDigits : 'Not set' }}</p>
-                                        </div>
-                                        <div id="seller-dash-phone-verified-badge" class="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-semibold
-                                            {{ $user->phone_verified_at ? 'bg-green-50 text-green-700 border border-green-200' : 'hidden bg-yellow-50 text-yellow-700 border border-yellow-200' }}">
-                                            <svg class="w-3.5 h-3.5 mr-1" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                            </svg>
-                                            <span>{{ $user->phone_verified_at ? 'Verified' : 'Not verified' }}</span>
-                                        </div>
-                                    </div>
+                {{-- ══════════════════════════════════════════
+                     SECTION 1 — ACCOUNT INFORMATION
+                ══════════════════════════════════════════ --}}
+                <div class="bg-white rounded-2xl border border-gray-200 shadow-sm">
+                    <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
+                        <span class="material-icons-round text-gray-400" style="font-size:18px">person</span>
+                        <h3 class="font-bold text-gray-900 text-sm">Account Information</h3>
+                    </div>
+                    <div class="p-6 space-y-5">
 
-                                    <div class="grid grid-cols-1 md:grid-cols-[minmax(10rem,14rem),minmax(0,1.5fr),auto] gap-3 items-end">
-                                        <div>
-                                            <label class="block text-xs font-semibold text-gray-600 mb-1">Country / area code</label>
-                                            <select id="seller_dash_phone_country" class="w-full px-3 py-2.5 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm">
-                                                @foreach ($sellerDialRows as $row)
-                                                    <option value="{{ $row['code'] }}" @if((string)($row['code'] ?? '') === $sellerDefaultCountry) selected @endif>{{ $row['label'] }}</option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                        <div class="min-w-[180px]">
-                                            <label class="block text-xs font-semibold text-gray-600 mb-1">Phone Number</label>
-                                            <input type="text" id="seller_dash_phone_input" value="{{ old('seller_phone_local', $sellerDefaultNational) }}"
-                                                placeholder="e.g. (242) 555-1234"
-                                                class="js-digits-only js-phone-format w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                                                data-phone-country-select="#seller_dash_phone_country"
-                                                data-cm-validate="phone"
-                                                inputmode="numeric" autocomplete="tel-national">
-                                        </div>
-                                        <div class="flex md:block">
-                                            <button type="button" id="seller-dash-send-code-btn"
-                                                class="w-full md:w-auto px-4 py-2.5 rounded-xl bg-gray-200 text-gray-800 text-sm font-semibold hover:bg-gray-300 transition whitespace-nowrap">
-                                                Send code
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <input type="hidden" id="seller_dash_phone_full" value="">
-
-                                    <div id="seller-dash-phone-verify-row" class="grid grid-cols-1 md:grid-cols-[minmax(0,1.5fr),auto] gap-3 items-end hidden">
-                                        <div>
-                                            <label class="block text-xs font-semibold text-gray-600 mb-1">Verification code</label>
-                                            <input type="text" id="seller_dash_phone_code_input" placeholder="6-digit code" maxlength="6" inputmode="numeric" pattern="[0-9]*"
-                                                class="js-digits-only w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
-                                            <p class="text-[11px] text-gray-500 mt-1">Code expires in 5 minutes.</p>
-                                        </div>
-                                        <div class="flex md:block">
-                                            <button type="button" id="seller-dash-verify-phone-btn"
-                                                class="w-full md:w-auto px-4 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition whitespace-nowrap">
-                                                Verify &amp; Save
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    @if(!$user->phone || !$user->phone_verified_at)
-                                        <p class="text-[11px] text-red-500 mt-1.5">
-                                            You must add and verify a phone number before you can submit listings.
-                                        </p>
-                                    @else
-                                        <p class="text-[11px] text-gray-400 mt-1.5">
-                                            Verified phone is used for security, payouts, and pickup coordination.
-                                        </p>
-                                    @endif
-                                </div>
-                            </div>
-
-                            <!-- Account Type -->
-                            <div class="group">
-                                <label class="flex items-center gap-2 text-sm font-semibold text-gray-600 mb-2">
-                                    <span class="material-icons-round text-gray-400 text-lg">workspace_premium</span>
-                                    Account Type
-                                </label>
-                                <div class="flex items-center gap-3 rounded-xl bg-slate-50/80 border border-gray-200 px-4 py-3.5">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-semibold bg-blue-100 text-blue-800">
-                                        {{ $user->business_license_path ? 'Business Seller' : 'Individual Seller' }}
-                                    </span>
-                                </div>
+                        <!-- Full Name (read-only) -->
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Full Name</label>
+                            <div class="flex items-center gap-3 rounded-xl bg-gray-50 border border-gray-200 px-4 py-3">
+                                <span class="material-icons-round text-gray-400" style="font-size:18px">badge</span>
+                                <span class="text-gray-900 font-medium text-sm">{{ $user->name }}</span>
+                                <span class="ml-auto text-xs text-gray-400">Cannot be changed here</span>
                             </div>
                         </div>
 
-                        <!-- Uploaded Documents -->
-                        <div class="pt-2 border-t border-gray-100">
-                            <label class="flex items-center gap-2 text-sm font-semibold text-gray-600 mb-3">
-                                <span class="material-icons-round text-gray-400 text-lg">folder_open</span>
-                                Uploaded Documents
+                        <!-- Phone Number -->
+                        <div>
+                            <label class="flex items-center gap-2 text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                                Phone Number
+                                <span class="text-red-500 normal-case tracking-normal font-semibold text-[11px]">(required to list)</span>
                             </label>
-                            @if(isset($documents) && $documents->count() > 0)
-                                <div class="space-y-3">
-                                    @foreach($documents as $document)
-                                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 rounded-xl bg-slate-50/80 border border-gray-200 px-4 py-3">
-                                            <div>
-                                                <span class="text-gray-900 font-medium">
-                                                    @if($document->doc_type === 'business_license')
-                                                        Business License
-                                                    @else
-                                                        {{ ucfirst(str_replace('_', ' ', $document->doc_type ?? 'Document')) }}
-                                                    @endif
-                                                </span>
-                                                @if($user->relationship_to_business && $document->doc_type === 'business_license')
-                                                    <p class="text-xs text-gray-500 mt-1">
-                                                        Relationship: {{ ucfirst(str_replace('_', ' ', $user->relationship_to_business)) }}
-                                                    </p>
-                                                @endif
-                                            </div>
-                                            @if($document->path ?? null)
-                                                <a href="{{ asset('storage/' . $document->path) }}" target="_blank" rel="noopener" class="text-blue-600 hover:text-blue-800 text-sm font-medium shrink-0">View</a>
-                                            @else
-                                                <span class="text-gray-400 text-sm">—</span>
-                                            @endif
-                                        </div>
-                                    @endforeach
+                            <div class="rounded-xl bg-gray-50 border border-gray-200 px-4 py-4 space-y-3">
+                                <div class="flex items-center justify-between gap-3">
+                                    <div class="text-sm">
+                                        <p class="text-gray-500 text-xs mb-0.5">Current</p>
+                                        <p class="text-gray-900 font-medium" id="seller_dashboard_phone_display">{{ ($user->phone && $sellerPhoneDigits !== '') ? '+'.$sellerPhoneDigits : 'Not set' }}</p>
+                                    </div>
+                                    <div id="seller-dash-phone-verified-badge" class="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-semibold
+                                        {{ $user->phone_verified_at ? 'bg-green-50 text-green-700 border border-green-200' : 'hidden bg-yellow-50 text-yellow-700 border border-yellow-200' }}">
+                                        <svg class="w-3.5 h-3.5 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <span>{{ $user->phone_verified_at ? 'Verified' : 'Not verified' }}</span>
+                                    </div>
                                 </div>
-                                <p class="text-xs text-gray-400 mt-2">Documents uploaded during registration. To update, contact support.</p>
-                            @else
-                                <div class="rounded-xl border-2 border-dashed border-gray-200 bg-gray-50/50 p-6 text-center">
-                                    <p class="text-gray-500 text-sm">No documents uploaded yet.</p>
-                                </div>
-                            @endif
-                        </div>
-
-                        <!-- Email -->
-                        <div class="pt-2 border-t border-gray-100">
-                            @php $emailChangePending = session('email_change_pending') || (new \App\Services\EmailChangeVerificationService())->hasPendingChange($user); @endphp
-                            @if($emailChangePending)
-                                @php $pendingNew = session('email_change_new') ?? (new \App\Services\EmailChangeVerificationService())->getPendingNewEmail($user); @endphp
-                                <form method="POST" action="{{ route('seller.dashboard.update-email') }}" class="group">
-                                    @csrf
-                                    <input type="hidden" name="email" value="{{ $pendingNew }}">
-                                    <label class="flex items-center gap-2 text-sm font-semibold text-gray-600 mb-2">
-                                        <span class="material-icons-round text-gray-400 text-lg">mail</span>
-                                        Verify email change
-                                    </label>
-                                    <p class="text-sm text-gray-600 mb-3">We sent a verification code to <strong>{{ $user->email }}</strong>. Enter it below to confirm the change to <strong>{{ $pendingNew }}</strong>.</p>
-                                    <div class="flex flex-col sm:flex-row gap-3">
-                                        <div class="flex-1 max-w-[200px]">
-                                            <input type="text" name="code" value="{{ old('code') }}" placeholder="000000" maxlength="6" pattern="[0-9]*" inputmode="numeric" required
-                                                class="w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-gray-900 font-mono text-xl text-center tracking-widest placeholder-gray-400 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all">
-                                            @error('code')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
-                                        </div>
-                                        <button type="submit" class="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3.5 rounded-xl font-semibold shadow-lg shadow-blue-600/20 hover:shadow-blue-600/30 transition-all duration-200">
-                                            <span class="material-icons-round text-lg">check_circle</span>
-                                            Confirm change
+                                <div class="grid grid-cols-1 md:grid-cols-[minmax(10rem,14rem),minmax(0,1.5fr),auto] gap-3 items-end">
+                                    <div>
+                                        <label class="block text-xs font-semibold text-gray-600 mb-1">Country / area code</label>
+                                        <select id="seller_dash_phone_country" class="w-full px-3 py-2.5 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm">
+                                            @foreach ($sellerDialRows as $row)
+                                                <option value="{{ $row['code'] }}" @if((string)($row['code'] ?? '') === $sellerDefaultCountry) selected @endif>{{ $row['label'] }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="min-w-[180px]">
+                                        <label class="block text-xs font-semibold text-gray-600 mb-1">Phone Number</label>
+                                        <input type="text" id="seller_dash_phone_input" value="{{ old('seller_phone_local', $sellerDefaultNational) }}"
+                                            placeholder="e.g. (242) 555-1234"
+                                            class="js-digits-only js-phone-format w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                            data-phone-country-select="#seller_dash_phone_country"
+                                            data-cm-validate="phone"
+                                            inputmode="numeric" autocomplete="tel-national">
+                                    </div>
+                                    <div class="flex md:block">
+                                        <button type="button" id="seller-dash-send-code-btn"
+                                            class="w-full md:w-auto px-4 py-2.5 rounded-xl bg-gray-200 text-gray-800 text-sm font-semibold hover:bg-gray-300 transition whitespace-nowrap">
+                                            Send code
                                         </button>
                                     </div>
-                                    <p class="text-xs text-gray-400 mt-1.5">Code expires in 15 minutes. <a href="{{ route('seller.account') }}" class="text-blue-600 hover:underline">Cancel</a></p>
-                                </form>
-                            @else
-                                <form method="POST" action="{{ route('seller.dashboard.update-email') }}" class="group">
-                                    @csrf
-                                    <label class="flex items-center gap-2 text-sm font-semibold text-gray-600 mb-2">
-                                        <span class="material-icons-round text-gray-400 text-lg group-focus-within:text-blue-600 transition-colors">mail</span>
-                                        Email Address
-                                    </label>
-                                    <div class="flex flex-col sm:flex-row gap-3">
-                                        <div class="flex-1">
-                                            <input type="email" name="email" value="{{ old('email', $user->email) }}" required
-                                                class="w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-gray-900 font-medium placeholder-gray-400 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all @error('email') border-red-500 @enderror">
-                                            @error('email')<p class="text-sm text-red-600 mt-1">{{ $message }}</p>@enderror
-                                        </div>
-                                        <button type="submit" class="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3.5 rounded-xl font-semibold shadow-lg shadow-blue-600/20 hover:shadow-blue-600/30 transition-all duration-200">
-                                            <span class="material-icons-round text-lg">send</span>
-                                            Send verification code
+                                </div>
+                                <input type="hidden" id="seller_dash_phone_full" value="">
+                                <div id="seller-dash-phone-verify-row" class="grid grid-cols-1 md:grid-cols-[minmax(0,1.5fr),auto] gap-3 items-end hidden">
+                                    <div>
+                                        <label class="block text-xs font-semibold text-gray-600 mb-1">Verification code</label>
+                                        <input type="text" id="seller_dash_phone_code_input" placeholder="6-digit code" maxlength="6" inputmode="numeric" pattern="[0-9]*"
+                                            class="js-digits-only w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+                                        <p class="text-[11px] text-gray-500 mt-1">Code expires in 5 minutes.</p>
+                                    </div>
+                                    <div class="flex md:block">
+                                        <button type="button" id="seller-dash-verify-phone-btn"
+                                            class="w-full md:w-auto px-4 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition whitespace-nowrap">
+                                            Verify &amp; Save
                                         </button>
                                     </div>
-                                    <p class="text-xs text-gray-400 mt-1.5">A code will be sent to your current email to approve the change.</p>
-                                </form>
-                            @endif
-                        </div>
-
-                        <!-- Password -->
-                        <div class="pt-2 border-t border-gray-100">
-                            <div class="group">
-                                <label class="flex items-center gap-2 text-sm font-semibold text-gray-600 mb-2">
-                                    <span class="material-icons-round text-gray-400 text-lg">lock</span>
-                                    Password
-                                </label>
-                                <div class="rounded-xl border-2 border-dashed border-gray-200 bg-gray-50/50 p-4">
-                                    <p class="text-sm text-gray-500 mb-3">Your password is encrypted and never displayed.</p>
-                                    <button type="button" onclick="showPasswordModal()"
-                                        class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl border-2 border-gray-300 bg-white text-gray-700 font-semibold hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50/50 transition-all duration-200">
-                                        <span class="material-icons-round text-lg">key</span>
-                                        Change Password
-                                    </button>
                                 </div>
+                                @if(!$user->phone || !$user->phone_verified_at)
+                                    <p class="text-[11px] text-red-500">You must add and verify a phone number before you can submit listings.</p>
+                                @else
+                                    <p class="text-[11px] text-gray-400">Verified phone is used for security, payouts, and pickup coordination.</p>
+                                @endif
                             </div>
                         </div>
 
-                        <!-- Payout (seller-only; styled to match card sections) -->
-                        <div class="pt-2 border-t border-gray-100">
-                            <label class="flex items-center gap-2 text-sm font-semibold text-gray-600 mb-3">
-                                <span class="material-icons-round text-gray-400 text-lg">account_balance_wallet</span>
-                                Payout Settings
-                            </label>
-                            @if($payoutMethod)
-                                <div class="rounded-xl bg-slate-50/80 border border-gray-200 px-4 py-3.5 mb-4 space-y-2 text-sm text-gray-700">
-                                    <p><span class="font-semibold text-gray-900">Bank:</span> {{ $payoutMethod->bank_name }}</p>
-                                    <p><span class="font-semibold text-gray-900">Account holder:</span> {{ $payoutMethod->account_holder_name }}</p>
-                                    <p><span class="font-semibold text-gray-900">Bank account:</span> ****{{ strlen($payoutMethod->account_number ?? '') >= 4 ? substr($payoutMethod->account_number, -4) : '****' }}</p>
-                                    @if($payoutMethod->card_number)
-                                        <p><span class="font-semibold text-gray-900">Card on file:</span> ****{{ substr($payoutMethod->card_number, -4) }}</p>
-                                    @endif
-                                    @if($payoutMethod->country)
-                                        <p><span class="font-semibold text-gray-900">Region:</span> {{ $payoutMethod->country }}</p>
-                                    @endif
-                                    @if($payoutMethod->routing_number)
-                                        <p><span class="font-semibold text-gray-900">Routing number:</span> ****{{ substr($payoutMethod->routing_number, -4) }}</p>
-                                    @endif
-                                </div>
-                            @endif
-                            <button type="button" onclick="showPayoutModal()"
-                                class="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3.5 rounded-xl font-semibold shadow-lg shadow-blue-600/20 hover:shadow-blue-600/30 transition-all duration-200">
-                                <span class="material-icons-round text-lg">payments</span>
-                                {{ $payoutMethod ? 'Update payout settings' : 'Add payout settings' }}
-                            </button>
-                            <p class="text-xs text-gray-400 mt-2">Payout details must be on file before earnings can be released.</p>
-                        </div>
                     </div>
                 </div>
-            </div>
+
+                {{-- ══════════════════════════════════════════
+                     SECTION 2 — ACCOUNT TYPE
+                ══════════════════════════════════════════ --}}
+                <div class="bg-white rounded-2xl border border-gray-200 shadow-sm">
+                    <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
+                        <span class="material-icons-round text-gray-400" style="font-size:18px">workspace_premium</span>
+                        <h3 class="font-bold text-gray-900 text-sm">Account Type</h3>
+                    </div>
+                    <div class="p-6">
+                        @if($user->business_license_path)
+                            {{-- BUSINESS SELLER VIEW --}}
+                            <div class="flex flex-wrap items-start justify-between gap-4">
+                                <div>
+                                    <p class="font-bold text-gray-900 text-base mb-1">Business Seller Plan</p>
+                                    @if(isset($activeSubscription) && $activeSubscription)
+                                        <p class="text-sm text-gray-500">Plan Expires: <span class="font-semibold text-gray-700">{{ $activeSubscription->ends_at->format('M d, Y') }}</span></p>
+                                    @endif
+                                </div>
+                                <div class="flex flex-col items-end gap-2">
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-bold">
+                                        <span class="material-icons-round" style="font-size:13px">workspace_premium</span>
+                                        Business Seller
+                                    </span>
+                                    @if($showRenew)
+                                        <a href="{{ route('enterprise-seller') }}"
+                                           class="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition-colors duration-200">
+                                            <span class="material-icons-round" style="font-size:14px">autorenew</span>
+                                            Renew Plan
+                                        </a>
+                                    @endif
+                                </div>
+                            </div>
+                        @else
+                            {{-- CASUAL SELLER VIEW --}}
+                            <div class="flex flex-wrap items-start justify-between gap-4">
+                                <div>
+                                    <p class="font-bold text-gray-900 text-base mb-2">Casual Seller Account</p>
+                                    <a href="{{ route('enterprise-seller') }}"
+                                       class="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-colors duration-200 mb-2">
+                                        <span class="material-icons-round" style="font-size:15px">upgrade</span>
+                                        Upgrade to Business Seller
+                                    </a>
+                                    <p class="text-xs text-gray-500 mt-1">Unlock additional listings, analytics, and business seller features.</p>
+                                </div>
+                                <span class="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-semibold">
+                                    Casual Seller
+                                </span>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+
+                {{-- ══════════════════════════════════════════
+                     SECTION 3 — DOCUMENTS
+                ══════════════════════════════════════════ --}}
+                @if(isset($documents) && $documents->count() > 0)
+                <div class="bg-white rounded-2xl border border-gray-200 shadow-sm">
+                    <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
+                        <span class="material-icons-round text-gray-400" style="font-size:18px">folder_open</span>
+                        <h3 class="font-bold text-gray-900 text-sm">Documents</h3>
+                    </div>
+                    <div class="p-6 space-y-3">
+                        @foreach($documents as $document)
+                            <div class="flex items-center justify-between gap-2 rounded-xl bg-gray-50 border border-gray-200 px-4 py-3">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-900">
+                                        @if($document->doc_type === 'business_license') Business License
+                                        @else {{ ucfirst(str_replace('_', ' ', $document->doc_type ?? 'Document')) }}
+                                        @endif
+                                    </p>
+                                    @if($user->relationship_to_business && $document->doc_type === 'business_license')
+                                        <p class="text-xs text-gray-500 mt-0.5">Relationship: {{ ucfirst(str_replace('_', ' ', $user->relationship_to_business)) }}</p>
+                                    @endif
+                                </div>
+                                @if($document->path ?? null)
+                                    <a href="{{ asset('storage/' . $document->path) }}" target="_blank" rel="noopener"
+                                       class="text-blue-600 hover:text-blue-800 text-sm font-semibold shrink-0">View</a>
+                                @else
+                                    <span class="text-gray-400 text-sm shrink-0">—</span>
+                                @endif
+                            </div>
+                        @endforeach
+                        <p class="text-xs text-gray-400">Documents uploaded during registration. To update, contact support.</p>
+                    </div>
+                </div>
+                @endif
+
+                {{-- ══════════════════════════════════════════
+                     SECTION 4 — PAYOUT SETTINGS
+                ══════════════════════════════════════════ --}}
+                <div class="bg-white rounded-2xl border border-gray-200 shadow-sm">
+                    <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
+                        <span class="material-icons-round text-gray-400" style="font-size:18px">account_balance_wallet</span>
+                        <h3 class="font-bold text-gray-900 text-sm">Payout Settings</h3>
+                    </div>
+                    <div class="p-6">
+                        @if(!$payoutMethod)
+                            <div class="flex items-start gap-3 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 mb-4">
+                                <span class="material-icons-round text-amber-500 flex-shrink-0" style="font-size:18px">warning</span>
+                                <p class="text-sm text-amber-800 font-medium">Payout details must be completed before earnings can be released.</p>
+                            </div>
+                        @else
+                            <div class="rounded-xl bg-gray-50 border border-gray-200 px-4 py-4 mb-4 space-y-2 text-sm text-gray-700">
+                                <p><span class="font-semibold text-gray-900">Bank:</span> {{ $payoutMethod->bank_name }}</p>
+                                <p><span class="font-semibold text-gray-900">Account holder:</span> {{ $payoutMethod->account_holder_name }}</p>
+                                <p><span class="font-semibold text-gray-900">Bank account:</span> ****{{ strlen($payoutMethod->account_number ?? '') >= 4 ? substr($payoutMethod->account_number, -4) : '****' }}</p>
+                                @if($payoutMethod->routing_number)
+                                    <p><span class="font-semibold text-gray-900">Routing / Branch:</span> ****{{ substr($payoutMethod->routing_number, -4) }}</p>
+                                @endif
+                                @if($payoutMethod->country)
+                                    <p><span class="font-semibold text-gray-900">Region:</span> {{ $payoutMethod->country }}</p>
+                                @endif
+                            </div>
+                        @endif
+                        <button type="button" onclick="showPayoutModal()"
+                            class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition-colors duration-200 shadow-sm">
+                            <span class="material-icons-round" style="font-size:18px">{{ $payoutMethod ? 'edit' : 'add' }}</span>
+                            {{ $payoutMethod ? 'Edit Payout Settings' : 'Add Payout Settings' }}
+                        </button>
+                        @if(!$payoutMethod)
+                            <p class="text-xs text-gray-500 mt-2">Payout details must be completed before earnings can be released.</p>
+                        @endif
+                    </div>
+                </div>
+
+                {{-- ══════════════════════════════════════════
+                     SECTION 5 — SECURITY (PASSWORD)
+                ══════════════════════════════════════════ --}}
+                <div class="bg-white rounded-2xl border border-gray-200 shadow-sm">
+                    <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
+                        <span class="material-icons-round text-gray-400" style="font-size:18px">lock</span>
+                        <h3 class="font-bold text-gray-900 text-sm">Security</h3>
+                    </div>
+                    <div class="p-6 flex items-center justify-between gap-4 flex-wrap">
+                        <div>
+                            <p class="text-sm font-medium text-gray-700">Password</p>
+                            <p class="text-xs text-gray-400 mt-0.5">Your password is encrypted and never displayed.</p>
+                        </div>
+                        <button type="button" onclick="showPasswordModal()"
+                            class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-gray-300 bg-white hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 text-sm font-semibold text-gray-700 transition-all duration-200">
+                            <span class="material-icons-round" style="font-size:18px">key</span>
+                            Change Password
+                        </button>
+                    </div>
+                </div>
+
+                </div>{{-- end space-y-5 --}}
+
+            </div>{{-- end content-user --}}
 
             <!-- SUBMISSION TAB -->
             <div id="content-submission" class="tab-content hidden p-6">
@@ -1688,183 +2124,283 @@ document.getElementById('deleteListingModal') && document.getElementById('delete
 });
 </script>
 
-<!-- Password Change Modal -->
-<div id="passwordModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-        <div class="mt-3">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Change Password</h3>
-            <form method="POST" action="{{ route('seller.dashboard.change-password') }}">
+<!-- ════════════════════════════════════════════════════
+     CHANGE EMAIL MODAL (2-step)
+════════════════════════════════════════════════════ -->
+<div id="emailChangeModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+            <h3 class="text-base font-bold text-gray-900">Change Email Address</h3>
+            <button type="button" onclick="closeEmailChangeModal()" class="text-gray-400 hover:text-gray-600">
+                <span class="material-icons-round">close</span>
+            </button>
+        </div>
+
+        <!-- Step 1: Credentials -->
+        <div id="emailStep1" class="p-6">
+            <p class="text-sm text-gray-500 mb-5">Enter your new email and current password to initiate the change. A verification code will be sent to your <strong>new email</strong>.</p>
+            <form method="POST" action="{{ route('seller.dashboard.initiate-email-change') }}">
                 @csrf
+                <!-- Current Email (read-only) -->
                 <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Current Email</label>
+                    <input type="email" value="{{ $user->email }}" readonly
+                           class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-500 text-sm cursor-not-allowed">
+                </div>
+                <!-- New Email -->
+                <div class="mb-4">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">New Email</label>
+                    <input type="email" name="new_email" required placeholder="your@newemail.com"
+                           class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-sm transition">
+                </div>
+                <!-- Password -->
+                <div class="mb-5">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Account Password</label>
                     <div class="relative">
-                        <input type="password" id="modal_current_password" name="current_password" required
-                               class="w-full border border-gray-300 rounded-lg px-4 py-2 pr-10 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600" aria-label="Toggle visibility" onclick="togglePasswordModal('modal_current_password', 'modal_current_eye')">
-                            <svg id="modal_current_eye" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                            <svg id="modal_current_eye_slash" class="h-5 w-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
+                        <input type="password" name="password" id="ecm_password" required
+                               class="w-full px-4 py-2.5 pr-10 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-sm transition"
+                               placeholder="Your current password">
+                        <button type="button" onclick="ecmTogglePwd()" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
+                            <span class="material-icons-round text-lg" id="ecm_eye">visibility</span>
                         </button>
                     </div>
                 </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">New Password</label>
-                    <div class="relative">
-                        <input type="password" id="modal_new_password" name="password" required minlength="8"
-                               class="w-full border border-gray-300 rounded-lg px-4 py-2 pr-10 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600" aria-label="Toggle visibility" onclick="togglePasswordModal('modal_new_password', 'modal_new_eye')">
-                            <svg id="modal_new_eye" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                            <svg id="modal_new_eye_slash" class="h-5 w-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
-                        </button>
+                <div class="flex items-center justify-between gap-3">
+                    <a href="{{ route('password.request') }}" target="_blank"
+                       class="text-xs text-blue-600 hover:text-blue-800">Forgot your password?</a>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="closeEmailChangeModal()"
+                                class="px-4 py-2 text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition">Cancel</button>
+                        <button type="submit"
+                                class="px-5 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition">Send Code</button>
                     </div>
                 </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
-                    <div class="relative">
-                        <input type="password" id="modal_confirm_password" name="password_confirmation" required minlength="8"
-                               class="w-full border border-gray-300 rounded-lg px-4 py-2 pr-10 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600" aria-label="Toggle visibility" onclick="togglePasswordModal('modal_confirm_password', 'modal_confirm_eye')">
-                            <svg id="modal_confirm_eye" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                            <svg id="modal_confirm_eye_slash" class="h-5 w-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
-                        </button>
-                    </div>
+            </form>
+        </div>
+
+        <!-- Step 2: OTP Verification -->
+        <div id="emailStep2" class="p-6 hidden">
+            <div class="flex items-center gap-2 text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 mb-5">
+                <span class="material-icons-round" style="font-size:18px">mail</span>
+                <span>Verification code sent to <strong>{{ $emailPendingNew ?? 'your new email' }}</strong>. Expires in 10 minutes.</span>
+            </div>
+            <form method="POST" action="{{ route('seller.dashboard.update-email') }}">
+                @csrf
+                <input type="hidden" name="email" value="{{ $emailPendingNew ?? '' }}">
+                <div class="mb-5">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Verification Code</label>
+                    <input type="text" name="code" maxlength="6" pattern="[0-9]*" inputmode="numeric" required
+                           placeholder="000000"
+                           class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-center text-2xl font-mono tracking-[0.3em] transition">
+                    @error('code')<p class="text-xs text-red-600 mt-1">{{ $message }}</p>@enderror
                 </div>
-                <div class="flex items-center justify-end space-x-3">
-                    <button type="button" 
-                            onclick="hidePasswordModal()" 
-                            class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition duration-200">
-                        Cancel
-                    </button>
-                    <button type="submit" 
-                            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200">
-                        Change Password
-                    </button>
+                <div class="flex items-center justify-between gap-3">
+                    <form method="POST" action="{{ route('seller.dashboard.cancel-email-change') }}" class="inline">
+                        @csrf
+                        <button type="submit" class="text-xs text-gray-500 hover:text-gray-700">Cancel change</button>
+                    </form>
+                    <button type="submit"
+                            class="px-5 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition">Confirm Change</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<!-- Payout Settings Modal -->
-<div id="payoutModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-    <div class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white m-4">
-        <div class="mt-3">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Payout Settings</h3>
-            <form method="POST" action="{{ route('seller.dashboard.update-payout') }}">
+<!-- ════════════════════════════════════════════════════
+     CHANGE PASSWORD MODAL
+════════════════════════════════════════════════════ -->
+<div id="passwordModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+            <h3 class="text-base font-bold text-gray-900">Change Password</h3>
+            <button type="button" onclick="hidePasswordModal()" class="text-gray-400 hover:text-gray-600">
+                <span class="material-icons-round">close</span>
+            </button>
+        </div>
+        <div class="p-6">
+            <form method="POST" action="{{ route('seller.dashboard.change-password') }}">
                 @csrf
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <!-- Current Password -->
+                <div class="mb-4">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Current Password</label>
+                    <div class="relative">
+                        <input type="password" id="modal_current_password" name="current_password" required
+                               class="w-full border border-gray-200 rounded-xl px-4 py-2.5 pr-10 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                                onclick="togglePasswordModal('modal_current_password', 'modal_current_eye', 'modal_current_eye_slash')">
+                            <span id="modal_current_eye" class="material-icons-round text-lg">visibility</span>
+                            <span id="modal_current_eye_slash" class="material-icons-round text-lg hidden">visibility_off</span>
+                        </button>
+                    </div>
+                </div>
+                <!-- New Password -->
+                <div class="mb-4">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">New Password</label>
+                    <div class="relative">
+                        <input type="password" id="modal_new_password" name="password" required minlength="8"
+                               class="w-full border border-gray-200 rounded-xl px-4 py-2.5 pr-10 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                                onclick="togglePasswordModal('modal_new_password', 'modal_new_eye', 'modal_new_eye_slash')">
+                            <span id="modal_new_eye" class="material-icons-round text-lg">visibility</span>
+                            <span id="modal_new_eye_slash" class="material-icons-round text-lg hidden">visibility_off</span>
+                        </button>
+                    </div>
+                    <p class="text-[11px] text-gray-400 mt-1">Minimum 8 characters. Must differ from current password.</p>
+                </div>
+                <!-- Confirm Password -->
+                <div class="mb-5">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Confirm New Password</label>
+                    <div class="relative">
+                        <input type="password" id="modal_confirm_password" name="password_confirmation" required minlength="8"
+                               class="w-full border border-gray-200 rounded-xl px-4 py-2.5 pr-10 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                                onclick="togglePasswordModal('modal_confirm_password', 'modal_confirm_eye', 'modal_confirm_eye_slash')">
+                            <span id="modal_confirm_eye" class="material-icons-round text-lg">visibility</span>
+                            <span id="modal_confirm_eye_slash" class="material-icons-round text-lg hidden">visibility_off</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between gap-3">
+                    <a href="{{ route('password.request') }}" target="_blank"
+                       class="text-xs text-blue-600 hover:text-blue-800">Forgot your password?</a>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="hidePasswordModal()"
+                                class="px-4 py-2 text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition">Cancel</button>
+                        <button type="submit"
+                                class="px-5 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition">Update Password</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════
+     PAYOUT SETTINGS MODAL
+════════════════════════════════════════════════════ -->
+<div id="payoutModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden max-h-[90vh] flex flex-col">
+        <!-- Header -->
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
+            <div class="flex items-center gap-2">
+                <span class="material-icons-round text-blue-600">account_balance</span>
+                <h3 class="text-base font-bold text-gray-900">Payout Settings</h3>
+            </div>
+            <button type="button" onclick="hidePayoutModal()" class="text-gray-400 hover:text-gray-600">
+                <span class="material-icons-round">close</span>
+            </button>
+        </div>
+
+        <!-- Scrollable body -->
+        <div class="overflow-y-auto flex-1">
+            <!-- Earnings notice -->
+            <div class="mx-6 mt-5 flex items-start gap-2.5 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+                <span class="material-icons-round text-amber-500 flex-shrink-0" style="font-size:18px">warning</span>
+                <p class="text-xs text-amber-800 leading-relaxed">Payout details must be completed before earnings can be released.</p>
+            </div>
+
+            <form id="payoutForm" method="POST" action="{{ route('seller.dashboard.update-payout') }}">
+                @csrf
+                <div class="px-6 pt-5 pb-4 space-y-4">
+                    <!-- Bank Name -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Account holder name *</label>
-                        <input type="text" 
-                               name="account_holder_name" 
-                               value="{{ $payoutMethod->account_holder_name ?? '' }}"
+                        <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Bank Name *</label>
+                        <input type="text"
+                               name="bank_name"
+                               value="{{ old('bank_name', $payoutMethod->bank_name ?? '') }}"
+                               required
+                               placeholder="e.g. Commonwealth Bank"
+                               class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                    </div>
+
+                    <!-- Account Name -->
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Account Name *</label>
+                        <input type="text"
+                               name="account_holder_name"
+                               value="{{ old('account_holder_name', $payoutMethod->account_holder_name ?? '') }}"
                                required
                                autocomplete="name"
-                               class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                               placeholder="Name as it appears on the account"
+                               class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
                     </div>
+
+                    <!-- Account Number -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Bank account number {{ $payoutMethod ? '' : '*' }}</label>
-                        @if($payoutMethod)
-                            <p class="text-xs text-gray-500 mb-1">Currently: ****{{ strlen($payoutMethod->account_number ?? '') >= 4 ? substr($payoutMethod->account_number, -4) : '****' }}</p>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Account Number {{ $payoutMethod ? '' : '*' }}</label>
+                        @if($payoutMethod && $payoutMethod->account_number)
+                            <p class="text-[11px] text-gray-400 mb-1">Current: ****{{ strlen($payoutMethod->account_number) >= 4 ? substr($payoutMethod->account_number, -4) : str_repeat('*', strlen($payoutMethod->account_number)) }}</p>
                         @endif
-                        <input type="text" 
-                               name="account_number" 
+                        <input type="text"
+                               name="account_number"
                                value=""
                                inputmode="numeric"
                                autocomplete="off"
-                               placeholder="{{ $payoutMethod ? 'Leave blank to keep current' : 'Required' }}"
+                               placeholder="{{ $payoutMethod ? 'Leave blank to keep current' : 'Your bank account number' }}"
                                {{ !$payoutMethod ? 'required' : '' }}
-                               class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                               class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
                     </div>
-                    <div class="md:col-span-2 border-t border-gray-100 pt-3 mt-1">
-                        <p class="text-sm font-medium text-gray-800 mb-2">Payout debit card</p>
-                        <p class="text-xs text-gray-500 mb-3">Card number, CVC, and expiry are encrypted. Use the name of the cardholder above if it matches this card.</p>
-                    </div>
+
+                    <!-- Routing / Branch Number -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Card number {{ $payoutMethod ? '' : '*' }}</label>
-                        @if($payoutMethod && $payoutMethod->card_number)
-                            <p class="text-xs text-gray-500 mb-1">Currently: ****{{ substr($payoutMethod->card_number, -4) }}</p>
-                        @endif
-                        <input type="text"
-                               name="card_number"
-                               value=""
-                               inputmode="numeric"
-                               autocomplete="cc-number"
-                               placeholder="{{ $payoutMethod ? 'Leave blank to keep current' : '12–19 digits' }}"
-                               {{ !$payoutMethod ? 'required' : '' }}
-                               class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">CVC {{ $payoutMethod ? '' : '*' }}</label>
-                        <input type="password"
-                               name="card_cvc"
-                               value=""
-                               inputmode="numeric"
-                               maxlength="4"
-                               autocomplete="cc-csc"
-                               placeholder="{{ $payoutMethod ? 'Leave blank to keep current' : '3 or 4 digits' }}"
-                               {{ !$payoutMethod ? 'required' : '' }}
-                               class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Expiry (MM/YY) {{ $payoutMethod ? '' : '*' }}</label>
-                        <input type="text"
-                               name="card_expiry"
-                               value=""
-                               maxlength="5"
-                               autocomplete="cc-exp"
-                               placeholder="{{ $payoutMethod ? 'Leave blank to keep current' : 'e.g. 09/28' }}"
-                               {{ !$payoutMethod ? 'required' : '' }}
-                               class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Bank name *</label>
-                        <input type="text" 
-                               name="bank_name" 
-                               value="{{ $payoutMethod->bank_name ?? '' }}"
-                               required
-                               class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Routing / Transfer Number</label>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Routing / Branch Number <span class="normal-case font-normal text-gray-400">(if applicable)</span></label>
                         @if($payoutMethod && $payoutMethod->routing_number)
-                            <p class="text-xs text-gray-500 mb-1">Currently: ****{{ substr($payoutMethod->routing_number, -4) }}</p>
+                            <p class="text-[11px] text-gray-400 mb-1">Current: ****{{ substr($payoutMethod->routing_number, -4) }}</p>
                         @endif
-                        <input type="text" 
-                               name="routing_number" 
+                        <input type="text"
+                               name="routing_number"
                                value=""
                                placeholder="{{ $payoutMethod ? 'Leave blank to keep current' : 'Optional' }}"
-                               class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                               class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">SWIFT Number</label>
-                        @if($payoutMethod && $payoutMethod->swift_number)
-                            <p class="text-xs text-gray-500 mb-1">Currently: ****{{ substr($payoutMethod->swift_number, -4) }}</p>
-                        @endif
-                        <input type="text" 
-                               name="swift_number" 
-                               value=""
-                               placeholder="{{ $payoutMethod ? 'Leave blank to keep current' : 'Optional' }}"
-                               class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+
+                    <!-- SWIFT / Country (collapsible secondary fields) -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">SWIFT / BIC</label>
+                            @if($payoutMethod && $payoutMethod->swift_number)
+                                <p class="text-[11px] text-gray-400 mb-1">Current: ****{{ substr($payoutMethod->swift_number, -4) }}</p>
+                            @endif
+                            <input type="text"
+                                   name="swift_number"
+                                   value=""
+                                   placeholder="{{ $payoutMethod ? 'Keep current' : 'Optional' }}"
+                                   class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Country *</label>
+                            <input type="text"
+                                   name="country"
+                                   value="{{ old('country', optional($payoutMethod)->country ?? 'Bahamas') }}"
+                                   required
+                                   class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Country / Payout Region *</label>
-                        <input type="text" 
-                               name="country" 
-                               value="{{ old('country', optional($payoutMethod)->country ?? 'Bahamas') }}"
-                               required
-                               class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+
+                    <!-- Card fields (hidden inputs to preserve existing card data) -->
+                    <input type="hidden" name="card_number" value="">
+                    <input type="hidden" name="card_cvc" value="">
+                    <input type="hidden" name="card_expiry" value="">
+
+                    <!-- Truth Declaration -->
+                    <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 mt-2">
+                        <label class="flex items-start gap-3 cursor-pointer">
+                            <input type="checkbox" id="payoutTruthDeclaration" required
+                                   class="mt-0.5 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 flex-shrink-0">
+                            <span class="text-xs text-gray-600 leading-relaxed">
+                                I confirm that the information provided above is accurate and true. I understand that CayMark is not responsible for failed payouts due to incorrect or incomplete banking details provided by me.
+                            </span>
+                        </label>
                     </div>
                 </div>
-                <div class="flex items-center justify-end space-x-3">
-                    <button type="button" 
-                            onclick="hidePayoutModal()" 
-                            class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition duration-200">
-                        Cancel
-                    </button>
-                    <button type="submit" 
-                            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200">
-                        Save Payout Settings
-                    </button>
+
+                <!-- Footer -->
+                <div class="flex items-center justify-end gap-3 px-6 pb-6">
+                    <button type="button" onclick="hidePayoutModal()"
+                            class="px-4 py-2 text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition">Cancel</button>
+                    <button type="submit"
+                            class="px-5 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition">Save Payout Settings</button>
                 </div>
             </form>
         </div>
@@ -1902,6 +2438,13 @@ document.addEventListener('DOMContentLoaded', function() {
     @if(session('open_payout_modal'))
     if (typeof showPayoutModal === 'function') {
         showPayoutModal();
+    }
+    @endif
+
+    @php $emailPendingForJs = session('email_change_pending') || (isset($emailPending) && $emailPending); @endphp
+    @if($emailPendingForJs)
+    if (typeof openEmailChangeModal === 'function') {
+        openEmailChangeModal(2);
     }
     @endif
 
@@ -2150,18 +2693,23 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
-// Password Modal
-function showPasswordModal() {
-    document.getElementById('passwordModal').classList.remove('hidden');
+// ——— Modal helpers (shared pattern: hidden + flex classes) ———
+function _modalShow(id) {
+    var el = document.getElementById(id);
+    if (el) el.classList.remove('hidden');
+}
+function _modalHide(id) {
+    var el = document.getElementById(id);
+    if (el) el.classList.add('hidden');
 }
 
-function hidePasswordModal() {
-    document.getElementById('passwordModal').classList.add('hidden');
-}
+// Password Modal
+function showPasswordModal() { _modalShow('passwordModal'); }
+function hidePasswordModal()  { _modalHide('passwordModal'); }
 
 function togglePasswordModal(inputId, eyeIconId) {
     var input = document.getElementById(inputId);
-    var eye = document.getElementById(eyeIconId);
+    var eye   = document.getElementById(eyeIconId);
     var slash = document.getElementById(eyeIconId + '_slash');
     if (!input || !eye || !slash) return;
     if (input.type === 'password') {
@@ -2176,24 +2724,49 @@ function togglePasswordModal(inputId, eyeIconId) {
 }
 
 // Payout Modal
-function showPayoutModal() {
-    document.getElementById('payoutModal').classList.remove('hidden');
+function showPayoutModal() { _modalShow('payoutModal'); }
+function hidePayoutModal()  { _modalHide('payoutModal'); }
+
+// Email Change Modal
+function openEmailChangeModal(step) {
+    _modalShow('emailChangeModal');
+    showEmailStep(step || 1);
+}
+function closeEmailChangeModal() { _modalHide('emailChangeModal'); }
+
+function showEmailStep(step) {
+    var s1 = document.getElementById('emailStep1');
+    var s2 = document.getElementById('emailStep2');
+    if (!s1 || !s2) return;
+    if (step === 2) {
+        s1.classList.add('hidden');
+        s2.classList.remove('hidden');
+    } else {
+        s1.classList.remove('hidden');
+        s2.classList.add('hidden');
+    }
 }
 
-function hidePayoutModal() {
-    document.getElementById('payoutModal').classList.add('hidden');
+function ecmTogglePwd() {
+    var input = document.getElementById('ecm_password');
+    var eye   = document.getElementById('ecm_eye');
+    if (!input || !eye) return;
+    if (input.type === 'password') {
+        input.type = 'text';
+        eye.textContent = 'visibility_off';
+    } else {
+        input.type = 'password';
+        eye.textContent = 'visibility';
+    }
 }
 
-// Close modals when clicking outside
+// Close modals when clicking the backdrop
 window.onclick = function(event) {
-    const passwordModal = document.getElementById('passwordModal');
-    const payoutModal = document.getElementById('payoutModal');
-    if (event.target == passwordModal) {
-        hidePasswordModal();
-    }
-    if (event.target == payoutModal) {
-        hidePayoutModal();
-    }
+    var ids = ['passwordModal', 'payoutModal', 'emailChangeModal'];
+    ids.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el && event.target === el) el.classList.add('hidden');
+    });
 }
 
 // Countdown Timer
@@ -2569,6 +3142,11 @@ function initializeCharts() {
                 }
             }
         });
+    }
+
+    // Performance Insights chart (Business Seller dashboard only)
+    if (typeof window._buildInsightsChart === 'function') {
+        window._buildInsightsChart();
     }
 }
 

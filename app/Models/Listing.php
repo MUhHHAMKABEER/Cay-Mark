@@ -547,7 +547,20 @@ public function invoices()
     public function scopeCurrentAuctionsForSeller($query, $sellerId)
     {
         return $query->where('seller_id', $sellerId)
-            ->whereIn('status', ['approved', 'active']);
+            ->whereIn('status', ['approved', 'active'])
+            ->where(function ($q) {
+                // Only listings whose auction has NOT yet ended
+                $q->whereNull('auction_end_time')
+                  ->orWhere('auction_end_time', '>=', now());
+            });
+    }
+
+    public function scopeEndedNotSoldForSeller($query, $sellerId)
+    {
+        return $query->where('seller_id', $sellerId)
+            ->whereIn('status', ['approved', 'active'])
+            ->whereNotNull('auction_end_time')
+            ->where('auction_end_time', '<', now());
     }
 
     /**

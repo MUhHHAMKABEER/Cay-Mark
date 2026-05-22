@@ -99,34 +99,75 @@ class SellerDashboardController extends Controller
     }
 
     /**
-     * Update email (verification code sent to old email first)
+     * Step 1 of email change: validate password + send OTP to the NEW email address.
+     */
+    public function requestEmailChange(Request $request)
+    {
+        $request->validate([
+            'new_email' => 'required|email|max:255',
+            'password'  => 'required|string',
+        ]);
+
+        $user    = $request->user();
+        $service = new EmailChangeVerificationService();
+
+        try {
+            $service->sendCodeToNewEmail($user, $request->input('new_email'), $request->input('password'));
+        } catch (ValidationException $e) {
+            return back()->withErrors($e->errors())->withInput();
+        }
+
+        return back()
+            ->with('success', 'A 6-digit verification code has been sent to ' . $request->input('new_email') . '. Enter it below to confirm.')
+            ->with('email_change_pending', true)
+            ->with('email_change_new', $request->input('new_email'));
+    }
+
+    /**
+     * Step 2 of email change: verify OTP and complete the update.
      */
     public function updateEmail(SellerDashboardUpdateEmailRequest $request)
     {
         $request->validated();
-        $user = $request->user();
+        $user    = $request->user();
         $service = new EmailChangeVerificationService();
 
         if ($request->filled('code')) {
             $ok = $service->verifyAndUpdateEmail($user, $request->input('code'));
             if (!$ok) {
-                return back()->withErrors(['code' => 'Invalid or expired verification code. Please request a new code.'])->withInput();
+                return back()
+                    ->withErrors(['code' => 'Invalid or expired verification code. Please request a new one.'])
+                    ->with('email_change_pending', true)
+                    ->with('email_change_new', $service->getPendingNewEmail($user))
+                    ->withInput();
             }
             try {
                 (new \App\Services\NotificationService())->emailUpdated($user);
-            } catch (\Throwable $e) {
-            }
+            } catch (\Throwable) {}
 
-            return back()->with('success', 'Email address updated successfully. Please verify your new email when you receive the link.');
+            return back()->with('success', 'Your email address has been updated successfully.');
         }
 
+        // Legacy inline-form path (kept for backwards compatibility)
         try {
             $service->sendCodeToOldEmail($user, $request->input('email'));
         } catch (ValidationException $e) {
             return back()->withErrors($e->errors())->withInput();
         }
-        return back()->with('success', 'A verification code has been sent to your current email address. Enter the code below to confirm the change.')
-            ->with('email_change_pending', true)->with('email_change_new', $request->input('email'));
+
+        return back()
+            ->with('success', 'A verification code has been sent to your current email address.')
+            ->with('email_change_pending', true)
+            ->with('email_change_new', $request->input('email'));
+    }
+
+    /**
+     * Cancel a pending email change.
+     */
+    public function cancelEmailChange(Request $request)
+    {
+        (new EmailChangeVerificationService())->cancelPendingChange($request->user());
+        return back()->with('success', 'Email change cancelled.');
     }
 
     /**

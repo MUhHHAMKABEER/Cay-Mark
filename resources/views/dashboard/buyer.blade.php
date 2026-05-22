@@ -28,8 +28,6 @@
                     <p class="text-gray-600 text-sm">Real-time insights into your bidding activity and purchase analytics</p>
         </div>
 
-                <x-ui.profile-completion :user="$user" class="mb-4" />
-
                 <!-- Top Stats Cards (limited: all paid purchases, current bids, watchlist, pending payment; one row only) -->
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
                     <div class="bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 rounded-xl shadow-xl p-4 text-white transform hover:scale-105 transition-all duration-300 relative overflow-hidden">
@@ -117,8 +115,6 @@
                         </div>
                     </div>
                 </div>
-
-                <x-ui.profile-completion :user="$user" class="mb-6" />
 
                 @if(session('success'))
                     <div class="flex items-center gap-3 rounded-xl bg-emerald-50 border border-emerald-200/80 px-4 py-3 mb-6 text-emerald-800 shadow-sm">

@@ -88,7 +88,9 @@ Route::get('/dashboard/seller', function (Request $request) {
 })->middleware(['auth', 'seller'])->name('dashboard.seller');
 Route::post('/dashboard/seller/update-payout', [App\Http\Controllers\Seller\SellerDashboardController::class, 'updatePayout'])->middleware(['auth', 'seller'])->name('seller-dashboard.update-payout');
 Route::post('/dashboard/seller/change-password', [App\Http\Controllers\Seller\SellerDashboardController::class, 'changePassword'])->middleware(['auth', 'seller'])->name('seller-dashboard.change-password');
+Route::post('/dashboard/seller/initiate-email-change', [App\Http\Controllers\Seller\SellerDashboardController::class, 'requestEmailChange'])->middleware(['auth', 'seller'])->name('seller.dashboard.initiate-email-change');
 Route::post('/dashboard/seller/update-email', [App\Http\Controllers\Seller\SellerDashboardController::class, 'updateEmail'])->middleware(['auth', 'seller'])->name('seller-dashboard.update-email');
+Route::post('/dashboard/seller/cancel-email-change', [App\Http\Controllers\Seller\SellerDashboardController::class, 'cancelEmailChange'])->middleware(['auth', 'seller'])->name('seller.dashboard.cancel-email-change');
 Route::post('/dashboard/seller/confirm-pickup/{listingId}', [App\Http\Controllers\Seller\SellerDashboardController::class, 'confirmPickup'])->middleware(['auth', 'seller'])->name('seller-dashboard.confirm-pickup');
 
 Route::get('/dashboard/buyer', function (Request $request) {
