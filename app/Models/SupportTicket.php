@@ -50,6 +50,42 @@ class SupportTicket extends Model
         'Other',
     ];
 
+    public const CATEGORY_OPTIONS_SUPPORT = [
+        'Account',
+        'Disputes',
+        'General Inquiry',
+        'Other',
+    ];
+
+    public const CATEGORY_OPTIONS_FINANCE = [
+        'Payments & Deposits',
+        'Payouts',
+    ];
+
+    public const CATEGORY_OPTIONS_OPERATIONS = [
+        'Auctions',
+        'Listings & Auctions',
+    ];
+
+    /**
+     * Map ticket category → routing queue per Notes for System Issues.
+     * - Support: Account / Disputes / General Inquiry / Other
+     * - Finance: Payments & Deposits / Payouts
+     * - Operations: Auctions / Listings & Auctions
+     */
+    public static function routingQueueForCategory(?string $category): string
+    {
+        $category = (string) $category;
+        if (in_array($category, self::CATEGORY_OPTIONS_FINANCE, true)) {
+            return 'finance';
+        }
+        if (in_array($category, self::CATEGORY_OPTIONS_OPERATIONS, true)) {
+            return 'operations';
+        }
+
+        return 'support';
+    }
+
     /**
      * @return list<string>
      */

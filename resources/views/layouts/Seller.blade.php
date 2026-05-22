@@ -693,6 +693,7 @@ html, body {
         @yield('content')
     </main>
 
+    @include('partials.caymark-ui-kit')
 </body>
 
 </html>

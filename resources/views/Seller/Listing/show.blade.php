@@ -58,10 +58,16 @@
                 {{ $listing->year ?? '' }} {{ $listing->make ?? '' }} {{ $listing->model ?? '' }} {{ $listing->trim ?? '' }}
             </h1>
             <div class="flex flex-wrap gap-3">
-                <a href="{{ route('seller.listings.edit', $listing) }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-gray-700 text-white font-medium rounded-lg hover:bg-gray-800 shadow-sm">
-                    <span class="material-icons text-lg">edit</span>
-                    Edit Listing
-                </a>
+                @php
+                    $rejectedRecently = ($listing->status === 'rejected')
+                        && (!isset($listing->updated_at) || $listing->updated_at->gt(now()->subDays(3)));
+                @endphp
+                @if($rejectedRecently)
+                    <a href="{{ route('seller.listings.edit', $listing) }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-gray-700 text-white font-medium rounded-lg hover:bg-gray-800 shadow-sm">
+                        <span class="material-icons text-lg">edit</span>
+                        Edit Submission
+                    </a>
+                @endif
                 @if($listing->listing_method === 'auction' && $listing->slug)
                     <a href="{{ route('auction.show', $listing) }}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 shadow-sm">
                         <span class="material-icons text-lg">visibility</span>
@@ -134,7 +140,7 @@
                 </div>
 
                 <div class="section-card">
-                    <h2 class="section-title">Lot Information</h2>
+                    <h2 class="section-title">More Information</h2>
                     <div class="info-grid">
                         <div class="info-item">
                             <span class="info-label">Location (Island)</span>
@@ -174,15 +180,7 @@
                         <div class="info-item">
                             <span class="info-label">Odometer</span>
                             <span class="info-value">
-                                @if($listing->odometer)
-                                    {{ number_format($listing->odometer) }} mi
-                                    @if($listing->odometer_estimated ?? false)
-                                    <span class="text-amber-600 font-medium">(Estimated)</span>
-                                    <span class="material-icons text-gray-400 cursor-help align-middle ml-0.5" title="This is an estimated odometer reading and may be subject to change." style="font-size: 16px;">info</span>
-                                @endif
-                                @else
-                                    N/A
-                                @endif
+                                {{ \App\Helpers\ListingDisplayHelper::formatOdometer($listing->odometer, (bool) ($listing->odometer_estimated ?? false)) }}
                             </span>
                         </div>
                         <div class="info-item"><span class="info-label">Has Key</span><span class="info-value">{{ $listing->keys_available ? 'Yes' : 'No' }}</span></div>

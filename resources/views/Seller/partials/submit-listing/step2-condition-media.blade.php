@@ -84,9 +84,17 @@
     </div>
 
     <h3 class="text-base font-semibold text-gray-900 mb-2">Media Upload</h3>
-    <div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-xl text-sm text-blue-800">
-        <p class="font-semibold mb-1">Required photos (minimum 6, maximum 15 total)</p>
-        <p>Include: Front (cover), Rear, Left Side, Right Side, Interior, Dashboard, VIN Plate, and Engine Bay when possible.</p>
+    <div class="mb-4 p-4 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700">
+        <p class="font-semibold mb-2">Include clear photos of the vehicle from multiple angles, including:</p>
+        <ul class="list-disc list-inside space-y-0.5">
+            <li>Front view</li>
+            <li>Rear view</li>
+            <li>Driver side</li>
+            <li>Passenger side</li>
+            <li>Interior/dashboard</li>
+            <li>Engine area</li>
+            <li>VIN plate</li>
+        </ul>
     </div>
 
     @if($isEdit && $listing->images->count() > 0)
@@ -116,7 +124,6 @@
         </div>
         <div>
             <label class="form-label">Additional Photos @if(!$isEdit)<span class="text-red-500">*</span>@endif</label>
-            <p class="text-xs text-gray-600 mb-2">5–14 additional images (6–15 total with cover).</p>
             <div class="file-upload-box" id="photosUploadBox">
                 <input type="file" name="photos[]" id="photos_input" multiple @if(!$isEdit) required @endif accept="image/*" class="file-upload-input">
                 <div class="file-upload-inner">

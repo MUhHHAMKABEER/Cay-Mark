@@ -33,12 +33,12 @@
                     </div>
                 @endif
 
-                <form method="POST" action="{{ route('password.email') }}" class="space-y-5">
+                <form method="POST" action="{{ route('password.email') }}" class="space-y-5" novalidate>
                     @csrf
 
                     <div>
                         <label for="email" class="block text-sm font-semibold text-gray-700 mb-1.5">Email</label>
-                        <input type="email" id="email" name="email" required autofocus autocomplete="email"
+                        <input type="email" id="email" name="email" required autofocus autocomplete="email" data-cm-label="Email"
                             value="{{ old('email') }}"
                             class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:border-[#063466] focus:ring-2 focus:ring-[#063466]/10 transition-all text-gray-900 placeholder-gray-400 text-[15px]"
                             placeholder="you@example.com">

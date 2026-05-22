@@ -613,10 +613,8 @@
                             </div>
                         </div>
                     @empty
-                        <div class="col-span-full text-center py-10 animate-fade-in">
-                            <i class="fas fa-search text-gray-300 text-6xl mb-4"></i>
-                            <h3 class="text-xl font-semibold text-gray-600 mb-2">No listings found</h3>
-                            <p class="text-gray-500">Try adjusting your filters to find more results.</p>
+                        <div class="col-span-full">
+                            <x-ui.empty-state variant="no-search-results" class="py-10" />
                         </div>
                     @endforelse
                 </div>
@@ -739,10 +737,8 @@
                             </div>
                         </div>
                     @empty
-                        <div class="col-span-full text-center py-10 animate-fade-in">
-                            <i class="fas fa-search text-gray-300 text-6xl mb-4"></i>
-                            <h3 class="text-xl font-semibold text-gray-600 mb-2">No listings found</h3>
-                            <p class="text-gray-500">Try adjusting your filters to find more results.</p>
+                        <div class="col-span-full">
+                            <x-ui.empty-state variant="no-search-results" class="py-10" />
                         </div>
                     @endforelse
                 </div>

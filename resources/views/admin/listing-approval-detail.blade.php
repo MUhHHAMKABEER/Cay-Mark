@@ -15,7 +15,7 @@
                 <div class="flex items-center gap-2">
                     @if($listing->status !== 'pending')
                     <a href="{{ route('admin.active-listings') }}" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition">
-                        <i class="fas fa-arrow-left mr-2"></i>Back to Active Listings
+                        <i class="fas fa-arrow-left mr-2"></i>Back to Active Auctions
                     </a>
                     @endif
                     <a href="{{ route('admin.listing-review') }}" class="px-4 py-2 {{ $listing->status === 'pending' ? 'bg-gray-600 text-white' : 'bg-gray-200 text-gray-700' }} rounded-lg hover:opacity-90 transition">

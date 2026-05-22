@@ -357,6 +357,9 @@
 
     {{-- Main content area (each page will fill this) --}}
     <main>
+        <div class="container mx-auto px-4">
+            <x-ui.breadcrumbs />
+        </div>
         @yield('content')
     </main>
 
@@ -742,6 +745,7 @@
         });
     </script>
 
+    @include('partials.caymark-ui-kit')
     @stack('scripts')
 </body>
 

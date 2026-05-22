@@ -457,7 +457,7 @@
         }
     </style>
 
-    <div class="bg-gray-50 text-gray-800 w-full" x-data="filterData()" x-init="initFilters()">
+    <div class="bg-gray-50 text-gray-800 w-full cm-pull-refresh-root" id="cm-auction-pull-root" x-data="filterData()" x-init="initFilters()" @cm-pull-refresh.window="applyFilters()">
 
         <main class="w-full px-4 sm:px-6 lg:px-10 xl:px-12 2xl:px-16 py-6">
 
@@ -566,9 +566,29 @@
                 </div>
             </div>
 
+            {{-- Mobile: floating Filters button + bottom sheet (desktop sidebar unchanged at xl+) --}}
+            <button
+                type="button"
+                class="cm-mobile-filters-btn xl:hidden"
+                aria-controls="cm-auction-filter-sheet"
+                aria-expanded="false"
+                data-cm-open-sheet="cm-auction-filter-sheet"
+            >
+                <span class="material-icons" aria-hidden="true">tune</span>
+                <span>Filters</span>
+            </button>
+
+            <x-ui.filter-bottom-sheet id="cm-auction-filter-sheet" title="Vehicle Finder">
+                <div class="vehicle-finder vehicle-finder--sheet">
+                    <div class="vehicle-finder-body filter-scroll">
+                        @include('partials.auction-vehicle-finder-fields')
+                    </div>
+                </div>
+            </x-ui.filter-bottom-sheet>
+
             <div class="flex flex-col xl:flex-row xl:gap-8 2xl:gap-10">
-                <!-- Vehicle Finder Panel -->
-                <aside class="w-full xl:w-80 flex-shrink-0">
+                <!-- Vehicle Finder Panel (desktop) -->
+                <aside class="hidden xl:block w-full xl:w-80 flex-shrink-0">
                     <div class="vehicle-finder bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200">
                         <div class="vehicle-finder-header">
                             <div class="flex items-center justify-between">
@@ -576,165 +596,8 @@
                                 <span class="material-icons text-white/80 text-xl">tune</span>
                             </div>
                         </div>
-                        <div class="vehicle-finder-body">
-                            <!-- Title -->
-                            <div class="vehicle-finder-row">
-                                <label>Title</label>
-                                <div class="input-wrap">
-                                    <div class="segmented-control">
-                                        <button type="button" :class="{ 'active': titleCondition === '' }" @click="titleCondition = ''; applyFilters()">All</button>
-                                        <button type="button" :class="{ 'active': titleCondition === 'CLEAN' }" @click="titleCondition = 'CLEAN'; applyFilters()">Has Title</button>
-                                        <button type="button" :class="{ 'active': titleCondition === 'SALVAGE' }" @click="titleCondition = 'SALVAGE'; applyFilters()">No Title</button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Condition -->
-                            <div class="vehicle-finder-row">
-                                <label>Condition</label>
-                                <div class="input-wrap">
-                                    <div class="segmented-control">
-                                        <button type="button" :class="{ 'active': condition === '' }" @click="condition = ''; applyFilters()">All</button>
-                                        <button type="button" :class="{ 'active': condition === 'used' }" @click="condition = 'used'; applyFilters()">Used</button>
-                                        <button type="button" :class="{ 'active': condition === 'salvaged' }" @click="condition = 'salvaged'; applyFilters()">Salvaged</button>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Types -->
-                            <div class="vehicle-finder-row">
-                                <label>Vehicle Type</label>
-                                <div class="input-wrap">
-                                    <select x-model="selectedFilters.vehicle_type" @change="applyFilters()">
-                                        <option value="">All Types</option>
-                                        @foreach ($filterOptions['vehicle_types'] as $type)
-                                            <option value="{{ $type }}">{{ $type }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
-                            
-                            <!-- Odometer -->
-                            <div class="vehicle-finder-row">
-                                <label>Odometer Range</label>
-                                <div class="input-wrap">
-                                    <div class="flex justify-between text-xs text-gray-500 mb-2 font-medium">
-                                        <span>0 mi</span>
-                                        <span>250,000+ mi</span>
-                                    </div>
-                                    <input type="range" class="odometer-range w-full" min="0" max="{{ $filterOptions['odometer_max'] ?? 250000 }}"
-                                        x-model.number="odometerMax" @input.debounce.300ms="applyFilters()">
-                                    <p class="text-xs text-blue-600 mt-2 font-semibold" x-text="`Up to ${odometerMax ? odometerMax.toLocaleString() : 0} miles`"></p>
-                                </div>
-                            </div>
-                            
-                            <!-- Year -->
-                            <div class="vehicle-finder-row">
-                                <label>Year Range</label>
-                                <div class="input-wrap">
-                                    <div class="year-selects">
-                                        <select x-model.number="yearFrom" @change="applyFilters()">
-                                            @for($y = date('Y') + 1; $y >= 1990; $y--)
-                                                <option value="{{ $y }}">{{ $y }}</option>
-                                            @endfor
-                                        </select>
-                                        <span class="separator">to</span>
-                                        <select x-model.number="yearTo" @change="applyFilters()">
-                                            @for($y = date('Y') + 1; $y >= 1990; $y--)
-                                                <option value="{{ $y }}">{{ $y }}</option>
-                                            @endfor
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Location (all islands) -->
-                            <div class="vehicle-finder-row">
-                                <label>Location</label>
-                                <div class="input-wrap">
-                                    <select x-model="locationSingle" @change="applyFilters()">
-                                        <option value="">All islands</option>
-                                        @foreach ($filterOptions['locations'] ?? [] as $location)
-                                            <option value="{{ $location }}">{{ $location }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
-                            
-                            <!-- Make (searchable: input + datalist) -->
-                            <div class="vehicle-finder-row">
-                                <label>Make</label>
-                                <div class="input-wrap">
-                                    <input type="text" list="make-list" x-model="makeSingle" @input.debounce.300ms="applyFilters()"
-                                        placeholder="Type or select make" class="w-full">
-                                    <datalist id="make-list">
-                                        @foreach ($filterOptions['makes'] as $make)
-                                            <option value="{{ $make }}">
-                                        @endforeach
-                                    </datalist>
-                                </div>
-                            </div>
-                            
-                            <!-- Model (searchable) -->
-                            <div class="vehicle-finder-row">
-                                <label>Model</label>
-                                <div class="input-wrap">
-                                    <input type="text" list="model-list" x-model="modelSingle" @input.debounce.300ms="applyFilters()"
-                                        placeholder="Type or select model" class="w-full">
-                                    <datalist id="model-list">
-                                        @foreach ($filterOptions['models'] as $model)
-                                            <option value="{{ $model }}">
-                                        @endforeach
-                                    </datalist>
-                                </div>
-                            </div>
-                            
-                            <!-- Fuel Type (multi-select) -->
-                            <div class="vehicle-finder-row">
-                                <label>Fuel Type</label>
-                                <div class="input-wrap">
-                                    <select multiple x-model="fuelTypeMulti" @change="applyFilters()" class="h-24">
-                                        @foreach ($filterOptions['fuel_types'] ?? [] as $fuel)
-                                            <option value="{{ $fuel }}">{{ $fuel }}</option>
-                                        @endforeach
-                                    </select>
-                                    <p class="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple</p>
-                                </div>
-                            </div>
-                            
-                            <!-- Color (multi-select) -->
-                            <div class="vehicle-finder-row">
-                                <label>Color</label>
-                                <div class="input-wrap">
-                                    <select multiple x-model="colorMulti" @change="applyFilters()" class="h-24">
-                                        @foreach ($filterOptions['colors'] ?? [] as $color)
-                                            <option value="{{ $color }}">{{ $color }}</option>
-                                        @endforeach
-                                    </select>
-                                    <p class="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple</p>
-                                </div>
-                            </div>
-                            
-                            <!-- Damage Type (multi-select) -->
-                            <div class="vehicle-finder-row">
-                                <label>Damage Type</label>
-                                <div class="input-wrap">
-                                    <select multiple x-model="damageTypeMulti" @change="applyFilters()" class="h-24">
-                                        @foreach ($filterOptions['damage_types'] ?? [] as $damage)
-                                            <option value="{{ $damage }}">{{ $damage }}</option>
-                                        @endforeach
-                                    </select>
-                                    <p class="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple</p>
-                                </div>
-                            </div>
-                            
-                            <!-- Search button -->
-                            <button type="button" class="btn-search-vehicle mt-3" @click="applyFilters()">
-                                <span class="flex items-center justify-center gap-2">
-                                    <span class="material-icons text-lg">search</span>
-                                    <span>Search Vehicles</span>
-                                </span>
-                            </button>
+                        <div class="vehicle-finder-body filter-scroll">
+                            @include('partials.auction-vehicle-finder-fields')
                         </div>
                     </div>
                 </aside>
@@ -805,37 +668,24 @@
                                         </button>
                                     </div>
 
-                                    <div class="absolute top-3 left-3 flex flex-col space-y-1">
+                                    <div class="absolute top-3 right-3 z-10">
+                                        <x-ui.watchlist-heart
+                                            :listing="$listing"
+                                            :in-watchlist="$likedListingIds->contains($listing->id)"
+                                            :likes-count="$listing->likes_count ?? 0"
+                                        />
+                                    </div>
+
+                                    <div class="absolute top-3 left-3 flex flex-col space-y-1 z-10">
                                         @if ($listing->featured)
                                             <span
                                                 class="badge bg-red-500 text-white px-2 py-1 rounded-full text-xs font-semibold">Featured</span>
                                         @endif
                                         @php
-                                            // Calculate end date from database
-                                            if ($listing->auction_end_time) {
-                                                $endDate = \Carbon\Carbon::parse($listing->auction_end_time);
-                                            } elseif ($listing->auction_start_time) {
-                                                $endDate = \Carbon\Carbon::parse($listing->auction_start_time)->addDays($listing->auction_duration ?? 7);
-                                            } else {
-                                                $endDate = \Carbon\Carbon::parse($listing->created_at)->addDays($listing->auction_duration ?? 7);
-                                            }
-                                            $isExpired = \Carbon\Carbon::now()->greaterThanOrEqualTo($endDate);
+                                            $endDate = $listing->getAuctionEndDate();
                                         @endphp
-                                        @if(!$isExpired)
-                                        <div class="bg-gradient-to-br from-blue-600/95 to-indigo-700/95 backdrop-blur-md text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-xl border border-white/20" 
-                                             id="countdown-grid-{{ $listing->id }}" 
-                                             data-end-time="{{ $endDate->toIso8601String() }}">
-                                            <div class="flex items-center space-x-1">
-                                                <span class="bg-white/20 backdrop-blur-sm px-1.5 py-0.5 rounded font-mono text-xs" id="days-grid-{{ $listing->id }}">00</span>
-                                                <span class="text-white/70 text-xs">:</span>
-                                                <span class="bg-white/20 backdrop-blur-sm px-1.5 py-0.5 rounded font-mono text-xs" id="hours-grid-{{ $listing->id }}">00</span>
-                                                <span class="text-white/70 text-xs">:</span>
-                                                <span class="bg-white/20 backdrop-blur-sm px-1.5 py-0.5 rounded font-mono text-xs" id="minutes-grid-{{ $listing->id }}">00</span>
-                                            </div>
-                                        </div>
-                                        @else
-                                        <span class="badge bg-gray-500/90 backdrop-blur-sm text-white px-2 py-1 rounded-full text-xs font-semibold border border-gray-400/30">Ended</span>
-                                        @endif
+                                        <x-ui.ending-soon-badge :end="$endDate" />
+                                        <x-ui.countdown :end="$endDate" :listing-id="$listing->id" variant="grid" />
                                     </div>
                                 </div>
 
@@ -850,9 +700,9 @@
                                             <span class="material-icons text-gray-400 text-sm mr-1.5 shrink-0">speed</span>
                                             <span class="truncate">
                                             @if($listing->odometer)
-                                                {{ number_format($listing->odometer) }} mi
+                                                {{ number_format($listing->odometer) }} km
                                                 @if($listing->odometer_estimated)
-                                                    <span class="text-amber-600 font-medium">(Est.)</span>
+                                                    <span class="text-amber-600 font-medium">(Estimated)</span>
                                                     <span class="material-icons text-gray-400 cursor-help align-middle ml-0.5" title="This is an estimated odometer reading and may be subject to change." style="font-size: 14px;">info</span>
                                                 @endif
                                             @else
@@ -947,6 +797,7 @@
                                 if (typeof localStorage !== 'undefined') localStorage.setItem('auctionViewMode', value);
                                 setTimeout(() => { this.isLoading = false; }, 300);
                             });
+                            window.__auctionRefresh = () => this.applyFilters();
                         },
                         
                         clearAllFilters() {
@@ -970,6 +821,7 @@
                         applyFilters() {
                             this.isLoading = true;
                             const params = new URLSearchParams();
+                            const self = this;
                             
                             if (this.titleCondition) params.append('title_condition[]', this.titleCondition);
                             if (this.condition) params.append('condition', this.condition);
@@ -991,7 +843,7 @@
                             window.history.pushState({}, '', newUrl);
                             
                             // Make AJAX request
-                            fetch(newUrl, {
+                            return fetch(newUrl, {
                                 headers: {
                                     'X-Requested-With': 'XMLHttpRequest',
                                     'Accept': 'application/json',
@@ -1010,14 +862,16 @@
                                         typeResultsCount();
                                     }
                                     
-                                    // Update countdown timers after AJAX load
-                                    setTimeout(updateCountdownTimers, 100);
+                                    if (window.CaymarkUI && CaymarkUI.auction) {
+                                        CaymarkUI.auction.initCountdowns(document.getElementById('auctionListings'));
+                                        CaymarkUI.auction.initWatchlistHearts(document.getElementById('auctionListings'));
+                                    }
                                 }
-                                this.isLoading = false;
+                                self.isLoading = false;
                             })
                             .catch(error => {
                                 console.error('Filter error:', error);
-                                this.isLoading = false;
+                                self.isLoading = false;
                             });
                         }
                     }
@@ -1064,6 +918,21 @@
 
                 document.addEventListener('DOMContentLoaded', function() {
                     typeResultsCount();
+                    if (window.CaymarkUI && CaymarkUI.auction) {
+                        CaymarkUI.auction.initCountdowns();
+                        CaymarkUI.auction.initWatchlistHearts();
+                    }
+                    if (window.CaymarkUI && CaymarkUI.mobile) {
+                        CaymarkUI.mobile.initPullToRefresh(
+                            document.getElementById('cm-auction-pull-root'),
+                            function () {
+                                if (typeof window.__auctionRefresh === 'function') {
+                                    return window.__auctionRefresh();
+                                }
+                                window.dispatchEvent(new CustomEvent('cm:pull-refresh'));
+                            }
+                        );
+                    }
                 });
 
                 // Close modal on ESC key
@@ -1073,64 +942,5 @@
                     }
                 });
                 
-                // Countdown Timer Function
-                function updateCountdownTimers() {
-                    // Update grid view timers
-                    document.querySelectorAll('[id^="countdown-grid-"]').forEach(element => {
-                        const listingId = element.id.replace('countdown-grid-', '');
-                        const endTime = new Date(element.getAttribute('data-end-time'));
-                        const now = new Date();
-                        const diff = Math.max(0, Math.floor((endTime - now) / 1000));
-                        
-                        if (diff <= 0) {
-                            element.innerHTML = '<span class="badge bg-gray-500/90 backdrop-blur-sm text-white px-2 py-1 rounded-full text-xs font-semibold border border-gray-400/30">Ended</span>';
-                            return;
-                        }
-                        
-                        const days = Math.floor(diff / 86400);
-                        const hours = Math.floor((diff % 86400) / 3600);
-                        const minutes = Math.floor((diff % 3600) / 60);
-                        
-                        const daysEl = document.getElementById('days-grid-' + listingId);
-                        const hoursEl = document.getElementById('hours-grid-' + listingId);
-                        const minutesEl = document.getElementById('minutes-grid-' + listingId);
-                        
-                        if (daysEl) daysEl.textContent = String(days).padStart(2, '0');
-                        if (hoursEl) hoursEl.textContent = String(hours).padStart(2, '0');
-                        if (minutesEl) minutesEl.textContent = String(minutes).padStart(2, '0');
-                    });
-                    
-                    // Update detail view timers
-                    document.querySelectorAll('[id^="countdown-detail-"]').forEach(element => {
-                        const listingId = element.id.replace('countdown-detail-', '');
-                        const endTime = new Date(element.getAttribute('data-end-time'));
-                        const now = new Date();
-                        const diff = Math.max(0, Math.floor((endTime - now) / 1000));
-                        
-                        if (diff <= 0) {
-                            element.innerHTML = '<div class="bg-gray-500/90 backdrop-blur-md text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-xl border border-gray-400/30">Auction Ended</div>';
-                            return;
-                        }
-                        
-                        const days = Math.floor(diff / 86400);
-                        const hours = Math.floor((diff % 86400) / 3600);
-                        const minutes = Math.floor((diff % 3600) / 60);
-                        const seconds = diff % 60;
-                        
-                        const daysEl = document.getElementById('days-detail-' + listingId);
-                        const hoursEl = document.getElementById('hours-detail-' + listingId);
-                        const minutesEl = document.getElementById('minutes-detail-' + listingId);
-                        const secondsEl = document.getElementById('seconds-detail-' + listingId);
-                        
-                        if (daysEl) daysEl.textContent = String(days).padStart(2, '0');
-                        if (hoursEl) hoursEl.textContent = String(hours).padStart(2, '0');
-                        if (minutesEl) minutesEl.textContent = String(minutes).padStart(2, '0');
-                        if (secondsEl) secondsEl.textContent = String(seconds).padStart(2, '0');
-                    });
-                }
-                
-                // Update countdown timers every second
-                setInterval(updateCountdownTimers, 1000);
-                updateCountdownTimers(); // Initial call
             </script>
         @endsection

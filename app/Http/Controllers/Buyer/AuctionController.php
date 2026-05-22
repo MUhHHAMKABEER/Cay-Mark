@@ -16,6 +16,7 @@ use App\Http\Controllers\Controller;
 use App\Services\DepositService;
 use App\Services\BiddingIncrementService;
 use App\Services\Buyer\AuctionBidOrchestrator;
+use App\Services\CommissionService;
 
 
 class AuctionController extends Controller
@@ -324,6 +325,39 @@ public function show(Listing $listing)
     
     $mainImage = $images->first() ?? asset('images/placeholder.png');
 
+    view()->share('auctionListing', $auctionListing);
+
+    $listingTitle = trim(implode(' ', array_filter([
+        $auctionListing->year ?? null,
+        $auctionListing->make ?? $auctionListing->other_make ?? null,
+        $auctionListing->model ?? $auctionListing->other_model ?? null,
+    ])));
+
+    view()->share('cmBreadcrumbs', [
+        ['label' => 'Home', 'route' => 'welcome'],
+        ['label' => 'Auctions', 'route' => 'Auction.index'],
+        ['label' => $listingTitle !== '' ? $listingTitle : 'Listing'],
+    ]);
+
+    $inWatchlist = Auth::check() && Auth::user()->watchlist()->where('listing_id', $auctionListing->id)->exists();
+
+    $showOutbidBanner = false;
+    if (Auth::check()) {
+        $userHasActiveBid = $auctionListing->bids()
+            ->where('user_id', Auth::id())
+            ->where('status', 'active')
+            ->exists();
+        $highestActiveBid = $auctionListing->bids()
+            ->where('status', 'active')
+            ->orderByDesc('amount')
+            ->first();
+        $showOutbidBanner = $userHasActiveBid
+            && $highestActiveBid
+            && (int) $highestActiveBid->user_id !== (int) Auth::id();
+    }
+
+    $buyerFeePreview = (new CommissionService())->calculateBuyerCommission($nextValidIncrement);
+
     // Use the new professional AuctionDetail view
     return view('Buyer.AuctionDetail', compact(
         'auctionListing',
@@ -334,7 +368,10 @@ public function show(Listing $listing)
         'nextValidIncrement',
         'incrementAmount',
         'images',
-        'mainImage'
+        'mainImage',
+        'inWatchlist',
+        'showOutbidBanner',
+        'buyerFeePreview'
     ));
 }
 
@@ -448,6 +485,25 @@ public function auctionDetailBuyer($id, $slug = null)
     $images = collect($auctionListing->images)->map(fn($img) => asset('uploads/listings/' . $img->image_path));
     $mainImage = $images->first() ?? asset('images/placeholder.png');
 
+    $inWatchlist = Auth::check() && Auth::user()->watchlist()->where('listing_id', $auctionListing->id)->exists();
+
+    $showOutbidBanner = false;
+    if (Auth::check()) {
+        $userHasActiveBid = $auctionListing->bids()
+            ->where('user_id', Auth::id())
+            ->where('status', 'active')
+            ->exists();
+        $highestActiveBid = $auctionListing->bids()
+            ->where('status', 'active')
+            ->orderByDesc('amount')
+            ->first();
+        $showOutbidBanner = $userHasActiveBid
+            && $highestActiveBid
+            && (int) $highestActiveBid->user_id !== (int) Auth::id();
+    }
+
+    $buyerFeePreview = (new CommissionService())->calculateBuyerCommission($nextValidIncrement);
+
     return view('Buyer.AuctionDetail', compact(
         'auctionListing',
         'endDate',
@@ -457,7 +513,10 @@ public function auctionDetailBuyer($id, $slug = null)
         'nextValidIncrement',
         'incrementAmount',
         'images',
-        'mainImage'
+        'mainImage',
+        'inWatchlist',
+        'showOutbidBanner',
+        'buyerFeePreview'
     ));
 }
 

@@ -15,8 +15,9 @@ class SellerListingStoreRequest extends FormRequest
     public function rules(): array
     {
         $user = $this->user();
-        $userPackage = $user?->activeSubscription?->package;
-        $isIndividualSeller = $userPackage && ((float) $userPackage->price === 25.00);
+        // Casual (Individual) seller = no business license on file. Business sellers
+        // (with a license uploaded) skip the per-listing payment per the spec.
+        $isIndividualSeller = $user ? empty($user->business_license_path) : false;
         $maxYear = (int) date('Y') + 1;
         $damageKeys = array_keys(config('listing_damage_types.allowed', []));
 

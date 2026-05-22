@@ -157,6 +157,7 @@
     </script>
 
     {{-- Optional: Place Shepherd.js tour starter here --}}
+    @include('partials.caymark-ui-kit')
     @stack('scripts')
 </body>
 

@@ -26,6 +26,9 @@
             ind.classList.toggle('active', j === sectionNum);
             if (j > sectionNum) ind.classList.remove('active', 'completed');
         }
+        if (window.CaymarkUI && typeof CaymarkUI.updateProgress === 'function') {
+            CaymarkUI.updateProgress('#listing-progress-bar', sectionNum, 3);
+        }
     }
 
     function validateStep1() {
@@ -75,6 +78,14 @@
                 alert('Engine video is required when Starts is Yes.');
                 return false;
             }
+            // Best-effort duration check (30s–60s). If browser cannot determine
+            // the duration we proceed; server should also validate.
+            if (typeof vid._duration === 'number' && isFinite(vid._duration)) {
+                if (vid._duration < 30 || vid._duration > 60) {
+                    alert('Engine video must be between 30 seconds and under 1 minute.');
+                    return false;
+                }
+            }
         }
         return true;
     }
@@ -97,12 +108,26 @@
                 var input = document.getElementById('vin_hin');
                 if (kind === 'marine') {
                     if (label) label.textContent = 'HIN';
-                    if (input) { input.placeholder = 'Enter 14-character HIN'; input.maxLength = 14; }
+                    if (input) { input.placeholder = 'Enter 14-character HIN'; input.maxLength = 14; input.value = ''; }
                 } else {
                     if (label) label.textContent = 'VIN';
-                    if (input) { input.placeholder = 'Enter 17-character VIN'; input.maxLength = 17; }
+                    if (input) { input.placeholder = 'Enter 17-character VIN'; input.maxLength = 17; input.value = ''; }
                 }
+                vinAttemptCount = 0;
+                var flag = document.getElementById('vin_decode_success'); if (flag) flag.value = '0';
+                setMmyLocked(false);
+                showVinMessage('', false);
             });
+        });
+
+        // If user edits VIN/HIN after a successful decode, drop the lock and reset success.
+        document.getElementById('vin_hin')?.addEventListener('input', function() {
+            var flag = document.getElementById('vin_decode_success');
+            if (flag && flag.value === '1') {
+                flag.value = '0';
+                setMmyLocked(false);
+                showVinMessage('', false);
+            }
         });
 
         document.querySelectorAll('.condition-info-btn').forEach(function(btn) {
@@ -124,6 +149,25 @@
         document.getElementById('engine_starts_select')?.addEventListener('change', function() {
             var block = document.getElementById('engineVideoBlock');
             if (block) block.style.display = this.value === 'yes' ? 'block' : 'none';
+        });
+
+        // Probe engine video duration on selection so validateStep2 can use it.
+        document.getElementById('engine_video_input')?.addEventListener('change', function() {
+            var input = this;
+            input._duration = null;
+            var file = input.files && input.files[0];
+            if (!file) return;
+            try {
+                var url = URL.createObjectURL(file);
+                var vid = document.createElement('video');
+                vid.preload = 'metadata';
+                vid.onloadedmetadata = function() {
+                    input._duration = vid.duration;
+                    URL.revokeObjectURL(url);
+                };
+                vid.onerror = function() { URL.revokeObjectURL(url); };
+                vid.src = url;
+            } catch (e) { /* non-fatal */ }
         });
     });
 

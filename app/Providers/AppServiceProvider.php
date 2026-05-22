@@ -2,9 +2,11 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
+use App\Helpers\BreadcrumbHelper;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\View;
+use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
@@ -39,5 +41,16 @@ class AppServiceProvider extends ServiceProvider
                 ->numbers()
                 ->symbols();
         });
+
+        View::composer(
+            ['layouts.welcome', 'layouts.dashboard', 'layouts.admin', 'errors.404'],
+            function ($view): void {
+                $data = $view->getData();
+                $override = $data['cmBreadcrumbs'] ?? view()->shared('cmBreadcrumbs');
+                $view->with('cmBreadcrumbs', BreadcrumbHelper::resolve(
+                    is_array($override) ? $override : null
+                ));
+            }
+        );
     }
 }

@@ -20,6 +20,7 @@ class SellerListingUpdateRequest extends FormRequest
         return [
             'identifier_kind' => ['nullable', Rule::in(['vehicle', 'marine'])],
             'vin' => 'nullable|string|max:17',
+            'vin_decode_success' => 'nullable|boolean',
             'make' => 'required|string|max:100',
             'model' => 'required|string|max:100',
             'year' => ['required', 'integer', 'min:1995', "max:{$maxYear}"],
@@ -43,15 +44,19 @@ class SellerListingUpdateRequest extends FormRequest
             'odometer' => 'nullable|integer|min:0|max:9999999',
             'odometer_estimated' => 'nullable|boolean',
             'additional_notes' => 'nullable|string|max:300',
+            // Photos are optional on edit — existing images are kept unless replaced.
             'cover_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
             'photos' => 'nullable|array|max:14',
             'photos.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            // Engine video is optional on edit (existing one persists). Required only
+            // when Starts=Yes AND no existing video. Re-check is enforced in controller.
             'engine_video' => 'nullable|file|mimes:mp4,webm,mov|max:51200',
             'auction_duration' => 'required|in:3,5,7,14,21,28',
             'starting_price' => 'required|numeric|min:0.01',
             'reserve_price' => 'nullable|numeric|min:0',
             'buy_now_price' => 'nullable|numeric|min:0',
-            'terms_accepted' => 'accepted',
+            // Terms re-acceptance is optional on edit; original acceptance stands.
+            'terms_accepted' => 'nullable',
         ];
     }
 }

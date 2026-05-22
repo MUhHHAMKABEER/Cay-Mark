@@ -1,6 +1,10 @@
 @php
     $sellerPackage = $user->activeSubscription?->package ?? null;
-    $isIndividualSeller = $isIndividualSeller ?? ($sellerPackage && (float) $sellerPackage->price === 25.00);
+    // Casual (Individual) seller = no business license on file. Business = has license.
+    // Fall back to subscription price if the column isn't set.
+    $isIndividualSeller = $isIndividualSeller
+        ?? (empty($user->business_license_path)
+            && ! ($sellerPackage && (float) ($sellerPackage->price ?? 0) === 0.0));
     $dur = old('auction_duration', $listing->auction_duration ?? 7);
 @endphp
 <div id="section3" class="form-section" style="display: @if(session('error_section') === 'section3') block; border: 2px solid #ef4444; border-radius: 12px; @else none; @endif">

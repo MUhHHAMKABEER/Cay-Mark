@@ -18,5 +18,6 @@
     <body class="font-sans antialiased">
         <!-- Page Content -->
         @yield('content')
+        @include('partials.caymark-ui-kit')
     </body>
 </html>

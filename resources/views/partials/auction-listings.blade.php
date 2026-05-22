@@ -22,15 +22,7 @@
                         $imgUrl = asset('uploads/listings/' . $p);
                     }
                 }
-                // Calculate end date from database
-                if ($listing->auction_end_time) {
-                    $endDate = \Carbon\Carbon::parse($listing->auction_end_time);
-                } elseif ($listing->auction_start_time) {
-                    $endDate = \Carbon\Carbon::parse($listing->auction_start_time)->addDays($listing->auction_duration ?? 7);
-                } else {
-                    $endDate = \Carbon\Carbon::parse($listing->created_at)->addDays($listing->auction_duration ?? 7);
-                }
-                $isExpired = \Carbon\Carbon::now()->greaterThanOrEqualTo($endDate);
+                $endDate = $listing->getAuctionEndDate();
             @endphp
             <img alt="{{ $listing->title ?? $listing->make . ' ' . $listing->model }}"
                 style="height:250px" src="{{ $imgUrl }}"
@@ -45,26 +37,19 @@
                     View Image
                 </button>
             </div>
-            <!-- Countdown Timer Badge -->
-            @if(!$isExpired)
-            <div class="absolute bottom-3 left-3 bg-gradient-to-br from-blue-600/95 to-indigo-700/95 backdrop-blur-md text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-2xl border border-white/20" 
-                 id="countdown-detail-{{ $listing->id }}" 
-                 data-end-time="{{ $endDate->toIso8601String() }}">
-                <div class="flex items-center space-x-1.5">
-                    <span class="bg-white/20 backdrop-blur-sm px-2.5 py-1 rounded-lg font-mono text-xs" id="days-detail-{{ $listing->id }}">00</span>
-                    <span class="text-white/70">:</span>
-                    <span class="bg-white/20 backdrop-blur-sm px-2.5 py-1 rounded-lg font-mono text-xs" id="hours-detail-{{ $listing->id }}">00</span>
-                    <span class="text-white/70">:</span>
-                    <span class="bg-white/20 backdrop-blur-sm px-2.5 py-1 rounded-lg font-mono text-xs" id="minutes-detail-{{ $listing->id }}">00</span>
-                    <span class="text-white/70">:</span>
-                    <span class="bg-white/20 backdrop-blur-sm px-2.5 py-1 rounded-lg font-mono text-xs" id="seconds-detail-{{ $listing->id }}">00</span>
-                </div>
+            <div class="absolute top-3 right-3 z-10">
+                <x-ui.watchlist-heart
+                    :listing="$listing"
+                    :in-watchlist="$liked"
+                    :likes-count="$likesCount"
+                />
             </div>
-            @else
-            <div class="absolute bottom-3 left-3 bg-gray-500/90 backdrop-blur-md text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-xl border border-gray-400/30">
-                Auction Ended
+            <div class="absolute top-3 left-3 flex flex-col gap-1 z-10">
+                <x-ui.ending-soon-badge :end="$endDate" />
             </div>
-            @endif
+            <div class="absolute bottom-3 left-3 z-10">
+                <x-ui.countdown :end="$endDate" :listing-id="$listing->id" variant="grid" />
+            </div>
         </div>
 
         <!-- Info -->
@@ -74,20 +59,6 @@
                     {{ $listing->year }} {{ $listing->make }} {{ $listing->model }}
                 </h3>
                 <div class="flex space-x-2 items-center">
-                    <form action="{{ route('listing.watchlist', $listing->id) }}" method="POST">
-                        @csrf
-                        <button
-                            type="submit"
-                            class="js-like-toggle inline-flex items-center text-sm {{ $liked ? 'text-red-500' : 'text-gray-400' }} hover:text-red-500 transition-colors"
-                            data-url="{{ route('listing.watchlist', $listing->id) }}"
-                            data-liked="{{ $liked ? '1' : '0' }}"
-                            data-auth="{{ Auth::check() ? '1' : '0' }}"
-                            data-unliked-class="text-gray-400"
-                            aria-label="Like listing">
-                            <span class="material-icons">{{ $liked ? 'favorite' : 'favorite_border' }}</span>
-                            <span class="ml-1 text-xs js-like-count">{{ $likesCount }}</span>
-                        </button>
-                    </form>
                     <span
                         class="material-icons text-gray-400 hover:text-primary-500 cursor-pointer transition-colors">share</span>
                 </div>

@@ -47,6 +47,7 @@
 
     <main class="main-content">
         <div class="max-w-[1600px] mx-auto">
+            <x-ui.breadcrumbs class="mb-2" />
             @if(session('success'))
                 <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg mb-4">
                     {{ session('success') }}
@@ -75,6 +76,7 @@
             });
         });
     </script>
+    @include('partials.caymark-ui-kit')
     @stack('scripts')
 </body>
 </html>

@@ -259,7 +259,7 @@
                         <div class="grid md:grid-cols-2 gap-5">
                             <div>
                                 <label for="phone" class="block text-sm font-semibold text-gray-700 mb-2">Phone</label>
-                                <input type="tel" id="phone" name="phone" required class="w-full form-input" placeholder="Enter your phone">
+                                <input type="text" id="phone" name="phone" required class="w-full form-input js-digits-only js-phone-format" data-cm-validate="phone" placeholder="e.g. (242) 555-1234" inputmode="numeric">
                             </div>
                             <div>
                                 <label for="email" class="block text-sm font-semibold text-gray-700 mb-2">Email</label>
@@ -272,7 +272,7 @@
                         </div>
                         <div>
                             <label for="message" class="block text-sm font-semibold text-gray-700 mb-2">Message</label>
-                            <textarea id="message" name="message" rows="6" required class="w-full form-input resize-none" placeholder="Enter your message"></textarea>
+                            <textarea id="message" name="message" rows="6" required maxlength="500" class="w-full form-input resize-none" placeholder="Enter your message"></textarea>
                         </div>
                         <button type="submit" class="w-full submit-btn text-white font-bold py-4 px-6 rounded-xl">
                             Send

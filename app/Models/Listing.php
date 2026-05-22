@@ -99,9 +99,9 @@ class Listing extends Model
     public function getTitleStatusDisplayAttribute(): string
     {
         return match (strtoupper($this->title_status ?? '')) {
-            'CLEAN', 'YES' => 'Has Title',
-            'SALVAGE', 'NO' => 'No Title',
-            default => $this->title_status ?? 'N/A',
+            'CLEAN', 'YES' => 'Yes',
+            'SALVAGE', 'NO' => 'No',
+            default => 'N/A',
         };
     }
 
@@ -725,7 +725,11 @@ public function invoices()
             'model' => $p['model'] ?? null,
             'trim' => $p['trim'] ?? null,
             'year' => $p['year'] ?? null,
-            'vin' => !empty($p['vin']) ? TextFormatter::toAllCaps($p['vin']) : null,
+            // Per spec: if VIN/HIN was not successfully decoded after attempts,
+            // do not store it — frontend should render "VIN: N/A".
+            'vin' => (!empty($p['vin']) && (string) ($p['vin_decode_success'] ?? '1') === '1')
+                ? TextFormatter::toAllCaps($p['vin'])
+                : null,
             'duplicate_vin_flag' => $duplicateVinFlag,
             'color' => $p['color'],
             'interior_color' => $p['interior_color'],
@@ -854,7 +858,9 @@ public function invoices()
             'model' => $payload['model'] ?? null,
             'trim' => $payload['trim'] ?? null,
             'year' => $payload['year'] ?? null,
-            'vin' => !empty($payload['vin']) ? TextFormatter::toAllCaps($payload['vin']) : null,
+            'vin' => (!empty($payload['vin']) && (string) ($payload['vin_decode_success'] ?? '1') === '1')
+                ? TextFormatter::toAllCaps($payload['vin'])
+                : null,
             'color' => $payload['color'] ?? $this->color,
             'interior_color' => $payload['interior_color'] ?? $this->interior_color,
             'island' => $payload['island'] ?? $this->island,

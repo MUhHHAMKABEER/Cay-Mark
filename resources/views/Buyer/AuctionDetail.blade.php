@@ -29,8 +29,9 @@
 
     $mainImage = $images->first() ?? asset('images/placeholder.png');
 
-    // Check if in watchlist
-    $inWatchlist = Auth::check() && Auth::user()->watchlist()->where('listing_id', $listing->id)->exists();
+    $inWatchlist = $inWatchlist ?? (Auth::check() && Auth::user()->watchlist()->where('listing_id', $listing->id)->exists());
+    $showOutbidBanner = $showOutbidBanner ?? false;
+    $buyerFeePreview = $buyerFeePreview ?? ['commission' => max($nextValidBid * 0.06, 100)];
 
     // User's highest bid
     $userHighestBid = Auth::check() ? $listing->bids()->where('user_id', Auth::id())->where('status', 'active')->max('amount') : null;
@@ -459,6 +460,8 @@
             Back to results
         </a>
 
+        <x-ui.outbid-banner :show="$showOutbidBanner" />
+
         @if(($listing->condition ?? '') === 'salvaged')
         <!-- Salvaged vehicle warning -->
         <div class="mb-6 p-4 rounded-xl bg-amber-100 border-2 border-amber-400 text-amber-900 flex items-start gap-3">
@@ -528,10 +531,11 @@
                     </div>
 
                     <div class="action-buttons">
-                        <button onclick="toggleWatchlist()" class="action-btn {{ $inWatchlist ? 'active' : '' }}" id="watchlistBtn">
-                            <span class="material-icons" id="watchlistIcon">{{ $inWatchlist ? 'favorite' : 'favorite_border' }}</span>
-                            <span id="watchlistLabel">{{ $inWatchlist ? 'Added to Watchlist' : 'Add to Watchlist' }}</span>
-                        </button>
+                        <x-ui.watchlist-heart
+                            :listing="$listing"
+                            :in-watchlist="$inWatchlist"
+                            variant="button"
+                        />
                         <button onclick="shareListing()" class="action-btn">
                             <span class="material-icons">share</span>
                             <span>Share Listing</span>
@@ -572,30 +576,30 @@
                             <span class="info-label">Model</span>
                             <span class="info-value">{{ $listing->model ?? 'N/A' }}</span>
                         </div>
-                        @if($listing->trim)
                         <div class="info-item">
                             <span class="info-label">Trim</span>
-                            <span class="info-value">{{ $listing->trim }}</span>
+                            <span class="info-value">{{ $listing->trim ?: 'N/A' }}</span>
                         </div>
-                        @endif
                         <div class="info-item">
                             <span class="info-label">Body Style</span>
                             <span class="info-value">{{ $listing->body_style ?? $listing->subcategory ?? 'N/A' }}</span>
                         </div>
                         <div class="info-item">
-                            <span class="info-label">Color</span>
-                            <span class="info-value">{{ $listing->color ?? 'N/A' }}</span>
+                            <span class="info-label">Exterior Color</span>
+                            <span class="info-value">{{ $listing->color ? ucfirst(strtolower($listing->color)) : 'N/A' }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Interior Color</span>
+                            <span class="info-value">{{ $listing->interior_color ? ucfirst(strtolower($listing->interior_color)) : 'N/A' }}</span>
                         </div>
                         <div class="info-item">
                             <span class="info-label">Engine Size</span>
-                            <span class="info-value">{{ $listing->engine_type ?? 'N/A' }}</span>
+                            <span class="info-value">{{ $listing->engine_type ?: 'N/A' }}</span>
                         </div>
-                        @if($listing->cylinders)
                         <div class="info-item">
                             <span class="info-label">Cylinders</span>
-                            <span class="info-value">{{ $listing->cylinders }}</span>
+                            <span class="info-value">{{ $listing->cylinders ?: 'N/A' }}</span>
                         </div>
-                        @endif
                         <div class="info-item">
                             <span class="info-label">Transmission</span>
                             <span class="info-value">
@@ -606,12 +610,10 @@
                                 @endif
                             </span>
                         </div>
-                        @if($listing->drive_type)
                         <div class="info-item">
                             <span class="info-label">Drive Type</span>
-                            <span class="info-value">{{ $listing->drive_type }}</span>
+                            <span class="info-value">{{ $listing->drive_type ?: 'N/A' }}</span>
                         </div>
-                        @endif
                         <div class="info-item">
                             <span class="info-label">Fuel Type</span>
                             <span class="info-value">{{ $listing->fuel_type ?? 'N/A' }}</span>
@@ -646,22 +648,7 @@
                     </h2>
 
                     <!-- Auction Countdown -->
-                    <div class="countdown-box" id="countdownBox">
-                        <div class="countdown-label">Auction Countdown</div>
-                        <div class="countdown-display" id="countdownDisplay">
-                            @if($timeRemaining && !$isExpired)
-                                @if($timeRemaining->days > 0)
-                                    {{ $timeRemaining->days }}d : {{ $timeRemaining->h }}h : {{ $timeRemaining->i }}m : {{ $timeRemaining->s }}s
-                                @elseif($timeRemaining->h > 0)
-                                    {{ $timeRemaining->h }}h : {{ $timeRemaining->i }}m : {{ $timeRemaining->s }}s
-                                @else
-                                    {{ $timeRemaining->i }}m : {{ $timeRemaining->s }}s
-                                @endif
-                            @else
-                                Auction Ended
-                            @endif
-                        </div>
-                    </div>
+                    <x-ui.countdown :end="$endDate" :listing-id="$listing->id" variant="detail" />
 
                     <!-- Sale Ends -->
                     <div class="info-item mb-4">
@@ -786,7 +773,7 @@
                     @if(!$isExpired && Auth::check() && Auth::user()->role === 'buyer')
                     <div class="mb-4">
                         <span class="info-label">Place Your Bid</span>
-                        <form action="{{ route('auction.bid.store', $listing->getSlugOrGenerate()) }}" method="POST" id="bidForm">
+                        <form action="{{ route('auction.bid.store', $listing->getSlugOrGenerate()) }}" method="POST" id="bidForm" data-cm-validate="off">
                             @csrf
                             <div class="bid-input-wrapper">
                                 <button type="button" onclick="adjustBid(-{{ $incrementAmount }})" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-l-lg font-bold">-</button>
@@ -902,6 +889,11 @@
 </style>
 
 <script>
+    window.CaymarkUIAuctionConfig = {
+        buyerFeeRate: {{ \App\Services\CommissionService::BUYER_COMMISSION_RATE }},
+        buyerFeeMin: {{ \App\Services\CommissionService::BUYER_COMMISSION_MIN }},
+    };
+
     const images = @json($images->toArray());
     let currentImageIndex = 0;
 
@@ -923,85 +915,6 @@
         input.value = newAmount.toFixed(2);
     }
 
-    function typeText(element, text, speed) {
-        speed = speed || 50;
-        element.textContent = '';
-        element.classList.add('watchlist-text-typing');
-        let i = 0;
-        return new Promise(function(resolve) {
-            var interval = setInterval(function() {
-                element.textContent += text.charAt(i);
-                i++;
-                if (i >= text.length) {
-                    clearInterval(interval);
-                    setTimeout(function() {
-                        element.classList.remove('watchlist-text-typing');
-                        resolve();
-                    }, 400);
-                }
-            }, speed);
-        });
-    }
-
-    function toggleWatchlist() {
-        @if(Auth::check())
-        var btn = document.getElementById('watchlistBtn');
-        var icon = document.getElementById('watchlistIcon');
-        var label = document.getElementById('watchlistLabel');
-
-        if (btn.classList.contains('watchlist-saving')) return;
-        btn.classList.add('watchlist-saving');
-
-        fetch('{{ route("listing.watchlist", $listing->id) }}', {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-            },
-        })
-        .then(function(response) {
-            if (!response.ok && response.status === 422) {
-                return response.json().then(function(errData) { throw errData; });
-            }
-            return response.json();
-        })
-        .then(function(data) {
-            btn.classList.remove('watchlist-saving');
-            btn.classList.add('watchlist-pop');
-
-            if (data.in_watchlist) {
-                // Now in watchlist
-                btn.classList.add('active');
-                icon.textContent = 'favorite';
-
-                var burst = document.createElement('span');
-                burst.className = 'heart-burst';
-                btn.appendChild(burst);
-                setTimeout(function() { burst.remove(); }, 600);
-
-                // Show final state text
-                typeText(label, 'Added to Watchlist', 45);
-            } else {
-                // Removed from watchlist
-                btn.classList.remove('active');
-                icon.textContent = 'favorite_border';
-                typeText(label, 'Add to Watchlist', 45);
-            }
-
-            setTimeout(function() { btn.classList.remove('watchlist-pop'); }, 500);
-        })
-        .catch(function(err) {
-            btn.classList.remove('watchlist-saving');
-            if (err && err.message) {
-                typeText(label, err.message, 30);
-            }
-        });
-        @else
-        window.location.href = '{{ route("login") }}';
-        @endif
-    }
-
     function shareListing() {
         if (navigator.share) {
             navigator.share({
@@ -1016,40 +929,6 @@
             });
         }
     }
-
-    // Countdown Timer - Real-time calculation from database end time
-    @if($timeRemaining && !$isExpired)
-    const countdownEl = document.getElementById('countdownDisplay');
-    const countdownBox = document.getElementById('countdownBox');
-    const endTime = new Date('{{ $endDate->toIso8601String() }}');
-
-    function updateCountdown() {
-        const now = new Date();
-        const diff = Math.max(0, Math.floor((endTime - now) / 1000));
-
-        if (diff <= 0) {
-            countdownEl.textContent = 'Auction Ended';
-            countdownBox.style.background = 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)';
-            return;
-        }
-
-        const days = Math.floor(diff / 86400);
-        const hours = Math.floor((diff % 86400) / 3600);
-        const minutes = Math.floor((diff % 3600) / 60);
-        const seconds = diff % 60;
-
-        if (days > 0) {
-            countdownEl.textContent = `${days}d : ${hours}h : ${minutes}m : ${seconds}s`;
-        } else if (hours > 0) {
-            countdownEl.textContent = `${hours}h : ${minutes}m : ${seconds}s`;
-        } else {
-            countdownEl.textContent = `${minutes}m : ${seconds}s`;
-        }
-    }
-
-    updateCountdown();
-    setInterval(updateCountdown, 1000); // Update every second
-    @endif
 
     // Bid result modal (replaces alert)
     function showBidModal(message, isSuccess, onClose) {
@@ -1085,12 +964,15 @@
         const submitBtn = document.getElementById('bidSubmitBtn');
         const amount = parseFloat(document.getElementById('bidAmount').value);
         const minBid = {{ $nextValidBid }};
+        const vehicleName = @json(trim(($listing->year ?? '') . ' ' . ($listing->make ?? '') . ' ' . ($listing->model ?? '')));
 
         if (amount < minBid) {
-            showBidModal('Your bid must be at least $' + minBid.toLocaleString() + '.', false);
+            if (window.CaymarkUI) CaymarkUI.showError('Bid too low', 'Your bid must be at least $' + minBid.toLocaleString() + '.');
+            else showBidModal('Your bid must be at least $' + minBid.toLocaleString() + '.', false);
             return false;
         }
 
+        function placeBid() {
         submitBtn.disabled = true;
         submitBtn.textContent = 'Placing Bid...';
 
@@ -1120,6 +1002,19 @@
             showBidModal('An error occurred. Please try again.', false);
             submitBtn.disabled = false;
             submitBtn.textContent = 'Bid now';
+        });
+        }
+
+        var confirmFn = (window.CaymarkUI && CaymarkUI.auction && CaymarkUI.auction.confirmBid)
+            ? CaymarkUI.auction.confirmBid({
+                vehicleName: vehicleName,
+                amount: amount,
+                buyerFee: CaymarkUI.auction.calcBuyerFee(amount),
+            })
+            : Promise.resolve(window.confirm('Place a bid of $' + amount.toLocaleString() + ' on ' + vehicleName + '?'));
+
+        confirmFn.then(function (ok) {
+            if (ok) placeBid();
         });
     });
 </script>

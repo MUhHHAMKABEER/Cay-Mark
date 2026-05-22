@@ -41,10 +41,23 @@
     $latestNotificationBarText = $latestNotificationFullText
         ? \Illuminate\Support\Str::limit(trim($latestNotificationFullText), 160)
         : null;
+    $headerUnreadCount = ($user && method_exists($user, 'unreadNotifications'))
+        ? $user->unreadNotifications()->count()
+        : 0;
+    $headerRecentNotifications = ($user && method_exists($user, 'notifications'))
+        ? $user->notifications()->latest()->take(8)->get()
+        : collect();
+    $headerNotificationsUrl = $isBuyer
+        ? route('buyer.notifications')
+        : ($isSeller ? route('seller.notifications') : route('finish.registration'));
+    $homeActive = request()->routeIs('welcome');
+    $auctionActive = request()->routeIs('Auction.index', 'auction.show', 'auction.dashboard', 'listing.show');
+    $gettingStartedActive = request()->routeIs('buyer-guide', 'sellers-guide', 'enterprise-seller');
+    $contactActive = request()->routeIs('contact');
 @endphp
 
 <!-- Top Header Bar (white for all users, same as normal dashboard) -->
-<div class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+<header class="cm-site-header bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
     <!-- First Header Row: Logo, Search (centered), Actions -->
     <div class="bg-white">
         <div class="container mx-auto px-4 py-3 relative">
@@ -115,10 +128,17 @@
                                 <span class="text-gray-900 font-semibold text-sm">{{ $buyerHeaderStats['watchlist_count'] }}</span>
                             </a>
                         </div>
+                        <x-ui.notification-bell
+                            :user="$user"
+                            :notifications="$headerRecentNotifications"
+                            :unread-count="$headerUnreadCount"
+                            :notifications-url="$headerNotificationsUrl"
+                            class="flex-shrink-0"
+                        />
                         <!-- Profile -->
                         <div class="relative" x-data="{ open: false }">
-                            <button type="button" @click="open = !open" class="w-10 h-10 rounded-full bg-blue-500 hover:bg-blue-600 flex items-center justify-center text-white font-semibold text-lg transition-colors flex-shrink-0">
-                                {{ strtoupper(substr($user->name, 0, 1)) }}
+                            <button type="button" @click="open = !open" class="flex-shrink-0 rounded-full transition-opacity hover:opacity-90" aria-label="Account menu">
+                                <x-ui.avatar :user="$user" size="md" />
                             </button>
                             <div x-show="open" @click.away="open = false" x-cloak class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
                                 <a href="{{ route('buyer.dashboard') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Buyer Dashboard</a>
@@ -147,20 +167,17 @@
                         <a href="{{ route('seller.listings.create') }}" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors">
                             Submit listing
                         </a>
-                        <a href="{{ route('seller.notifications') }}" class="relative p-2 text-gray-600 hover:text-blue-600 transition-colors" title="Notifications">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-                            </svg>
-                            @if($user->unreadNotifications()->count() > 0)
-                                <span class="absolute top-0 right-0 w-4 h-4 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">{{ $user->unreadNotifications()->count() }}</span>
-                            @endif
-                        </a>
+                        <x-ui.notification-bell
+                            :user="$user"
+                            :notifications="$headerRecentNotifications"
+                            :unread-count="$headerUnreadCount"
+                            :notifications-url="route('seller.notifications')"
+                            class="flex-shrink-0"
+                        />
                         <!-- Profile Dropdown -->
                         <div class="relative" x-data="{ open: false }">
                             <button type="button" @click="open = !open" class="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors">
-                                <div class="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-white font-semibold">
-                                    {{ strtoupper(substr($user->name, 0, 1)) }}
-                                </div>
+                                <x-ui.avatar :user="$user" size="sm" />
                                 <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                                 </svg>
@@ -182,8 +199,8 @@
                     @else
                         <!-- Logged in but registration incomplete: user icon + dropdown (Complete registration, Logout) -->
                         <div class="relative" x-data="{ open: false }">
-                            <button type="button" @click="open = !open" class="w-10 h-10 rounded-full bg-blue-500 hover:bg-blue-600 flex items-center justify-center text-white font-semibold text-lg transition-colors flex-shrink-0" title="Account">
-                                {{ strtoupper(substr($user->name ?? 'U', 0, 1)) }}
+                            <button type="button" @click="open = !open" class="flex-shrink-0 rounded-full transition-opacity hover:opacity-90" title="Account" aria-label="Account menu">
+                                <x-ui.avatar :user="$user" size="md" />
                             </button>
                             <div x-show="open" @click.away="open = false" x-cloak class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
                                 <a href="{{ route('finish.registration') }}" class="block px-4 py-2 text-sm text-blue-600 font-medium hover:bg-blue-50">Complete registration</a>
@@ -206,9 +223,9 @@
             <nav class="flex items-center justify-between">
                 <!-- Main Menu: Home, Auction, Getting Started, Services & Support, Contact Us (no Help) -->
                 <div class="flex items-center space-x-6 lg:space-x-8 flex-wrap">
-                    <a href="{{ route('welcome') }}" class="py-3 px-2 font-medium transition-colors text-gray-700 hover:text-blue-600 {{ request()->routeIs('welcome') ? 'text-blue-600 border-b-2 border-blue-600' : '' }}">Home</a>
-                    <a href="{{ route('Auction.index') }}" class="py-3 px-2 font-medium transition-colors text-gray-700 hover:text-blue-600 {{ request()->routeIs('Auction.index') ? 'text-blue-600 border-b-2 border-blue-600' : '' }}">Auction</a>
-                    <a href="{{ route('buyer-guide') }}" class="py-3 px-2 font-medium transition-colors text-gray-700 hover:text-blue-600 {{ request()->routeIs('buyer-guide') ? 'text-blue-600 border-b-2 border-blue-600' : '' }}">Getting Started</a>
+                    <a href="{{ route('welcome') }}" class="cm-nav-link {{ $homeActive ? 'cm-nav-link--active' : '' }}" @if($homeActive) aria-current="page" @endif>Home</a>
+                    <a href="{{ route('Auction.index') }}" class="cm-nav-link {{ $auctionActive ? 'cm-nav-link--active' : '' }}" @if($auctionActive) aria-current="page" @endif>Auction</a>
+                    <a href="{{ route('buyer-guide') }}" class="cm-nav-link {{ $gettingStartedActive ? 'cm-nav-link--active' : '' }}" @if($gettingStartedActive) aria-current="page" @endif>Getting Started</a>
                     <!-- Services & Support Dropdown -->
                     <div class="relative" x-data="{ open: false }">
                         <button type="button" @click="open = !open" @click.away="open = false" class="py-3 px-2 font-medium transition-colors flex items-center text-gray-700 hover:text-blue-600">
@@ -235,7 +252,7 @@
                             </a>
                         </div>
                     </div>
-                    <a href="{{ route('contact') }}" class="py-3 px-2 font-medium transition-colors text-gray-700 hover:text-blue-600 {{ request()->routeIs('contact') ? 'text-blue-600 border-b-2 border-blue-600' : '' }}">Contact Us</a>
+                    <a href="{{ route('contact') }}" class="cm-nav-link {{ $contactActive ? 'cm-nav-link--active' : '' }}" @if($contactActive) aria-current="page" @endif>Contact Us</a>
                 </div>
 
             </nav>
@@ -270,7 +287,7 @@
         </div>
     </div>
     @endif
-</div>
+</header>
 
 <style>
     [x-cloak] { display: none !important; }

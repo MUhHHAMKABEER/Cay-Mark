@@ -663,6 +663,13 @@
                 </h1>
                 <p class="text-gray-600 text-sm md:text-base">{{ $isEdit ? 'Update your listing details below.' : 'List your vehicle or vessel in just a few simple steps' }}</p>
             </div>
+            <div class="mb-4 hidden lg:block" id="listing-progress-bar">
+                <x-ui.progress-steps
+                    :step="1"
+                    :total="3"
+                    :labels="['Vehicle Information', 'Condition + Media', 'Auction + Payment']"
+                />
+            </div>
             <div class="step-indicator animate-fade-in">
                 <div class="step-item active" id="step-indicator-1">
                     <div class="step-number">1</div>
@@ -680,6 +687,45 @@
         </aside>
 
         <div class="create-listing-main w-full min-w-0">
+        @if($isEdit && ($listing->status ?? null) === 'rejected')
+            @php
+                $rejReason = $listing->rejection_reason ?? null;
+                $rejNotes = $listing->rejection_notes ?? null;
+                $hoursLeft = method_exists($listing, 'getEditHoursRemaining') ? $listing->getEditHoursRemaining() : null;
+            @endphp
+            <div id="rejection-reason-banner" class="mb-4 p-4 bg-amber-50 border-l-4 border-amber-500 rounded-lg animate-fade-in">
+                <div class="flex items-start gap-3">
+                    <span class="material-icons-round text-amber-600 mt-0.5">report_problem</span>
+                    <div class="flex-1">
+                        <h3 class="text-amber-900 font-semibold mb-1">This submission was rejected</h3>
+                        @if($rejReason)
+                            <p class="text-sm text-amber-900"><span class="font-medium">Reason for Rejection:</span> {{ $rejReason }}</p>
+                        @endif
+                        @if($rejNotes)
+                            <p class="text-sm text-amber-900 mt-1"><span class="font-medium">Notes:</span> {{ $rejNotes }}</p>
+                        @endif
+                        <p class="text-sm text-amber-800 mt-2">Please make the necessary adjustments before resubmitting.</p>
+                        @if(is_int($hoursLeft) && $hoursLeft > 0)
+                            <p class="text-xs text-amber-700 mt-1">Editing closes in approximately {{ $hoursLeft }} hour{{ $hoursLeft === 1 ? '' : 's' }}.</p>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            {{-- Modal popup on first arrival --}}
+            <div id="rejection-reason-modal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" style="display:flex;">
+                <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6">
+                    <h3 class="text-lg font-bold text-gray-900 mb-3">Reason for Rejection</h3>
+                    <p class="text-gray-700 text-sm mb-2">{{ $rejReason ?: 'Not specified.' }}</p>
+                    @if($rejNotes)
+                        <p class="text-gray-700 text-sm mb-4"><span class="font-semibold">Notes:</span> {{ $rejNotes }}</p>
+                    @endif
+                    <p class="text-gray-700 text-sm mb-4">Please make the necessary adjustments before submitting.</p>
+                    <button type="button" onclick="document.getElementById('rejection-reason-modal').style.display='none';" class="w-full py-2 bg-blue-600 text-white rounded-lg font-semibold">I understand</button>
+                </div>
+            </div>
+        @endif
+
         <!-- Error Messages Display -->
         @if($errors->any() || session('error'))
             <div class="mb-4 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg animate-fade-in">
@@ -706,7 +752,7 @@
             </div>
         @endif
 
-        <form id="listingForm" action="{{ $isEdit ? route('seller.listings.update', $listing) : route('seller.listings.store') }}" method="POST" enctype="multipart/form-data">
+        <form id="listingForm" data-cm-validate="off" action="{{ $isEdit ? route('seller.listings.update', $listing) : route('seller.listings.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
             @if($isEdit) @method('PUT') @endif
 

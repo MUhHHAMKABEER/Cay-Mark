@@ -28,6 +28,8 @@
                     <p class="text-gray-600 text-sm">Real-time insights into your bidding activity and purchase analytics</p>
         </div>
 
+                <x-ui.profile-completion :user="$user" class="mb-4" />
+
                 <!-- Top Stats Cards (limited: all paid purchases, current bids, watchlist, pending payment; one row only) -->
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
                     <div class="bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 rounded-xl shadow-xl p-4 text-white transform hover:scale-105 transition-all duration-300 relative overflow-hidden">
@@ -93,6 +95,12 @@
                         <div class="h-64"><canvas id="winLossChart"></canvas></div>
                     </div>
                 </div>
+
+                @if(!empty($activityTimeline))
+                <div class="mt-6 max-w-2xl">
+                    <x-ui.activity-timeline :items="$activityTimeline" />
+                </div>
+                @endif
             </div>
 
             <!-- USER TAB -->
@@ -109,6 +117,8 @@
                         </div>
                     </div>
                 </div>
+
+                <x-ui.profile-completion :user="$user" class="mb-6" />
 
                 @if(session('success'))
                     <div class="flex items-center gap-3 rounded-xl bg-emerald-50 border border-emerald-200/80 px-4 py-3 mb-6 text-emerald-800 shadow-sm">
@@ -200,9 +210,11 @@
                                         </div>
                                         <div class="min-w-[180px]">
                                             <label class="block text-xs font-semibold text-gray-600 mb-1">Phone Number</label>
-                                            <input type="text" id="dash_phone_input" value="{{ $dashPhoneNational }}" placeholder="National number (no country code)"
-                                                class="js-digits-only w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                                                inputmode="numeric" pattern="[0-9]*" maxlength="15" autocomplete="tel-national">
+                                            <input type="text" id="dash_phone_input" value="{{ $dashPhoneNational }}" placeholder="e.g. (242) 555-1234"
+                                                class="js-digits-only js-phone-format w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                                data-phone-country-select="#dash_phone_country"
+                                                data-cm-validate="phone"
+                                                inputmode="numeric" autocomplete="tel-national">
                                         </div>
                                         <div class="flex md:block">
                                             <button type="button" id="dash-send-code-btn"
@@ -1125,11 +1137,13 @@
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1.5">New Password</label>
                 <input type="password" name="password" required minlength="8" placeholder="Min. 8 characters"
+                    data-password-strength data-cm-label="New password"
                     class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-gray-50/50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all">
             </div>
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1.5">Confirm New Password</label>
                 <input type="password" name="password_confirmation" required minlength="8" placeholder="Re-enter new password"
+                    data-cm-match="[name=password]" data-cm-label="Confirm new password"
                     class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-gray-50/50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all">
                 </div>
             <div class="flex gap-3 pt-2">

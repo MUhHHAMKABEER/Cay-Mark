@@ -25,7 +25,7 @@
                     </div>
                 @endif
 
-                <form method="POST" action="{{ route('password.store') }}" class="space-y-5">
+                <form method="POST" action="{{ route('password.store') }}" class="space-y-5" novalidate>
                     @csrf
                     <input type="hidden" name="token" value="{{ $request->route('token') }}">
 
@@ -38,13 +38,15 @@
 
                     <div>
                         <label for="password" class="block text-sm font-semibold text-gray-700 mb-1.5">New password</label>
-                        <input type="password" id="password" name="password" required autocomplete="new-password"
+                        <input type="password" id="password" name="password" required minlength="8" autocomplete="new-password"
+                            data-password-strength data-cm-label="New password"
                             class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:border-[#063466] focus:ring-2 focus:ring-[#063466]/10 transition-all text-gray-900 text-[15px]">
                     </div>
 
                     <div>
                         <label for="password_confirmation" class="block text-sm font-semibold text-gray-700 mb-1.5">Confirm password</label>
-                        <input type="password" id="password_confirmation" name="password_confirmation" required autocomplete="new-password"
+                        <input type="password" id="password_confirmation" name="password_confirmation" required minlength="8" autocomplete="new-password"
+                            data-cm-match="#password" data-cm-label="Confirm password"
                             class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:border-[#063466] focus:ring-2 focus:ring-[#063466]/10 transition-all text-gray-900 text-[15px]">
                     </div>
 

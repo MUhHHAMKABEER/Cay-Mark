@@ -272,6 +272,8 @@
                     <p class="text-gray-600 text-sm">{{ $user->business_license_path ? 'Manage your business listings, payouts, and buyer coordination.' : 'Your sales summary and listing status at a glance.' }}</p>
                 </div>
 
+                <x-ui.profile-completion :user="$user" class="mb-4" />
+
                 @if(!$user->business_license_path)
                 {{-- INDIVIDUAL SELLER: Only Total Revenue, Active Auction, Pending Payout, Items Sold, Status Overview --}}
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
@@ -549,6 +551,12 @@
                     </div>
                 </div>
                 @endif
+
+                @if(!empty($activityTimeline))
+                <div class="mt-6 max-w-2xl">
+                    <x-ui.activity-timeline :items="$activityTimeline" title="Recent seller activity" />
+                </div>
+                @endif
             </div>
 
             <!-- USER TAB (layout matches buyer account tab) -->
@@ -564,6 +572,8 @@
                         </div>
                     </div>
                 </div>
+
+                <x-ui.profile-completion :user="$user" class="mb-6" />
 
                 @if(session('success'))
                     <div class="flex items-center gap-3 rounded-xl bg-emerald-50 border border-emerald-200/80 px-4 py-3 mb-6 text-emerald-800 shadow-sm">
@@ -660,9 +670,11 @@
                                         <div class="min-w-[180px]">
                                             <label class="block text-xs font-semibold text-gray-600 mb-1">Phone Number</label>
                                             <input type="text" id="seller_dash_phone_input" value="{{ old('seller_phone_local', $sellerDefaultNational) }}"
-                                                placeholder="National number (no country code)"
-                                                class="js-digits-only w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                                                inputmode="numeric" pattern="[0-9]*" maxlength="15" autocomplete="tel-national">
+                                                placeholder="e.g. (242) 555-1234"
+                                                class="js-digits-only js-phone-format w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                                data-phone-country-select="#seller_dash_phone_country"
+                                                data-cm-validate="phone"
+                                                inputmode="numeric" autocomplete="tel-national">
                                         </div>
                                         <div class="flex md:block">
                                             <button type="button" id="seller-dash-send-code-btn"
@@ -1474,12 +1486,9 @@
                         </div>
                         <div class="flex-1">
                             <div class="flex items-center gap-3">
-                                <h2 class="text-2xl font-bold text-gray-900 tracking-tight">Customer Support</h2>
-                                <div class="hidden md:flex items-center gap-2 px-3 py-1 rounded-lg bg-teal-50 border border-teal-200">
-                                    <span class="text-xs font-semibold text-teal-700">CayMark</span>
-                                </div>
+                                <h2 class="text-2xl font-bold text-gray-900 tracking-tight">Support Center</h2>
                             </div>
-                            <p class="text-sm text-gray-500">Get help with listings, payouts, and your seller account</p>
+                            <p class="text-sm text-gray-500">Submit a request and our team will respond as quickly as possible.</p>
                         </div>
                     </div>
                 </div>
@@ -1493,8 +1502,8 @@
                                         <span class="material-icons-round text-white text-lg">help_outline</span>
                                     </div>
                                     <div>
-                                        <h3 class="text-lg font-bold text-gray-900">Submit Support Ticket</h3>
-                                        <p class="text-xs text-gray-600">We'll respond within 24 hours</p>
+                                        <h3 class="text-lg font-bold text-gray-900">Submit a Request</h3>
+                                        <p class="text-xs text-gray-600">Our team will respond as quickly as possible.</p>
                                     </div>
                                 </div>
                             </div>
@@ -1516,10 +1525,10 @@
                                 <div class="group">
                                     <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
                                         <span class="material-icons-round text-gray-400 text-lg group-focus-within:text-teal-600 transition-colors">category</span>
-                                        Ticket category
+                                        What is this request about?
                                     </label>
                                     <select name="title" required class="w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-gray-900 font-medium focus:bg-white focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 transition-all">
-                                        <option value="">Select issue type…</option>
+                                        <option value="">Select a category...</option>
                                         @foreach($supportCategories as $option)
                                             <option value="{{ $option }}" {{ old('title') === $option ? 'selected' : '' }}>{{ $option }}</option>
                                         @endforeach
@@ -1527,24 +1536,23 @@
                                     @error('title')
                                         <p class="text-xs text-red-600 mt-1.5">{{ $message }}</p>
                                     @enderror
-                                    <p class="text-xs text-gray-400 mt-1.5">Choose the option that best matches your issue</p>
                                 </div>
                                 <div class="group">
                                     <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
                                         <span class="material-icons-round text-gray-400 text-lg group-focus-within:text-teal-600 transition-colors">description</span>
                                         Message
                                     </label>
-                                    <textarea name="message" rows="8" required maxlength="800" placeholder="Describe your issue in detail (10–800 characters)…"
+                                    <textarea name="message" rows="8" required maxlength="800" placeholder="Write your message here..."
                                         class="w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-gray-900 font-medium placeholder-gray-400 focus:bg-white focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 transition-all resize-none">{{ old('message') }}</textarea>
                                     @error('message')
                                         <p class="text-xs text-red-600 mt-1.5">{{ $message }}</p>
                                     @enderror
-                                    <p class="text-xs text-gray-400 mt-1.5">10–800 characters. Include listing IDs, payout details, or error messages.</p>
+                                    <p class="text-xs text-gray-400 mt-1.5">Message limit: 800 characters.</p>
                                 </div>
                                 <div class="pt-2">
                                     <button type="submit" class="w-full inline-flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-700 text-white px-6 py-3.5 rounded-xl font-semibold shadow-lg shadow-teal-600/30 hover:shadow-teal-600/40 transition-all duration-200" style="background-color: #0d9488; color: #ffffff;">
                                         <span class="material-icons-round text-lg text-white">send</span>
-                                        <span class="text-white font-semibold">Submit Ticket</span>
+                                        <span class="text-white font-semibold">Submit Request</span>
                                     </button>
                                 </div>
                             </form>
@@ -1613,57 +1621,26 @@
                                 <span class="material-icons-round text-xl" style="color: #0d9488;">lightbulb</span>
                                 <h4 class="font-bold text-gray-900">Quick Help</h4>
                             </div>
-                            <div class="space-y-3 text-sm">
-                                <div class="flex items-start gap-3">
-                                    <span class="material-icons-round text-lg flex-shrink-0" style="color: #14b8a6;">check_circle</span>
-                                    <div>
-                                        <p class="font-semibold text-gray-900">Listings &amp; auctions</p>
-                                        <p class="text-gray-600 text-xs">Include listing or item number and auction status</p>
-                                    </div>
-                                </div>
-                                <div class="flex items-start gap-3">
-                                    <span class="material-icons-round text-lg flex-shrink-0" style="color: #14b8a6;">check_circle</span>
-                                    <div>
-                                        <p class="font-semibold text-gray-900">Payouts</p>
-                                        <p class="text-gray-600 text-xs">Mention payout amount, date, or bank details issue</p>
-                                    </div>
-                                </div>
-                                <div class="flex items-start gap-3">
-                                    <span class="material-icons-round text-lg flex-shrink-0" style="color: #14b8a6;">check_circle</span>
-                                    <div>
-                                        <p class="font-semibold text-gray-900">Account &amp; disputes</p>
-                                        <p class="text-gray-600 text-xs">Describe what happened and any reference IDs</p>
-                                    </div>
-                                </div>
-                            </div>
+                            <ul class="space-y-2 text-sm">
+                                <li><a href="{{ route('help-center') }}" class="font-semibold hover:underline" style="color: #0d9488;">View FAQ</a></li>
+                                <li><a href="{{ route('video-guide') }}" class="font-semibold hover:underline" style="color: #0d9488;">Auction Guide</a></li>
+                                <li><a href="{{ route('sellers-guide') }}" class="font-semibold hover:underline" style="color: #0d9488;">Seller Guide</a></li>
+                                <li><a href="{{ route('video-guide') }}" class="font-semibold hover:underline" style="color: #0d9488;">How Auctions Work</a></li>
+                            </ul>
                         </div>
 
                         <div class="bg-teal-50 rounded-2xl border-2 border-teal-200 p-6" style="background-color: #f0fdfa;">
                             <div class="flex items-center gap-2 mb-4">
                                 <span class="material-icons-round text-teal-600 text-xl" style="color: #0d9488;">contact_support</span>
-                                <h4 class="font-bold text-gray-900">Need Immediate Help?</h4>
+                                <h4 class="font-bold text-gray-900">Contact Us</h4>
                             </div>
-                            <p class="text-sm text-gray-700 mb-4">For urgent matters, our support team is available 24/7.</p>
                             <div class="space-y-2 text-sm">
                                 <div class="flex items-center gap-2 text-gray-700">
-                                    <span class="material-icons-round text-lg" style="color: #0d9488;">schedule</span>
-                                    <span class="font-medium text-gray-700">Response time: within 24 hours</span>
-                                </div>
-                                <div class="flex items-center gap-2 text-gray-700">
                                     <span class="material-icons-round text-lg" style="color: #0d9488;">email</span>
-                                    <span class="font-medium text-gray-700">{{ config('support.inbox', 'support@caymark.co') }}</span>
+                                    <span class="font-medium text-gray-700">support@caymark.com</span>
                                 </div>
+                                <p class="text-sm text-gray-700">For urgent matters call or WhatsApp us at +1 (242) 806-6275</p>
                             </div>
-                        </div>
-
-                        <div class="bg-white rounded-2xl border-2 border-dashed border-gray-200 p-6 text-center">
-                            <span class="material-icons-round text-gray-400 text-4xl mb-3 block">quiz</span>
-                            <p class="text-sm font-semibold text-gray-900 mb-1">Check Our FAQ</p>
-                            <p class="text-xs text-gray-500 mb-3">Find answers to common seller questions</p>
-                            <a href="#" class="inline-flex items-center gap-2 text-sm font-semibold hover:underline" style="color: #0d9488;">
-                                <span style="color: #0d9488;">View FAQ</span>
-                                <span class="material-icons-round text-sm" style="color: #0d9488;">arrow_forward</span>
-                            </a>
                         </div>
                     </div>
                 </div>

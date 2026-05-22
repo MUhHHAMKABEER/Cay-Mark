@@ -8,10 +8,15 @@ use App\Models\Listing;
 use App\Models\PostAuctionThread;
 use App\Models\User;
 use App\Models\Watchlist;
+use App\Services\UserActivityTimelineService;
 use Illuminate\Support\Collection;
 
 class BuyerDashboardService
 {
+    public function __construct(
+        protected UserActivityTimelineService $activityTimelineService
+    ) {
+    }
     /**
      * Get current auctions where buyer has placed bids
      */
@@ -215,6 +220,7 @@ class BuyerDashboardService
             'winLossRatioData' => $this->getWinLossRatioData($user),
             'buyerSummary' => $this->getBuyerSummary($user),
             'averagePurchaseData' => $this->getAveragePurchaseData($user),
+            'activityTimeline' => $this->activityTimelineService->buildFor($user),
         ];
     }
 }

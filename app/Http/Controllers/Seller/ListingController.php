@@ -149,6 +149,35 @@ class ListingController extends Controller
     }
 
     /**
+     * Spec: pending or rejected-within-3-days are editable. Active/approved/sold are not.
+     */
+    private function sellerCanEditListing(Listing $listing): bool
+    {
+        $status = strtolower((string) $listing->status);
+        if ($status === 'pending') {
+            return true;
+        }
+        if ($status === 'rejected') {
+            return $listing->canBeEdited();
+        }
+
+        return false;
+    }
+
+    private function editBlockedMessage(Listing $listing): string
+    {
+        $status = strtolower((string) $listing->status);
+        if ($status === 'sold') {
+            return 'Sold listings cannot be edited.';
+        }
+        if ($status === 'rejected') {
+            return 'The 3-day window to edit this rejected submission has closed. Please submit a new listing.';
+        }
+
+        return 'Active listings cannot be edited. You can view or delete them, or contact support.';
+    }
+
+    /**
      * Detect which section has errors for better UX.
      */
     private function detectErrorSection($errors)
@@ -279,17 +308,25 @@ class ListingController extends Controller
 
     /**
      * Edit listing – same form as add listing, pre-filled (submit-listing-new in edit mode).
+     * Per "Notes for System Issues":
+     *  - Active / approved / sold listings are NOT editable (View + Delete only).
+     *  - Rejected listings are editable only within 3 days (72h) of rejection.
+     *  - Pending listings (awaiting admin approval) remain editable.
      */
     public function edit($id)
     {
         $user = Auth::user();
         $listing = Listing::where('seller_id', $user->id)->with('images')->findOrFail($id);
-        if ($listing->status === 'sold') {
-            return redirect()->route('seller.auctions')->with('error', 'Sold listings cannot be edited.');
+
+        if (! $this->sellerCanEditListing($listing)) {
+            return redirect()
+                ->route('seller.listings.show', $listing->id)
+                ->with('error', $this->editBlockedMessage($listing));
         }
+
         $maxYear = (int) date('Y') + 1;
-        $isIndividualSeller = $user->activeSubscription?->package
-            && (float) $user->activeSubscription->package->price === 25.00;
+        // Casual (Individual) seller = no business license on file.
+        $isIndividualSeller = empty($user->business_license_path);
 
         return view('Seller.submit-listing-new', compact('listing', 'user', 'maxYear', 'isIndividualSeller'));
     }
@@ -301,9 +338,13 @@ class ListingController extends Controller
     {
         $user = Auth::user();
         $listing = Listing::where('seller_id', $user->id)->findOrFail($id);
-        if ($listing->status === 'sold') {
-            return redirect()->route('seller.auctions')->with('error', 'Sold listings cannot be edited.');
+
+        if (! $this->sellerCanEditListing($listing)) {
+            return redirect()
+                ->route('seller.listings.show', $listing->id)
+                ->with('error', $this->editBlockedMessage($listing));
         }
+
         $validated = $request->validated();
         if ($request->starting_price && $request->starting_price <= 0) {
             return back()->withErrors(['starting_price' => 'Starting Bid must be greater than $0 if entered.'])->withInput();

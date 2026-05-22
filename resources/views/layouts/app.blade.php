@@ -33,5 +33,6 @@
                 @yield('content')
             </main>
         </div>
+        @include('partials.caymark-ui-kit')
     </body>
 </html>

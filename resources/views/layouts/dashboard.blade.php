@@ -122,6 +122,9 @@
 
     {{-- Main Content --}}
     <main class="main-content">
+        <div class="px-8 pt-4">
+            <x-ui.breadcrumbs />
+        </div>
         @yield('content')
     </main>
 
@@ -252,7 +255,7 @@
             }
         });
     </script>
-    @include('partials.phone-digits-only-script')
+    @include('partials.caymark-ui-kit')
     @stack('scripts')
 </body>
 

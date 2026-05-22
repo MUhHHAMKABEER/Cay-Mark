@@ -10,10 +10,15 @@ use App\Models\SellerPayoutMethod;
 use App\Models\User;
 use App\Models\UserDocument;
 use Carbon\Carbon;
+use App\Services\UserActivityTimelineService;
 use Illuminate\Support\Collection;
 
 class SellerDashboardService
 {
+    public function __construct(
+        protected UserActivityTimelineService $activityTimelineService
+    ) {
+    }
     /**
      * Get current auctions (active + awaiting PIN confirmation)
      */
@@ -303,6 +308,7 @@ class SellerDashboardService
             'salesConversionData' => $this->getSalesConversionData($user),
             'averageSalePriceData' => $this->getAverageSalePriceData($user),
             'bidActivityData' => $this->getBidActivityData($user),
+            'activityTimeline' => $this->activityTimelineService->buildFor($user),
         ];
     }
 }

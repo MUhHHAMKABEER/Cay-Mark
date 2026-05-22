@@ -222,6 +222,7 @@
             });
         });
     </script>
+    @include('partials.caymark-ui-kit')
 </body>
 
 </html>

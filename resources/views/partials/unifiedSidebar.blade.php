@@ -163,6 +163,7 @@
     }
     .unified-sidebar .user-profile:hover { background: var(--cm-hover-bg); text-decoration: none; }
 
+    .unified-sidebar .user-profile-avatar,
     .unified-sidebar .user-profile-initials {
         flex-shrink: 0;
         width: 40px;
@@ -482,17 +483,10 @@
 
     @php
         $displayName = trim((string) ($user->name ?? ''));
-        $parts = $displayName !== '' ? preg_split('/\s+/u', $displayName, -1, PREG_SPLIT_NO_EMPTY) : [];
-        if (count($parts) >= 2) {
-            $userInitials = mb_strtoupper(mb_substr($parts[0], 0, 1) . mb_substr($parts[count($parts) - 1], 0, 1));
-        } elseif (count($parts) === 1) {
-            $userInitials = mb_strtoupper(mb_substr($parts[0], 0, min(2, mb_strlen($parts[0]))));
-        } else {
-            $userInitials = '?';
-        }
+        $profileRoute = $role === 'seller' ? 'seller.account' : ($role === 'buyer' ? 'buyer.user' : 'profile.edit');
     @endphp
-    <a href="{{ route('profile.edit') }}" class="user-profile" data-sidebar-flyout="Account settings" title="{{ $displayName ?: 'Account' }} · {{ $roleLabel }}">
-        <span class="user-profile-initials" aria-hidden="true">{{ $userInitials }}</span>
+    <a href="{{ route($profileRoute) }}" class="user-profile" data-sidebar-flyout="Account settings" title="{{ $displayName ?: 'Account' }} · {{ $roleLabel }}">
+        <x-ui.avatar :user="$user" size="sm" class="user-profile-avatar" />
         <div class="user-profile-meta">
             <span class="user-name">{{ Str::ucfirst($user->name) }}</span>
             <span class="user-role">{{ $roleBadge }}</span>
@@ -624,8 +618,8 @@
             function anchorRectFor(el) {
                 var wrap = el.querySelector('.nav-icon-wrap');
                 if (wrap) return wrap.getBoundingClientRect();
-                var initials = el.querySelector('.user-profile-initials');
-                if (initials) return initials.getBoundingClientRect();
+                var avatar = el.querySelector('.user-profile-avatar, .user-profile-initials');
+                if (avatar) return avatar.getBoundingClientRect();
                 var mi = el.querySelector('.material-icons-round');
                 if (mi) return mi.getBoundingClientRect();
                 return el.getBoundingClientRect();

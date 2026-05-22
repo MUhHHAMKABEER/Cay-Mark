@@ -229,9 +229,11 @@
                                     <label for="reg_phone_input" class="block text-xs font-bold text-gray-600 mb-1.5">Phone number</label>
                                     <input type="text" id="reg_phone_input" name="phone_local"
                                         value="{{ old('phone_local', $regDisplayNational) }}"
-                                        placeholder="National number (no country code)"
-                                        class="js-digits-only w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 focus:border-[#063466] focus:ring-4 focus:ring-[#063466]/10 transition-all text-gray-900 font-medium @if ($regPhoneVerified) bg-gray-100 cursor-not-allowed @endif"
-                                        inputmode="numeric" pattern="[0-9]*" maxlength="15" autocomplete="tel-national"
+                                        placeholder="e.g. (242) 555-1234"
+                                        class="js-digits-only js-phone-format w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 focus:border-[#063466] focus:ring-4 focus:ring-[#063466]/10 transition-all text-gray-900 font-medium @if ($regPhoneVerified) bg-gray-100 cursor-not-allowed @endif"
+                                        data-phone-country-select="#reg_phone_country"
+                                        inputmode="numeric" autocomplete="tel-national"
+                                        data-cm-validate="phone"
                                         @if ($regPhoneVerified) readonly @endif>
                                 </div>
                                 <div class="flex md:block">
@@ -290,6 +292,9 @@
                                     </svg>
                                 </div>
                                 <input type="password" id="password" name="password" required minlength="8" maxlength="15" autocomplete="new-password"
+                                    data-password-strength
+                                    data-cm-validate="password-register"
+                                    data-cm-label="Password"
                                     class="w-full pl-12 pr-12 py-4 rounded-xl border-2 border-gray-200 focus:border-[#063466] focus:ring-4 focus:ring-[#063466]/10 transition-all duration-300 text-gray-900 placeholder-gray-400 font-medium"
                                     placeholder="8–15 characters">
                                 <button type="button" class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 transition-colors" aria-label="Show/hide password" title="Show/hide password" onclick="togglePassword('password', 'password-eye')">
@@ -319,6 +324,8 @@
                                     </svg>
                                 </div>
                                 <input type="password" id="password_confirmation" name="password_confirmation" required minlength="8" maxlength="15" autocomplete="new-password"
+                                    data-cm-match="#password"
+                                    data-cm-label="Confirm password"
                                     class="w-full pl-12 pr-12 py-4 rounded-xl border-2 border-gray-200 focus:border-[#063466] focus:ring-4 focus:ring-[#063466]/10 transition-all duration-300 text-gray-900 placeholder-gray-400 font-medium"
                                     placeholder="Re-enter your password">
                                 <button type="button" class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 transition-colors" aria-label="Show/hide password" title="Show/hide password" onclick="togglePassword('password_confirmation', 'password-confirm-eye')">
@@ -652,7 +659,5 @@
         });
     })();
 </script>
-
-@include('partials.phone-digits-only-script')
 
 @endsection
