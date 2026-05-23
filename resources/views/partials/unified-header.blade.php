@@ -258,30 +258,22 @@
             </nav>
         </div>
     </div>
-    <!-- Notification bar: green, white text, registered users only (notification center) -->
-    @if($showNotificationBar)
+    <!-- Notification bar: only shown when the user has at least one real unread notification -->
+    @if($showNotificationBar && $latestUnreadNotification)
     <div class="border-t border-green-700 bg-green-600">
         <div class="container mx-auto px-4 py-2">
             <div class="flex items-center justify-center gap-2 text-sm text-white flex-wrap">
                 <span class="w-2 h-2 bg-white rounded-full animate-pulse flex-shrink-0"></span>
                 @if($isBuyer)
-                    <a href="{{ route('buyer.messaging-center') }}" class="hover:underline font-medium text-center max-w-4xl" @if($latestNotificationFullText) title="{{ e($latestNotificationFullText) }}" @endif>
-                        @if($latestUnreadNotification)
-                            <span>{{ $latestNotificationBarText }}</span>
-                        @else
-                            <span>Notification center — bid confirmations &amp; updates, alerts on watched/owned listings, payment required, new listings to checkout</span>
-                        @endif
+                    <a href="{{ route('buyer.messaging-center') }}" class="hover:underline font-medium text-center max-w-4xl" title="{{ e($latestNotificationFullText) }}">
+                        <span>{{ $latestNotificationBarText }}</span>
                     </a>
                 @elseif($isSeller)
-                    <a href="{{ route('seller.notifications') }}" class="hover:underline font-medium text-center max-w-4xl" @if($latestNotificationFullText) title="{{ e($latestNotificationFullText) }}" @endif>
-                        @if($latestUnreadNotification)
-                            <span>{{ $latestNotificationBarText }}</span>
-                        @else
-                            <span>Notification center — new bids on your listings, listing status updates, payment required, create new listing</span>
-                        @endif
+                    <a href="{{ route('seller.notifications') }}" class="hover:underline font-medium text-center max-w-4xl" title="{{ e($latestNotificationFullText) }}">
+                        <span>{{ $latestNotificationBarText }}</span>
                     </a>
                 @else
-                    <span>Notification center — incomplete registration reminders, account activity, and updates</span>
+                    <span>{{ $latestNotificationBarText }}</span>
                 @endif
             </div>
         </div>
