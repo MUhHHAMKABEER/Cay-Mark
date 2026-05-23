@@ -1290,8 +1290,8 @@
                                     </label>
                                     <select name="title" required
                                         class="w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50 text-gray-900 font-medium focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all text-sm">
-                                        <option value="">Select…</option>
-                                        @foreach (['Payment', 'Auctions', 'Account', 'Vehicle', 'Pick Up', 'Other'] as $opt)
+                                        <option value="">Select a category…</option>
+                                        @foreach ($supportCategories as $opt)
                                             <option value="{{ $opt }}" {{ old('title') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
                                         @endforeach
                                     </select>

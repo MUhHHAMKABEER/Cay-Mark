@@ -88,9 +88,8 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vehicle</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Seller</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Method</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Current Bid</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">End Time</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Auction Ends</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bids</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
@@ -123,49 +122,50 @@
                             </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900">{{ $listing->seller->name ?? 'N/A' }}</div>
-                            <div class="text-xs text-gray-500">{{ $listing->seller->email ?? 'N/A' }}</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full
-                                {{ $listing->listing_method === 'auction' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800' }}">
-                                {{ ucfirst($listing->listing_method ?? 'N/A') }}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            @if($listing->listing_method === 'auction')
-                                @php
-                                    $highestBid = $listing->bids->max('amount') ?? $listing->starting_price ?? 0;
-                                @endphp
-                                <div class="text-sm font-medium text-gray-900">${{ number_format($highestBid, 2) }}</div>
-                                <div class="text-xs text-gray-500">Starting: ${{ number_format($listing->starting_price ?? 0, 2) }}</div>
-                            @else
-                                <div class="text-sm font-medium text-gray-900">${{ number_format($listing->buy_now_price ?? 0, 2) }}</div>
+                            <div class="text-sm font-medium text-gray-900">{{ $listing->seller->name ?? '—' }}</div>
+                            <div class="text-xs text-gray-500">{{ $listing->seller->email ?? '' }}</div>
+                            @if($listing->seller->phone ?? false)
+                            <div class="text-xs text-gray-400 font-mono">{{ $listing->seller->phone }}</div>
                             @endif
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             @php
-                                $endTime = $listing->auction_end_time;
-                                if (!$endTime && $listing->auction_start_time && $listing->auction_duration) {
-                                    $endTime = \Carbon\Carbon::parse($listing->auction_start_time)->addDays($listing->auction_duration);
-                                }
+                                $highestBid = $listing->bids->max('amount') ?? $listing->starting_price ?? 0;
+                            @endphp
+                            <div class="text-sm font-medium text-gray-900">${{ number_format($highestBid, 2) }}</div>
+                            @if($listing->bids->count() === 0)
+                            <div class="text-xs text-gray-400">Starting: ${{ number_format($listing->starting_price ?? 0, 2) }}</div>
+                            @else
+                            <div class="text-xs text-green-600">{{ $listing->bids->count() }} bid(s)</div>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            @php
+                                $endTime = $listing->auction_end_time
+                                    ? \Carbon\Carbon::parse($listing->auction_end_time)
+                                    : ($listing->auction_start_time && $listing->auction_duration
+                                        ? \Carbon\Carbon::parse($listing->auction_start_time)->addDays((int) $listing->auction_duration)
+                                        : null);
+                                $hoursLeft = $endTime ? now()->diffInHours($endTime, false) : null;
                             @endphp
                             @if($endTime)
-                                <div class="text-sm font-medium text-gray-900">{{ $endTime->format('M j, Y') }}</div>
-                                <div class="text-xs {{ $endTime->isPast() ? 'text-red-600' : ($endTime->diffInHours(now()) <= 24 ? 'text-orange-600' : 'text-gray-500') }}">
-                                    {{ $endTime->format('g:i A') }}
-                                    @if($endTime->diffInHours(now()) <= 24 && !$endTime->isPast())
-                                        <span class="block">Ending Soon</span>
+                                <div class="text-sm font-medium {{ $hoursLeft !== null && $hoursLeft <= 24 ? 'text-orange-600 font-semibold' : 'text-gray-900' }}">
+                                    {{ $endTime->format('M j, Y g:i A') }}
+                                </div>
+                                <div class="text-xs {{ $hoursLeft !== null && $hoursLeft <= 24 ? 'text-orange-500' : 'text-gray-400' }}">
+                                    {{ $endTime->diffForHumans() }}
+                                    @if($hoursLeft !== null && $hoursLeft <= 24 && $hoursLeft > 0)
+                                        · <span class="font-semibold">Ending Soon</span>
                                     @endif
                                 </div>
                             @else
-                                <span class="text-gray-400 text-sm">N/A</span>
+                                <span class="text-gray-400 text-sm">—</span>
                             @endif
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-center">
                             <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full
                                 {{ $listing->bids->count() > 0 ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' }}">
-                                {{ $listing->bids->count() ?? 0 }}
+                                {{ $listing->bids->count() }}
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -186,7 +186,7 @@
                     </tr>
                     @empty
                     <tr class="js-admin-empty-row">
-                        <td colspan="8" class="px-6 py-12 text-center text-gray-500">
+                        <td colspan="7" class="px-6 py-12 text-center text-gray-500">
                             <i class="fas fa-list text-4xl mb-3 text-gray-300"></i>
                             <p>No active listings found</p>
                         </td>
@@ -194,7 +194,7 @@
                     @endforelse
                     @if($activeListings->isNotEmpty())
                     <tr class="js-admin-empty-row" style="display: none;">
-                        <td colspan="8" class="px-6 py-12 text-center text-gray-500"><p>No matching listings</p></td>
+                        <td colspan="7" class="px-6 py-12 text-center text-gray-500"><p>No matching listings</p></td>
                     </tr>
                     @endif
                 </tbody>

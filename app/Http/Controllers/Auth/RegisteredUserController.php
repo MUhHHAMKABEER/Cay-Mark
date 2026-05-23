@@ -201,20 +201,6 @@ class RegisteredUserController extends Controller
             'agree_terms.accepted' => 'You must agree to CayMark\'s Terms and Privacy Policy to create an account.',
         ]);
 
-        $sessionDigits = (string) $request->session()->get('registration_verified_phone', '');
-        if (! $request->session()->get('registration_phone_verified') || $sessionDigits === '') {
-            throw ValidationException::withMessages([
-                'phone' => ['Please verify your mobile number with the SMS code before continuing.'],
-            ]);
-        }
-
-        $postedDigits = preg_replace('/\D/', '', (string) $request->input('phone_full', ''));
-        if ($postedDigits === '' || $postedDigits !== $sessionDigits) {
-            throw ValidationException::withMessages([
-                'phone' => ['The phone number does not match your verified number. Request a new code if you changed the number.'],
-            ]);
-        }
-
         DB::beginTransaction();
 
         try {

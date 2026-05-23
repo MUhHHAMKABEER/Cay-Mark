@@ -163,8 +163,7 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Listing</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Seller</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vehicle</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Method</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Starting Price</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Submitted</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
@@ -206,8 +205,11 @@
                             </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900">{{ $listing->seller->name ?? 'N/A' }}</div>
-                            <div class="text-xs text-gray-500">{{ $listing->seller->email ?? 'N/A' }}</div>
+                            <div class="text-sm font-medium text-gray-900">{{ $listing->seller->name ?? '—' }}</div>
+                            <div class="text-xs text-gray-500">{{ $listing->seller->email ?? '' }}</div>
+                            @if($listing->seller->phone ?? false)
+                            <div class="text-xs text-gray-400 font-mono">{{ $listing->seller->phone }}</div>
+                            @endif
                         </td>
                         <td class="px-6 py-4">
                             <div class="text-sm font-medium text-gray-900">
@@ -222,19 +224,12 @@
                             </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full
-                                {{ $listing->listing_method === 'auction' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800' }}">
-                                {{ ucfirst($listing->listing_method ?? 'N/A') }}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            @if($listing->listing_method === 'auction')
-                                <div class="text-sm font-medium text-gray-900">Starting: ${{ number_format($listing->starting_price ?? 0, 2) }}</div>
-                                @if($listing->reserve_price)
-                                <div class="text-xs text-gray-500">Reserve: ${{ number_format($listing->reserve_price, 2) }}</div>
-                                @endif
-                            @else
-                                <div class="text-sm font-medium text-gray-900">${{ number_format($listing->buy_now_price ?? 0, 2) }}</div>
+                            <div class="text-sm font-medium text-gray-900">${{ number_format($listing->starting_price ?? 0, 2) }}</div>
+                            @if($listing->reserve_price)
+                            <div class="text-xs text-gray-500">Reserve: ${{ number_format($listing->reserve_price, 2) }}</div>
+                            @endif
+                            @if($listing->auction_duration)
+                            <div class="text-xs text-gray-400">{{ $listing->auction_duration }}-day auction</div>
                             @endif
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -252,7 +247,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="px-6 py-12 text-center text-gray-500">
+                        <td colspan="6" class="px-6 py-12 text-center text-gray-500">
                             <div class="mb-4">
                                 <i class="fas fa-check-circle text-4xl text-green-300"></i>
                             </div>
@@ -269,6 +264,119 @@
         @if($pendingListings->hasPages())
         <div class="px-6 py-4 border-t border-gray-200">
             {{ $pendingListings->links() }}
+        </div>
+        @endif
+    </div>
+</div>
+
+{{-- ══════════════ REJECTED LISTINGS ══════════════ --}}
+<div class="bg-gray-50 mt-8">
+    <div class="bg-white shadow-sm mb-6 rounded-lg p-6 border-l-4 border-red-500">
+        <div class="flex items-center justify-between">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                    <i class="fas fa-ban text-red-500"></i> Rejected Listings
+                </h2>
+                <p class="text-gray-600 mt-1">Listings that were rejected and require seller attention or re-submission</p>
+            </div>
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                {{ $rejectedListings->total() }} rejected
+            </span>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-red-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Listing</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Seller</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vehicle</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rejection Reason</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rejected</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @forelse($rejectedListings as $listing)
+                    @php
+                        $mainImageRej = $listing->images->first();
+                        $imageUrlRej  = $mainImageRej ? $resolveListingImageUrl($mainImageRej->image_path) : asset('images/placeholder-product.png');
+                        $vehicleNameRej = trim(($listing->year ?? '') . ' ' . ($listing->make ?? '') . ' ' . ($listing->model ?? ''));
+                    @endphp
+                    <tr class="hover:bg-red-50/40">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                @if($listing->images && $listing->images->count() > 0)
+                                <div class="listing-review-thumb mr-3">
+                                    <button type="button"
+                                        class="listing-review-thumb-button js-listing-image-trigger"
+                                        data-image="{{ $imageUrlRej }}"
+                                        data-title="{{ $vehicleNameRej ?: 'Rejected Listing' }}"
+                                        data-listing="#{{ $listing->id }}"
+                                        data-seller="{{ $listing->seller->name ?? '—' }}">
+                                        <img src="{{ $imageUrlRej }}" alt="{{ $listing->make ?? '' }} {{ $listing->model ?? '' }}">
+                                        <span class="listing-review-thumb-badge"><i class="fas fa-search-plus"></i></span>
+                                    </button>
+                                </div>
+                                @else
+                                <div class="h-12 w-16 bg-red-100 rounded mr-3 flex items-center justify-center">
+                                    <i class="fas fa-car text-red-400"></i>
+                                </div>
+                                @endif
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900">#{{ $listing->id }}</div>
+                                    <div class="text-xs text-gray-500">{{ $listing->subcategory ?? '—' }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">{{ $listing->seller->name ?? '—' }}</div>
+                            <div class="text-xs text-gray-500">{{ $listing->seller->email ?? '' }}</div>
+                            @if($listing->seller->phone ?? false)
+                            <div class="text-xs text-gray-400">{{ $listing->seller->phone }}</div>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm font-medium text-gray-900">{{ $vehicleNameRej ?: '—' }}</div>
+                            <div class="text-xs text-gray-500">{{ $listing->vin ? 'VIN: '.$listing->vin : 'No VIN' }}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            @if($listing->rejection_reason)
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                                {{ $listing->rejection_reason }}
+                            </span>
+                            @endif
+                            @if($listing->rejection_notes)
+                            <p class="text-xs text-gray-500 mt-1 max-w-xs">{{ Str::limit($listing->rejection_notes, 80) }}</p>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ $listing->updated_at->format('M j, Y') }}<br>
+                            <span class="text-xs">{{ $listing->updated_at->format('g:i A') }}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <a href="{{ route('admin.listings.approval-detail', $listing->id) }}"
+                                class="inline-flex items-center px-3 py-1.5 bg-gray-600 text-white text-xs font-medium rounded hover:bg-gray-700 transition">
+                                <i class="fas fa-eye mr-1"></i>View
+                            </a>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="6" class="px-6 py-10 text-center text-gray-500">
+                            <i class="fas fa-check-circle text-3xl mb-3 text-green-300"></i>
+                            <p>No rejected listings</p>
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        @if($rejectedListings->hasPages())
+        <div class="px-6 py-4 border-t border-gray-200">
+            {{ $rejectedListings->appends(request()->query())->links() }}
         </div>
         @endif
     </div>

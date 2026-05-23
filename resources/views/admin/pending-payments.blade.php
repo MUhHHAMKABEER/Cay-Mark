@@ -40,15 +40,27 @@
                             <div class="text-xs text-gray-500">{{ $invoice->created_at->format('M j, Y') }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900">{{ $invoice->buyer->name ?? 'Unknown' }}</div>
-                            <div class="text-xs text-gray-500">{{ $invoice->buyer->email ?? '' }}</div>
-                            @if($invoice->buyer->phone ?? false)
-                            <div class="text-xs text-gray-500">{{ $invoice->buyer->phone }}</div>
+                            @if($invoice->buyer)
+                            <div class="text-sm font-medium text-gray-900">{{ $invoice->buyer->name }}</div>
+                            <div class="text-xs text-gray-500">{{ $invoice->buyer->email }}</div>
+                            @if($invoice->buyer->phone)
+                            <div class="text-xs text-gray-400 font-mono">{{ $invoice->buyer->phone }}</div>
+                            @endif
+                            @else
+                            <div class="text-sm text-gray-400 italic">Buyer account not found</div>
                             @endif
                         </td>
                         <td class="px-6 py-4">
-                            <div class="text-sm font-medium text-gray-900">{{ $invoice->item_name ?? ($invoice->listing ? ($invoice->listing->year . ' ' . $invoice->listing->make . ' ' . $invoice->listing->model) : 'N/A') }}</div>
-                            <div class="text-xs text-gray-500">{{ $invoice->listing->item_number ?? '' }}</div>
+                            @php
+                                $listingName = $invoice->item_name
+                                    ?? ($invoice->listing
+                                        ? trim(($invoice->listing->year ?? '') . ' ' . ($invoice->listing->make ?? '') . ' ' . ($invoice->listing->model ?? ''))
+                                        : null);
+                            @endphp
+                            <div class="text-sm font-medium text-gray-900">{{ $listingName ?: '—' }}</div>
+                            @if($invoice->listing->item_number ?? false)
+                            <div class="text-xs text-gray-500">{{ $invoice->listing->item_number }}</div>
+                            @endif
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm font-bold text-orange-600">${{ number_format($invoice->total_amount_due, 2) }}</div>

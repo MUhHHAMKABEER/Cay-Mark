@@ -58,7 +58,7 @@ class AdminController extends Controller
             'total_buyers' => User::where('role', 'buyer')->count(),
             'total_sellers' => User::where('role', 'seller')->count(),
             'active_auctions' => $activeAuctions,
-            'payments_pending' => Invoice::where('payment_status', 'pending')->count(),
+            'payments_pending' => Invoice::where('payment_status', 'pending')->whereNotNull('listing_id')->whereNotNull('buyer_id')->count(),
             'payouts_pending' => \App\Models\Payout::whereIn('status', ['pending', 'processing'])->count(),
             'open_disputes' => 0,
         ];
@@ -432,7 +432,7 @@ class AdminController extends Controller
             });
         }
 
-        $pendingListings = $query->orderBy('created_at', 'desc')->paginate(15);
+        $pendingListings = $query->orderBy('created_at', 'desc')->paginate(15, ['*'], 'pending_page');
 
         // Rejection reasons dropdown
         $rejectionReasons = [
@@ -445,7 +445,20 @@ class AdminController extends Controller
             'Other (specify in notes)',
         ];
 
-        return view('admin.listing-approval', compact('pendingListings', 'rejectionReasons'));
+        // Rejected listings (searchable by same term)
+        $rejectedQuery = Listing::with(['seller', 'images'])->where('status', 'rejected');
+        if ($request->has('search')) {
+            $search = $request->search;
+            $rejectedQuery->where(function ($q) use ($search) {
+                $q->where('item_number', 'like', "%{$search}%")
+                  ->orWhere('make', 'like', "%{$search}%")
+                  ->orWhere('model', 'like', "%{$search}%")
+                  ->orWhere('vin', 'like', "%{$search}%");
+            });
+        }
+        $rejectedListings = $rejectedQuery->orderBy('updated_at', 'desc')->paginate(15, ['*'], 'rejected_page');
+
+        return view('admin.listing-approval', compact('pendingListings', 'rejectionReasons', 'rejectedListings'));
     }
 
     /**
@@ -462,25 +475,43 @@ class AdminController extends Controller
      */
     public function activeListings(Request $request)
     {
-        $query = Listing::with(['seller', 'images', 'bids'])
-            ->where('status', 'approved');
+        // Only show auction listings that have NOT yet expired
+        $activeAuctionScope = function ($q) {
+            $q->where('status', 'approved')
+              ->where('listing_method', 'auction')
+              ->where(function ($inner) {
+                  $inner->where('auction_end_time', '>', now())
+                        ->orWhere(function ($fallback) {
+                            $fallback->whereNull('auction_end_time')
+                                     ->whereNotNull('auction_start_time')
+                                     ->whereRaw('DATE_ADD(auction_start_time, INTERVAL auction_duration DAY) > NOW()');
+                        });
+              });
+        };
 
-        // Filters
-        if ($request->has('search')) {
+        $query = Listing::with(['seller', 'images', 'bids']);
+        $activeAuctionScope($query);
+
+        if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('item_number', 'like', "%{$search}%")
-                    ->orWhere('make', 'like', "%{$search}%")
-                    ->orWhere('model', 'like', "%{$search}%");
+                  ->orWhere('make', 'like', "%{$search}%")
+                  ->orWhere('model', 'like', "%{$search}%")
+                  ->orWhereHas('seller', fn ($s) => $s->where('name', 'like', "%{$search}%"));
             });
         }
 
-        $activeListings = $query->orderBy('created_at', 'desc')->paginate(20);
-                                
+        // Sort soonest-ending first so admin sees urgent ones at the top
+        $activeListings = $query->orderByRaw(
+            'COALESCE(auction_end_time, DATE_ADD(auction_start_time, INTERVAL auction_duration DAY)) ASC'
+        )->paginate(20);
+
         $listingStats = [
-            'total_active' => Listing::where('status', 'approved')->count(),
-            'with_bids' => Listing::where('status', 'approved')->has('bids')->count(),
-            'ending_soon' => Listing::where('status', 'approved')
+            'total_active' => Listing::where(function ($q) use ($activeAuctionScope) { $activeAuctionScope($q); })->count(),
+            'with_bids'    => Listing::where(function ($q) use ($activeAuctionScope) { $activeAuctionScope($q); })->has('bids')->count(),
+            'ending_soon'  => Listing::where('status', 'approved')
+                ->where('listing_method', 'auction')
                 ->where('auction_end_time', '<=', now()->addHours(24))
                 ->where('auction_end_time', '>', now())
                 ->count(),
@@ -813,12 +844,18 @@ class AdminController extends Controller
      */
     public function pendingPayments(Request $request)
     {
-        $invoices = Invoice::where('payment_status', 'pending')
-            ->with(['buyer', 'listing.images', 'listing'])
-            ->orderBy('payment_deadline', 'asc')
+        // Only auction invoices — buyers who owe payment after winning an auction.
+        // Membership payments live in the payments table, not here.
+        $baseQuery = Invoice::where('payment_status', 'pending')
+            ->whereNotNull('listing_id')   // must be tied to an auction
+            ->whereNotNull('buyer_id');    // must have an identifiable buyer
+
+        $invoices = (clone $baseQuery)
+            ->with(['buyer', 'listing'])
+            ->orderByRaw('CASE WHEN payment_deadline IS NULL THEN 1 ELSE 0 END, payment_deadline ASC')
             ->paginate(20);
 
-        $totalOwed = Invoice::where('payment_status', 'pending')->sum('total_amount_due');
+        $totalOwed = (clone $baseQuery)->sum('total_amount_due');
 
         return view('admin.pending-payments', compact('invoices', 'totalOwed'));
     }

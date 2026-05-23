@@ -502,4 +502,53 @@ public function watchlist()
             ->where('is_active', true)
             ->first();
     }
+
+    /**
+     * Get missing requirements for placing a bid (buyer role).
+     * Returns an array of human-readable requirement strings.
+     */
+    public function getMissingBidRequirements(): array
+    {
+        $missing = [];
+
+        $idCount = $this->documents()->where('doc_type', 'id')->count();
+        if ($idCount < 2) {
+            $missing[] = 'Upload two government-issued IDs';
+        }
+
+        if (empty($this->phone) || is_null($this->phone_verified_at)) {
+            $missing[] = 'Add and verify your phone number';
+        }
+
+        return $missing;
+    }
+
+    /**
+     * Get missing requirements for submitting a listing (seller role).
+     * Returns an array of human-readable requirement strings.
+     */
+    public function getMissingListingRequirements(): array
+    {
+        $missing = [];
+
+        $idCount = $this->documents()->where('doc_type', 'id')->count();
+        if ($idCount < 2) {
+            $missing[] = 'Upload two government-issued IDs';
+        }
+
+        if (empty($this->phone) || is_null($this->phone_verified_at)) {
+            $missing[] = 'Add and verify your phone number';
+        }
+
+        $payoutMethod = $this->payoutMethod()->where('is_active', true)->first();
+        if (!$payoutMethod) {
+            $missing[] = 'Add your payout method';
+        }
+
+        if (empty($this->relationship_to_business)) {
+            $missing[] = 'Provide your business details';
+        }
+
+        return $missing;
+    }
 }

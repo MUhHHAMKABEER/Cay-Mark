@@ -96,11 +96,11 @@
                         </div>
                         <div>
                             <label class="text-sm font-medium text-gray-500">Primary Damage</label>
-                            <p class="text-gray-900 font-semibold">{{ $listing->primary_damage ?? 'N/A' }}</p>
+                            <p class="text-gray-900 font-semibold">{{ $listing->primary_damage ?: '—' }}</p>
                         </div>
                         <div>
                             <label class="text-sm font-medium text-gray-500">Secondary Damage</label>
-                            <p class="text-gray-900 font-semibold">{{ $listing->secondary_damage ?? 'N/A' }}</p>
+                            <p class="text-gray-900 font-semibold">{{ $listing->secondary_damage ?: '—' }}</p>
                         </div>
                         <div>
                             <label class="text-sm font-medium text-gray-500">Keys Available</label>

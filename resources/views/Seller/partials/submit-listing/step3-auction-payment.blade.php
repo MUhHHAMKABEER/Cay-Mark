@@ -312,9 +312,14 @@
         <button type="button" onclick="showSection(2)" class="btn-secondary">
             <i class="fas fa-arrow-left mr-2"></i> Back
         </button>
-        <button type="submit" class="btn-success" id="submit-listing-btn">
+        @php $listingBlocked = !($isEdit ?? false) && count($missingRequirements ?? []) > 0; @endphp
+        <button type="submit" class="btn-success" id="submit-listing-btn"
+            @if($listingBlocked) disabled title="Complete your profile before submitting a listing" @endif
+            style="{{ $listingBlocked ? 'opacity:0.45;cursor:not-allowed;' : '' }}">
             @if($isEdit)
                 <i class="fas fa-save mr-2"></i> Save Changes
+            @elseif($listingBlocked)
+                <i class="fas fa-lock mr-2"></i> Complete Profile to Submit
             @else
                 <i class="fas fa-check-circle mr-2"></i> Complete Submission
             @endif

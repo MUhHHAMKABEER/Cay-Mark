@@ -8,7 +8,36 @@
 @php
     $listing = $listing ?? null;
     $isEdit = !empty($listing);
+    $missingRequirements = $missingRequirements ?? [];
 @endphp
+
+{{-- Seller block message: show when profile is incomplete --}}
+@if(!$isEdit && count($missingRequirements) > 0)
+<div style="max-width:860px;margin:1.5rem auto 0;padding:0 1rem;">
+    <div style="background:#fff7ed;border:1.5px solid #fb923c;border-radius:14px;padding:1.25rem 1.4rem;display:flex;gap:1rem;align-items:flex-start;">
+        <span class="material-icons" style="color:#ea580c;font-size:1.6rem;flex-shrink:0;margin-top:2px;">warning</span>
+        <div style="flex:1;">
+            <p style="font-weight:700;color:#ea580c;font-size:1rem;margin:0 0 0.35rem;">Profile Incomplete — Listing Submission Blocked</p>
+            <p style="font-size:0.875rem;color:#92400e;margin:0 0 0.7rem;line-height:1.55;">
+                Please complete the following in your profile before submitting a listing:
+            </p>
+            <ul style="margin:0 0 1rem 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:0.35rem;">
+                @foreach($missingRequirements as $req)
+                <li style="display:flex;align-items:center;gap:0.45rem;font-size:0.875rem;color:#78350f;">
+                    <span class="material-icons" style="font-size:1rem;color:#dc2626;">cancel</span>
+                    {{ $req }}
+                </li>
+                @endforeach
+            </ul>
+            <a href="{{ route('seller.dashboard') }}" style="display:inline-flex;align-items:center;gap:0.4rem;background:#ea580c;color:#fff;font-size:0.85rem;font-weight:600;padding:0.5rem 1.1rem;border-radius:8px;text-decoration:none;">
+                <span class="material-icons" style="font-size:1rem;">manage_accounts</span>
+                Go to Account Settings
+            </a>
+        </div>
+    </div>
+</div>
+@endif
+
 <style>
     @keyframes fadeIn {
         from { opacity: 0; transform: translateY(10px); }

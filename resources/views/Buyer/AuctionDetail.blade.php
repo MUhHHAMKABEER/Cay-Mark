@@ -771,26 +771,55 @@
 
                     <!-- Place Your Bid -->
                     @if(!$isExpired && Auth::check() && Auth::user()->role === 'buyer')
-                    <div class="mb-4">
-                        <span class="info-label">Place Your Bid</span>
-                        <form action="{{ route('auction.bid.store', $listing->getSlugOrGenerate()) }}" method="POST" id="bidForm" data-cm-validate="off">
-                            @csrf
-                            <div class="bid-input-wrapper">
-                                <button type="button" onclick="adjustBid(-{{ $incrementAmount }})" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-l-lg font-bold">-</button>
-                                <input type="number"
-                                       name="amount"
-                                       id="bidAmount"
-                                       class="bid-input"
-                                       value="{{ $nextValidBid }}"
-                                       min="{{ $nextValidBid }}"
-                                       step="{{ $incrementAmount }}">
-                                <button type="button" onclick="adjustBid({{ $incrementAmount }})" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-r-lg font-bold">+</button>
+                        @php $missingBidReqs = Auth::user()->getMissingBidRequirements(); @endphp
+                        @if(count($missingBidReqs) > 0)
+                        {{-- Block message: buyer has incomplete profile --}}
+                        <div class="mb-4">
+                            <span class="info-label">Place Your Bid</span>
+                            <div style="background:#fff7ed;border:1.5px solid #fb923c;border-radius:12px;padding:1rem 1.1rem;">
+                                <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.55rem;">
+                                    <span class="material-icons" style="color:#ea580c;font-size:1.2rem;">warning</span>
+                                    <span style="font-weight:700;color:#ea580c;font-size:0.95rem;">Profile Incomplete</span>
+                                </div>
+                                <p style="font-size:0.875rem;color:#92400e;margin-bottom:0.65rem;line-height:1.5;">
+                                    Please complete the following in your profile before placing a bid:
+                                </p>
+                                <ul style="margin:0 0 0.85rem 0;padding:0;list-style:none;">
+                                    @foreach($missingBidReqs as $req)
+                                    <li style="display:flex;align-items:center;gap:0.4rem;font-size:0.875rem;color:#78350f;margin-bottom:0.3rem;">
+                                        <span class="material-icons" style="font-size:1rem;color:#dc2626;">cancel</span>
+                                        {{ $req }}
+                                    </li>
+                                    @endforeach
+                                </ul>
+                                <a href="{{ route('buyer.profile') }}" style="display:inline-flex;align-items:center;gap:0.35rem;background:#ea580c;color:#fff;font-size:0.82rem;font-weight:600;padding:0.45rem 1rem;border-radius:8px;text-decoration:none;">
+                                    <span class="material-icons" style="font-size:1rem;">manage_accounts</span>
+                                    Go to Account Settings
+                                </a>
                             </div>
-                            <button type="submit" class="bid-btn" id="bidSubmitBtn">
-                                Bid now
-                            </button>
-                        </form>
-                    </div>
+                        </div>
+                        @else
+                        <div class="mb-4">
+                            <span class="info-label">Place Your Bid</span>
+                            <form action="{{ route('auction.bid.store', $listing->getSlugOrGenerate()) }}" method="POST" id="bidForm" data-cm-validate="off">
+                                @csrf
+                                <div class="bid-input-wrapper">
+                                    <button type="button" onclick="adjustBid(-{{ $incrementAmount }})" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-l-lg font-bold">-</button>
+                                    <input type="number"
+                                           name="amount"
+                                           id="bidAmount"
+                                           class="bid-input"
+                                           value="{{ $nextValidBid }}"
+                                           min="{{ $nextValidBid }}"
+                                           step="{{ $incrementAmount }}">
+                                    <button type="button" onclick="adjustBid({{ $incrementAmount }})" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-r-lg font-bold">+</button>
+                                </div>
+                                <button type="submit" class="bid-btn" id="bidSubmitBtn">
+                                    Bid now
+                                </button>
+                            </form>
+                        </div>
+                        @endif
                     @elseif(!Auth::check())
                     <div class="mb-4">
                         <span class="info-label">Place Your Bid</span>

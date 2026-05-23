@@ -53,7 +53,9 @@ class ListingController extends Controller
         $isIndividualSeller = $user->activeSubscription?->package
             && (float) $user->activeSubscription->package->price === 25.00;
 
-        return view('Seller.submit-listing-new', compact('user', 'maxYear', 'isIndividualSeller'));
+        $missingRequirements = $user->getMissingListingRequirements();
+
+        return view('Seller.submit-listing-new', compact('user', 'maxYear', 'isIndividualSeller', 'missingRequirements'));
     }
 
     public function store(SellerListingStoreRequest $request)
@@ -61,9 +63,10 @@ class ListingController extends Controller
         try {
             $user = Auth::user();
 
-            if (empty($user->phone) || is_null($user->phone_verified_at)) {
+            $missingRequirements = $user->getMissingListingRequirements();
+            if (!empty($missingRequirements)) {
                 return back()->withErrors([
-                    'phone' => 'You must verify a phone number before submitting a listing. Go to Dashboard → Profile and verify your phone.',
+                    'requirements' => 'Please complete the following in your profile before submitting a listing: ' . implode(', ', $missingRequirements) . '.',
                 ])->withInput();
             }
 
