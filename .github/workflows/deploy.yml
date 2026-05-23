@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
     steps:
 
       - name: Checkout code
@@ -109,11 +110,39 @@ jobs:
           protocol: ftps
           local-dir: ./
           log-level: verbose
-          server-dir: /caymark/
+          server-dir: /domains/360webcoders.com/public_html/caymark/
           exclude: |
             **/.git*
             **/.git*/**
             **/node_modules/**
             **/tests/**
             **/.env.example
-            **/vendor/**
+
+      - name: Run post-deploy commands via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            cd /domains/360webcoders.com/public_html/caymark
+
+            echo "=== Clearing caches ==="
+            php artisan config:clear
+            php artisan cache:clear
+            php artisan route:clear
+            php artisan view:clear
+
+            echo "=== Running migrations ==="
+            php artisan migrate --force
+
+            echo "=== Caching for production ==="
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+
+            echo "=== Restarting queue worker (if any) ==="
+            php artisan queue:restart
+
+            echo "=== Done ==="

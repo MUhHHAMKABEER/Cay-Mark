@@ -393,6 +393,40 @@ class RegisteredUserController extends Controller
             // Send Email #1: Complete Your Registration
             $this->sendRegistrationStep1Email($user);
 
+            // Seed guest welcome notifications (DB only — no email, welcome email already sent above)
+            $now = now();
+            \Illuminate\Support\Facades\DB::table('notifications')->insert([
+                [
+                    'id'              => (string) \Illuminate\Support\Str::uuid(),
+                    'type'            => 'App\Notifications\GenericNotification',
+                    'notifiable_type' => 'App\Models\User',
+                    'notifiable_id'   => $user->id,
+                    'data'            => json_encode([
+                        'type'    => 'welcome',
+                        'message' => 'Welcome to CayMark! Your account has been created successfully.',
+                        'title'   => 'Welcome to CayMark',
+                    ]),
+                    'read_at'    => null,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ],
+                [
+                    'id'              => (string) \Illuminate\Support\Str::uuid(),
+                    'type'            => 'App\Notifications\GenericNotification',
+                    'notifiable_type' => 'App\Models\User',
+                    'notifiable_id'   => $user->id,
+                    'data'            => json_encode([
+                        'type'    => 'registration_reminder',
+                        'message' => 'Complete your registration to start bidding or selling on CayMark.',
+                        'title'   => 'Complete Registration',
+                        'link'    => route('finish.registration'),
+                    ]),
+                    'read_at'    => null,
+                    'created_at' => $now->addSecond(),
+                    'updated_at' => $now->addSecond(),
+                ],
+            ]);
+
             // Redirect to step 2: membership selection (finish registration)
             return redirect()->route('finish.registration')
                 ->with('success', 'Account created! Choose your membership to continue.');
@@ -692,6 +726,10 @@ public function step3(Request $request)
 
         // If registration is already complete, redirect to appropriate dashboard
         if ($user->isRegistrationComplete()) {
+            $role = strtolower(trim($user->role ?? ''));
+            if ($role === 'seller') return redirect()->route('seller.dashboard');
+            if ($role === 'buyer')  return redirect()->route('welcome');
+            if ($role === 'admin')  return redirect()->route('admin.dashboard');
             return redirect()->route('dashboard');
         }
 

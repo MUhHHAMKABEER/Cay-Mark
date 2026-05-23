@@ -24,8 +24,9 @@
         $recentlyFinished = \App\Models\Listing::where('seller_id', $user->id)->where('listing_state', 'ended')->where('updated_at', '>=', now()->subDays(30))->count();
         $sellerHeaderStats = ['active_auctions' => $activeListings, 'recently_finished' => $recentlyFinished];
     }
-    // Notification bar: for registered users only (buyers, sellers, or users who haven't selected role yet)
-    $showNotificationBar = !$isGuest;
+    // Notification bar: only for buyers and sellers (not guests / incomplete-registration users)
+    $isGuestUser = $user && !$user->registration_complete;
+    $showNotificationBar = !$isGuest && !$isGuestUser;
     $latestUnreadNotification = ($user && method_exists($user, 'unreadNotifications'))
         ? $user->unreadNotifications()->orderByDesc('created_at')->first()
         : null;

@@ -112,7 +112,8 @@ class AuthenticatedSessionController extends Controller
         $user->saveQuietly();
 
         $role = strtolower(trim($user->role ?? ''));
-        $redirectTo = route('dashboard');
+        // Guest / incomplete registration: send to the basic dashboard, not back to register
+        $redirectTo = route('dashboard.default');
         if ($role === 'admin') {
             $redirectTo = route('admin.dashboard');
         } elseif ($role === 'seller') {

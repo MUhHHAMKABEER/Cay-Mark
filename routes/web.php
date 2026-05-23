@@ -57,8 +57,9 @@ Route::get('/dashboard', function (Request $request) {
         return redirect()->route('welcome');
     }
 
+    // Guest / incomplete registration — send to basic dashboard without verified check
     return redirect()->route('dashboard.default');
-})->middleware(['auth', 'verified'])->name('dashboard');
+})->middleware(['auth'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -116,9 +117,9 @@ Route::get('/dashboard/admin', function () {
     return redirect()->route('admin.dashboard');
 })->middleware(['auth', 'admin'])->name('dashboard.admin');
 
-Route::get('/dashboard/default', function () {
-    return redirect()->route('register');
-})->name('dashboard.default');
+Route::get('/dashboard/default', [App\Http\Controllers\BasicDashboardController::class, 'index'])
+    ->middleware(['auth'])
+    ->name('dashboard.default');
 Route::post('/dashboard/default/update-email', [App\Http\Controllers\BasicDashboardController::class, 'updateEmail'])->middleware(['auth'])->name('basic-dashboard.update-email');
 Route::post('/dashboard/default/change-password', [App\Http\Controllers\BasicDashboardController::class, 'changePassword'])->middleware(['auth'])->name('basic-dashboard.change-password');
 

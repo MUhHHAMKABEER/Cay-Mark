@@ -1,7 +1,8 @@
 @php
     $user = Auth::user();
-    $role = $user->role ?? 'buyer';
+    $role = $user->role ?? '';          // null → '' = guest / incomplete registration
     $currentRoute = request()->route()?->getName() ?? '';
+    $currentTab   = request()->query('tab', '');
 
     $menuItems = [];
 
@@ -39,6 +40,17 @@
         $roleLabel = $user->business_license_path ? 'Business Seller' : 'Individual Seller';
         $roleBadge = 'SELLER';
         $dashboardRoute = 'seller.dashboard';
+    } elseif ($role === '') {
+        // Guest / incomplete registration — only 4 items, no registration portal in sidebar
+        $menuItems = [
+            ['route' => 'dashboard.default', 'tab' => '',              'icon' => 'dashboard',     'label' => 'Dashboard'],
+            ['route' => 'dashboard.default', 'tab' => 'account',       'icon' => 'person',        'label' => 'Account Settings'],
+            ['route' => 'dashboard.default', 'tab' => 'notifications', 'icon' => 'notifications', 'label' => 'Notifications'],
+            ['route' => 'dashboard.default', 'tab' => 'support',       'icon' => 'support_agent', 'label' => 'Customer Support'],
+        ];
+        $roleLabel = 'Guest';
+        $roleBadge = 'GUEST';
+        $dashboardRoute = 'dashboard.default';
     } else {
         $menuItems = [
             ['route' => 'welcome', 'icon' => 'home', 'label' => 'Home'],
@@ -56,8 +68,15 @@
     }
 
     if (!isset($roleBadge)) {
-        $roleBadge = strtoupper($role);
+        $roleBadge = $role !== '' ? strtoupper($role) : 'GUEST';
     }
+    $roleBadgeBg = match($roleBadge) {
+        'ADMIN'  => 'background:#7c3aed;',
+        'SELLER' => 'background:#0a1930;',
+        'BUYER'  => 'background:#0a1930;',
+        'GUEST'  => 'background:#64748b;',
+        default  => 'background:#0a1930;',
+    };
 
     // Default messaging routes to collapsed if user has no saved preference yet.
     $defaultCollapsed = request()->routeIs('messaging.index', 'messaging.thread.show');
@@ -483,13 +502,19 @@
 
     @php
         $displayName = trim((string) ($user->name ?? ''));
-        $profileRoute = $role === 'seller' ? 'seller.account' : ($role === 'buyer' ? 'buyer.user' : 'profile.edit');
+        $profileRoute = match($role) {
+            'seller' => 'seller.account',
+            'buyer'  => 'buyer.user',
+            ''       => null,       // guest — use tab URL
+            default  => 'profile.edit',  // admin, etc.
+        };
+        $profileUrl = $profileRoute ? route($profileRoute) : route('dashboard.default').'?tab=account';
     @endphp
-    <a href="{{ route($profileRoute) }}" class="user-profile" data-sidebar-flyout="Account settings" title="{{ $displayName ?: 'Account' }} · {{ $roleLabel }}">
+    <a href="{{ $profileUrl }}" class="user-profile" data-sidebar-flyout="Account settings" title="{{ $displayName ?: 'Account' }} · {{ $roleLabel }}">
         <x-ui.avatar :user="$user" size="sm" class="user-profile-avatar" />
         <div class="user-profile-meta">
             <span class="user-name">{{ Str::ucfirst($user->name) }}</span>
-            <span class="user-role">{{ $roleBadge }}</span>
+            <span class="user-role" style="{{ $roleBadgeBg }}">{{ $roleBadge }}</span>
         </div>
     </a>
 
@@ -500,21 +525,27 @@
                 @php
                     $isActive = false;
                     if ($item['route'] !== '#') {
-                        $routeName = $item['route'];
+                        $routeName   = $item['route'];
                         $matchRoutes = $item['match_routes'] ?? [];
 
-                        if ($currentRoute !== '' && count($matchRoutes) > 0 && in_array($currentRoute, $matchRoutes, true)) {
-                            $isActive = true;
-                        }
+                        // Tab-based items (used by guest/basic role)
+                        if (array_key_exists('tab', $item)) {
+                            $itemTab  = (string) $item['tab'];
+                            $isActive = ($currentRoute === $routeName && $currentTab === $itemTab);
+                        } else {
+                            if ($currentRoute !== '' && count($matchRoutes) > 0 && in_array($currentRoute, $matchRoutes, true)) {
+                                $isActive = true;
+                            }
 
-                        if (!$isActive && !isset($item['tab'])) {
-                            $isActive = ($currentRoute === $routeName);
-                            if (!$isActive && $currentRoute !== '' && ($item['prefix_match'] ?? true)) {
-                                $routeParts = explode('.', $routeName);
-                                $currentParts = explode('.', $currentRoute);
-                                if (count($routeParts) >= 2 && count($currentParts) >= 2) {
-                                    $isActive = $routeParts[0] === $currentParts[0] &&
-                                               $routeParts[1] === $currentParts[1];
+                            if (!$isActive) {
+                                $isActive = ($currentRoute === $routeName);
+                                if (!$isActive && $currentRoute !== '' && ($item['prefix_match'] ?? true)) {
+                                    $routeParts   = explode('.', $routeName);
+                                    $currentParts = explode('.', $currentRoute);
+                                    if (count($routeParts) >= 2 && count($currentParts) >= 2) {
+                                        $isActive = $routeParts[0] === $currentParts[0] &&
+                                                    $routeParts[1] === $currentParts[1];
+                                    }
                                 }
                             }
                         }
@@ -523,8 +554,12 @@
                     $url = '#';
                     if ($item['route'] !== '#') {
                         $url = route($item['route']);
+                        // Append tab param for guest tab-based items
+                        if (array_key_exists('tab', $item) && $item['tab'] !== '') {
+                            $url .= '?tab=' . $item['tab'];
+                        }
                     }
-                    $tourId = $role . '-' . \Illuminate\Support\Str::slug($item['label']);
+                    $tourId = ($role ?: 'guest') . '-' . \Illuminate\Support\Str::slug($item['label']);
                     $unreadCount = 0;
                     if ($item['icon'] === 'notifications' && isset($user)) {
                         $unreadCount = $user->unreadNotifications()->count();
