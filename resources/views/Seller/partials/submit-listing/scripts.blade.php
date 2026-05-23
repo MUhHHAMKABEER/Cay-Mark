@@ -151,12 +151,27 @@
             if (block) block.style.display = this.value === 'yes' ? 'block' : 'none';
         });
 
-        // Probe engine video duration on selection so validateStep2 can use it.
+        // Engine video: update status text + has-file class + probe duration.
         document.getElementById('engine_video_input')?.addEventListener('change', function() {
-            var input = this;
+            var input   = this;
             input._duration = null;
-            var file = input.files && input.files[0];
-            if (!file) return;
+            var box     = document.getElementById('engineVideoUploadBox');
+            var status  = document.getElementById('engineVideoStatus');
+            var warning = document.getElementById('evDurationWarning');
+            var file    = input.files && input.files[0];
+
+            if (!file) {
+                if (box)    box.classList.remove('has-file');
+                if (status) status.textContent = 'No file chosen';
+                if (warning) warning.classList.add('hidden');
+                return;
+            }
+
+            if (box)    box.classList.add('has-file');
+            if (status) status.textContent = file.name;
+            if (warning) warning.classList.add('hidden');
+
+            // Probe duration
             try {
                 var url = URL.createObjectURL(file);
                 var vid = document.createElement('video');
@@ -164,6 +179,11 @@
                 vid.onloadedmetadata = function() {
                     input._duration = vid.duration;
                     URL.revokeObjectURL(url);
+                    if (warning) {
+                        if (vid.duration < 30 || vid.duration > 60) {
+                            warning.classList.remove('hidden');
+                        }
+                    }
                 };
                 vid.onerror = function() { URL.revokeObjectURL(url); };
                 vid.src = url;
@@ -210,6 +230,11 @@
         }
         var btn = this;
         btn.disabled = true;
+        // Show spinner, hide idle label
+        var idleEl    = document.getElementById('vinBtn_idle');
+        var loadingEl = document.getElementById('vinBtn_loading');
+        if (idleEl)    idleEl.classList.add('hidden');
+        if (loadingEl) loadingEl.classList.remove('hidden');
         fetch('{{ route("seller.listings.decode-vin-hin") }}', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
@@ -239,7 +264,12 @@
             setMmyLocked(false);
             showVinMessage(vinAttemptCount >= 3 ? 'Entry unsuccessful. Please enter details manually.' : 'Invalid entry. Please try again.', true);
         })
-        .finally(function() { btn.disabled = false; });
+        .finally(function() {
+            btn.disabled = false;
+            // Restore idle state, hide spinner
+            if (idleEl)    idleEl.classList.remove('hidden');
+            if (loadingEl) loadingEl.classList.add('hidden');
+        });
     });
 
     var additionalPhotosFiles = [];

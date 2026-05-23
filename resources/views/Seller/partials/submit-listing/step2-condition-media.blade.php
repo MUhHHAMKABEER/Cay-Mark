@@ -141,7 +141,17 @@
     <div id="engineVideoBlock" class="mb-4" style="display: {{ old('engine_starts', $listing->engine_starts ?? '') === 'yes' ? 'block' : 'none' }};">
         <label class="form-label">Engine Video <span class="text-red-500">*</span></label>
         <p class="text-xs text-gray-600 mb-2">Record the engine running (30 seconds to under 1 minute).</p>
-        <input type="file" name="engine_video" id="engine_video_input" accept="video/mp4,video/webm,video/quicktime" class="form-input">
+        <div class="file-upload-box" id="engineVideoUploadBox">
+            <input type="file" name="engine_video" id="engine_video_input"
+                   accept="video/mp4,video/webm,video/quicktime"
+                   class="file-upload-input">
+            <div class="file-upload-inner">
+                <div class="file-upload-icon"><i class="fas fa-video"></i></div>
+                <div class="file-upload-btn-text">Choose Video</div>
+                <div class="file-upload-status" id="engineVideoStatus">No file chosen</div>
+            </div>
+        </div>
+        <p id="evDurationWarning" class="hidden text-xs text-amber-600 mt-1">Video must be between 30 seconds and under 1 minute.</p>
     </div>
 
     <div class="mb-4">

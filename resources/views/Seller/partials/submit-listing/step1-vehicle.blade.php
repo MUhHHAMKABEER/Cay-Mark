@@ -39,8 +39,20 @@
                    placeholder="{{ $identifierKind === 'marine' ? 'Enter 14-character HIN' : 'Enter 17-character VIN' }}"
                    maxlength="{{ $identifierKind === 'marine' ? 14 : 17 }}"
                    value="{{ old('vin', $listing->vin ?? '') }}">
-            <button type="button" id="searchVinBtn" class="btn-primary whitespace-nowrap px-4 py-2.5">
-                <i class="fas fa-search mr-2"></i>Lookup
+            <button type="button" id="searchVinBtn" class="btn-primary whitespace-nowrap px-4 py-2.5 inline-flex items-center gap-2 transition-all">
+                {{-- Idle state --}}
+                <span id="vinBtn_idle" class="inline-flex items-center gap-2">
+                    <i class="fas fa-search"></i>
+                    Lookup
+                </span>
+                {{-- Loading state (hidden until fetch starts) --}}
+                <span id="vinBtn_loading" class="hidden inline-flex items-center gap-2">
+                    <svg class="animate-spin h-4 w-4 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Looking up…
+                </span>
             </button>
         </div>
         <div id="vinDecoderMessage" class="mt-1 text-sm"></div>

@@ -260,6 +260,7 @@
         margin-top: 0.25rem;
     }
     .file-upload-box.has-file .file-upload-status { color: #15803d; }
+
     
     .step-item {
         display: flex;

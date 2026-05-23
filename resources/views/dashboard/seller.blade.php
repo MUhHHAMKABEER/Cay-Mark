@@ -5,10 +5,10 @@
 @section('content')
 <style>
 .notifications-scrollbar { max-height: 65vh; overflow-y: scroll !important; overflow-x: hidden; }
-.notifications-scrollbar::-webkit-scrollbar { width: 12px; }
-.notifications-scrollbar::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 6px; }
-.notifications-scrollbar::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 6px; }
-.notifications-scrollbar::-webkit-scrollbar-thumb:hover { background: #64748b; }
+.notifications-scrollbar::-webkit-scrollbar { width: 6px; }
+.notifications-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.notifications-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 6px; }
+.notifications-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 /* Auctions tab: scroll inside fixed-height main (layouts/dashboard .main-content overflow:hidden) */
 .seller-auctions-scrollbar {
     max-height: calc(100vh - 4rem);
@@ -1386,12 +1386,6 @@
                             <span class="material-icons-round text-lg opacity-90">block</span>
                             Rejected
                         </button>
-                        <button type="button" onclick="showAuctionSection('won')"
-                                id="auction-won"
-                                class="auction-tab-button">
-                            <span class="material-icons-round text-lg opacity-90">emoji_events</span>
-                            Won
-                        </button>
                     </nav>
                     <div class="inline-flex rounded-xl bg-gray-100 p-1 shadow-inner shrink-0" role="group" aria-label="View layout">
                         <button type="button" id="seller-auctions-view-btn-grid" class="seller-auctions-view-toggle-btn is-active inline-flex items-center gap-1.5 rounded-lg px-3 sm:px-4 py-2 text-sm font-medium"
@@ -1412,15 +1406,19 @@
                     @if($currentAuctions->count() > 0)
                         <div class="seller-auction-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             @foreach($currentAuctions as $listing)
+                                @php
+                                    $img = $listing->images->first();
+                                    $imgUrl = $img ? (str_contains($img->image_path ?? '', '/') ? asset($img->image_path) : asset('uploads/listings/' . $img->image_path)) : null;
+                                    $endTime = $listing->auction_end_time
+                                        ? \Carbon\Carbon::parse($listing->auction_end_time)
+                                        : ($listing->auction_start_time ? \Carbon\Carbon::parse($listing->auction_start_time)->addDays($listing->auction_duration ?? 7) : null);
+                                @endphp
                                 <div class="seller-auction-card">
-                                    <div class="seller-auction-card-media overflow-hidden">
-                                        @php
-                                            $img = $listing->images->first();
-                                            $imgUrl = $img ? (str_contains($img->image_path ?? '', '/') ? asset($img->image_path) : asset('uploads/listings/' . $img->image_path)) : null;
-                                        @endphp
+                                    <!-- Image with countdown timer overlay at top-left -->
+                                    <div class="seller-auction-card-media overflow-hidden relative">
                                         @if($imgUrl)
                                             <img src="{{ $imgUrl }}"
-                                                 alt="{{ $listing->make }} {{ $listing->model }}"
+                                                 alt="{{ $listing->year }} {{ $listing->make }} {{ $listing->model }}"
                                                  class="w-full h-full object-cover">
                                         @else
                                             <div class="w-full h-full flex items-center justify-center text-gray-400">
@@ -1429,41 +1427,33 @@
                                                 </svg>
                                             </div>
                                         @endif
+                                        <!-- Countdown timer badge overlaid on image (top-left) -->
+                                        @if($endTime)
+                                            <div class="absolute top-3 left-3 flex items-center gap-1.5 bg-black/65 backdrop-blur-sm text-white text-xs font-bold px-2.5 py-1.5 rounded-lg shadow">
+                                                <span class="material-icons-round" style="font-size:0.9rem">schedule</span>
+                                                <span id="countdown-{{ $listing->id }}" data-end-time="{{ $endTime->toIso8601String() }}">Loading…</span>
+                                            </div>
+                                        @endif
                                     </div>
 
                                     <div class="p-4">
-                                        <h3 class="text-lg font-semibold text-gray-900 mb-2">
+                                        <h3 class="text-base font-semibold text-gray-900 mb-1 leading-tight">
                                             {{ $listing->year }} {{ $listing->make }} {{ $listing->model }}
                                         </h3>
-                                        <p class="text-sm text-gray-600 mb-2">
-                                            <span class="font-medium">ITEM NUMBER:</span> {{ $listing->item_number ?? 'CM' . str_pad($listing->id, 6, '0', STR_PAD_LEFT) }}
+                                        <p class="text-xs text-gray-500 mb-2 font-medium uppercase tracking-wide">
+                                            {{ $listing->item_number ?? 'CM' . str_pad($listing->id, 6, '0', STR_PAD_LEFT) }}
                                         </p>
-
-                                        <p class="text-lg font-bold text-blue-600 mb-3">
+                                        <p class="text-base font-bold text-blue-600 mb-3">
                                             Current Bid: ${{ number_format($listing->current_bid, 2) }}
                                         </p>
-                                        @php
-                                            $endTime = $listing->auction_end_time ?? ($listing->auction_start_time ? \Carbon\Carbon::parse($listing->auction_start_time)->addDays($listing->auction_duration) : null);
-                                        @endphp
-                                        @if($endTime && $endTime->isFuture())
-                                            <div class="mb-3">
-                                                <p class="text-sm text-gray-600 mb-1">Time Remaining:</p>
-                                                <p class="text-lg font-bold text-red-600" id="countdown-{{ $listing->id }}"
-                                                   data-end-time="{{ $endTime->toIso8601String() }}">
-                                                    Calculating...
-                                                </p>
-                                            </div>
-                                        @endif
 
                                         <div class="seller-auction-card-actions">
-                                            @if(in_array($listing->status, ['approved', 'active']))
-                                                <a href="{{ route('seller.listings.show', $listing->id) }}" class="seller-auction-btn seller-auction-btn--view">
-                                                    <span class="material-icons-round" aria-hidden="true">visibility</span> View
-                                                </a>
-                                                <button type="button" onclick="openDeleteModal({{ $listing->id }}, '{{ addslashes($listing->year . ' ' . $listing->make . ' ' . $listing->model) }}')" class="seller-auction-btn seller-auction-btn--delete">
-                                                    <span class="material-icons-round" aria-hidden="true">delete_outline</span> Delete
-                                                </button>
-                                            @endif
+                                            <a href="{{ route('seller.listings.show', $listing->id) }}" class="seller-auction-btn seller-auction-btn--view">
+                                                <span class="material-icons-round" aria-hidden="true">visibility</span> View
+                                            </a>
+                                            <button type="button" onclick="openDeleteModal({{ $listing->id }}, '{{ addslashes($listing->year . ' ' . $listing->make . ' ' . $listing->model) }}')" class="seller-auction-btn seller-auction-btn--delete">
+                                                <span class="material-icons-round" aria-hidden="true">delete_outline</span> Delete
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -1481,33 +1471,52 @@
                     @endif
                 </div>
 
-                <!-- COMPLETED AUCTIONS -->
+                <!-- COMPLETED / PAST AUCTIONS — Sold + Ended Not Sold -->
                 <div id="auction-section-past" class="auction-section hidden">
-                    @if($pastAuctions->count() > 0)
-                        @php
-                            $statusBadgeMap = [
-                                'awaiting_payment'  => ['label' => 'Awaiting Payment',                  'classes' => 'bg-amber-50 text-amber-700 border-amber-200'],
-                                'payment_received'  => ['label' => 'Payment Received - Action Required', 'classes' => 'bg-blue-50 text-blue-700 border-blue-200'],
-                                'completed'         => ['label' => 'Completed',                          'classes' => 'bg-emerald-50 text-emerald-700 border-emerald-200'],
-                                'awaiting_invoice'  => ['label' => 'Awaiting Invoice',                   'classes' => 'bg-slate-100 text-slate-600 border-slate-200'],
-                            ];
-                        @endphp
+                    @php
+                        // Merge sold listings + ended-not-sold listings into one unified list
+                        $allPastCards = collect();
+                        foreach (($pastAuctions ?? collect()) as $l) {
+                            $l->_past_type = 'sold';
+                            $allPastCards->push($l);
+                        }
+                        foreach (($endedAuctions ?? collect()) as $l) {
+                            $l->_past_type = 'not_sold';
+                            $allPastCards->push($l);
+                        }
+                        $allPastCards = $allPastCards->sortByDesc(function($l) {
+                            return $l->auction_end_time ?? $l->updated_at;
+                        })->values();
+
+                        $statusBadgeMap = [
+                            'awaiting_payment'  => ['label' => 'Awaiting Payment',                  'classes' => 'bg-amber-50 text-amber-700 border-amber-200'],
+                            'payment_received'  => ['label' => 'Payment Received — Action Required', 'classes' => 'bg-blue-50 text-blue-700 border-blue-200'],
+                            'completed'         => ['label' => 'Completed',                          'classes' => 'bg-emerald-50 text-emerald-700 border-emerald-200'],
+                            'awaiting_invoice'  => ['label' => 'Awaiting Invoice',                   'classes' => 'bg-slate-100 text-slate-600 border-slate-200'],
+                        ];
+                    @endphp
+
+                    @if($allPastCards->count() > 0)
                         <div class="seller-auction-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            @foreach($pastAuctions as $listing)
+                            @foreach($allPastCards as $listing)
                                 @php
-                                    $imgP = $listing->images->first();
-                                    $imgUrlP = $imgP ? (str_contains($imgP->image_path ?? '', '/') ? asset($imgP->image_path) : asset('uploads/listings/' . $imgP->image_path)) : null;
-                                    $status = $listing->completion_status ?? 'awaiting_invoice';
-                                    $badge = $statusBadgeMap[$status] ?? $statusBadgeMap['awaiting_invoice'];
-                                    $endTime = $listing->auction_end_time ?? ($listing->auction_start_time ? \Carbon\Carbon::parse($listing->auction_start_time)->addDays($listing->auction_duration) : null);
-                                    $endLabel = $endTime ? \Carbon\Carbon::parse($endTime)->format('M d, Y') : '—';
-                                    $location = trim((string)($listing->city ?? '') . (($listing->city && $listing->state) ? ', ' : '') . (string)($listing->state ?? '')) ?: ($listing->location ?? '—');
-                                    $cardClasses = $status === 'completed' ? 'seller-auction-card border-2 border-emerald-300/90 shadow-md' : 'seller-auction-card';
+                                    $isSold    = $listing->_past_type === 'sold';
+                                    $imgP      = $listing->images->first();
+                                    $imgUrlP   = $imgP ? (str_contains($imgP->image_path ?? '', '/') ? asset($imgP->image_path) : asset('uploads/listings/' . $imgP->image_path)) : null;
+                                    $endTime   = $listing->auction_end_time
+                                        ? \Carbon\Carbon::parse($listing->auction_end_time)
+                                        : ($listing->auction_start_time ? \Carbon\Carbon::parse($listing->auction_start_time)->addDays($listing->auction_duration ?? 7) : null);
+                                    $soldDate  = $endTime ? $endTime->format('M d, Y') : '—';
+                                    $status    = $listing->completion_status ?? 'awaiting_invoice';
+                                    $badge     = $statusBadgeMap[$status] ?? $statusBadgeMap['awaiting_invoice'];
+                                    $highestBid = $listing->current_bid ?? $listing->getHighestBidAmount();
+                                    $cardBorder = $isSold ? 'seller-auction-card border-2 border-emerald-300/60' : 'seller-auction-card border-2 border-slate-200';
                                 @endphp
-                                <div class="{{ $cardClasses }}">
-                                    <div class="seller-auction-card-media overflow-hidden">
+                                <div class="{{ $cardBorder }}">
+                                    <!-- Image with "Finished" overlay + sold/not-sold indicator under image -->
+                                    <div class="seller-auction-card-media overflow-hidden relative">
                                         @if($imgUrlP)
-                                            <img src="{{ $imgUrlP }}" alt="{{ $listing->make }} {{ $listing->model }}" class="w-full h-full object-cover">
+                                            <img src="{{ $imgUrlP }}" alt="{{ $listing->year }} {{ $listing->make }} {{ $listing->model }}" class="w-full h-full object-cover">
                                         @else
                                             <div class="w-full h-full flex items-center justify-center text-gray-400">
                                                 <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1515,88 +1524,96 @@
                                                 </svg>
                                             </div>
                                         @endif
-                                    </div>
-                                    <div class="p-5">
-                                        <h3 class="text-lg font-semibold text-gray-900 mb-2 leading-tight">
-                                            {{ $listing->year }} {{ $listing->make }} {{ $listing->model }}
-                                        </h3>
-                                        <div class="flex items-center gap-2 text-sm text-slate-600 mb-1">
-                                            <span class="material-icons-round text-base text-slate-400">place</span>
-                                            <span>{{ $location }}</span>
+                                        <!-- "Finished" badge overlay at top-left -->
+                                        <div class="absolute top-3 left-3 flex items-center gap-1 bg-black/65 backdrop-blur-sm text-white text-xs font-bold px-2.5 py-1.5 rounded-lg shadow">
+                                            <span class="material-icons-round" style="font-size:0.85rem">flag</span>
+                                            Finished
                                         </div>
-                                        <div class="flex items-center gap-2 text-sm text-slate-600 mb-3">
-                                            <span class="material-icons-round text-base text-slate-400">event</span>
-                                            <span>Auction Ended: {{ $endLabel }}</span>
-                                        </div>
-                                        <div class="mb-3">
-                                            <p class="text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">Payment Status</p>
-                                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border {{ $badge['classes'] }}">
-                                                {{ $badge['label'] }}
-                                            </span>
-                                        </div>
-
-                                        @if($status === 'payment_received')
-                                            <div class="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
-                                                <p class="text-sm font-semibold text-blue-900 mb-3">
-                                                    Enter the pick-up code provided by the buyer at pickup to complete this transaction.
-                                                </p>
-                                                <form method="POST" action="{{ route('seller.dashboard.confirm-pickup', $listing->id) }}" class="seller-pin-form" data-pin-form>
-                                                    @csrf
-                                                    <label class="block text-xs font-medium text-slate-700 mb-2">Enter Pick-up Code</label>
-                                                    <div class="flex gap-2 mb-3" data-pin-boxes>
-                                                        @for($i = 0; $i < 6; $i++)
-                                                            <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" required
-                                                                   class="seller-pin-box w-10 h-12 text-center text-lg font-bold border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                                                                   aria-label="Pick-up code digit {{ $i + 1 }}">
-                                                        @endfor
-                                                    </div>
-                                                    <input type="hidden" name="pickup_pin" data-pin-hidden>
-                                                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg transition" data-pin-submit disabled>
-                                                        Submit Code
-                                                    </button>
-                                                </form>
+                                        <!-- Sold / Not Sold indicator at bottom of image -->
+                                        @if($isSold)
+                                            <div class="absolute bottom-0 left-0 right-0 px-3 py-2 bg-emerald-600/90 text-white text-xs font-semibold">
+                                                Date Sold: {{ $soldDate }}
                                             </div>
-                                        @elseif($status === 'completed')
-                                            <div class="mt-4 bg-emerald-50 border border-emerald-200 rounded-lg p-4 space-y-1.5">
-                                                <div class="flex items-center gap-2 text-sm text-emerald-800">
-                                                    <span class="material-icons-round text-base">check_circle</span>
-                                                    <span class="font-semibold">Pickup Confirmed</span>
-                                                </div>
-                                                <div class="flex items-center gap-2 text-sm text-emerald-800">
-                                                    <span class="material-icons-round text-base">payments</span>
-                                                    <span>
-                                                        @if(($listing->payout_status ?? null) === 'completed')
-                                                            Payout Completed
-                                                        @else
-                                                            Payout Processing
-                                                        @endif
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        @elseif($status === 'awaiting_payment')
-                                            <div class="mt-4 bg-amber-50 border border-amber-200 rounded-lg p-4">
-                                                <p class="text-sm text-amber-900">
-                                                    Buyer payment is pending. The pick-up code will appear here once payment is received.
-                                                </p>
+                                        @else
+                                            <div class="absolute bottom-0 left-0 right-0 px-3 py-2 bg-slate-700/85 text-white text-xs font-semibold">
+                                                Not Sold
                                             </div>
                                         @endif
+                                    </div>
 
-                                        <div class="mt-4 border-t border-slate-200 pt-4 grid grid-cols-3 gap-2 text-xs">
-                                            <div>
-                                                <p class="text-slate-500">Sale Price</p>
-                                                <p class="font-semibold text-slate-900 text-sm">${{ number_format($listing->sale_price ?? 0, 2) }}</p>
-                                            </div>
-                                            <div>
-                                                <p class="text-slate-500">CayMark Fee</p>
-                                                <p class="font-semibold text-rose-600 text-sm">-${{ number_format($listing->seller_commission_amount ?? 0, 2) }}</p>
-                                            </div>
-                                            <div>
-                                                <p class="text-slate-500">You Will Receive</p>
-                                                <p class="font-semibold text-emerald-600 text-sm">${{ number_format($listing->net_payout_amount ?? 0, 2) }}</p>
-                                            </div>
-                                        </div>
+                                    <div class="p-4">
+                                        <h3 class="text-base font-semibold text-gray-900 mb-1 leading-tight">
+                                            {{ $listing->year }} {{ $listing->make }} {{ $listing->model }}
+                                        </h3>
+                                        <p class="text-xs text-gray-500 mb-3 font-medium uppercase tracking-wide">
+                                            {{ $listing->item_number ?? 'CM' . str_pad($listing->id, 6, '0', STR_PAD_LEFT) }}
+                                        </p>
 
-                                        <a href="{{ route('seller.listings.show', $listing->id) }}" class="mt-4 inline-flex items-center justify-center gap-1.5 w-full px-3 py-2 bg-white border border-slate-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 transition">
+                                        @if($isSold)
+                                            {{-- SOLD: show sale price + payout breakdown --}}
+                                            <p class="text-base font-bold text-emerald-700 mb-1">
+                                                Sale Price: ${{ number_format($listing->sale_price ?? 0, 2) }}
+                                            </p>
+
+                                            @if($status === 'payment_received')
+                                                <div class="mt-3 bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                                    <p class="text-xs font-semibold text-blue-900 mb-2">
+                                                        Enter the pick-up code from the buyer to complete this transaction.
+                                                    </p>
+                                                    <form method="POST" action="{{ route('seller.dashboard.confirm-pickup', $listing->id) }}" class="seller-pin-form" data-pin-form>
+                                                        @csrf
+                                                        <label class="block text-xs font-medium text-slate-700 mb-1.5">Pick-up Code</label>
+                                                        <div class="flex gap-1.5 mb-2" data-pin-boxes>
+                                                            @for($i = 0; $i < 6; $i++)
+                                                                <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" required
+                                                                       class="seller-pin-box w-9 h-10 text-center text-base font-bold border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                                                                       aria-label="Digit {{ $i + 1 }}">
+                                                            @endfor
+                                                        </div>
+                                                        <input type="hidden" name="pickup_pin" data-pin-hidden>
+                                                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold py-2 rounded-lg transition" data-pin-submit disabled>
+                                                            Submit Code
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            @elseif($status === 'completed')
+                                                <div class="mt-3 bg-emerald-50 border border-emerald-200 rounded-lg p-3 flex items-center gap-2 text-sm text-emerald-800">
+                                                    <span class="material-icons-round text-base">check_circle</span>
+                                                    <span class="font-semibold">Pickup Confirmed</span>
+                                                    @if(($listing->payout_status ?? null) === 'completed')
+                                                        <span class="ml-auto text-xs text-emerald-600">Payout Complete</span>
+                                                    @else
+                                                        <span class="ml-auto text-xs text-emerald-600">Payout Processing</span>
+                                                    @endif
+                                                </div>
+                                            @elseif($status === 'awaiting_payment')
+                                                <div class="mt-3 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                                                    <p class="text-xs text-amber-900">Awaiting buyer payment.</p>
+                                                </div>
+                                            @endif
+
+                                            <div class="mt-3 border-t border-slate-100 pt-3 grid grid-cols-3 gap-1 text-xs">
+                                                <div>
+                                                    <p class="text-slate-400">Sale Price</p>
+                                                    <p class="font-semibold text-slate-900">${{ number_format($listing->sale_price ?? 0, 0) }}</p>
+                                                </div>
+                                                <div>
+                                                    <p class="text-slate-400">CayMark Fee</p>
+                                                    <p class="font-semibold text-rose-500">-${{ number_format($listing->seller_commission_amount ?? 0, 0) }}</p>
+                                                </div>
+                                                <div>
+                                                    <p class="text-slate-400">You Receive</p>
+                                                    <p class="font-semibold text-emerald-600">${{ number_format($listing->net_payout_amount ?? 0, 0) }}</p>
+                                                </div>
+                                            </div>
+                                        @else
+                                            {{-- NOT SOLD: show highest bid --}}
+                                            <p class="text-base font-bold text-slate-600 mb-3">
+                                                Highest Bid: ${{ $highestBid > 0 ? number_format($highestBid, 2) : '—' }}
+                                            </p>
+                                        @endif
+
+                                        <a href="{{ route('seller.listings.show', $listing->id) }}" class="mt-3 inline-flex items-center justify-center gap-1.5 w-full px-3 py-2 bg-white border border-slate-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 transition">
                                             <span class="material-icons-round text-base">visibility</span> View Details
                                         </a>
                                     </div>
@@ -1606,8 +1623,8 @@
                     @else
                         <div class="seller-auctions-empty text-center py-14 px-6">
                             <span class="material-icons-round text-5xl text-slate-300 mb-3 block" aria-hidden="true">task_alt</span>
-                            <p class="text-slate-800 text-lg font-semibold">No completed sales yet</p>
-                            <p class="text-slate-500 text-sm mt-2 max-w-md mx-auto">Sold auctions will appear here so you can track payment, enter the pick-up code, and confirm completion.</p>
+                            <p class="text-slate-800 text-lg font-semibold">No past auctions yet</p>
+                            <p class="text-slate-500 text-sm mt-2 max-w-md mx-auto">Ended and sold auctions will appear here.</p>
                         </div>
                     @endif
                 </div>
@@ -1617,62 +1634,65 @@
                     @if($rejectedListings->count() > 0)
                         <div class="seller-auction-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             @foreach($rejectedListings as $listing)
-                                <div class="seller-auction-card border-red-200/80 bg-red-50/10">
-                                    <div class="seller-auction-card-media overflow-hidden">
-                                        @php
-                                            $imgR = $listing->images->first();
-                                            $imgUrlR = $imgR ? (str_contains($imgR->image_path ?? '', '/') ? asset($imgR->image_path) : asset('uploads/listings/' . $imgR->image_path)) : null;
-                                        @endphp
+                                @php
+                                    $imgR = $listing->images->first();
+                                    $imgUrlR = $imgR ? (str_contains($imgR->image_path ?? '', '/') ? asset($imgR->image_path) : asset('uploads/listings/' . $imgR->image_path)) : null;
+                                    $rejReason  = $listing->rejection_reason ?? '';
+                                    $rejNotes   = $listing->rejection_notes  ?? '';
+                                    $canEdit    = $listing->can_edit ?? false;
+                                    $deadline   = $listing->edit_deadline;
+                                    $listingName = addslashes($listing->year . ' ' . $listing->make . ' ' . $listing->model);
+                                    $reasonJs   = addslashes($rejReason);
+                                    $notesJs    = addslashes($rejNotes);
+                                @endphp
+                                <div class="seller-auction-card border-2 border-red-200/70">
+                                    <div class="seller-auction-card-media overflow-hidden relative">
                                         @if($imgUrlR)
-                                            <img src="{{ $imgUrlR }}" alt="{{ $listing->make }} {{ $listing->model }}" class="w-full h-full object-cover">
+                                            <img src="{{ $imgUrlR }}" alt="{{ $listing->year }} {{ $listing->make }} {{ $listing->model }}" class="w-full h-full object-cover">
                                         @else
-                                            <div class="w-full h-full flex items-center justify-center text-gray-400">
+                                            <div class="w-full h-full flex items-center justify-center bg-red-50/40 text-red-300">
                                                 <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                                 </svg>
                                             </div>
                                         @endif
+                                        <!-- Rejected badge overlay -->
+                                        <div class="absolute top-3 left-3 flex items-center gap-1 bg-red-600/90 text-white text-xs font-bold px-2.5 py-1.5 rounded-lg shadow">
+                                            <span class="material-icons-round" style="font-size:0.85rem">block</span>
+                                            Rejected
+                                        </div>
                                     </div>
+
                                     <div class="p-4">
-                                        <h3 class="text-lg font-semibold text-gray-900 mb-2">
+                                        <h3 class="text-base font-semibold text-gray-900 mb-1 leading-tight">
                                             {{ $listing->year }} {{ $listing->make }} {{ $listing->model }}
                                         </h3>
-                                        <p class="text-sm text-gray-600 mb-2">
-                                            <span class="font-medium">ITEM NUMBER:</span> {{ $listing->item_number ?? 'CM' . str_pad($listing->id, 6, '0', STR_PAD_LEFT) }}
+                                        <p class="text-xs text-gray-500 mb-2 font-medium uppercase tracking-wide">
+                                            {{ $listing->item_number ?? 'CM' . str_pad($listing->id, 6, '0', STR_PAD_LEFT) }}
                                         </p>
-                                        
-                                        @if($listing->rejection_reason || $listing->rejection_notes)
-                                            <div class="bg-red-50 border border-red-200 rounded-lg p-3 mb-3">
-                                                @if($listing->rejection_reason)
-                                                    <p class="text-sm text-red-800 mb-1">
-                                                        <span class="font-medium">Rejection Reason:</span> {{ $listing->rejection_reason }}
-                                                    </p>
-                                                @endif
-                                                @if($listing->rejection_notes)
-                                                    <p class="text-sm text-red-800">
-                                                        <span class="font-medium">Rejection Notes:</span> {{ $listing->rejection_notes }}
-                                                    </p>
-                                                @endif
-                                            </div>
+
+                                        @if($rejReason)
+                                            <p class="text-sm text-red-700 mb-3">
+                                                <span class="font-semibold">Reason for Rejection:</span> {{ $rejReason }}
+                                            </p>
                                         @endif
 
-                                        @if($listing->can_edit)
-                                            <div class="mb-3">
-                                                <p class="text-sm text-amber-600 font-medium mb-1">
-                                                    Time Remaining to Edit: <span id="rejection-timer-{{ $listing->id }}" 
-                                                                                  data-deadline="{{ $listing->edit_deadline->toIso8601String() }}">
-                                                        {{ $listing->time_remaining }}
-                                                    </span>
-                                                </p>
-                                            </div>
-                                            <a href="{{ route('seller.listings.edit', $listing->id) }}" 
-                                               class="block w-full bg-blue-600 text-white text-center px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition duration-200">
-                                                EDIT LISTING
-                                            </a>
+                                        {{-- Edit window: 3 days (72 hrs) --}}
+                                        @if($canEdit)
+                                            <p class="text-xs text-amber-600 font-medium mb-2">
+                                                @if($deadline)
+                                                    Edit window closes: <span id="rejection-timer-{{ $listing->id }}" data-deadline="{{ $deadline->toIso8601String() }}">—</span>
+                                                @endif
+                                            </p>
+                                            <button type="button"
+                                                    onclick="openRejectionModal('{{ $listing->id }}', '{{ $listingName }}', '{{ $reasonJs }}', '{{ $notesJs }}', '{{ route('seller.listings.edit', $listing->id) }}')"
+                                                    class="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition shadow-sm">
+                                                Edit Submission
+                                            </button>
                                         @else
-                                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-3">
-                                                <p class="text-sm text-gray-600">Editing is permanently locked. Submit a new listing to relist.</p>
-                                            </div>
+                                            <p class="text-sm text-slate-500 font-medium py-2 text-center border border-slate-200 rounded-xl bg-slate-50">
+                                                Finished
+                                            </p>
                                         @endif
                                     </div>
                                 </div>
@@ -1687,60 +1707,57 @@
                     @endif
                 </div>
 
-                <!-- WON AUCTIONS (ended with a winner) -->
-                <div id="auction-section-won" class="auction-section hidden">
-                    @if(isset($wonAuctions) && $wonAuctions->count() > 0)
-                        <div class="seller-auction-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            @foreach($wonAuctions as $listing)
-                                <div class="seller-auction-card border-2 border-emerald-300/90 shadow-md">
-                                    <div class="seller-auction-card-media overflow-hidden">
-                                        @php
-                                            $imgW = $listing->images->first();
-                                            $imgUrlW = $imgW ? (str_contains($imgW->image_path ?? '', '/') ? asset($imgW->image_path) : asset('uploads/listings/' . $imgW->image_path)) : null;
-                                        @endphp
-                                        @if($imgUrlW)
-                                            <img src="{{ $imgUrlW }}" alt="{{ $listing->make }} {{ $listing->model }}" class="w-full h-full object-cover">
-                                        @else
-                                            <div class="w-full h-full flex items-center justify-center text-gray-400">
-                                                <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                </svg>
-                                            </div>
-                                        @endif
-                                    </div>
-                                    <div class="p-4">
-                                        <h3 class="text-lg font-semibold text-gray-900 mb-2">
-                                            {{ $listing->year }} {{ $listing->make }} {{ $listing->model }}
-                                        </h3>
-                                        <p class="text-sm text-gray-600 mb-2">
-                                            <span class="font-medium">ITEM NUMBER:</span> {{ $listing->item_number ?? 'CM' . str_pad($listing->id, 6, '0', STR_PAD_LEFT) }}
-                                        </p>
-                                        <p class="text-lg font-bold text-emerald-600 mb-2">
-                                            Sale Price: ${{ number_format($listing->final_price ?? 0, 2) }}
-                                        </p>
-                                        <span class="inline-block bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-sm font-semibold">
-                                            WON
-                                        </span>
-                                        <a href="{{ route('seller.listings.show', $listing->id) }}" class="mt-3 block w-full text-center px-3 py-2 bg-emerald-50 text-emerald-700 text-sm font-medium rounded-lg hover:bg-emerald-100 transition">View details</a>
-                                    </div>
-                                </div>
-                            @endforeach
+                </div><!-- end seller-auctions-wrap -->
+            </div><!-- end content-auctions -->
+
+            <!-- ══ Rejection Details Modal ══ -->
+            <div id="rejectionModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+                    <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-xl bg-red-100 flex items-center justify-center">
+                                <span class="material-icons-round text-red-600">block</span>
+                            </div>
+                            <div>
+                                <h3 class="text-base font-bold text-slate-900">Submission Rejected</h3>
+                                <p id="rejModal_listingName" class="text-xs text-slate-500"></p>
+                            </div>
                         </div>
-                    @else
-                        <div class="seller-auctions-empty text-center py-14 px-6">
-                            <span class="material-icons-round text-5xl text-slate-300 mb-3 block" aria-hidden="true">emoji_events</span>
-                            <p class="text-slate-800 text-lg font-semibold">No won auctions yet</p>
-                            <p class="text-slate-500 text-sm mt-2 max-w-md mx-auto">When an auction ends with a winning bid, it will appear here.</p>
+                        <button onclick="_modalHide('rejectionModal')" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition">
+                            <span class="material-icons-round text-lg">close</span>
+                        </button>
+                    </div>
+                    <div class="px-6 py-5 space-y-4">
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Reason for Rejection</p>
+                            <p id="rejModal_reason" class="text-sm text-red-700 font-medium">—</p>
                         </div>
-                    @endif
-                </div>
+                        <div id="rejModal_notesWrap" class="hidden">
+                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Additional Notes</p>
+                            <p id="rejModal_notes" class="text-sm text-slate-700"></p>
+                        </div>
+                        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                            <p class="text-sm text-amber-900 leading-relaxed">
+                                Please make the necessary adjustments to your submission before resubmitting. Ensure all required information is accurate and all photos meet the minimum requirements.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="px-6 pb-5 flex gap-3">
+                        <button onclick="_modalHide('rejectionModal')" class="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-xl transition">
+                            Close
+                        </button>
+                        <a id="rejModal_editBtn" href="#" class="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition text-center">
+                            Edit Submission
+                        </a>
+                    </div>
                 </div>
             </div>
+            {{-- End Rejection Modal --}}
 
             <!-- NOTIFICATIONS TAB (same UI as buyer: header, filters, grouped by month, cards with mark-read) -->
-            <div id="content-notifications" class="tab-content hidden p-6 flex flex-col" style="min-height: 0;">
+            <div id="content-notifications" class="tab-content hidden pt-6 pb-4 flex flex-col" style="min-height: 0;">
                 <!-- Header -->
-                <div class="mb-6 flex-shrink-0">
+                <div class="mb-6 flex-shrink-0 px-6">
                     <div class="flex items-center justify-between mb-1">
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center shadow-lg shadow-purple-500/20">
@@ -1771,20 +1788,17 @@
                 </div>
 
                 <!-- Filter Buttons -->
-                <div class="mb-4 flex items-center gap-3 flex-shrink-0" x-data="{ currentFilter: 'all' }" x-init="window.notificationFilter = currentFilter">
-                    <button @click="currentFilter = 'all'; window.notificationFilter = 'all'; filterNotifications('all')"
-                            :class="currentFilter === 'all' ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
-                            class="px-5 py-2.5 rounded-lg font-semibold text-sm transition-all">
+                <div class="mb-4 flex items-center gap-3 flex-shrink-0 px-6">
+                    <button id="notif-filter-all" onclick="setNotificationFilter('all')"
+                            class="notif-filter-btn px-5 py-2.5 rounded-lg font-semibold text-sm transition-all bg-blue-600 text-white shadow-md">
                         All
                     </button>
-                    <button @click="currentFilter = 'unread'; window.notificationFilter = 'unread'; filterNotifications('unread')"
-                            :class="currentFilter === 'unread' ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
-                            class="px-5 py-2.5 rounded-lg font-semibold text-sm transition-all">
+                    <button id="notif-filter-unread" onclick="setNotificationFilter('unread')"
+                            class="notif-filter-btn px-5 py-2.5 rounded-lg font-semibold text-sm transition-all bg-gray-100 text-gray-700 hover:bg-gray-200">
                         Unread
                     </button>
-                    <button @click="currentFilter = 'read'; window.notificationFilter = 'read'; filterNotifications('read')"
-                            :class="currentFilter === 'read' ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
-                            class="px-5 py-2.5 rounded-lg font-semibold text-sm transition-all">
+                    <button id="notif-filter-read" onclick="setNotificationFilter('read')"
+                            class="notif-filter-btn px-5 py-2.5 rounded-lg font-semibold text-sm transition-all bg-gray-100 text-gray-700 hover:bg-gray-200">
                         Read
                     </button>
                 </div>
@@ -1795,8 +1809,8 @@
                             return $notification->created_at->format('F Y');
                         });
                     @endphp
-                    <div class="notifications-scroll-wrapper notifications-scrollbar pr-2 border border-gray-200 rounded-xl flex-1 min-h-0" style="max-height: 55vh; overflow-y: scroll; overflow-x: hidden;">
-                    <div class="notifications-container space-y-6 py-1">
+                    <div class="notifications-scroll-wrapper notifications-scrollbar flex-1 min-h-0" style="max-height: 65vh; overflow-y: scroll; overflow-x: hidden;">
+                    <div class="notifications-container space-y-6 py-1 px-4">
                         @foreach($groupedNotifications as $month => $monthNotifications)
                             <div class="notification-month-group" data-month="{{ $month }}">
                                 <div class="mb-4 flex items-center gap-3">
@@ -2760,9 +2774,26 @@ function ecmTogglePwd() {
     }
 }
 
+// Open the rejection-details popup modal
+function openRejectionModal(listingId, listingName, reason, notes, editUrl) {
+    document.getElementById('rejModal_listingName').textContent = listingName || '';
+    document.getElementById('rejModal_reason').textContent = reason || 'No reason provided.';
+    var notesWrap = document.getElementById('rejModal_notesWrap');
+    var notesEl   = document.getElementById('rejModal_notes');
+    if (notes && notes.trim() !== '') {
+        notesEl.textContent = notes;
+        notesWrap.classList.remove('hidden');
+    } else {
+        notesWrap.classList.add('hidden');
+    }
+    var editBtn = document.getElementById('rejModal_editBtn');
+    if (editBtn) editBtn.href = editUrl || '#';
+    _modalShow('rejectionModal');
+}
+
 // Close modals when clicking the backdrop
 window.onclick = function(event) {
-    var ids = ['passwordModal', 'payoutModal', 'emailChangeModal'];
+    var ids = ['passwordModal', 'payoutModal', 'emailChangeModal', 'rejectionModal'];
     ids.forEach(function(id) {
         var el = document.getElementById(id);
         if (el && event.target === el) el.classList.add('hidden');
@@ -3264,6 +3295,21 @@ function updateUnreadCount() {
         }
     }).catch(function(e) {});
 }
+function setNotificationFilter(filterType) {
+    window.notificationFilter = filterType; // keep for read-marking logic
+    // Update active button styles
+    document.querySelectorAll('.notif-filter-btn').forEach(function(btn) {
+        btn.classList.remove('bg-blue-600', 'text-white', 'shadow-md');
+        btn.classList.add('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
+    });
+    var activeBtn = document.getElementById('notif-filter-' + filterType);
+    if (activeBtn) {
+        activeBtn.classList.remove('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
+        activeBtn.classList.add('bg-blue-600', 'text-white', 'shadow-md');
+    }
+    filterNotifications(filterType);
+}
+
 function filterNotifications(filterType) {
     var allCards = document.querySelectorAll('.notification-card');
     var monthGroups = document.querySelectorAll('.notification-month-group');

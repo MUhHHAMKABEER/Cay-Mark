@@ -5,10 +5,10 @@
 @section('content')
 <style>
 .notifications-scrollbar { max-height: 65vh; overflow-y: scroll !important; overflow-x: hidden; }
-.notifications-scrollbar::-webkit-scrollbar { width: 12px; }
-.notifications-scrollbar::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 6px; }
-.notifications-scrollbar::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 6px; }
-.notifications-scrollbar::-webkit-scrollbar-thumb:hover { background: #64748b; }
+.notifications-scrollbar::-webkit-scrollbar { width: 6px; }
+.notifications-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.notifications-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 6px; }
+.notifications-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 .customer-support-scrollbar { max-height: calc(100vh - 140px); overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
 .customer-support-scrollbar::-webkit-scrollbar { width: 10px; }
 .customer-support-scrollbar::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 6px; }
@@ -712,9 +712,9 @@
             </div>
 
             <!-- NOTIFICATIONS TAB -->
-            <div id="content-notifications" class="tab-content hidden p-6 flex flex-col" style="min-height: 0;">
+            <div id="content-notifications" class="tab-content hidden pt-6 pb-4 flex flex-col" style="min-height: 0;">
                 <!-- Header -->
-                <div class="mb-6 flex-shrink-0">
+                <div class="mb-6 flex-shrink-0 px-6">
                     <div class="flex items-center justify-between mb-1">
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center shadow-lg shadow-purple-500/20">
@@ -745,20 +745,17 @@
                 </div>
 
                 <!-- Filter Buttons -->
-                <div class="mb-4 flex items-center gap-3 flex-shrink-0" x-data="{ currentFilter: 'all' }" x-init="window.notificationFilter = currentFilter">
-                    <button @click="currentFilter = 'all'; window.notificationFilter = 'all'; filterNotifications('all')"
-                            :class="currentFilter === 'all' ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
-                            class="px-5 py-2.5 rounded-lg font-semibold text-sm transition-all">
+                <div class="mb-4 flex items-center gap-3 flex-shrink-0 px-6">
+                    <button id="notif-filter-all" onclick="setNotificationFilter('all')"
+                            class="notif-filter-btn px-5 py-2.5 rounded-lg font-semibold text-sm transition-all bg-blue-600 text-white shadow-md">
                         All
                     </button>
-                    <button @click="currentFilter = 'unread'; window.notificationFilter = 'unread'; filterNotifications('unread')"
-                            :class="currentFilter === 'unread' ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
-                            class="px-5 py-2.5 rounded-lg font-semibold text-sm transition-all">
+                    <button id="notif-filter-unread" onclick="setNotificationFilter('unread')"
+                            class="notif-filter-btn px-5 py-2.5 rounded-lg font-semibold text-sm transition-all bg-gray-100 text-gray-700 hover:bg-gray-200">
                         Unread
                     </button>
-                    <button @click="currentFilter = 'read'; window.notificationFilter = 'read'; filterNotifications('read')"
-                            :class="currentFilter === 'read' ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
-                            class="px-5 py-2.5 rounded-lg font-semibold text-sm transition-all">
+                    <button id="notif-filter-read" onclick="setNotificationFilter('read')"
+                            class="notif-filter-btn px-5 py-2.5 rounded-lg font-semibold text-sm transition-all bg-gray-100 text-gray-700 hover:bg-gray-200">
                         Read
                     </button>
                 </div>
@@ -771,8 +768,8 @@
                         });
                     @endphp
 
-                    <div class="notifications-scroll-wrapper notifications-scrollbar pr-2 border border-gray-200 rounded-xl flex-1 min-h-0" style="max-height: 55vh; overflow-y: scroll; overflow-x: hidden;">
-                    <div class="notifications-container space-y-6 py-1">
+                    <div class="notifications-scroll-wrapper notifications-scrollbar flex-1 min-h-0" style="max-height: 65vh; overflow-y: scroll; overflow-x: hidden;">
+                    <div class="notifications-container space-y-6 py-1 px-4">
                         @foreach($groupedNotifications as $month => $monthNotifications)
                             <div class="notification-month-group" data-month="{{ $month }}">
                                 <!-- Month Header -->
@@ -1547,6 +1544,21 @@ function updateUnreadCount() {
         .catch(error => {
             console.error('Error fetching unread count:', error);
         });
+}
+
+// Active-state management for notification filter buttons
+function setNotificationFilter(filterType) {
+    window.notificationFilter = filterType; // keep for read-marking logic
+    document.querySelectorAll('.notif-filter-btn').forEach(function(btn) {
+        btn.classList.remove('bg-blue-600', 'text-white', 'shadow-md');
+        btn.classList.add('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
+    });
+    var activeBtn = document.getElementById('notif-filter-' + filterType);
+    if (activeBtn) {
+        activeBtn.classList.remove('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
+        activeBtn.classList.add('bg-blue-600', 'text-white', 'shadow-md');
+    }
+    filterNotifications(filterType);
 }
 
 // Filter notifications by read/unread status

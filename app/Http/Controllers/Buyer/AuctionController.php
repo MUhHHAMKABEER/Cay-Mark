@@ -29,9 +29,9 @@ class AuctionController extends Controller
         ->where('listing_method', 'auction')
         ->visibleAuctions();
 
-    // If you have a 'status' column, filter approved ones
+    // If you have a 'status' column, filter approved/active ones
     if (Schema::hasColumn('listings', 'status')) {
-        $query->where('status', 'approved');
+        $query->whereIn('status', ['approved', 'active']);
     }
 
     // Helper to normalize incoming filter values
