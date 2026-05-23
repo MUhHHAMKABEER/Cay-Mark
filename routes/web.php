@@ -373,6 +373,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::put('/email-templates/{template}', [\App\Http\Controllers\Admin\EmailTemplateController::class, 'update'])->name('admin.email-templates.update');
     Route::get('/email-templates/{template}/preview', [\App\Http\Controllers\Admin\EmailTemplateController::class, 'preview'])->name('admin.email-templates.preview');
     Route::post('/email-templates/{template}/restore', [\App\Http\Controllers\Admin\EmailTemplateController::class, 'restoreDefault'])->name('admin.email-templates.restore');
+    Route::post('/email-templates/{template}/toggle', [\App\Http\Controllers\Admin\EmailTemplateController::class, 'toggle'])->name('admin.email-templates.toggle');
 });
 
 // API route for packages

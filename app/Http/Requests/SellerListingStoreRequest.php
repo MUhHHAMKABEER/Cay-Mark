@@ -105,10 +105,20 @@ class SellerListingStoreRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        $merges = [];
+
+        // Strip spaces/formatting from card number (UI formats as "1234 5678 9012 3456")
         if ($this->has('card_number')) {
-            $this->merge([
-                'card_number' => preg_replace('/\D/', '', (string) $this->input('card_number')),
-            ]);
+            $merges['card_number'] = preg_replace('/\D/', '', (string) $this->input('card_number'));
+        }
+
+        // Strip spaces from expiry (UI formats as "MM / YY", validation expects "MM/YY")
+        if ($this->has('card_expiry')) {
+            $merges['card_expiry'] = str_replace(' ', '', (string) $this->input('card_expiry'));
+        }
+
+        if ($merges) {
+            $this->merge($merges);
         }
     }
 }

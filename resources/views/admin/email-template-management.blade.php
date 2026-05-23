@@ -4,10 +4,43 @@
 
 <div class="container mx-auto px-4 py-8">
     {{-- Header --}}
-    <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900 mb-2">Email Template Management</h1>
-        <p class="text-gray-600">Manage transactional email templates used for notifications, invoices, and account emails.</p>
+    <div class="mb-8 flex flex-wrap items-start justify-between gap-4">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Email Template Management</h1>
+            <p class="text-gray-600">Manage transactional email templates used for notifications, invoices, and account emails.</p>
+        </div>
+        @php
+            $totalTemplates   = count($templates ?? []);
+            $disabledCount    = count($disabledTemplates ?? []);
+            $enabledCount     = $totalTemplates - $disabledCount;
+        @endphp
+        <div class="flex items-center gap-3 text-sm flex-shrink-0">
+            <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-green-50 border border-green-200 text-green-700 font-medium">
+                <span class="material-icons-round text-base">toggle_on</span>
+                {{ $enabledCount }} active
+            </div>
+            @if($disabledCount > 0)
+                <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-50 border border-red-200 text-red-700 font-medium">
+                    <span class="material-icons-round text-base">toggle_off</span>
+                    {{ $disabledCount }} disabled
+                </div>
+            @endif
+            <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-100 text-gray-600 font-medium">
+                <span class="material-icons-round text-base">mail_outline</span>
+                {{ $totalTemplates }} total
+            </div>
+        </div>
     </div>
+
+    @if(!empty($disabledTemplates))
+        <div class="mb-6 rounded-xl bg-amber-50 border border-amber-200 p-4 flex items-start gap-3">
+            <span class="material-icons-round text-amber-500 flex-shrink-0 mt-0.5">warning</span>
+            <div>
+                <p class="text-amber-800 font-medium">{{ count($disabledTemplates) }} template(s) are currently disabled — no emails will be sent for these events.</p>
+                <p class="text-amber-700 text-sm mt-0.5">Disabled: <span class="font-mono">{{ implode(', ', $disabledTemplates) }}</span></p>
+            </div>
+        </div>
+    @endif
 
     @if (session('success'))
         <div class="mb-6 rounded-xl bg-green-50 border border-green-200 p-4 flex items-center gap-3">
@@ -43,13 +76,19 @@
                     </div>
                     <ul class="divide-y divide-gray-100">
                         @foreach($items as $t)
-                            <li class="flex flex-wrap items-center justify-between gap-4 px-6 py-4 hover:bg-gray-50/50 transition-colors">
+                            @php $isDisabled = in_array($t['name'], $disabledTemplates ?? []); @endphp
+                            <li class="flex flex-wrap items-center justify-between gap-4 px-6 py-4 transition-colors {{ $isDisabled ? 'bg-red-50/40' : 'hover:bg-gray-50/50' }}">
                                 <div class="flex items-center gap-4 min-w-0">
-                                    <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center">
-                                        <span class="material-icons-round text-indigo-600 text-xl">mail</span>
+                                    <div class="flex-shrink-0 w-10 h-10 rounded-xl {{ $isDisabled ? 'bg-red-100' : 'bg-indigo-100' }} flex items-center justify-center">
+                                        <span class="material-icons-round {{ $isDisabled ? 'text-red-400' : 'text-indigo-600' }} text-xl">{{ $isDisabled ? 'mail_off' : 'mail' }}</span>
                                     </div>
                                     <div class="min-w-0">
-                                        <p class="font-medium text-gray-900">{{ str_replace(['-', '_'], ' ', $t['name']) }}</p>
+                                        <div class="flex items-center gap-2">
+                                            <p class="font-medium {{ $isDisabled ? 'text-gray-400 line-through' : 'text-gray-900' }}">{{ str_replace(['-', '_'], ' ', $t['name']) }}</p>
+                                            @if($isDisabled)
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-700">Disabled</span>
+                                            @endif
+                                        </div>
                                         <p class="text-sm text-gray-500 font-mono truncate">{{ $t['name'] }}.blade.php</p>
                                     </div>
                                 </div>
@@ -59,12 +98,25 @@
                                     @endif
                                 </div>
                                 <div class="flex items-center gap-2 flex-shrink-0">
-                                    <a href="{{ route('admin.email-templates.edit', $t['name']) }}" 
+                                    {{-- Toggle Enable/Disable --}}
+                                    <form action="{{ route('admin.email-templates.toggle', $t['name']) }}" method="POST" class="inline">
+                                        @csrf
+                                        <button type="submit"
+                                                title="{{ $isDisabled ? 'Click to enable — emails will be sent again' : 'Click to disable — emails will NOT be sent' }}"
+                                                class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors
+                                                       {{ $isDisabled
+                                                            ? 'bg-red-50 border border-red-200 text-red-700 hover:bg-red-100'
+                                                            : 'bg-green-50 border border-green-200 text-green-700 hover:bg-green-100' }}">
+                                            <span class="material-icons-round text-lg">{{ $isDisabled ? 'toggle_off' : 'toggle_on' }}</span>
+                                            {{ $isDisabled ? 'Disabled' : 'Enabled' }}
+                                        </button>
+                                    </form>
+                                    <a href="{{ route('admin.email-templates.edit', $t['name']) }}"
                                        class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition-colors">
                                         <span class="material-icons-round text-lg">edit</span>
                                         Edit
                                     </a>
-                                    <a href="{{ route('admin.email-templates.preview', $t['name']) }}" 
+                                    <a href="{{ route('admin.email-templates.preview', $t['name']) }}"
                                        target="_blank"
                                        class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-50 transition-colors">
                                         <span class="material-icons-round text-lg">visibility</span>
@@ -94,15 +146,20 @@
                 </div>
                 <ul class="divide-y divide-gray-100">
                     @foreach($uncategorized as $name)
-                        @php $t = $templateMap->get($name); @endphp
+                        @php $t = $templateMap->get($name); $isDisabled = in_array($name, $disabledTemplates ?? []); @endphp
                         @if($t)
-                            <li class="flex flex-wrap items-center justify-between gap-4 px-6 py-4 hover:bg-gray-50/50 transition-colors">
+                            <li class="flex flex-wrap items-center justify-between gap-4 px-6 py-4 transition-colors {{ $isDisabled ? 'bg-red-50/40' : 'hover:bg-gray-50/50' }}">
                                 <div class="flex items-center gap-4 min-w-0">
-                                    <div class="flex-shrink-0 w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center">
-                                        <span class="material-icons-round text-gray-500 text-xl">draft</span>
+                                    <div class="flex-shrink-0 w-10 h-10 rounded-xl {{ $isDisabled ? 'bg-red-100' : 'bg-gray-100' }} flex items-center justify-center">
+                                        <span class="material-icons-round {{ $isDisabled ? 'text-red-400' : 'text-gray-500' }} text-xl">{{ $isDisabled ? 'mail_off' : 'draft' }}</span>
                                     </div>
                                     <div class="min-w-0">
-                                        <p class="font-medium text-gray-900">{{ str_replace(['-', '_'], ' ', $name) }}</p>
+                                        <div class="flex items-center gap-2">
+                                            <p class="font-medium {{ $isDisabled ? 'text-gray-400 line-through' : 'text-gray-900' }}">{{ str_replace(['-', '_'], ' ', $name) }}</p>
+                                            @if($isDisabled)
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-700">Disabled</span>
+                                            @endif
+                                        </div>
                                         <p class="text-sm text-gray-500 font-mono truncate">{{ $name }}.blade.php</p>
                                     </div>
                                 </div>
@@ -112,12 +169,25 @@
                                     @endif
                                 </div>
                                 <div class="flex items-center gap-2 flex-shrink-0">
-                                    <a href="{{ route('admin.email-templates.edit', $name) }}" 
+                                    {{-- Toggle Enable/Disable --}}
+                                    <form action="{{ route('admin.email-templates.toggle', $name) }}" method="POST" class="inline">
+                                        @csrf
+                                        <button type="submit"
+                                                title="{{ $isDisabled ? 'Click to enable — emails will be sent again' : 'Click to disable — emails will NOT be sent' }}"
+                                                class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors
+                                                       {{ $isDisabled
+                                                            ? 'bg-red-50 border border-red-200 text-red-700 hover:bg-red-100'
+                                                            : 'bg-green-50 border border-green-200 text-green-700 hover:bg-green-100' }}">
+                                            <span class="material-icons-round text-lg">{{ $isDisabled ? 'toggle_off' : 'toggle_on' }}</span>
+                                            {{ $isDisabled ? 'Disabled' : 'Enabled' }}
+                                        </button>
+                                    </form>
+                                    <a href="{{ route('admin.email-templates.edit', $name) }}"
                                        class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition-colors">
                                         <span class="material-icons-round text-lg">edit</span>
                                         Edit
                                     </a>
-                                    <a href="{{ route('admin.email-templates.preview', $name) }}" 
+                                    <a href="{{ route('admin.email-templates.preview', $name) }}"
                                        target="_blank"
                                        class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-50 transition-colors">
                                         <span class="material-icons-round text-lg">visibility</span>

@@ -4,6 +4,25 @@ namespace App\Services\Admin;
 
 class AdminEmailTemplateOps
 {
+    /**
+     * Check whether an email template has been disabled by an admin.
+     *
+     * Usage before Mail::send:
+     *   if (!AdminEmailTemplateOps::isDisabled('listing-approved')) { Mail::send(...); }
+     */
+    public static function isDisabled(string $templateName): bool
+    {
+        $path = storage_path('app/email_templates_config.json');
+        if (!file_exists($path)) {
+            return false;
+        }
+        $data = json_decode(file_get_contents($path), true);
+        if (!is_array($data) || empty($data['disabled'])) {
+            return false;
+        }
+        return in_array($templateName, $data['disabled'], true);
+    }
+
     public static function update($request, $templateName)
     {
         $request->validate([

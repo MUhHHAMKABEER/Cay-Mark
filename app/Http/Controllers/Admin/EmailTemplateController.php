@@ -16,6 +16,26 @@ class EmailTemplateController extends Controller
         return resource_path('views/emails/caymark');
     }
 
+    private function configPath(): string
+    {
+        return storage_path('app/email_templates_config.json');
+    }
+
+    private function getConfig(): array
+    {
+        $path = $this->configPath();
+        if (!file_exists($path)) {
+            return ['disabled' => []];
+        }
+        $data = json_decode(file_get_contents($path), true);
+        return is_array($data) ? $data : ['disabled' => []];
+    }
+
+    private function saveConfig(array $config): void
+    {
+        file_put_contents($this->configPath(), json_encode($config, JSON_PRETTY_PRINT));
+    }
+
     /**
      * Email Template Management - List all templates
      */
@@ -51,8 +71,10 @@ class EmailTemplateController extends Controller
         ];
 
         $emailFailures = $this->getRecentEmailFailures();
+        $config = $this->getConfig();
+        $disabledTemplates = $config['disabled'] ?? [];
 
-        return view('admin.email-template-management', compact('templates', 'categories', 'emailFailures'));
+        return view('admin.email-template-management', compact('templates', 'categories', 'emailFailures', 'disabledTemplates'));
     }
 
     /**
@@ -267,6 +289,38 @@ class EmailTemplateController extends Controller
         ];
 
         return $templatesWithData[$templateName] ?? [];
+    }
+
+    /**
+     * Toggle enable / disable for a template.
+     * Disabled state is stored in storage/app/email_templates_config.json.
+     */
+    public function toggle(string $templateName)
+    {
+        $templatePath = $this->transactionalTemplatesPath() . DIRECTORY_SEPARATOR . $templateName . '.blade.php';
+
+        if (!File::exists($templatePath)) {
+            return back()->with('error', 'Template not found.');
+        }
+
+        $config   = $this->getConfig();
+        $disabled = $config['disabled'] ?? [];
+
+        if (in_array($templateName, $disabled, true)) {
+            // Re-enable
+            $config['disabled'] = array_values(array_filter($disabled, fn ($n) => $n !== $templateName));
+            $label = 'enabled';
+        } else {
+            // Disable
+            $config['disabled'][] = $templateName;
+            $config['disabled']   = array_values(array_unique($config['disabled']));
+            $label = 'disabled';
+        }
+
+        $this->saveConfig($config);
+
+        $friendly = ucwords(str_replace(['-', '_'], ' ', $templateName));
+        return back()->with('success', "\"{$friendly}\" template {$label} successfully.");
     }
 
     /**
