@@ -9,242 +9,19 @@
 .notifications-scrollbar::-webkit-scrollbar-track { background: transparent; }
 .notifications-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 6px; }
 .notifications-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-/* Auctions tab: scroll inside fixed-height main (layouts/dashboard .main-content overflow:hidden) */
-.seller-auctions-scrollbar {
-    max-height: calc(100vh - 4rem);
-    overflow-y: auto;
-    overflow-x: hidden;
-    -webkit-overflow-scrolling: touch;
-}
-.seller-auctions-scrollbar::-webkit-scrollbar { width: 10px; }
-.seller-auctions-scrollbar::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 6px; }
-.seller-auctions-scrollbar::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 6px; }
-.seller-auctions-scrollbar::-webkit-scrollbar-thumb:hover { background: #64748b; }
 
-.customer-support-scrollbar { max-height: calc(100vh - 140px); overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
-.customer-support-scrollbar::-webkit-scrollbar { width: 10px; }
-.customer-support-scrollbar::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 6px; }
-.customer-support-scrollbar::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 6px; }
-.customer-support-scrollbar::-webkit-scrollbar-thumb:hover { background: #64748b; }
+.dash-no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+.dash-no-scrollbar::-webkit-scrollbar { display: none; }
 
-/* Seller — Auctions tab: professional polish */
-.seller-auctions-wrap {
-    background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
-    border-radius: 1rem;
-    padding: 1.25rem;
-}
-@media (min-width: 640px) {
-    .seller-auctions-wrap { padding: 1.5rem 1.75rem; }
-}
-.seller-auctions-hero-icon {
-    width: 3rem;
-    height: 3rem;
-    border-radius: 0.875rem;
-    background: linear-gradient(135deg, #063466 0%, #1e40af 100%);
-    box-shadow: 0 8px 24px rgba(6, 52, 102, 0.35);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-.seller-auctions-stat {
-    position: relative;
-    overflow: hidden;
-    border-radius: 1rem;
-    padding: 1.25rem 1.25rem 1.125rem;
-    color: #fff;
-    box-shadow: 0 10px 40px -12px rgba(15, 23, 42, 0.25);
-}
-.seller-auctions-stat::after {
-    content: '';
-    position: absolute;
-    right: -1rem;
-    top: -1rem;
-    width: 6rem;
-    height: 6rem;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.08);
-    pointer-events: none;
-}
-.seller-auctions-stat-label {
-    font-size: 0.6875rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    opacity: 0.92;
-}
-.seller-auctions-stat-value {
-    font-size: 1.875rem;
-    font-weight: 800;
-    line-height: 1.15;
-    letter-spacing: -0.02em;
-}
-.seller-auctions-stat-hint {
-    font-size: 0.8125rem;
-    opacity: 0.88;
-    margin-top: 0.25rem;
-}
-#content-auctions .auction-tab-button {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.375rem;
-    padding: 0.625rem 1rem;
-    border-radius: 0.75rem;
-    font-size: 0.8125rem;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    color: #64748b;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    transition: color 0.2s, background 0.2s, box-shadow 0.2s;
-}
-#content-auctions .auction-tab-button:hover {
-    color: #0f172a;
-    background: rgba(255,255,255,0.7);
-}
-#content-auctions .auction-tab-button.active {
-    color: #fff !important;
-    background: linear-gradient(135deg, #063466 0%, #1e3a8a 100%) !important;
-    box-shadow: 0 4px 16px rgba(6, 52, 102, 0.35);
-}
-.seller-auction-card {
-    border-radius: 1rem;
-    border: 1px solid rgba(226, 232, 240, 0.95);
-    background: #fff;
-    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
-    overflow: hidden;
-    transition: box-shadow 0.25s ease, border-color 0.25s ease, transform 0.2s ease;
-}
-.seller-auction-card:hover {
-    box-shadow: 0 12px 40px -12px rgba(15, 23, 42, 0.18);
-    border-color: #cbd5e1;
-}
-.seller-auction-card-media {
-    position: relative;
-    height: 12rem;
-    background: linear-gradient(135deg, #e2e8f0 0%, #f1f5f9 100%);
-}
-.seller-auction-card-media img {
-    transition: transform 0.35s ease;
-}
-.seller-auction-card:hover .seller-auction-card-media img {
-    transform: scale(1.04);
-}
-.seller-auctions-empty {
-    border-radius: 1rem;
-    border: 2px dashed #cbd5e1;
-    background: linear-gradient(180deg, rgba(248,250,252,0.9) 0%, rgba(241,245,249,0.5) 100%);
-}
-
-/* Listing card: View / Delete — match professional auctions UI */
-#content-auctions .seller-auction-card-actions {
-    display: flex;
-    align-items: stretch;
-    gap: 0.5rem;
-    margin-top: 0.75rem;
-    padding-top: 0.75rem;
-    border-top: 1px solid #f1f5f9;
-}
-#content-auctions .seller-auction-btn {
-    flex: 1 1 0;
-    min-width: 0;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.375rem;
-    min-height: 2.5rem;
-    padding: 0.5rem 0.625rem;
-    font-size: 0.8125rem;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    border-radius: 0.625rem;
-    line-height: 1.2;
-    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
-    border: 1px solid transparent;
-    cursor: pointer;
-    text-decoration: none;
-}
-#content-auctions .seller-auction-btn .material-icons-round {
-    font-size: 1.125rem;
-    opacity: 0.95;
-}
-#content-auctions .seller-auction-btn--view {
-    color: #fff;
-    background: linear-gradient(135deg, #063466 0%, #1e3a8a 100%);
-    border-color: rgba(6, 52, 102, 0.35);
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
-}
-#content-auctions .seller-auction-btn--view:hover {
-    box-shadow: 0 4px 14px rgba(6, 52, 102, 0.28);
-    filter: brightness(1.06);
-}
-#content-auctions .seller-auction-btn--view:active {
-    transform: scale(0.98);
-}
-#content-auctions .seller-auction-btn--delete {
-    color: #b91c1c;
-    background: #fff;
-    border-color: #fecaca;
-}
-#content-auctions .seller-auction-btn--delete:hover {
-    background: #fef2f2;
-    border-color: #f87171;
-    color: #991b1b;
-    box-shadow: 0 1px 3px rgba(185, 28, 28, 0.12);
-}
-#content-auctions .seller-auction-btn--delete:active {
-    transform: scale(0.98);
-}
-
-/* My Auctions: grid vs list (row) — same idea as public auction page */
-#content-auctions.seller-auctions-view-list .seller-auction-grid {
-    display: flex !important;
-    flex-direction: column;
-    gap: 1rem;
-}
-#content-auctions.seller-auctions-view-list .seller-auction-card {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    max-width: 100%;
-}
+.seller-auctions-view-toggle-btn { transition: background 0.15s ease, color 0.15s ease; }
+.seller-auctions-view-toggle-btn.is-active { background: #fff; color: #2563eb; box-shadow: 0 1px 3px rgba(15,23,42,0.08), 0 0 0 1px rgba(229,231,235,0.9); }
+.seller-auctions-view-toggle-btn:not(.is-active) { color: #6b7280; }
+.seller-auctions-view-toggle-btn:not(.is-active):hover { color: #374151; }
+/* My Auctions — list view mode */
+#content-auctions.seller-auctions-view-list .seller-auction-grid { display: flex !important; flex-direction: column; gap: 0.75rem; }
+#content-auctions.seller-auctions-view-list .s-card { flex-direction: row !important; }
 @media (min-width: 768px) {
-    #content-auctions.seller-auctions-view-list .seller-auction-card {
-        flex-direction: row;
-    }
-    #content-auctions.seller-auctions-view-list .seller-auction-card-media {
-        width: 11rem;
-        min-width: 11rem;
-        height: auto;
-        min-height: 8rem;
-        max-height: 14rem;
-        align-self: stretch;
-    }
-    #content-auctions.seller-auctions-view-list .seller-auction-card-media img,
-    #content-auctions.seller-auctions-view-list .seller-auction-card-media > div {
-        height: 100%;
-        min-height: 8rem;
-    }
-}
-#content-auctions.seller-auctions-view-list .seller-auction-card > .p-4,
-#content-auctions.seller-auctions-view-list .seller-auction-card > .p-5 {
-    flex: 1;
-    min-width: 0;
-}
-.seller-auctions-view-toggle-btn {
-    transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
-}
-.seller-auctions-view-toggle-btn.is-active {
-    background: #fff;
-    color: #2563eb;
-    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(229, 231, 235, 0.9);
-}
-.seller-auctions-view-toggle-btn:not(.is-active) {
-    color: #6b7280;
-}
-.seller-auctions-view-toggle-btn:not(.is-active):hover {
-    color: #374151;
+    #content-auctions.seller-auctions-view-list .s-card-img { width: 10rem; min-width: 10rem; height: auto; min-height: 7rem; }
 }
 </style>
 <!-- Chart.js CDN -->
@@ -470,7 +247,8 @@
                         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
                             @foreach($casualListings as $cl)
                             @php
-                                $clImage  = $cl->images->first()?->path ?? null;
+                                $clImg    = $cl->images->first();
+                                $clImage  = $clImg ? (str_contains($clImg->image_path ?? '', '/') ? asset($clImg->image_path) : asset('uploads/listings/' . $clImg->image_path)) : null;
                                 $clTitle  = trim(implode(' ', array_filter([$cl->year, $cl->make, $cl->model]))) ?: 'Vehicle #' . $cl->id;
                                 $clTopBid = $cl->bids()->max('amount');
                             @endphp
@@ -479,7 +257,7 @@
                                 <!-- Image -->
                                 <div class="relative w-full" style="padding-top:62%">
                                     @if($clImage)
-                                        <img src="{{ asset('storage/' . $clImage) }}" alt="{{ $clTitle }}"
+                                        <img src="{{ $clImage }}" alt="{{ $clTitle }}"
                                              class="absolute inset-0 w-full h-full object-cover">
                                     @else
                                         <div class="absolute inset-0 bg-gray-100 flex items-center justify-center">
@@ -1325,83 +1103,99 @@
             </div>
 
             <!-- AUCTIONS TAB -->
-            <div id="content-auctions" class="tab-content hidden p-4 sm:p-6 lg:p-7 seller-auctions-scrollbar" data-tour-id="seller-auctions">
-                <div class="seller-auctions-wrap">
-                <div class="mb-8 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
-                    <div class="flex items-start gap-4">
-                        <div class="seller-auctions-hero-icon" aria-hidden="true">
-                            <span class="material-icons-round text-white text-2xl">gavel</span>
+            <div id="content-auctions" class="tab-content hidden p-6 dash-no-scrollbar" style="height:100%; overflow-y:auto;" data-tour-id="seller-auctions">
+
+                {{-- Page header --}}
+                <div class="flex items-center justify-between gap-4 mb-6 flex-wrap">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                            <span class="material-icons-round text-white text-xl">gavel</span>
                         </div>
                         <div>
-                            <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">My Auctions</h2>
-                            <p class="text-slate-600 text-sm mt-1 max-w-xl leading-relaxed">Live listings, completed sales, and outcomes — all in one place.</p>
+                            <h2 class="text-xl font-bold text-gray-900 tracking-tight">My Auctions</h2>
+                            <p class="text-sm text-gray-500">Live listings, completed sales, and outcomes.</p>
                         </div>
                     </div>
                     <a href="{{ route('seller.listings.create') }}"
-                       class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white shadow-lg shadow-slate-900/20 transition hover:opacity-95 active:scale-[0.99]"
-                       style="background: linear-gradient(135deg, #063466 0%, #1e3a8a 100%);">
+                       class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow-lg shadow-blue-600/25 transition-all duration-200">
                         <span class="material-icons-round text-lg">add_circle_outline</span>
-                        New listing
+                        New Listing
                     </a>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-                    <div class="seller-auctions-stat" style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 55%, #1e40af 100%);">
-                        <p class="seller-auctions-stat-label">Live now</p>
-                        <p class="seller-auctions-stat-value">{{ $auctionSummary['current_count'] }}</p>
-                        <p class="seller-auctions-stat-hint">Active auctions</p>
+                {{-- Stats --}}
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
+                    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
+                            <span class="material-icons-round text-blue-600 text-2xl">bolt</span>
+                        </div>
+                        <div>
+                            <p class="text-3xl font-bold text-gray-900">{{ $auctionSummary['current_count'] }}</p>
+                            <p class="text-sm text-gray-500 mt-0.5">Live Auctions</p>
+                        </div>
                     </div>
-                    <div class="seller-auctions-stat" style="background: linear-gradient(135deg, #059669 0%, #047857 55%, #0f766e 100%);">
-                        <p class="seller-auctions-stat-label">All-time</p>
-                        <p class="seller-auctions-stat-value">{{ $auctionSummary['total_items_sold'] }}</p>
-                        <p class="seller-auctions-stat-hint">Items sold</p>
+                    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center flex-shrink-0">
+                            <span class="material-icons-round text-emerald-600 text-2xl">sell</span>
+                        </div>
+                        <div>
+                            <p class="text-3xl font-bold text-gray-900">{{ $auctionSummary['total_items_sold'] }}</p>
+                            <p class="text-sm text-gray-500 mt-0.5">Items Sold</p>
+                        </div>
                     </div>
-                    <div class="seller-auctions-stat" style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 55%, #5b21b6 100%);">
-                        <p class="seller-auctions-stat-label">Revenue</p>
-                        <p class="seller-auctions-stat-value">${{ number_format($auctionSummary['total_sales_revenue'], 0) }}</p>
-                        <p class="seller-auctions-stat-hint">Total sales (lifetime)</p>
-                    </div>
-                </div>
-
-                <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-                    <nav class="inline-flex flex-wrap gap-1.5 p-1.5 rounded-2xl bg-white/90 border border-slate-200/90 shadow-sm w-full sm:w-auto">
-                        <button type="button" onclick="showAuctionSection('current')"
-                                id="auction-current"
-                                class="auction-tab-button active">
-                            <span class="material-icons-round text-lg opacity-90">bolt</span>
-                            Current
-                        </button>
-                        <button type="button" onclick="showAuctionSection('past')"
-                                id="auction-past"
-                                class="auction-tab-button">
-                            <span class="material-icons-round text-lg opacity-90">task_alt</span>
-                            Completed
-                        </button>
-                        <button type="button" onclick="showAuctionSection('rejected')"
-                                id="auction-rejected"
-                                class="auction-tab-button">
-                            <span class="material-icons-round text-lg opacity-90">block</span>
-                            Rejected
-                        </button>
-                    </nav>
-                    <div class="inline-flex rounded-xl bg-gray-100 p-1 shadow-inner shrink-0" role="group" aria-label="View layout">
-                        <button type="button" id="seller-auctions-view-btn-grid" class="seller-auctions-view-toggle-btn is-active inline-flex items-center gap-1.5 rounded-lg px-3 sm:px-4 py-2 text-sm font-medium"
-                                onclick="setSellerAuctionsViewMode('grid')">
-                            <span class="material-icons text-lg leading-none" style="font-size: 1.125rem;">grid_view</span>
-                            <span>Grid</span>
-                        </button>
-                        <button type="button" id="seller-auctions-view-btn-list" class="seller-auctions-view-toggle-btn inline-flex items-center gap-1.5 rounded-lg px-3 sm:px-4 py-2 text-sm font-medium"
-                                onclick="setSellerAuctionsViewMode('list')">
-                            <span class="material-icons text-lg leading-none" style="font-size: 1.125rem;">view_list</span>
-                            <span>List</span>
-                        </button>
+                    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center flex-shrink-0">
+                            <span class="material-icons-round text-purple-600 text-2xl">payments</span>
+                        </div>
+                        <div>
+                            <p class="text-3xl font-bold text-gray-900">${{ number_format($auctionSummary['total_sales_revenue'], 0) }}</p>
+                            <p class="text-sm text-gray-500 mt-0.5">Total Revenue</p>
+                        </div>
                     </div>
                 </div>
 
-                <!-- CURRENT AUCTIONS -->
+                {{-- Main card with tabs --}}
+                <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                    {{-- Card header: tabs + view toggle --}}
+                    <div class="px-5 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center gap-3">
+                        <nav class="flex gap-2 bg-gray-100 p-1 rounded-xl border border-gray-200 flex-1">
+                            <button type="button" onclick="showAuctionSection('current')" id="auction-current"
+                                    class="auction-tab-button flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg shadow-sm transition-all duration-200">
+                                <span class="material-icons-round text-sm mr-1 align-middle">bolt</span>
+                                Current
+                            </button>
+                            <button type="button" onclick="showAuctionSection('past')" id="auction-past"
+                                    class="auction-tab-button flex-1 px-4 py-2.5 text-sm font-semibold text-gray-600 hover:text-gray-900 rounded-lg transition-all duration-200">
+                                <span class="material-icons-round text-sm mr-1 align-middle">task_alt</span>
+                                Completed
+                            </button>
+                            <button type="button" onclick="showAuctionSection('rejected')" id="auction-rejected"
+                                    class="auction-tab-button flex-1 px-4 py-2.5 text-sm font-semibold text-gray-600 hover:text-gray-900 rounded-lg transition-all duration-200">
+                                <span class="material-icons-round text-sm mr-1 align-middle">block</span>
+                                Rejected
+                            </button>
+                        </nav>
+                        <div class="inline-flex rounded-xl bg-gray-100 p-1 shrink-0" role="group" aria-label="View layout">
+                            <button type="button" id="seller-auctions-view-btn-grid"
+                                    class="seller-auctions-view-toggle-btn is-active inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium"
+                                    onclick="setSellerAuctionsViewMode('grid')">
+                                <span class="material-icons-round" style="font-size:18px">grid_view</span>
+                                <span>Grid</span>
+                            </button>
+                            <button type="button" id="seller-auctions-view-btn-list"
+                                    class="seller-auctions-view-toggle-btn inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium"
+                                    onclick="setSellerAuctionsViewMode('list')">
+                                <span class="material-icons-round" style="font-size:18px">view_list</span>
+                                <span>List</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="p-5">
+
+                {{-- CURRENT AUCTIONS --}}
                 <div id="auction-section-current" class="auction-section">
                     @if($currentAuctions->count() > 0)
-                        <div class="seller-auction-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="seller-auction-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             @foreach($currentAuctions as $listing)
                                 @php
                                     $img = $listing->images->first();
@@ -1410,46 +1204,38 @@
                                         ? \Carbon\Carbon::parse($listing->auction_end_time)
                                         : ($listing->auction_start_time ? \Carbon\Carbon::parse($listing->auction_start_time)->addDays($listing->auction_duration ?? 7) : null);
                                 @endphp
-                                <div class="seller-auction-card">
-                                    <!-- Image with countdown timer overlay at top-left -->
-                                    <div class="seller-auction-card-media overflow-hidden relative">
+                                <div class="s-card flex flex-col bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden hover:border-blue-200 hover:shadow-md transition-all">
+                                    <div class="s-card-img relative h-48 bg-gray-100 overflow-hidden flex-shrink-0">
                                         @if($imgUrl)
-                                            <img src="{{ $imgUrl }}"
-                                                 alt="{{ $listing->year }} {{ $listing->make }} {{ $listing->model }}"
-                                                 class="w-full h-full object-cover">
+                                            <img src="{{ $imgUrl }}" alt="{{ $listing->year }} {{ $listing->make }} {{ $listing->model }}" class="w-full h-full object-cover">
                                         @else
-                                            <div class="w-full h-full flex items-center justify-center text-gray-400">
-                                                <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                </svg>
+                                            <div class="w-full h-full flex items-center justify-center text-gray-300">
+                                                <span class="material-icons-round text-5xl">directions_car</span>
                                             </div>
                                         @endif
-                                        <!-- Countdown timer badge overlaid on image (top-left) -->
+                                        <div class="absolute top-3 left-3 inline-flex items-center gap-1.5 bg-blue-600 text-white text-[11px] font-bold px-2 py-1 rounded-lg">
+                                            <span class="material-icons-round" style="font-size:12px">bolt</span>
+                                            LIVE
+                                        </div>
                                         @if($endTime)
-                                            <div class="absolute top-3 left-3 flex items-center gap-1.5 bg-black/65 backdrop-blur-sm text-white text-xs font-bold px-2.5 py-1.5 rounded-lg shadow">
-                                                <span class="material-icons-round" style="font-size:0.9rem">schedule</span>
-                                                <span id="countdown-{{ $listing->id }}" data-end-time="{{ $endTime->toIso8601String() }}">Loading…</span>
+                                            <div class="absolute bottom-3 left-3 inline-flex items-center gap-1.5 bg-black/60 backdrop-blur-sm text-white text-[11px] font-bold px-2 py-1 rounded-lg">
+                                                <span class="material-icons-round" style="font-size:12px">schedule</span>
+                                                <span id="countdown-{{ $listing->id }}" data-end-time="{{ $endTime->toIso8601String() }}">—</span>
                                             </div>
                                         @endif
                                     </div>
-
-                                    <div class="p-4">
-                                        <h3 class="text-base font-semibold text-gray-900 mb-1 leading-tight">
-                                            {{ $listing->year }} {{ $listing->make }} {{ $listing->model }}
-                                        </h3>
-                                        <p class="text-xs text-gray-500 mb-2 font-medium uppercase tracking-wide">
-                                            {{ $listing->item_number ?? 'CM' . str_pad($listing->id, 6, '0', STR_PAD_LEFT) }}
-                                        </p>
-                                        <p class="text-base font-bold text-blue-600 mb-3">
-                                            Current Bid: ${{ number_format($listing->current_bid, 2) }}
-                                        </p>
-
-                                        <div class="seller-auction-card-actions">
-                                            <a href="{{ route('seller.listings.show', $listing->id) }}" class="seller-auction-btn seller-auction-btn--view">
-                                                <span class="material-icons-round" aria-hidden="true">visibility</span> View
+                                    <div class="p-4 flex flex-col flex-1">
+                                        <h3 class="font-bold text-gray-900 text-sm leading-tight mb-0.5">{{ $listing->year }} {{ $listing->make }} {{ $listing->model }}</h3>
+                                        <p class="text-xs text-gray-400 font-mono mb-2">{{ $listing->item_number ?? 'CM' . str_pad($listing->id, 6, '0', STR_PAD_LEFT) }}</p>
+                                        <p class="text-sm font-bold text-blue-600 mb-3">Current Bid: ${{ number_format($listing->current_bid, 2) }}</p>
+                                        <div class="flex gap-2 pt-3 border-t border-gray-100 mt-auto">
+                                            <a href="{{ route('seller.listings.show', $listing->id) }}"
+                                               class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition">
+                                                <span class="material-icons-round" style="font-size:14px">visibility</span> View
                                             </a>
-                                            <button type="button" onclick="openDeleteModal({{ $listing->id }}, '{{ addslashes($listing->year . ' ' . $listing->make . ' ' . $listing->model) }}')" class="seller-auction-btn seller-auction-btn--delete">
-                                                <span class="material-icons-round" aria-hidden="true">delete_outline</span> Delete
+                                            <button type="button" onclick="openDeleteModal({{ $listing->id }}, '{{ addslashes($listing->year . ' ' . $listing->make . ' ' . $listing->model) }}')"
+                                                    class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-red-200 bg-white hover:bg-red-50 hover:border-red-300 text-red-600 text-xs font-semibold transition">
+                                                <span class="material-icons-round" style="font-size:14px">delete_outline</span> Delete
                                             </button>
                                         </div>
                                     </div>
@@ -1457,12 +1243,12 @@
                             @endforeach
                         </div>
                     @else
-                        <div class="seller-auctions-empty text-center py-14 px-6">
-                            <span class="material-icons-round text-5xl text-slate-300 mb-3 block" aria-hidden="true">inventory_2</span>
-                            <p class="text-slate-800 text-lg font-semibold">No live auctions</p>
-                            <p class="text-slate-500 text-sm mt-2 max-w-md mx-auto">When you have active listings, they will appear here.</p>
-                            <a href="{{ route('seller.listings.create') }}" class="inline-flex items-center gap-2 mt-6 px-5 py-2.5 rounded-xl text-sm font-semibold text-white shadow-md hover:opacity-95 transition" style="background: linear-gradient(135deg, #063466 0%, #1e3a8a 100%);">
-                                <span class="material-icons-round text-lg">add</span> Create a listing
+                        <div class="rounded-xl border border-dashed border-gray-200 bg-gray-50 py-14 text-center">
+                            <span class="material-icons-round text-gray-300 text-5xl block mb-3">inventory_2</span>
+                            <p class="text-gray-700 text-base font-semibold">No live auctions</p>
+                            <p class="text-gray-400 text-sm mt-1.5 max-w-sm mx-auto">When you have active listings, they will appear here.</p>
+                            <a href="{{ route('seller.listings.create') }}" class="inline-flex items-center gap-2 mt-5 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition shadow-lg shadow-blue-600/25">
+                                <span class="material-icons-round text-lg">add</span> Create a Listing
                             </a>
                         </div>
                     @endif
@@ -1494,76 +1280,60 @@
                     @endphp
 
                     @if($allPastCards->count() > 0)
-                        <div class="seller-auction-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="seller-auction-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             @foreach($allPastCards as $listing)
                                 @php
-                                    $isSold    = $listing->_past_type === 'sold';
-                                    $imgP      = $listing->images->first();
-                                    $imgUrlP   = $imgP ? (str_contains($imgP->image_path ?? '', '/') ? asset($imgP->image_path) : asset('uploads/listings/' . $imgP->image_path)) : null;
-                                    $endTime   = $listing->auction_end_time
+                                    $isSold     = $listing->_past_type === 'sold';
+                                    $imgP       = $listing->images->first();
+                                    $imgUrlP    = $imgP ? (str_contains($imgP->image_path ?? '', '/') ? asset($imgP->image_path) : asset('uploads/listings/' . $imgP->image_path)) : null;
+                                    $endTime    = $listing->auction_end_time
                                         ? \Carbon\Carbon::parse($listing->auction_end_time)
                                         : ($listing->auction_start_time ? \Carbon\Carbon::parse($listing->auction_start_time)->addDays($listing->auction_duration ?? 7) : null);
-                                    $soldDate  = $endTime ? $endTime->format('M d, Y') : '—';
-                                    $status    = $listing->completion_status ?? 'awaiting_invoice';
-                                    $badge     = $statusBadgeMap[$status] ?? $statusBadgeMap['awaiting_invoice'];
+                                    $soldDate   = $endTime ? $endTime->format('M d, Y') : '—';
+                                    $status     = $listing->completion_status ?? 'awaiting_invoice';
+                                    $badge      = $statusBadgeMap[$status] ?? $statusBadgeMap['awaiting_invoice'];
                                     $highestBid = $listing->current_bid ?? $listing->getHighestBidAmount();
-                                    $cardBorder = $isSold ? 'seller-auction-card border-2 border-emerald-300/60' : 'seller-auction-card border-2 border-slate-200';
                                 @endphp
-                                <div class="{{ $cardBorder }}">
-                                    <!-- Image with "Finished" overlay + sold/not-sold indicator under image -->
-                                    <div class="seller-auction-card-media overflow-hidden relative">
+                                <div class="s-card flex flex-col bg-white rounded-2xl border {{ $isSold ? 'border-emerald-200' : 'border-gray-200' }} shadow-sm overflow-hidden hover:shadow-md transition-all">
+                                    <div class="s-card-img relative h-48 bg-gray-100 overflow-hidden flex-shrink-0">
                                         @if($imgUrlP)
                                             <img src="{{ $imgUrlP }}" alt="{{ $listing->year }} {{ $listing->make }} {{ $listing->model }}" class="w-full h-full object-cover">
                                         @else
-                                            <div class="w-full h-full flex items-center justify-center text-gray-400">
-                                                <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                </svg>
+                                            <div class="w-full h-full flex items-center justify-center text-gray-300">
+                                                <span class="material-icons-round text-5xl">directions_car</span>
                                             </div>
                                         @endif
-                                        <!-- "Finished" badge overlay at top-left -->
-                                        <div class="absolute top-3 left-3 flex items-center gap-1 bg-black/65 backdrop-blur-sm text-white text-xs font-bold px-2.5 py-1.5 rounded-lg shadow">
-                                            <span class="material-icons-round" style="font-size:0.85rem">flag</span>
+                                        <div class="absolute top-3 left-3 inline-flex items-center gap-1 bg-black/60 backdrop-blur-sm text-white text-[11px] font-bold px-2 py-1 rounded-lg">
+                                            <span class="material-icons-round" style="font-size:12px">flag</span>
                                             Finished
                                         </div>
-                                        <!-- Sold / Not Sold indicator at bottom of image -->
                                         @if($isSold)
                                             <div class="absolute bottom-0 left-0 right-0 px-3 py-2 bg-emerald-600/90 text-white text-xs font-semibold">
-                                                Date Sold: {{ $soldDate }}
+                                                Sold · {{ $soldDate }}
                                             </div>
                                         @else
-                                            <div class="absolute bottom-0 left-0 right-0 px-3 py-2 bg-slate-700/85 text-white text-xs font-semibold">
+                                            <div class="absolute bottom-0 left-0 right-0 px-3 py-2 bg-gray-700/80 text-white text-xs font-semibold">
                                                 Not Sold
                                             </div>
                                         @endif
                                     </div>
-
-                                    <div class="p-4">
-                                        <h3 class="text-base font-semibold text-gray-900 mb-1 leading-tight">
-                                            {{ $listing->year }} {{ $listing->make }} {{ $listing->model }}
-                                        </h3>
-                                        <p class="text-xs text-gray-500 mb-3 font-medium uppercase tracking-wide">
-                                            {{ $listing->item_number ?? 'CM' . str_pad($listing->id, 6, '0', STR_PAD_LEFT) }}
-                                        </p>
+                                    <div class="p-4 flex flex-col flex-1">
+                                        <h3 class="font-bold text-gray-900 text-sm leading-tight mb-0.5">{{ $listing->year }} {{ $listing->make }} {{ $listing->model }}</h3>
+                                        <p class="text-xs text-gray-400 font-mono mb-3">{{ $listing->item_number ?? 'CM' . str_pad($listing->id, 6, '0', STR_PAD_LEFT) }}</p>
 
                                         @if($isSold)
-                                            {{-- SOLD: show sale price + payout breakdown --}}
-                                            <p class="text-base font-bold text-emerald-700 mb-1">
-                                                Sale Price: ${{ number_format($listing->sale_price ?? 0, 2) }}
-                                            </p>
+                                            <p class="text-sm font-bold text-emerald-700 mb-2">Sale Price: ${{ number_format($listing->sale_price ?? 0, 2) }}</p>
 
                                             @if($status === 'payment_received')
-                                                <div class="mt-3 bg-blue-50 border border-blue-200 rounded-lg p-3">
-                                                    <p class="text-xs font-semibold text-blue-900 mb-2">
-                                                        Enter the pick-up code from the buyer to complete this transaction.
-                                                    </p>
+                                                <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-3">
+                                                    <p class="text-xs font-semibold text-blue-900 mb-2">Enter the pick-up code from the buyer to complete this transaction.</p>
                                                     <form method="POST" action="{{ route('seller.dashboard.confirm-pickup', $listing->id) }}" class="seller-pin-form" data-pin-form>
                                                         @csrf
-                                                        <label class="block text-xs font-medium text-slate-700 mb-1.5">Pick-up Code</label>
+                                                        <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Pick-up Code</label>
                                                         <div class="flex gap-1.5 mb-2" data-pin-boxes>
                                                             @for($i = 0; $i < 6; $i++)
                                                                 <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" required
-                                                                       class="seller-pin-box w-9 h-10 text-center text-base font-bold border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                                                                       class="seller-pin-box w-9 h-10 text-center text-base font-bold border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
                                                                        aria-label="Digit {{ $i + 1 }}">
                                                             @endfor
                                                         </div>
@@ -1574,54 +1344,48 @@
                                                     </form>
                                                 </div>
                                             @elseif($status === 'completed')
-                                                <div class="mt-3 bg-emerald-50 border border-emerald-200 rounded-lg p-3 flex items-center gap-2 text-sm text-emerald-800">
+                                                <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 mb-3 flex items-center gap-2 text-sm text-emerald-800">
                                                     <span class="material-icons-round text-base">check_circle</span>
                                                     <span class="font-semibold">Pickup Confirmed</span>
-                                                    @if(($listing->payout_status ?? null) === 'completed')
-                                                        <span class="ml-auto text-xs text-emerald-600">Payout Complete</span>
-                                                    @else
-                                                        <span class="ml-auto text-xs text-emerald-600">Payout Processing</span>
-                                                    @endif
+                                                    <span class="ml-auto text-xs text-emerald-600">{{ ($listing->payout_status ?? null) === 'completed' ? 'Payout Complete' : 'Payout Processing' }}</span>
                                                 </div>
                                             @elseif($status === 'awaiting_payment')
-                                                <div class="mt-3 bg-amber-50 border border-amber-200 rounded-lg p-3">
-                                                    <p class="text-xs text-amber-900">Awaiting buyer payment.</p>
+                                                <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-3">
+                                                    <p class="text-xs text-amber-900 font-medium">Awaiting buyer payment.</p>
                                                 </div>
                                             @endif
 
-                                            <div class="mt-3 border-t border-slate-100 pt-3 grid grid-cols-3 gap-1 text-xs">
+                                            <div class="grid grid-cols-3 gap-1 text-xs pt-3 border-t border-gray-100 mb-3">
                                                 <div>
-                                                    <p class="text-slate-400">Sale Price</p>
-                                                    <p class="font-semibold text-slate-900">${{ number_format($listing->sale_price ?? 0, 0) }}</p>
+                                                    <p class="text-gray-400">Sale Price</p>
+                                                    <p class="font-semibold text-gray-900">${{ number_format($listing->sale_price ?? 0, 0) }}</p>
                                                 </div>
                                                 <div>
-                                                    <p class="text-slate-400">CayMark Fee</p>
-                                                    <p class="font-semibold text-rose-500">-${{ number_format($listing->seller_commission_amount ?? 0, 0) }}</p>
+                                                    <p class="text-gray-400">CayMark Fee</p>
+                                                    <p class="font-semibold text-red-500">-${{ number_format($listing->seller_commission_amount ?? 0, 0) }}</p>
                                                 </div>
                                                 <div>
-                                                    <p class="text-slate-400">You Receive</p>
+                                                    <p class="text-gray-400">You Receive</p>
                                                     <p class="font-semibold text-emerald-600">${{ number_format($listing->net_payout_amount ?? 0, 0) }}</p>
                                                 </div>
                                             </div>
                                         @else
-                                            {{-- NOT SOLD: show highest bid --}}
-                                            <p class="text-base font-bold text-slate-600 mb-3">
-                                                Highest Bid: ${{ $highestBid > 0 ? number_format($highestBid, 2) : '—' }}
-                                            </p>
+                                            <p class="text-sm font-bold text-gray-500 mb-3">Highest Bid: {{ $highestBid > 0 ? '$' . number_format($highestBid, 2) : '—' }}</p>
                                         @endif
 
-                                        <a href="{{ route('seller.listings.show', $listing->id) }}" class="mt-3 inline-flex items-center justify-center gap-1.5 w-full px-3 py-2 bg-white border border-slate-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 transition">
-                                            <span class="material-icons-round text-base">visibility</span> View Details
+                                        <a href="{{ route('seller.listings.show', $listing->id) }}"
+                                           class="mt-auto inline-flex items-center justify-center gap-1.5 w-full px-3 py-2 rounded-xl border border-gray-200 bg-white hover:border-blue-300 hover:text-blue-600 text-gray-700 text-xs font-semibold transition">
+                                            <span class="material-icons-round" style="font-size:14px">visibility</span> View Details
                                         </a>
                                     </div>
                                 </div>
                             @endforeach
                         </div>
                     @else
-                        <div class="seller-auctions-empty text-center py-14 px-6">
-                            <span class="material-icons-round text-5xl text-slate-300 mb-3 block" aria-hidden="true">task_alt</span>
-                            <p class="text-slate-800 text-lg font-semibold">No past auctions yet</p>
-                            <p class="text-slate-500 text-sm mt-2 max-w-md mx-auto">Ended and sold auctions will appear here.</p>
+                        <div class="rounded-xl border border-dashed border-gray-200 bg-gray-50 py-14 text-center">
+                            <span class="material-icons-round text-gray-300 text-5xl block mb-3">task_alt</span>
+                            <p class="text-gray-700 text-base font-semibold">No past auctions yet</p>
+                            <p class="text-gray-400 text-sm mt-1.5 max-w-sm mx-auto">Ended and sold auctions will appear here.</p>
                         </div>
                     @endif
                 </div>
@@ -1629,7 +1393,7 @@
                 <!-- REJECTED LISTINGS -->
                 <div id="auction-section-rejected" class="auction-section hidden">
                     @if($rejectedListings->count() > 0)
-                        <div class="seller-auction-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="seller-auction-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             @foreach($rejectedListings as $listing)
                                 @php
                                     $imgR = $listing->images->first();
@@ -1642,70 +1406,66 @@
                                     $reasonJs   = addslashes($rejReason);
                                     $notesJs    = addslashes($rejNotes);
                                 @endphp
-                                <div class="seller-auction-card border-2 border-red-200/70">
-                                    <div class="seller-auction-card-media overflow-hidden relative">
+                                <div class="s-card flex flex-col bg-white rounded-2xl border border-red-200 shadow-sm overflow-hidden hover:shadow-md transition-all">
+                                    <div class="s-card-img relative h-48 bg-red-50/30 overflow-hidden flex-shrink-0">
                                         @if($imgUrlR)
                                             <img src="{{ $imgUrlR }}" alt="{{ $listing->year }} {{ $listing->make }} {{ $listing->model }}" class="w-full h-full object-cover">
                                         @else
-                                            <div class="w-full h-full flex items-center justify-center bg-red-50/40 text-red-300">
-                                                <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                </svg>
+                                            <div class="w-full h-full flex items-center justify-center text-red-200">
+                                                <span class="material-icons-round text-5xl">directions_car</span>
                                             </div>
                                         @endif
-                                        <!-- Rejected badge overlay -->
-                                        <div class="absolute top-3 left-3 flex items-center gap-1 bg-red-600/90 text-white text-xs font-bold px-2.5 py-1.5 rounded-lg shadow">
-                                            <span class="material-icons-round" style="font-size:0.85rem">block</span>
+                                        <div class="absolute top-3 left-3 inline-flex items-center gap-1.5 bg-red-600 text-white text-[11px] font-bold px-2 py-1 rounded-lg">
+                                            <span class="material-icons-round" style="font-size:12px">block</span>
                                             Rejected
                                         </div>
                                     </div>
-
-                                    <div class="p-4">
-                                        <h3 class="text-base font-semibold text-gray-900 mb-1 leading-tight">
-                                            {{ $listing->year }} {{ $listing->make }} {{ $listing->model }}
-                                        </h3>
-                                        <p class="text-xs text-gray-500 mb-2 font-medium uppercase tracking-wide">
-                                            {{ $listing->item_number ?? 'CM' . str_pad($listing->id, 6, '0', STR_PAD_LEFT) }}
-                                        </p>
+                                    <div class="p-4 flex flex-col flex-1">
+                                        <h3 class="font-bold text-gray-900 text-sm leading-tight mb-0.5">{{ $listing->year }} {{ $listing->make }} {{ $listing->model }}</h3>
+                                        <p class="text-xs text-gray-400 font-mono mb-3">{{ $listing->item_number ?? 'CM' . str_pad($listing->id, 6, '0', STR_PAD_LEFT) }}</p>
 
                                         @if($rejReason)
-                                            <p class="text-sm text-red-700 mb-3">
-                                                <span class="font-semibold">Reason for Rejection:</span> {{ $rejReason }}
-                                            </p>
+                                            <div class="bg-red-50 border border-red-200 rounded-xl p-3 mb-3">
+                                                <p class="text-xs font-semibold text-red-700 mb-0.5">Reason for Rejection</p>
+                                                <p class="text-sm text-red-800">{{ $rejReason }}</p>
+                                            </div>
                                         @endif
 
                                         {{-- Edit window: 3 days (72 hrs) --}}
                                         @if($canEdit)
-                                            <p class="text-xs text-amber-600 font-medium mb-2">
-                                                @if($deadline)
+                                            @if($deadline)
+                                                <p class="text-xs text-amber-600 font-medium mb-2">
                                                     Edit window closes: <span id="rejection-timer-{{ $listing->id }}" data-deadline="{{ $deadline->toIso8601String() }}">—</span>
-                                                @endif
-                                            </p>
+                                                </p>
+                                            @endif
                                             <button type="button"
                                                     onclick="openRejectionModal('{{ $listing->id }}', '{{ $listingName }}', '{{ $reasonJs }}', '{{ $notesJs }}', '{{ route('seller.listings.edit', $listing->id) }}')"
-                                                    class="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition shadow-sm">
+                                                    class="mt-auto w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition">
+                                                <span class="material-icons-round" style="font-size:14px">edit</span>
                                                 Edit Submission
                                             </button>
                                         @else
-                                            <p class="text-sm text-slate-500 font-medium py-2 text-center border border-slate-200 rounded-xl bg-slate-50">
+                                            <div class="mt-auto flex items-center justify-center gap-1.5 py-2 rounded-xl border border-gray-200 bg-gray-50 text-gray-500 text-xs font-semibold">
+                                                <span class="material-icons-round" style="font-size:14px">check</span>
                                                 Finished
-                                            </p>
+                                            </div>
                                         @endif
                                     </div>
                                 </div>
                             @endforeach
                         </div>
                     @else
-                        <div class="seller-auctions-empty text-center py-14 px-6">
-                            <span class="material-icons-round text-5xl text-slate-300 mb-3 block" aria-hidden="true">task_alt</span>
-                            <p class="text-slate-800 text-lg font-semibold">No rejected listings</p>
-                            <p class="text-slate-500 text-sm mt-2 max-w-md mx-auto">If a submission is declined, you will see it here with the reason.</p>
+                        <div class="rounded-xl border border-dashed border-gray-200 bg-gray-50 py-14 text-center">
+                            <span class="material-icons-round text-gray-300 text-5xl block mb-3">block</span>
+                            <p class="text-gray-700 text-base font-semibold">No rejected listings</p>
+                            <p class="text-gray-400 text-sm mt-1.5 max-w-sm mx-auto">If a submission is declined, you will see it here with the reason.</p>
                         </div>
                     @endif
                 </div>
 
-                </div><!-- end seller-auctions-wrap -->
-            </div><!-- end content-auctions -->
+                    </div>{{-- end p-5 content wrapper --}}
+                </div>{{-- end main auctions card --}}
+            </div>{{-- end content-auctions --}}
 
             <!-- ══ Rejection Details Modal ══ -->
             <div id="rejectionModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -1919,132 +1679,129 @@
             </div>
 
             <!-- CUSTOMER SUPPORT TAB -->
-            <div id="content-support" class="tab-content hidden p-6 customer-support-scrollbar">
+            <div id="content-support" class="tab-content hidden p-6 dash-no-scrollbar" style="height: 100%; overflow-y: auto;">
+
+                {{-- Success banner --}}
                 @if (session('success'))
-                    <div id="seller-support-success-banner" class="flex items-center gap-3 rounded-xl bg-emerald-50 border-2 border-emerald-200 px-4 py-3 mb-6 text-emerald-900 shadow-sm" role="status">
-                        <span class="material-icons-round text-emerald-600 text-xl flex-shrink-0">check_circle</span>
-                        <span class="font-medium">{{ session('success') }}</span>
+                    <div id="seller-support-success-banner" class="flex items-center gap-3 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 mb-6 text-emerald-800" role="status">
+                        <span class="material-icons-round text-emerald-600 flex-shrink-0">check_circle</span>
+                        <span class="font-medium text-sm">{{ session('success') }}</span>
                     </div>
                 @endif
-                <div class="mb-8">
-                    <div class="flex items-center gap-3 mb-1">
-                        <div class="w-10 h-10 rounded-xl bg-teal-600 flex items-center justify-center shadow-lg" style="background-color: #0d9488;">
-                            <span class="material-icons-round text-white text-xl">support_agent</span>
-                        </div>
-                        <div class="flex-1">
-                            <div class="flex items-center gap-3">
-                                <h2 class="text-2xl font-bold text-gray-900 tracking-tight">Support Center</h2>
-                            </div>
-                            <p class="text-sm text-gray-500">Submit a request and our team will respond as quickly as possible.</p>
-                        </div>
+
+                {{-- Page header --}}
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                        <span class="material-icons-round text-white text-xl">support_agent</span>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-900 tracking-tight">Support Center</h2>
+                        <p class="text-sm text-gray-500">Submit a request and our team will respond as quickly as possible.</p>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="lg:col-span-2 space-y-6">
-                        <div class="bg-white rounded-2xl border-2 border-gray-200 shadow-sm overflow-hidden">
-                            <div class="bg-teal-50 border-b-2 border-teal-200 px-6 py-4" style="background-color: #f0fdfa;">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-xl bg-teal-600 flex items-center justify-center" style="background-color: #0d9488;">
-                                        <span class="material-icons-round text-white text-lg">help_outline</span>
-                                    </div>
-                                    <div>
-                                        <h3 class="text-lg font-bold text-gray-900">Submit a Request</h3>
-                                        <p class="text-xs text-gray-600">Our team will respond as quickly as possible.</p>
-                                    </div>
-                                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 items-start">
+
+                    {{-- ══ LEFT COLUMN — Form + History ══ --}}
+                    <div class="lg:col-span-2 space-y-5">
+
+                        {{-- Submit a Request --}}
+                        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                            <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
+                                <span class="material-icons-round text-gray-400" style="font-size:18px">edit_note</span>
+                                <h3 class="font-bold text-gray-900 text-sm">Submit a Request</h3>
                             </div>
                             <form method="POST" action="{{ route('seller.support.submit') }}" class="p-6 space-y-5">
                                 @csrf
                                 @if ($errors->has('title') || $errors->has('message'))
-                                    <div class="rounded-xl border-2 border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-                                        <p class="font-semibold mb-1">Please fix the following:</p>
-                                        <ul class="list-disc list-inside space-y-1">
-                                            @foreach ((array) ($errors->get('title') ?? []) as $err)
-                                                <li>{{ $err }}</li>
-                                            @endforeach
-                                            @foreach ((array) ($errors->get('message') ?? []) as $err)
-                                                <li>{{ $err }}</li>
-                                            @endforeach
+                                    <div class="flex items-start gap-3 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-red-800">
+                                        <span class="material-icons-round text-red-500 flex-shrink-0 text-lg">error</span>
+                                        <ul class="list-disc list-inside text-sm space-y-0.5">
+                                            @foreach ((array) ($errors->get('title') ?? []) as $err)<li>{{ $err }}</li>@endforeach
+                                            @foreach ((array) ($errors->get('message') ?? []) as $err)<li>{{ $err }}</li>@endforeach
                                         </ul>
                                     </div>
                                 @endif
-                                <div class="group">
-                                    <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                                        <span class="material-icons-round text-gray-400 text-lg group-focus-within:text-teal-600 transition-colors">category</span>
-                                        What is this request about?
+
+                                {{-- Category --}}
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                                        What is this request about? <span class="text-red-500 normal-case tracking-normal">*</span>
                                     </label>
-                                    <select name="title" required class="w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-gray-900 font-medium focus:bg-white focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 transition-all">
-                                        <option value="">Select a category...</option>
-                                        @foreach($supportCategories as $option)
-                                            <option value="{{ $option }}" {{ old('title') === $option ? 'selected' : '' }}>{{ $option }}</option>
+                                    <select name="title" required
+                                        class="w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50 text-gray-900 font-medium focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all text-sm">
+                                        <option value="">Select…</option>
+                                        @foreach (['Payment', 'Auctions', 'Account', 'Vehicle', 'Pick Up', 'Other'] as $opt)
+                                            <option value="{{ $opt }}" {{ old('title') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
                                         @endforeach
                                     </select>
                                     @error('title')
-                                        <p class="text-xs text-red-600 mt-1.5">{{ $message }}</p>
+                                        <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
                                     @enderror
                                 </div>
-                                <div class="group">
-                                    <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                                        <span class="material-icons-round text-gray-400 text-lg group-focus-within:text-teal-600 transition-colors">description</span>
-                                        Message
+
+                                {{-- Message --}}
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                                        Message <span class="text-red-500 normal-case tracking-normal">*</span>
                                     </label>
-                                    <textarea name="message" rows="8" required maxlength="800" placeholder="Write your message here..."
-                                        class="w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 bg-gray-50/50 text-gray-900 font-medium placeholder-gray-400 focus:bg-white focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 transition-all resize-none">{{ old('message') }}</textarea>
+                                    <textarea name="message" rows="7" required maxlength="800"
+                                        placeholder="Write your message here…"
+                                        class="w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50 text-gray-900 font-medium placeholder-gray-400 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all resize-none text-sm">{{ old('message') }}</textarea>
                                     @error('message')
-                                        <p class="text-xs text-red-600 mt-1.5">{{ $message }}</p>
+                                        <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
                                     @enderror
-                                    <p class="text-xs text-gray-400 mt-1.5">Message limit: 800 characters.</p>
                                 </div>
-                                <div class="pt-2">
-                                    <button type="submit" class="w-full inline-flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-700 text-white px-6 py-3.5 rounded-xl font-semibold shadow-lg shadow-teal-600/30 hover:shadow-teal-600/40 transition-all duration-200" style="background-color: #0d9488; color: #ffffff;">
-                                        <span class="material-icons-round text-lg text-white">send</span>
-                                        <span class="text-white font-semibold">Submit Request</span>
-                                    </button>
-                                </div>
+
+                                <button type="submit"
+                                    class="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow-lg shadow-blue-600/25 transition-all duration-200">
+                                    <span class="material-icons-round" style="font-size:18px">send</span>
+                                    Submit Request
+                                </button>
                             </form>
                         </div>
 
+                        {{-- Request History --}}
                         @php
                             $sellerTickets = \App\Models\SupportTicket::where('user_id', auth()->id())->latest()->get();
                         @endphp
-                        <div class="bg-white rounded-2xl border-2 border-gray-200 shadow-sm overflow-hidden">
-                            <div class="bg-teal-50 border-b-2 border-teal-200 px-6 py-4" style="background-color: #f0fdfa;">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-xl bg-teal-600 flex items-center justify-center" style="background-color: #0d9488;">
-                                        <span class="material-icons-round text-white text-lg">history</span>
-                                    </div>
-                                    <div>
-                                        <h3 class="text-lg font-bold text-gray-900">Ticket History</h3>
-                                        <p class="text-xs text-gray-600">Your recent support requests</p>
-                                    </div>
-                                </div>
+                        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                            <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
+                                <span class="material-icons-round text-gray-400" style="font-size:18px">history</span>
+                                <h3 class="font-bold text-gray-900 text-sm">Request History</h3>
                             </div>
                             <div class="p-6">
                                 @if($sellerTickets->count() > 0)
-                                    <div class="space-y-4">
+                                    <div class="space-y-3">
                                         @foreach($sellerTickets as $ticket)
-                                            <div class="rounded-xl border-2 p-4 transition-shadow {{ $ticket->status === 'open' ? 'border-teal-200 bg-teal-50/50' : 'border-gray-200 bg-gray-50/30' }}">
-                                                <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                                            @php
+                                                $tOpen = $ticket->status === 'open';
+                                                $statusMap = [
+                                                    'open'        => ['bg-blue-100 text-blue-800',       'Open'],
+                                                    'in_progress' => ['bg-amber-100 text-amber-800',     'In Progress'],
+                                                    'resolved'    => ['bg-emerald-100 text-emerald-800', 'Resolved'],
+                                                    'closed'      => ['bg-gray-100 text-gray-600',       'Closed'],
+                                                ];
+                                                [$sBadge, $sLabel] = $statusMap[$ticket->status] ?? ['bg-gray-100 text-gray-600', ucfirst($ticket->status)];
+                                            @endphp
+                                            <div class="rounded-xl border {{ $tOpen ? 'border-blue-200 bg-blue-50/30' : 'border-gray-200 bg-gray-50/30' }} p-4">
+                                                <div class="flex flex-wrap items-start justify-between gap-2 mb-2">
                                                     <div>
-                                                        <h4 class="font-semibold text-gray-900">{{ $ticket->title }}</h4>
+                                                        <h4 class="font-semibold text-gray-900 text-sm">{{ $ticket->title }}</h4>
                                                         @if($ticket->public_ticket_number)
-                                                            <p class="text-xs font-mono text-teal-700 mt-0.5">#{{ $ticket->public_ticket_number }}</p>
+                                                            <p class="text-xs font-mono text-gray-400 mt-0.5">#{{ $ticket->public_ticket_number }}</p>
                                                         @endif
                                                     </div>
-                                                    <span class="px-3 py-1 text-xs font-semibold rounded-full
-                                                        {{ $ticket->status === 'open' ? 'bg-blue-100 text-blue-800' : '' }}
-                                                        {{ $ticket->status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' : '' }}
-                                                        {{ $ticket->status === 'resolved' ? 'bg-green-100 text-green-800' : '' }}
-                                                        {{ $ticket->status === 'closed' ? 'bg-gray-100 text-gray-800' : '' }}">
-                                                        {{ ucfirst(str_replace('_', ' ', $ticket->status)) }}
-                                                    </span>
+                                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold {{ $sBadge }}">{{ $sLabel }}</span>
                                                 </div>
-                                                <p class="text-gray-600 text-sm mb-2 whitespace-pre-wrap">{{ $ticket->message }}</p>
+                                                <p class="text-gray-600 text-sm mb-2 whitespace-pre-wrap leading-relaxed">{{ $ticket->message }}</p>
                                                 <p class="text-xs text-gray-400">Submitted {{ $ticket->created_at->diffForHumans() }}</p>
                                                 @if($ticket->admin_reply)
-                                                    <div class="mt-3 p-3 bg-white border border-teal-100 rounded-xl">
-                                                        <p class="text-xs font-semibold text-teal-800 mb-1">Admin reply</p>
+                                                    <div class="mt-3 p-3 rounded-xl bg-white border border-gray-200">
+                                                        <p class="text-xs font-semibold text-gray-700 mb-1 flex items-center gap-1">
+                                                            <span class="material-icons-round text-blue-500" style="font-size:14px">reply</span>
+                                                            Support reply
+                                                        </p>
                                                         <p class="text-sm text-gray-700">{{ $ticket->admin_reply }}</p>
                                                     </div>
                                                 @endif
@@ -2052,44 +1809,67 @@
                                         @endforeach
                                     </div>
                                 @else
-                                    <div class="rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 py-10 text-center">
+                                    <div class="rounded-xl border border-dashed border-gray-200 bg-gray-50 py-10 text-center">
                                         <span class="material-icons-round text-gray-300 text-4xl mb-2 block">confirmation_number</span>
-                                        <p class="text-gray-600 font-medium">No tickets yet</p>
-                                        <p class="text-gray-400 text-sm mt-1">Submit a ticket above and it will appear here.</p>
+                                        <p class="text-gray-600 font-medium text-sm">No requests yet</p>
+                                        <p class="text-gray-400 text-xs mt-1">Submit a request above and it will appear here.</p>
                                     </div>
                                 @endif
                             </div>
                         </div>
-                    </div>
 
-                    <div class="space-y-6">
-                        <div class="bg-white rounded-2xl border-2 border-gray-200 shadow-sm p-6">
-                            <div class="flex items-center gap-2 mb-4">
-                                <span class="material-icons-round text-xl" style="color: #0d9488;">lightbulb</span>
-                                <h4 class="font-bold text-gray-900">Quick Help</h4>
+                    </div>{{-- end left column --}}
+
+                    {{-- ══ RIGHT SIDEBAR ══ --}}
+                    <div class="space-y-5">
+
+                        {{-- Quick Help --}}
+                        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                            <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
+                                <span class="material-icons-round text-gray-400" style="font-size:18px">lightbulb</span>
+                                <h4 class="font-bold text-gray-900 text-sm">Quick Help</h4>
                             </div>
-                            <ul class="space-y-2 text-sm">
-                                <li><a href="{{ route('help-center') }}" class="font-semibold hover:underline" style="color: #0d9488;">View FAQ</a></li>
-                                <li><a href="{{ route('video-guide') }}" class="font-semibold hover:underline" style="color: #0d9488;">Auction Guide</a></li>
-                                <li><a href="{{ route('sellers-guide') }}" class="font-semibold hover:underline" style="color: #0d9488;">Seller Guide</a></li>
-                                <li><a href="{{ route('video-guide') }}" class="font-semibold hover:underline" style="color: #0d9488;">How Auctions Work</a></li>
-                            </ul>
+                            <div class="divide-y divide-gray-100">
+                                @foreach([
+                                    ['icon' => 'help_outline',   'label' => 'View FAQ',          'href' => route('help-center')],
+                                    ['icon' => 'gavel',          'label' => 'Auction Guide',      'href' => route('video-guide')],
+                                    ['icon' => 'storefront',     'label' => 'Seller Guide',       'href' => route('sellers-guide')],
+                                    ['icon' => 'info_outline',   'label' => 'How Auctions Work',  'href' => route('video-guide')],
+                                ] as $help)
+                                    <a href="{{ $help['href'] }}" class="flex items-center justify-between px-5 py-3 hover:bg-gray-50 transition group">
+                                        <div class="flex items-center gap-3">
+                                            <span class="material-icons-round text-gray-400 group-hover:text-blue-600 transition" style="font-size:18px">{{ $help['icon'] }}</span>
+                                            <span class="text-sm text-gray-700 font-medium group-hover:text-blue-600 transition">{{ $help['label'] }}</span>
+                                        </div>
+                                        <span class="material-icons-round text-gray-300 group-hover:text-blue-400 transition" style="font-size:18px">chevron_right</span>
+                                    </a>
+                                @endforeach
+                            </div>
                         </div>
 
-                        <div class="bg-teal-50 rounded-2xl border-2 border-teal-200 p-6" style="background-color: #f0fdfa;">
-                            <div class="flex items-center gap-2 mb-4">
-                                <span class="material-icons-round text-teal-600 text-xl" style="color: #0d9488;">contact_support</span>
-                                <h4 class="font-bold text-gray-900">Contact Us</h4>
+                        {{-- Contact Us --}}
+                        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                            <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
+                                <span class="material-icons-round text-gray-400" style="font-size:18px">contact_support</span>
+                                <h4 class="font-bold text-gray-900 text-sm">Contact Us</h4>
                             </div>
-                            <div class="space-y-2 text-sm">
-                                <div class="flex items-center gap-2 text-gray-700">
-                                    <span class="material-icons-round text-lg" style="color: #0d9488;">email</span>
-                                    <span class="font-medium text-gray-700">support@caymark.com</span>
+                            <div class="p-5 space-y-3">
+                                <a href="mailto:support@caymark.com"
+                                   class="flex items-center gap-3 text-sm text-gray-700 hover:text-blue-600 transition group">
+                                    <span class="material-icons-round text-gray-400 group-hover:text-blue-500 flex-shrink-0 transition" style="font-size:18px">mail</span>
+                                    support@caymark.com
+                                </a>
+                                <div class="flex items-start gap-3 text-sm text-gray-700">
+                                    <span class="material-icons-round text-gray-400 flex-shrink-0 mt-0.5" style="font-size:18px">phone</span>
+                                    <span class="leading-snug">For urgent matters call or WhatsApp us at
+                                        <a href="tel:+12428066275" class="font-semibold text-blue-600 hover:text-blue-700 transition">+1 (242) 806-6275</a>
+                                    </span>
                                 </div>
-                                <p class="text-sm text-gray-700">For urgent matters call or WhatsApp us at +1 (242) 806-6275</p>
                             </div>
                         </div>
-                    </div>
+
+                    </div>{{-- end right sidebar --}}
+
                 </div>
             </div>
         </div>
@@ -2618,14 +2398,18 @@ function showAuctionSection(section) {
     });
 
     document.querySelectorAll('.auction-tab-button').forEach(function (btn) {
-        btn.classList.remove('active');
+        btn.classList.remove('text-white', 'bg-gradient-to-r', 'from-blue-600', 'to-indigo-600', 'shadow-sm');
+        btn.classList.add('text-gray-600', 'hover:text-gray-900');
     });
 
     const panel = document.getElementById('auction-section-' + section);
     if (panel) panel.classList.remove('hidden');
 
     const activeButton = document.getElementById('auction-' + section);
-    if (activeButton) activeButton.classList.add('active');
+    if (activeButton) {
+        activeButton.classList.remove('text-gray-600', 'hover:text-gray-900');
+        activeButton.classList.add('text-white', 'bg-gradient-to-r', 'from-blue-600', 'to-indigo-600', 'shadow-sm');
+    }
 }
 
 // Six-box pickup PIN inputs on the Completed tab.
