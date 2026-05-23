@@ -12,80 +12,31 @@ class SellerDashboardOps
         $user = \Illuminate\Support\Facades\Auth::user();
         $existing = $repository->getPayoutMethod($user);
 
-        // Do not overwrite with masked or empty values when updating
-        $accountNumber = $request->account_number;
-        if ($existing && (empty(trim((string) $accountNumber)) || str_starts_with(trim((string) $accountNumber), '****'))) {
+        // Do not overwrite account_number / routing_number with blank or masked values
+        $accountNumber = trim((string) $request->account_number);
+        if ($existing && (empty($accountNumber) || str_starts_with($accountNumber, '****'))) {
             $accountNumber = $existing->account_number; // keep existing (decrypted)
         }
-        $routingNumber = $request->routing_number;
-        if ($existing && (empty(trim((string) $routingNumber)) || str_starts_with(trim((string) $routingNumber), '****'))) {
-            $routingNumber = $existing->routing_number;
-        }
-        $swiftNumber = $request->swift_number ?? $request->swift_code;
-        if ($existing && (empty(trim((string) $swiftNumber)) || str_starts_with(trim((string) $swiftNumber), '****'))) {
-            $swiftNumber = $existing->swift_number;
-        }
 
-        $cardNumber = preg_replace('/\D/', '', (string) $request->card_number);
-        if ($existing && $cardNumber === '') {
-            $cardNumber = (string) ($existing->card_number ?? '');
-        }
-
-        $cardCvc = preg_replace('/\D/', '', (string) $request->card_cvc);
-        if ($existing && $cardCvc === '') {
-            $cardCvc = (string) ($existing->card_cvc ?? '');
-        }
-
-        $cardExpiry = $request->card_expiry ? strtoupper(trim((string) $request->card_expiry)) : '';
-        if ($existing && $cardExpiry === '') {
-            $cardExpiry = (string) ($existing->card_expiry ?? '');
-        }
-
-        if ($existing && empty($existing->getRawOriginal('card_number')) && $cardNumber === '') {
-            return back()->withErrors([
-                'card_number' => 'Please add your payout card number, CVC, and expiry (MM/YY).',
-            ]);
-        }
-
-        // New record must have account_number
-        if (!$existing && empty(trim((string) $accountNumber))) {
+        // New record must provide an account number
+        if (!$existing && empty($accountNumber)) {
             return back()->withErrors(['account_number' => 'Account number is required when adding payout settings.']);
         }
 
-        if (! $existing && (strlen($cardNumber) < 12 || strlen($cardCvc) < 3 || ! preg_match('/^(0[1-9]|1[0-2])\/\d{2}$/', $cardExpiry))) {
-            return back()->withErrors([
-                'card_number' => 'A valid card number, CVC, and expiry (MM/YY) are required when adding payout settings.',
-            ]);
-        }
-
-        if ($cardNumber !== '' && (strlen($cardNumber) < 12 || strlen($cardNumber) > 19)) {
-            return back()->withErrors(['card_number' => 'Card number must be between 12 and 19 digits.']);
-        }
-
-        if ($cardCvc !== '' && (strlen($cardCvc) < 3 || strlen($cardCvc) > 4)) {
-            return back()->withErrors(['card_cvc' => 'CVC must be 3 or 4 digits.']);
-        }
-
-        if ($cardExpiry !== '' && ! preg_match('/^(0[1-9]|1[0-2])\/\d{2}$/', $cardExpiry)) {
-            return back()->withErrors(['card_expiry' => 'Expiry must be in MM/YY format.']);
+        $routingNumber = trim((string) $request->routing_number);
+        if ($existing && (empty($routingNumber) || str_starts_with($routingNumber, '****'))) {
+            $routingNumber = $existing->routing_number;
         }
 
         \App\Models\SellerPayoutMethod::where('user_id', $user->id)
             ->update(['is_active' => false]);
 
-        $country = trim((string) $request->country) ?: null;
-
         $data = [
-            'bank_name' => $request->bank_name,
+            'bank_name'           => $request->bank_name,
             'account_holder_name' => $request->account_holder_name,
-            'account_number' => $accountNumber,
-            'routing_number' => $routingNumber ?: null,
-            'swift_number' => $swiftNumber ?: null,
-            'country' => $country,
-            'card_number' => $cardNumber !== '' ? $cardNumber : null,
-            'card_cvc' => $cardCvc !== '' ? $cardCvc : null,
-            'card_expiry' => $cardExpiry !== '' ? $cardExpiry : null,
-            'is_active' => true,
+            'account_number'      => $accountNumber,
+            'routing_number'      => $routingNumber ?: null,
+            'is_active'           => true,
         ];
 
         $repository->savePayoutMethod($user, $data);

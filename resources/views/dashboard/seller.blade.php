@@ -1261,9 +1261,6 @@
                                 @if($payoutMethod->routing_number)
                                     <p><span class="font-semibold text-gray-900">Routing / Branch:</span> ****{{ substr($payoutMethod->routing_number, -4) }}</p>
                                 @endif
-                                @if($payoutMethod->country)
-                                    <p><span class="font-semibold text-gray-900">Region:</span> {{ $payoutMethod->country }}</p>
-                                @endif
                             </div>
                         @endif
                         <button type="button" onclick="showPayoutModal()"
@@ -1318,7 +1315,7 @@
                     <div class="bg-white border border-gray-200 rounded-lg p-8 text-center">
                         <h3 class="text-2xl font-bold text-gray-900 mb-4">Ready to List Your Vehicle?</h3>
                         <p class="text-gray-600 mb-6">Submit a new listing through our three-step submission process.</p>
-                        <a href="{{ route('listings.create') }}" 
+                        <a href="{{ route('seller.listings.create') }}"
                            class="inline-block bg-blue-600 text-white px-8 py-4 rounded-lg font-semibold hover:bg-blue-700 transition duration-200 text-lg">
                             SUBMIT NEW LISTING
                         </a>
@@ -2368,34 +2365,6 @@ document.getElementById('deleteListingModal') && document.getElementById('delete
                                placeholder="{{ $payoutMethod ? 'Leave blank to keep current' : 'Optional' }}"
                                class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
                     </div>
-
-                    <!-- SWIFT / Country (collapsible secondary fields) -->
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">SWIFT / BIC</label>
-                            @if($payoutMethod && $payoutMethod->swift_number)
-                                <p class="text-[11px] text-gray-400 mb-1">Current: ****{{ substr($payoutMethod->swift_number, -4) }}</p>
-                            @endif
-                            <input type="text"
-                                   name="swift_number"
-                                   value=""
-                                   placeholder="{{ $payoutMethod ? 'Keep current' : 'Optional' }}"
-                                   class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Country *</label>
-                            <input type="text"
-                                   name="country"
-                                   value="{{ old('country', optional($payoutMethod)->country ?? 'Bahamas') }}"
-                                   required
-                                   class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
-                        </div>
-                    </div>
-
-                    <!-- Card fields (hidden inputs to preserve existing card data) -->
-                    <input type="hidden" name="card_number" value="">
-                    <input type="hidden" name="card_cvc" value="">
-                    <input type="hidden" name="card_expiry" value="">
 
                     <!-- Truth Declaration -->
                     <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 mt-2">
