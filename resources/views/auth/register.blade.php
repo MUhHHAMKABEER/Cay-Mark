@@ -210,10 +210,10 @@
                             <svg class="h-5 w-5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                             </svg>
-                            <span>Mobile number <span class="text-red-500">*</span></span>
+                            <span>Mobile number <span class="text-gray-400 font-normal text-xs">(optional — required before bidding or listing)</span></span>
                         </div>
                         <div class="rounded-2xl border-2 border-gray-200 bg-gradient-to-br from-gray-50/80 to-blue-50/30 p-5 space-y-4">
-                            <p class="text-xs text-gray-600">Choose your country / area code and enter your mobile number. We send a 6-digit SMS code (same verification flow as your CayMark account settings).</p>
+                            <p class="text-xs text-gray-600">Optionally verify your phone now. You will need a verified phone number before placing bids or submitting listings.</p>
                             <div class="grid grid-cols-1 md:grid-cols-[minmax(10rem,14rem),minmax(0,1fr),auto] gap-4 items-end">
                                 <div>
                                     <label for="reg_phone_country" class="block text-xs font-bold text-gray-600 mb-1.5">Country / area code</label>
@@ -377,10 +377,10 @@
                         @enderror
                     </div>
 
-                    <!-- Submit: enabled only after SMS verification (or session already verified after validation errors) -->
-                    <div class="pt-4 relative @if (! $regPhoneVerified) reg-pending-verify @endif" id="reg-submit-wrap">
-                        <button type="submit" id="reg-submit-btn" @if (! $regPhoneVerified) disabled @endif
-                            class="reg-submit-btn w-full bg-gradient-to-r from-[#063466] to-[#1e3a8a] text-white px-8 py-5 rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none disabled:hover:shadow-xl">
+                    <!-- Submit -->
+                    <div class="pt-4 relative" id="reg-submit-wrap">
+                        <button type="submit" id="reg-submit-btn"
+                            class="w-full bg-gradient-to-r from-[#063466] to-[#1e3a8a] text-white px-8 py-5 rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
                             <span class="relative z-10 flex items-center justify-center">
                                 <span>Create My Account</span>
                                 <svg class="w-6 h-6 ml-3 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -389,9 +389,6 @@
                             </span>
                             <div class="absolute inset-0 bg-gradient-to-r from-[#1e3a8a] to-[#2563eb] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                         </button>
-                        <span id="reg-hover-tooltip" class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-4 py-2 bg-gray-800 text-white text-sm rounded-lg whitespace-nowrap opacity-0 pointer-events-none transition-opacity duration-200 z-20">
-                            <span id="reg-typewriter-text" class="inline-block overflow-hidden whitespace-nowrap border-r-2 border-white w-0">Verify your phone first</span>
-                        </span>
                         <p class="text-center text-gray-500 text-sm mt-4">
                             Already have an account? 
                             <a href="{{ route('login') }}" class="text-[#063466] hover:text-[#1e3a8a] font-semibold underline decoration-2 underline-offset-2 transition-colors">Sign in here</a>
@@ -472,26 +469,6 @@
     input:focus, select:focus, textarea:focus {
         outline: none;
     }
-    #reg-typewriter-text {
-        display: inline-block;
-        overflow: hidden;
-        white-space: nowrap;
-        width: 0;
-        border-right: 2px solid rgba(255,255,255,0.9);
-        vertical-align: bottom;
-    }
-    #reg-submit-wrap.reg-pending-verify:hover #reg-hover-tooltip {
-        opacity: 1;
-    }
-    #reg-submit-wrap.reg-pending-verify:hover #reg-typewriter-text.reg-typewriter-on {
-        animation: reg-typewriter 1.4s steps(23) forwards;
-    }
-    #reg-submit-wrap.reg-pending-verify .reg-submit-btn {
-        background: linear-gradient(to right, #9ca3af, #6b7280);
-    }
-    @keyframes reg-typewriter {
-        to { width: 23ch; }
-    }
 </style>
 
 <script>
@@ -551,20 +528,11 @@
 
         if (hiddenVerified && hiddenVerified.value === '1') {
             applyVerifiedUi();
-        } else {
-            if (submitBtn) submitBtn.disabled = true;
-            if (submitWrap) submitWrap.classList.add('reg-pending-verify');
         }
 
         var step1Form = document.getElementById('step1-form');
         if (step1Form) {
-            step1Form.addEventListener('submit', function(e) {
-                var hv = document.getElementById('reg_phone_verified');
-                if (!hv || hv.value !== '1') {
-                    e.preventDefault();
-                    alert('Please verify your phone number with the SMS code before creating your account.');
-                    return;
-                }
+            step1Form.addEventListener('submit', function() {
                 var phoneFullEl = document.getElementById('reg_phone_full');
                 if (phoneFullEl && countrySelect && phoneInput && phoneInput.value.trim() && !phoneInput.readOnly) {
                     var code = countrySelect.disabled ? '' : countrySelect.value.trim();
@@ -640,23 +608,6 @@
             });
         });
 
-    })();
-    (function() {
-        var submitWrap = document.getElementById('reg-submit-wrap');
-        var typewriterEl = document.getElementById('reg-typewriter-text');
-        if (!submitWrap || !typewriterEl) return;
-        submitWrap.addEventListener('mouseenter', function() {
-            if (!submitWrap.classList.contains('reg-pending-verify')) return;
-            typewriterEl.classList.remove('reg-typewriter-on');
-            typewriterEl.style.width = '0';
-            requestAnimationFrame(function() {
-                typewriterEl.classList.add('reg-typewriter-on');
-            });
-        });
-        submitWrap.addEventListener('mouseleave', function() {
-            typewriterEl.classList.remove('reg-typewriter-on');
-            typewriterEl.style.width = '0';
-        });
     })();
 </script>
 
