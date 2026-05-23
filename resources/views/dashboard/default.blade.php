@@ -151,19 +151,6 @@
                     <p class="text-gray-500 text-sm">Manage your personal information and password.</p>
                 </div>
 
-                @if(session('success'))
-                    <div class="mb-6 rounded-xl bg-green-50 border border-green-200 p-4 flex items-center gap-3">
-                        <span class="material-icons-round text-green-600">check_circle</span>
-                        <p class="text-green-800 font-medium">{{ session('success') }}</p>
-                    </div>
-                @endif
-                @if(session('error'))
-                    <div class="mb-6 rounded-xl bg-red-50 border border-red-200 p-4 flex items-center gap-3">
-                        <span class="material-icons-round text-red-600">error</span>
-                        <p class="text-red-800 font-medium">{{ session('error') }}</p>
-                    </div>
-                @endif
-
                 <div class="space-y-5 max-w-2xl">
 
                     {{-- Full Name (read-only) --}}
@@ -491,14 +478,5 @@ document.getElementById('guestPasswordModal').addEventListener('click', function
     if (e.target === this) this.classList.add('hidden');
 });
 </script>
-
-@if($errors->any())
-    <div class="fixed top-4 right-4 bg-red-600 text-white px-5 py-3 rounded-xl shadow-lg z-50 text-sm">
-        @foreach($errors->all() as $error)
-            <p>{{ $error }}</p>
-        @endforeach
-    </div>
-    <script>setTimeout(() => { const el = document.querySelector('.fixed.top-4.right-4'); if(el) el.remove(); }, 5000);</script>
-@endif
 
 @endsection

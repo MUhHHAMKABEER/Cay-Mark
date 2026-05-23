@@ -3084,32 +3084,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-@if(session('success'))
-    <div class="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50">
-        {{ session('success') }}
-    </div>
-    <script>
-        setTimeout(() => {
-            const el = document.querySelector('.fixed.top-4');
-            if (el) el.remove();
-        }, 3000);
-    </script>
-@endif
-
-@if($errors->any())
-    <div class="fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50">
-        <ul>
-            @foreach($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-    <script>
-        setTimeout(() => {
-            const el = document.querySelector('.fixed.top-4');
-            if (el) el.remove();
-        }, 5000);
-    </script>
-@endif
-
 @endsection

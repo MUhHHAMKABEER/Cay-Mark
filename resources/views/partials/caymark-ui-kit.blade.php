@@ -28,15 +28,19 @@
 
 @php
     $flashSuccess = session('success') ?? session('status');
-    $flashError = session('error');
+    $flashError   = session('error');
     if (is_array($flashError)) {
         $flashError = implode(' ', $flashError);
+    }
+    // Fold validation errors into the global error toast (first message wins)
+    if (empty($flashError) && isset($errors) && $errors->any()) {
+        $flashError = $errors->first();
     }
 @endphp
 <script>
     window.CaymarkUIFlash = {
         @if(!empty($flashSuccess)) success: @json($flashSuccess), @endif
-        @if(!empty($flashError)) error: @json($flashError), @endif
+        @if(!empty($flashError))   error:   @json($flashError),   @endif
     };
 </script>
 @include('partials.caymark-ui-nav')
