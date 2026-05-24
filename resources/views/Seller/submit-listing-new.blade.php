@@ -11,31 +11,63 @@
     $missingRequirements = $missingRequirements ?? [];
 @endphp
 
-{{-- Seller block message: show when profile is incomplete --}}
+{{-- Seller block message: centered modal when profile is incomplete --}}
 @if(!$isEdit && count($missingRequirements) > 0)
-<div style="max-width:860px;margin:1.5rem auto 0;padding:0 1rem;">
-    <div style="background:#fff7ed;border:1.5px solid #fb923c;border-radius:14px;padding:1.25rem 1.4rem;display:flex;gap:1rem;align-items:flex-start;">
-        <span class="material-icons" style="color:#ea580c;font-size:1.6rem;flex-shrink:0;margin-top:2px;">warning</span>
-        <div style="flex:1;">
-            <p style="font-weight:700;color:#ea580c;font-size:1rem;margin:0 0 0.35rem;">Profile Incomplete — Listing Submission Blocked</p>
-            <p style="font-size:0.875rem;color:#92400e;margin:0 0 0.7rem;line-height:1.55;">
-                Please complete the following in your profile before submitting a listing:
-            </p>
-            <ul style="margin:0 0 1rem 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:0.35rem;">
-                @foreach($missingRequirements as $req)
-                <li style="display:flex;align-items:center;gap:0.45rem;font-size:0.875rem;color:#78350f;">
-                    <span class="material-icons" style="font-size:1rem;color:#dc2626;">cancel</span>
-                    {{ $req }}
-                </li>
-                @endforeach
-            </ul>
-            <a href="{{ route('seller.dashboard') }}" style="display:inline-flex;align-items:center;gap:0.4rem;background:#ea580c;color:#fff;font-size:0.85rem;font-weight:600;padding:0.5rem 1.1rem;border-radius:8px;text-decoration:none;">
+<!-- Modal Backdrop -->
+<div id="profile-block-modal" style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.55);backdrop-filter:blur(2px);">
+    <!-- Modal Card -->
+    <div style="background:#fff;border-radius:18px;box-shadow:0 24px 60px rgba(0,0,0,0.18);max-width:480px;width:calc(100% - 2rem);padding:2rem 2rem 1.75rem;position:relative;animation:pbm-in 0.25s ease;">
+        <!-- Icon + Title -->
+        <div style="display:flex;align-items:flex-start;gap:0.9rem;margin-bottom:1rem;">
+            <span style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;background:#fff7ed;flex-shrink:0;">
+                <span class="material-icons" style="color:#ea580c;font-size:1.5rem;">warning</span>
+            </span>
+            <div>
+                <p style="font-weight:800;color:#ea580c;font-size:1.05rem;margin:0 0 0.2rem;line-height:1.3;">Profile Incomplete</p>
+                <p style="font-weight:600;color:#7c3aed;font-size:0.8rem;margin:0;letter-spacing:0.01em;">Listing Submission Blocked</p>
+            </div>
+        </div>
+
+        <!-- Divider -->
+        <div style="height:1px;background:#f1f5f9;margin-bottom:1rem;"></div>
+
+        <!-- Body text -->
+        <p style="font-size:0.875rem;color:#64748b;margin:0 0 0.85rem;line-height:1.6;">
+            Please complete the following in your profile before submitting a listing:
+        </p>
+
+        <!-- Requirements list -->
+        <ul style="margin:0 0 1.25rem 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:0.55rem;">
+            @foreach($missingRequirements as $req)
+            <li style="display:flex;align-items:center;gap:0.55rem;font-size:0.875rem;font-weight:500;color:#1e293b;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:0.5rem 0.75rem;">
+                <span class="material-icons" style="font-size:1rem;color:#dc2626;flex-shrink:0;">cancel</span>
+                {{ $req }}
+            </li>
+            @endforeach
+        </ul>
+
+        <!-- Actions -->
+        <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
+            <a href="{{ route('seller.account') }}"
+               style="flex:1;min-width:160px;display:inline-flex;align-items:center;justify-content:center;gap:0.4rem;background:#ea580c;color:#fff;font-size:0.875rem;font-weight:700;padding:0.65rem 1.25rem;border-radius:10px;text-decoration:none;transition:background 0.15s;">
                 <span class="material-icons" style="font-size:1rem;">manage_accounts</span>
                 Go to Account Settings
+            </a>
+            <a href="{{ route('seller.dashboard') }}"
+               style="display:inline-flex;align-items:center;justify-content:center;gap:0.4rem;background:#f1f5f9;color:#475569;font-size:0.875rem;font-weight:600;padding:0.65rem 1.1rem;border-radius:10px;text-decoration:none;">
+                <span class="material-icons" style="font-size:1rem;">arrow_back</span>
+                Back to Dashboard
             </a>
         </div>
     </div>
 </div>
+
+<style>
+@keyframes pbm-in {
+    from { opacity:0; transform:scale(0.93) translateY(16px); }
+    to   { opacity:1; transform:scale(1) translateY(0); }
+}
+</style>
 @endif
 
 <style>
