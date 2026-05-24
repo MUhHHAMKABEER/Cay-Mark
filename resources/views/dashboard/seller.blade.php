@@ -1044,9 +1044,6 @@
                             <span class="material-icons-round" style="font-size:18px">{{ $payoutMethod ? 'edit' : 'add' }}</span>
                             {{ $payoutMethod ? 'Edit Payout Settings' : 'Add Payout Settings' }}
                         </button>
-                        @if(!$payoutMethod)
-                            <p class="text-xs text-gray-500 mt-2">Payout details must be completed before earnings can be released.</p>
-                        @endif
                     </div>
                 </div>
 
