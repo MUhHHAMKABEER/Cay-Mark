@@ -6,8 +6,10 @@ use Illuminate\Http\Request;
 use App\Http\Requests\BasicDashboardUpdateEmailRequest;
 use App\Http\Requests\BasicDashboardChangePasswordRequest;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
+use App\Models\UserDocument;
 use App\Services\BasicDashboardOps;
 
 class BasicDashboardController extends Controller
@@ -60,6 +62,31 @@ class BasicDashboardController extends Controller
     public function changePassword(BasicDashboardChangePasswordRequest $request)
     {
         return BasicDashboardOps::changePassword($request);
+    }
+
+    /**
+     * Serve a user document — only accessible by the owner.
+     */
+    public function viewDocument(UserDocument $document)
+    {
+        $user = Auth::user();
+
+        // Only the owner may view their own document
+        if ($document->user_id !== $user->id) {
+            abort(403);
+        }
+
+        if (!Storage::disk('public')->exists($document->path)) {
+            abort(404, 'Document not found.');
+        }
+
+        $fullPath = Storage::disk('public')->path($document->path);
+        $mime     = $document->mime_type ?: mime_content_type($fullPath) ?: 'application/octet-stream';
+
+        return response()->file($fullPath, [
+            'Content-Type'        => $mime,
+            'Content-Disposition' => 'inline; filename="' . ($document->filename ?: basename($document->path)) . '"',
+        ]);
     }
 }
 

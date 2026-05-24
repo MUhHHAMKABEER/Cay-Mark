@@ -1554,10 +1554,18 @@ document.addEventListener('DOMContentLoaded', function() {
             if (phoneFull) phoneFull.value = getFullPhone();
         }
 
+        function cmToast(type, title, sub) {
+            if (window.CaymarkUI) {
+                type === 'success' ? CaymarkUI.showSuccess(title, sub || '') : CaymarkUI.showError(title, sub || '');
+            } else {
+                alert(title + (sub ? '\n' + sub : ''));
+            }
+        }
+
         sendBtn.addEventListener('click', function() {
             var phone = getFullPhone();
             if (!phone) {
-                alert('Please select country and enter your phone number.');
+                cmToast('error', 'Phone number required', 'Select a country code and enter your number.');
                 return;
             }
             setFullPhoneInput();
@@ -1585,17 +1593,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (res.ok && res.data && res.data.success) {
                     if (verifyRow) verifyRow.classList.remove('hidden');
                     if (codeInput) { codeInput.value = ''; codeInput.focus(); }
-                    alert(res.data.message || 'Verification code sent. It expires in 5 minutes.');
+                    cmToast('success', 'Code sent!', res.data.message || 'Enter the 6-digit code sent to your phone.');
                     return;
                 }
                 var errMsg = (res.data && res.data.message) ||
                     (res.data && res.data.errors && res.data.errors.phone && res.data.errors.phone[0]) ||
-                    ('Could not send SMS (HTTP ' + res.status + '). Check you are logged in, then try again.');
-                alert(errMsg);
+                    ('Could not send SMS (HTTP ' + res.status + '). Please try again.');
+                cmToast('error', 'Could not send code', errMsg);
             }).catch(function() {
                 sendBtn.disabled = false;
                 sendBtn.textContent = 'Send code';
-                alert('Something went wrong while sending SMS. Please try again.');
+                cmToast('error', 'Request failed', 'Something went wrong. Please try again.');
             });
         });
 
@@ -1603,7 +1611,7 @@ document.addEventListener('DOMContentLoaded', function() {
             var phone = getFullPhone();
             var code = codeInput ? codeInput.value.trim() : '';
             if (!phone || !code) {
-                alert('Please enter your phone number and the SMS code.');
+                cmToast('error', 'Missing information', 'Enter your phone number and the 6-digit code.');
                 return;
             }
             verifyBtn.disabled = true;
@@ -1636,17 +1644,17 @@ document.addEventListener('DOMContentLoaded', function() {
                         var span = verifiedBadge.querySelector('span');
                         if (span) span.textContent = 'Verified';
                     }
-                    alert(res.data.message || 'Phone number verified and saved to your account.');
+                    cmToast('success', 'Phone verified!', res.data.message || 'Your number has been confirmed and saved.');
                     return;
                 }
                 var errMsg = (res.data && res.data.message) ||
                     (res.data && res.data.errors && res.data.errors.code && res.data.errors.code[0]) ||
                     ('Verification failed (HTTP ' + res.status + ').');
-                alert(errMsg);
+                cmToast('error', 'Verification failed', errMsg);
             }).catch(function() {
                 verifyBtn.disabled = false;
                 verifyBtn.textContent = 'Verify & Save';
-                alert('Verification failed. Please try again.');
+                cmToast('error', 'Request failed', 'Something went wrong. Please try again.');
             });
         });
     })();

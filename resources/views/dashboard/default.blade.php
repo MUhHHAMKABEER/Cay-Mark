@@ -224,7 +224,7 @@
                                             </div>
                                         </div>
                                         @if($document->path)
-                                            <a href="{{ asset('storage/' . $document->path) }}" target="_blank"
+                                            <a href="{{ route('user.document.view', $document->id) }}" target="_blank"
                                                class="text-blue-600 text-sm font-medium hover:underline flex items-center gap-1">
                                                 <span class="material-icons-round text-base">open_in_new</span> View
                                             </a>

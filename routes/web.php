@@ -122,6 +122,7 @@ Route::get('/dashboard/default', [App\Http\Controllers\BasicDashboardController:
     ->name('dashboard.default');
 Route::post('/dashboard/default/update-email', [App\Http\Controllers\BasicDashboardController::class, 'updateEmail'])->middleware(['auth'])->name('basic-dashboard.update-email');
 Route::post('/dashboard/default/change-password', [App\Http\Controllers\BasicDashboardController::class, 'changePassword'])->middleware(['auth'])->name('basic-dashboard.change-password');
+Route::get('/my-documents/{document}', [App\Http\Controllers\BasicDashboardController::class, 'viewDocument'])->middleware(['auth'])->name('user.document.view');
 
 Route::get('/sellers-guide', function () {
     return view('sellers-guide');

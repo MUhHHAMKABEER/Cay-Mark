@@ -50,14 +50,12 @@ return [
         'signup_fee_cents' => (int) env('TOW_PROVIDER_SIGNUP_FEE_CENTS', 5000), // $50.00 default
     ],
 
-    'twilio' => [
-        'sid' => env('TWILIO_SID'),
-        'token' => env('TWILIO_AUTH_TOKEN'),
-        'from' => env('TWILIO_FROM'),
-        // Path to cacert.pem (e.g. from https://curl.se/ca/cacert.pem) — fixes Windows/WAMP cURL "unable to get local issuer certificate"
-        'cainfo' => env('TWILIO_CAINFO'),
-        // Local only: bypass SSL verify for Twilio API (insecure; never enable in production)
-        'insecure_skip_verify' => filter_var(env('TWILIO_INSECURE_SSL_SKIP_VERIFY', false), FILTER_VALIDATE_BOOLEAN),
+    'vonage' => [
+        'api_key'    => env('VONAGE_API_KEY'),
+        'api_secret' => env('VONAGE_API_SECRET'),
+        // Alphanumeric sender ID (max 11 chars) shown to recipient, e.g. "CayMark"
+        // OR a Vonage virtual number e.g. "+12015555555"
+        'from'       => env('VONAGE_FROM', 'CayMark'),
     ],
 
 ];

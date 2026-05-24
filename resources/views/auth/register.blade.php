@@ -546,10 +546,19 @@
 
         if (!sendBtn || !verifyBtn || !phoneInput) return;
 
+        function cmToast(type, title, sub) {
+            if (window.CaymarkUI) {
+                type === 'success' ? CaymarkUI.showSuccess(title, sub || '') : CaymarkUI.showError(title, sub || '');
+            } else {
+                // Fallback if UI kit hasn't loaded yet (shouldn't happen on button click)
+                alert(title + (sub ? '\n' + sub : ''));
+            }
+        }
+
         sendBtn.addEventListener('click', function() {
             var phone = getFullPhone();
             if (!phone) {
-                alert('Please select country and enter your phone number.');
+                cmToast('error', 'Phone number required', 'Please select a country code and enter your number.');
                 return;
             }
             setFullPhoneInput();
@@ -565,16 +574,14 @@
                 if (data.success) {
                     if (verifyRow) verifyRow.classList.remove('hidden');
                     if (codeInput) { codeInput.value = ''; codeInput.focus(); }
-                    if (submitBtn) submitBtn.disabled = true;
-                    if (submitWrap) submitWrap.classList.add('reg-pending-verify');
-                    alert(data.message || 'Code sent.');
+                    cmToast('success', 'Code sent!', data.message || 'Enter the 6-digit code sent to your phone.');
                 } else {
-                    alert(data.message || 'Could not send code.');
+                    cmToast('error', 'Could not send code', data.message || 'Please check your number and try again.');
                 }
             }).catch(function() {
                 sendBtn.disabled = false;
                 sendBtn.textContent = 'Send code';
-                alert('Request failed. Try again.');
+                cmToast('error', 'Request failed', 'Check your connection and try again.');
             });
         });
 
@@ -582,7 +589,7 @@
             var phone = getFullPhone();
             var code = (codeInput && codeInput.value) ? codeInput.value.trim() : '';
             if (!phone || !code) {
-                alert('Enter phone number and the 6-digit code.');
+                cmToast('error', 'Missing information', 'Enter your phone number and the 6-digit code.');
                 return;
             }
             setFullPhoneInput();
@@ -598,13 +605,14 @@
                 if (data.success) {
                     setFullPhoneInput();
                     applyVerifiedUi();
+                    cmToast('success', 'Phone verified!', 'Your number has been confirmed successfully.');
                 } else {
-                    alert(data.message || 'Invalid or expired code.');
+                    cmToast('error', 'Verification failed', data.message || 'Invalid or expired code. Request a new one.');
                 }
             }).catch(function() {
                 verifyBtn.disabled = false;
                 verifyBtn.textContent = 'Verify';
-                alert('Request failed. Try again.');
+                cmToast('error', 'Request failed', 'Check your connection and try again.');
             });
         });
 
