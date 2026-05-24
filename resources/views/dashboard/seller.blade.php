@@ -60,14 +60,12 @@
                             </a>
                         </div>
                     </div>
-                    <button onclick="showTab('content-notifications')"
-                            class="relative w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors duration-200"
-                            title="Notifications">
-                        <span class="material-icons-round text-gray-600" style="font-size:20px">notifications</span>
-                        @if($casualUnread > 0)
-                            <span class="absolute top-1 right-1 min-w-[16px] h-4 bg-red-500 rounded-full flex items-center justify-center text-white font-bold px-0.5 leading-none" style="font-size:9px">{{ $casualUnread > 9 ? '9+' : $casualUnread }}</span>
-                        @endif
-                    </button>
+                    <x-ui.notification-bell
+                        :user="$user"
+                        :notifications="($notifications ?? collect())->take(4)"
+                        :unread-count="$casualUnread"
+                        :notifications-url="route('seller.notifications')"
+                    />
                 </div>
 
                 <!-- ── Row 1: Quick Stats (left) + Finances Overview (right) ── -->
