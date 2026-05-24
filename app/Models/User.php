@@ -547,7 +547,8 @@ public function watchlist()
             $missing[] = 'Add your payout method';
         }
 
-        if (empty($this->relationship_to_business)) {
+        // Only business sellers (those with a business license) need to provide business details
+        if ($this->business_license_path && empty($this->relationship_to_business)) {
             $missing[] = 'Provide your business details';
         }
 
