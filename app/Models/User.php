@@ -511,7 +511,8 @@ public function watchlist()
     {
         $missing = [];
 
-        $idCount = $this->documents()->where('doc_type', 'id')->count();
+        // First ID is stored as doc_type='id', second as doc_type='id_2'
+        $idCount = $this->documents()->whereIn('doc_type', ['id', 'id_2'])->count();
         if ($idCount < 2) {
             $missing[] = 'Upload two government-issued IDs';
         }
@@ -531,7 +532,8 @@ public function watchlist()
     {
         $missing = [];
 
-        $idCount = $this->documents()->where('doc_type', 'id')->count();
+        // First ID is stored as doc_type='id', second as doc_type='id_2'
+        $idCount = $this->documents()->whereIn('doc_type', ['id', 'id_2'])->count();
         if ($idCount < 2) {
             $missing[] = 'Upload two government-issued IDs';
         }
