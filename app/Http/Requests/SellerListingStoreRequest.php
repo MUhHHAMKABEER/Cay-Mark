@@ -15,11 +15,9 @@ class SellerListingStoreRequest extends FormRequest
     public function rules(): array
     {
         $user = $this->user();
-        // Individual/casual seller = has an active $25/listing subscription package.
+        // Casual seller = no business licence on file → card details required.
         // Must match exactly how create() and store() in ListingController determine this.
-        $isIndividualSeller = $user
-            && $user->activeSubscription?->package
-            && (float) $user->activeSubscription->package->price === 25.00;
+        $isIndividualSeller = $user && empty($user->business_license_path);
         $maxYear = (int) date('Y') + 1;
         $damageKeys = array_keys(config('listing_damage_types.allowed', []));
 

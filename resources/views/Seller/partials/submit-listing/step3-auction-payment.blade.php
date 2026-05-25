@@ -1,8 +1,6 @@
 @php
-    $sellerPackage = $user->activeSubscription?->package ?? null;
-    $isIndividualSeller = $isIndividualSeller
-        ?? (empty($user->business_license_path)
-            && ! ($sellerPackage && (float) ($sellerPackage->price ?? 0) === 0.0));
+    // Casual seller = no business licence. Falls back safely if controller already set it.
+    $isIndividualSeller = $isIndividualSeller ?? empty($user->business_license_path);
     $dur = old('auction_duration', $listing->auction_duration ?? 7);
 @endphp
 

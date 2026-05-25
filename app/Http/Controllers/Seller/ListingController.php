@@ -50,8 +50,10 @@ class ListingController extends Controller
 
         $user = Auth::user();
         $maxYear = (int) date('Y') + 1;
-        $isIndividualSeller = $user->activeSubscription?->package
-            && (float) $user->activeSubscription->package->price === 25.00;
+
+        // Casual seller = no business licence on file → pays $25 per listing.
+        // Business seller = has uploaded a business licence → subscription covers listings.
+        $isIndividualSeller = empty($user->business_license_path);
 
         $missingRequirements = $user->getMissingListingRequirements();
 
@@ -70,8 +72,8 @@ class ListingController extends Controller
                 ])->withInput();
             }
 
-            $userPackage = $user->activeSubscription?->package;
-            $isIndividualSeller = $userPackage && $userPackage->price == 25.00;
+            // Casual seller = no business licence → $25 per listing fee applies.
+            $isIndividualSeller = empty($user->business_license_path);
 
             $validated = $request->validated();
 
