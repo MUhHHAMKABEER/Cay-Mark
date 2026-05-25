@@ -392,24 +392,56 @@ class AdminController extends Controller
 
     /**
      * Membership Management Page
-     * Note: Using Subscription model instead of Membership
+     * Shows one row per user (their most recent subscription only).
      */
-    public function membershipManagement()
+    public function membershipManagement(\Illuminate\Http\Request $request)
     {
-        $memberships = \App\Models\Subscription::with(['user:id,name,email,username', 'package'])
-                                ->orderBy('created_at', 'desc')
-                                ->paginate(20);
-                                
+        // Latest subscription ID per user — prevents duplicate rows when a user upgrades
+        $latestSubIds = \App\Models\Subscription::selectRaw('MAX(id) as id')
+            ->groupBy('user_id')
+            ->pluck('id');
+
+        // Stats are based on each user's current (latest) subscription
         $membershipStats = [
-            'total' => \App\Models\Subscription::count(),
-            'active' => \App\Models\Subscription::where('status', 'active')->count(),
-            'expired' => \App\Models\Subscription::where('status', 'expired')->count(),
-            'pending_renewal' => \App\Models\Subscription::where('status', 'pending')->count(),
-            'expiring_soon' => \App\Models\Subscription::where('ends_at', '<=', Carbon::now()->addDays(7))
-                                        ->where('status', 'active')
-                                        ->whereNotNull('ends_at')
-                                        ->count(),
+            'total'           => \App\Models\Subscription::whereIn('id', $latestSubIds)->count(),
+            'active'          => \App\Models\Subscription::whereIn('id', $latestSubIds)->where('status', 'active')->count(),
+            'expired'         => \App\Models\Subscription::whereIn('id', $latestSubIds)->where('status', 'expired')->count(),
+            'pending_renewal' => \App\Models\Subscription::whereIn('id', $latestSubIds)->where('status', 'pending')->count(),
+            'expiring_soon'   => \App\Models\Subscription::whereIn('id', $latestSubIds)
+                                    ->where('status', 'active')
+                                    ->whereNotNull('ends_at')
+                                    ->where('ends_at', '<=', Carbon::now()->addDays(7))
+                                    ->count(),
         ];
+
+        $query = \App\Models\Subscription::with(['user:id,name,email,username,role,created_at', 'package'])
+            ->whereIn('id', $latestSubIds);
+
+        // Search by name or email
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->whereHas('user', function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        // Filter by membership status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Filter by user role (buyer / seller)
+        if ($request->filled('role')) {
+            $role = $request->role;
+            $query->whereHas('user', function ($q) use ($role) {
+                $q->where('role', $role);
+            });
+        }
+
+        $memberships = $query->orderBy('created_at', 'desc')
+                             ->paginate(25)
+                             ->appends($request->query());
 
         return view('admin.memberships', compact('memberships', 'membershipStats'));
     }
