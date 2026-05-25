@@ -962,7 +962,37 @@ public function invoices()
     /**
      * Fire off email + notification side effects.
      */
-    protected static function dispatchSideEffects(self $listing, $actor): void
+    /**
+     * Queue-friendly factory: creates the listing DB record and records the
+     * payment (for individual sellers) but does NOT move any files.
+     * File processing is handled by App\Jobs\ProcessListingMedia.
+     */
+    public static function createFromPayloadOnly(
+        $actor,
+        Request $request,
+        array $payload,
+        bool $isIndividualSeller,
+        bool $duplicateVinFlag
+    ): self {
+        return DB::transaction(function () use ($actor, $request, $payload, $isIndividualSeller, $duplicateVinFlag) {
+            $context = [
+                'actor'      => $actor,
+                'request'    => $request,
+                'payload'    => $payload,
+                'individual' => $isIndividualSeller,
+                'duplicate'  => $duplicateVinFlag,
+                'photos'     => 0, // not used in skeleton creation
+            ];
+
+            $context = static::maybeRecordObscurePayment($context);
+            $context = static::attachTemporalMetadata($context);
+            $listing = static::spinUpListingSkeleton($context);
+            // Side effects (email / notification) are deferred to the job.
+            return $listing;
+        });
+    }
+
+    public static function dispatchSideEffects(self $listing, $actor): void
     {
         try {
             Mail::send('emails.caymark.listing-submitted', [

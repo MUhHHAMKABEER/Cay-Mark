@@ -77,55 +77,86 @@ class ListingController extends Controller
 
             $validated = $request->validated();
 
-        // Validate pricing rules
-        if ($request->starting_price && $request->starting_price <= 0) {
-            return back()->withErrors(['starting_price' => 'Starting Bid must be greater than $0 if entered. Please enter a valid starting price.'])->withInput();
-        }
-        if ($request->reserve_price && $request->starting_price && $request->reserve_price < $request->starting_price) {
-            return back()->withErrors(['reserve_price' => 'Reserve Price must be greater than or equal to Starting Bid. Please adjust your pricing.'])->withInput();
-        }
-
-        $photos = $request->file('photos', []);
-        $totalPhotos = count($photos) + ($request->hasFile('cover_photo') ? 1 : 0);
-
-        if (count($photos) < 5) {
-            return back()->withErrors(['photos' => 'You need at least 6 photos total (1 cover + 5 additional). Currently you have ' . $totalPhotos . ' photo(s).'])->withInput()->with('error_section', 'section2');
-        }
-        if ($totalPhotos > 15) {
-            return back()->withErrors(['photos' => 'Maximum 15 photos allowed (1 cover + 14 additional). You have uploaded ' . $totalPhotos . '.'])->withInput()->with('error_section', 'section2');
-        }
-
-        if (!$request->boolean('vin_decode_success')) {
-            $validated['vin'] = null;
-        }
-
-        // Check for duplicate VIN if provided
-        $duplicateVinFlag = false;
-        if (!empty($validated['vin'])) {
-            $vin = TextFormatter::toAllCaps($validated['vin']);
-            $existingListing = Listing::where('vin', $vin)
-                ->where('id', '!=', $request->id ?? 0)
-                ->where('status', '!=', 'rejected')
-                ->first();
-
-            if ($existingListing) {
-                $duplicateVinFlag = true;
+            // Validate pricing rules
+            if ($request->starting_price && $request->starting_price <= 0) {
+                return back()->withErrors(['starting_price' => 'Starting Bid must be greater than $0 if entered. Please enter a valid starting price.'])->withInput();
             }
-        }
+            if ($request->reserve_price && $request->starting_price && $request->reserve_price < $request->starting_price) {
+                return back()->withErrors(['reserve_price' => 'Reserve Price must be greater than or equal to Starting Bid. Please adjust your pricing.'])->withInput();
+            }
 
-        // Delegate the convoluted creation workflow to the Listing model
-        $listing = Listing::fabricateFromSellerInput(
-            $user,
-            $request,
-            $validated,
-            $isIndividualSeller,
-            $duplicateVinFlag,
-            $totalPhotos
-        );
+            $photos      = $request->file('photos', []);
+            $totalPhotos = count($photos) + ($request->hasFile('cover_photo') ? 1 : 0);
 
-        return redirect()
-            ->route('seller.listings.success', ['id' => $listing->id])
-            ->with('listing_submitted', true);
+            if (count($photos) < 5) {
+                return back()->withErrors(['photos' => 'You need at least 6 photos total (1 cover + 5 additional). Currently you have ' . $totalPhotos . ' photo(s).'])->withInput()->with('error_section', 'section2');
+            }
+            if ($totalPhotos > 15) {
+                return back()->withErrors(['photos' => 'Maximum 15 photos allowed (1 cover + 14 additional). You have uploaded ' . $totalPhotos . '.'])->withInput()->with('error_section', 'section2');
+            }
+
+            if (!$request->boolean('vin_decode_success')) {
+                $validated['vin'] = null;
+            }
+
+            // Duplicate VIN check
+            $duplicateVinFlag = false;
+            if (!empty($validated['vin'])) {
+                $vin             = TextFormatter::toAllCaps($validated['vin']);
+                $existingListing = Listing::where('vin', $vin)
+                    ->where('id', '!=', $request->id ?? 0)
+                    ->where('status', '!=', 'rejected')
+                    ->first();
+                if ($existingListing) {
+                    $duplicateVinFlag = true;
+                }
+            }
+
+            // ── Step 1: Pre-move uploaded files to persistent temp storage ──
+            // PHP deletes temp files at request end, so we move them NOW
+            // before dispatching the queue job.
+            $queueKey = (string) \Illuminate\Support\Str::uuid();
+            $tempDir  = storage_path("app/listing-queue/{$queueKey}");
+            mkdir($tempDir, 0755, true);
+
+            $staged = ['cover' => null, 'photos' => [], 'video' => null];
+
+            if ($request->hasFile('cover_photo')) {
+                $f    = $request->file('cover_photo');
+                $name = 'cover.' . $f->getClientOriginalExtension();
+                $f->move($tempDir, $name);
+                $staged['cover'] = $name;
+            }
+
+            foreach ($request->file('photos', []) as $i => $photo) {
+                $name = "photo_{$i}." . $photo->getClientOriginalExtension();
+                $photo->move($tempDir, $name);
+                $staged['photos'][] = $name;
+            }
+
+            if ($request->hasFile('engine_video')) {
+                $v    = $request->file('engine_video');
+                $name = 'video.' . $v->getClientOriginalExtension();
+                $v->move($tempDir, $name);
+                $staged['video'] = $name;
+            }
+
+            // ── Step 2: Create listing DB record + payment (no file I/O) ───
+            $listing = Listing::createFromPayloadOnly(
+                $user,
+                $request,
+                $validated,
+                $isIndividualSeller,
+                $duplicateVinFlag
+            );
+
+            // ── Step 3: Dispatch media job — seller is redirected instantly ──
+            \App\Jobs\ProcessListingMedia::dispatch($listing->id, $tempDir, $staged);
+
+            return redirect()
+                ->route('seller.listings.success', ['id' => $listing->id])
+                ->with('listing_submitted', true);
+
         } catch (\Illuminate\Validation\ValidationException $e) {
             return back()->withErrors($e->errors())->withInput()->with('error_section', $this->detectErrorSection($e->errors()));
         } catch (\Illuminate\Http\Exceptions\PostTooLargeException $e) {
