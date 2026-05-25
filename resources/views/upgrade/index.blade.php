@@ -85,6 +85,7 @@
 }
 </style>
 
+<div style="height:100%;overflow-y:auto;">
 <div class="w-full px-3 sm:px-5 lg:px-7 py-5 max-w-5xl mx-auto">
 
     {{-- ── Page Header ── --}}
@@ -549,6 +550,8 @@
         </div>
     </div>
 </div>
+
+</div>{{-- /scroll wrapper --}}
 
 @push('scripts')
 <script>
