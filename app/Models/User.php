@@ -363,10 +363,11 @@ public function watchlist()
             })
             ->values()
             ->map(function($listing) {
-                $listing->highest_bid = $listing->getHighestBidAmount();
-                $listing->user_highest_bid = $listing->getUserHighestBid($this->id);
-                $listing->is_winning = $listing->isUserWinning($this->id);
-                $listing->pending_invoice = $listing->getPendingInvoiceForUser($this->id);
+                $listing->highest_bid      = $listing->bids()->where('status', 'active')->max('amount') ?? $listing->starting_price ?? 0;
+                $listing->user_highest_bid = $listing->bids()->where('user_id', $this->id)->where('status', 'active')->max('amount') ?? 0;
+                $listing->is_winning       = $listing->user_highest_bid > 0
+                                             && (float) $listing->user_highest_bid >= (float) $listing->highest_bid;
+                $listing->pending_invoice  = $listing->getPendingInvoiceForUser($this->id);
                 return $listing;
             });
     }

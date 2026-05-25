@@ -613,16 +613,16 @@ public function invoices()
     }
 
     /**
-     * Check if user is winning this listing
+     * Check if user currently has the highest active bid on this listing.
      */
     public function isUserWinning($userId): bool
     {
-        $invoice = $this->invoices()
-            ->where('buyer_id', $userId)
-            ->where('payment_status', 'pending')
-            ->first();
-        
-        return $invoice !== null;
+        $highestBid = $this->bids()->where('status', 'active')->max('amount');
+        if (!$highestBid || $highestBid <= 0) {
+            return false;
+        }
+        $userBid = $this->bids()->where('user_id', $userId)->where('status', 'active')->max('amount');
+        return $userBid !== null && (float) $userBid >= (float) $highestBid;
     }
 
     /**
