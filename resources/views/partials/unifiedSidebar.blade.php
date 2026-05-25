@@ -241,6 +241,98 @@
     body.sidebar-collapsed .unified-sidebar .user-profile { justify-content: center; padding: 1rem 0.25rem; }
     body.sidebar-collapsed .unified-sidebar .user-profile-meta { display: none; }
 
+    /* ── Business Seller profile card ─────────────────────────────── */
+    .unified-sidebar .user-profile--business {
+        background: linear-gradient(135deg, #0a1628 0%, #162848 100%);
+        border-bottom: 1px solid rgba(212,175,55,0.18);
+        padding: 0.8rem 1rem;
+    }
+    .unified-sidebar .user-profile--business:hover {
+        background: linear-gradient(135deg, #0d1e3a 0%, #1c3460 100%);
+    }
+    .biz-profile-card {
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+        width: 100%;
+    }
+    .biz-avatar {
+        position: relative;
+        flex-shrink: 0;
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #b8860b 0%, #f0d060 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.875rem;
+        font-weight: 800;
+        color: #0a1628;
+        letter-spacing: 0.04em;
+        box-shadow: 0 2px 10px rgba(212,175,55,0.35), 0 0 0 2px rgba(212,175,55,0.12);
+    }
+    .biz-verified-dot {
+        position: absolute;
+        bottom: -4px;
+        right: -4px;
+        width: 16px;
+        height: 16px;
+        background: linear-gradient(135deg, #b8860b, #f0d060);
+        border-radius: 50%;
+        border: 2px solid #0a1628;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .biz-name {
+        font-size: 0.8125rem;
+        font-weight: 700;
+        color: #ffffff;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        line-height: 1.2;
+    }
+    .biz-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        font-size: 9px;
+        font-weight: 800;
+        letter-spacing: 0.07em;
+        color: #0a1628;
+        background: linear-gradient(135deg, #b8860b 0%, #f0d060 100%);
+        padding: 2px 7px 2px 5px;
+        border-radius: 999px;
+        white-space: nowrap;
+        margin-top: 3px;
+    }
+    body.sidebar-collapsed .unified-sidebar .user-profile--business { justify-content: center; padding: 0.8rem 0.25rem; }
+
+    /* ── Individual Seller profile card ───────────────────────────── */
+    .unified-sidebar .user-profile--casual {
+        background: #f8fafc;
+        border-bottom: 1px solid #e9edf2;
+        border-left: 3px solid #063466;
+        padding-left: calc(1.1rem - 3px);
+    }
+    .unified-sidebar .user-profile--casual:hover { background: #eef2f7; }
+    .casual-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        font-size: 9px;
+        font-weight: 800;
+        letter-spacing: 0.07em;
+        color: #ffffff;
+        background: #063466;
+        padding: 2px 8px;
+        border-radius: 999px;
+        white-space: nowrap;
+        margin-top: 1px;
+    }
+
     /* Navigation — scroll only inner wrapper so flyout tooltips are not clipped */
     .unified-sidebar nav {
         flex: 1;
@@ -510,6 +602,47 @@
         };
         $profileUrl = $profileRoute ? route($profileRoute) : route('dashboard.default').'?tab=account';
     @endphp
+    @if($role === 'seller' && $user->business_license_path)
+    {{-- ═══ BUSINESS SELLER ═══ --}}
+    @php
+        $bpParts    = preg_split('/\s+/u', trim($user->name ?? ''), -1, PREG_SPLIT_NO_EMPTY);
+        $bpInitials = count($bpParts) >= 2
+            ? mb_strtoupper(mb_substr($bpParts[0],0,1) . mb_substr($bpParts[count($bpParts)-1],0,1))
+            : (count($bpParts) === 1 ? mb_strtoupper(mb_substr($bpParts[0],0,2)) : '?');
+    @endphp
+    <a href="{{ $profileUrl }}" class="user-profile user-profile--business" title="{{ $displayName ?: 'Account' }} · Business Seller">
+        <div class="biz-profile-card">
+            <div class="biz-avatar">
+                {{ $bpInitials }}
+                <span class="biz-verified-dot">
+                    <span class="material-icons-round" style="font-size:9px;color:#0a1628;line-height:1">check</span>
+                </span>
+            </div>
+            <div class="user-profile-meta" style="gap:0">
+                <span class="biz-name">{{ Str::ucfirst($user->name) }}</span>
+                <span class="biz-badge">
+                    <span class="material-icons-round" style="font-size:9px;line-height:1">business</span>
+                    BUSINESS
+                </span>
+            </div>
+        </div>
+    </a>
+
+    @elseif($role === 'seller')
+    {{-- ═══ INDIVIDUAL / CASUAL SELLER ═══ --}}
+    <a href="{{ $profileUrl }}" class="user-profile user-profile--casual" title="{{ $displayName ?: 'Account' }} · Individual Seller">
+        <x-ui.avatar :user="$user" size="sm" class="user-profile-avatar" />
+        <div class="user-profile-meta">
+            <span class="user-name">{{ Str::ucfirst($user->name) }}</span>
+            <span class="casual-badge">
+                <span class="material-icons-round" style="font-size:9px;line-height:1">person</span>
+                SELLER
+            </span>
+        </div>
+    </a>
+
+    @else
+    {{-- ═══ DEFAULT (buyer, admin, guest) ═══ --}}
     <a href="{{ $profileUrl }}" class="user-profile" data-sidebar-flyout="Account settings" title="{{ $displayName ?: 'Account' }} · {{ $roleLabel }}">
         <x-ui.avatar :user="$user" size="sm" class="user-profile-avatar" />
         <div class="user-profile-meta">
@@ -517,6 +650,7 @@
             <span class="user-role" style="{{ $roleBadgeBg }}">{{ $roleBadge }}</span>
         </div>
     </a>
+    @endif
 
     <nav>
         <div class="sidebar-nav-scroll">

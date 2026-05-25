@@ -1,29 +1,37 @@
 <IfModule mod_php.c>
-    php_value upload_max_filesize 20M
-    php_value post_max_size 25M
+    php_value upload_max_filesize 50M
+    php_value post_max_size 120M
     php_value max_execution_time 300
     php_value max_input_time 300
-    php_value memory_limit 256M
+    php_value memory_limit 512M
+    php_value max_file_uploads 30
 </IfModule>
 
 <IfModule mod_php7.c>
-    php_value upload_max_filesize 20M
-    php_value post_max_size 25M
+    php_value upload_max_filesize 50M
+    php_value post_max_size 120M
     php_value max_execution_time 300
     php_value max_input_time 300
-    php_value memory_limit 256M
+    php_value memory_limit 512M
+    php_value max_file_uploads 30
 </IfModule>
 
 <IfModule mod_php8.c>
-    php_value upload_max_filesize 20M
-    php_value post_max_size 25M
+    php_value upload_max_filesize 50M
+    php_value post_max_size 120M
     php_value max_execution_time 300
     php_value max_input_time 300
-    php_value memory_limit 256M
+    php_value memory_limit 512M
+    php_value max_file_uploads 30
 </IfModule>
 
 <IfModule mod_fcgid.c>
-    FcgidMaxRequestLen 26214400
+    FcgidMaxRequestLen 125829120
+</IfModule>
+
+# LiteSpeed body-size limit (host runs LiteSpeed — see x-lscache header)
+<IfModule LiteSpeed>
+    LimitRequestBody 125829120
 </IfModule>
 
 <IfModule mod_rewrite.c>

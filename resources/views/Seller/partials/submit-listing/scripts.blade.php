@@ -1,3 +1,4 @@
+<script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.js"></script>
 <script>
     const MAX_ADDITIONAL_PHOTOS = 14;
     const MIN_ADDITIONAL_PHOTOS = 5;
@@ -207,8 +208,12 @@
     });
 
     var vinAttemptCount = 0;
-    function setMmyLocked(locked) {
-        ['field_make', 'field_model', 'field_year'].forEach(function(id) {
+    // ids: optional array of element ids to lock; defaults to all three MMY fields.
+    // When unlocking (locked=false), always unlocks all three regardless of ids.
+    function setMmyLocked(locked, ids) {
+        var allMmy = ['field_make', 'field_model', 'field_year'];
+        var targets = locked ? (ids || allMmy) : allMmy;
+        targets.forEach(function(id) {
             var el = document.getElementById(id);
             if (!el) return;
             el.readOnly = locked;
@@ -217,10 +222,10 @@
             el.style.cursor        = locked ? 'not-allowed' : '';
             el.style.pointerEvents = locked ? 'none' : '';
         });
-        // Show/hide the lock badge above the MMY grid
+        // Show/hide the lock badge — only show when at least one field is locked
         var badge = document.getElementById('vinLockBadge');
         if (!badge) return;
-        if (locked) {
+        if (locked && targets.length) {
             badge.style.display = 'flex';
             clearTimeout(badge._hideTimer);
             badge._hideTimer = setTimeout(function() {
@@ -281,7 +286,14 @@
             if (data.success) {
                 applyDecodedData(data.data);
                 document.getElementById('vin_decode_success').value = '1';
-                setMmyLocked(true);
+                // Only lock MMY fields that the decoder actually returned a value for
+                var mmyMap = { make: 'field_make', model: 'field_model', year: 'field_year' };
+                var decoded = data.data || {};
+                var tolock = Object.keys(mmyMap).filter(function(k) {
+                    var v = decoded[k];
+                    return v != null && String(v).trim() !== '';
+                }).map(function(k) { return mmyMap[k]; });
+                setMmyLocked(true, tolock);
                 showVinMessage('Details loaded successfully.', false);
             } else {
                 vinAttemptCount++;
@@ -404,6 +416,72 @@
         var prev = document.getElementById('coverPhotoPreview');
         if (!prev) return;
         prev.innerHTML = file ? '<div class="photo-preview-item"><img src="' + URL.createObjectURL(file) + '" alt="Cover"></div>' : '';
+    });
+
+    /* ── Client-side image compression before submit ───────────────────── */
+    function cmShowCompressOverlay() {
+        var overlay = document.getElementById('cmCompressOverlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'cmCompressOverlay';
+            overlay.style.cssText = 'position:fixed;inset:0;background:rgba(10,22,40,0.88);z-index:99999;display:flex;align-items:center;justify-content:center;flex-direction:column;color:#fff;padding:1rem;backdrop-filter:blur(3px);';
+            overlay.innerHTML =
+                '<div style="width:60px;height:60px;border:4px solid rgba(240,208,96,0.2);border-top-color:#f0d060;border-radius:50%;animation:cmSpin 0.8s linear infinite;"></div>' +
+                '<p style="margin-top:1.5rem;font-size:1rem;font-weight:700;letter-spacing:0.02em;">Preparing your submission</p>' +
+                '<p id="cmCompressProgress" style="margin-top:0.4rem;font-size:0.85rem;color:rgba(255,255,255,0.75);">Optimizing photos…</p>';
+            document.body.appendChild(overlay);
+            var style = document.createElement('style');
+            style.textContent = '@keyframes cmSpin { to { transform: rotate(360deg); } }';
+            document.head.appendChild(style);
+        }
+        overlay.style.display = 'flex';
+    }
+    function cmHideCompressOverlay() {
+        var overlay = document.getElementById('cmCompressOverlay');
+        if (overlay) overlay.style.display = 'none';
+    }
+    function cmSetCompressProgress(text) {
+        var el = document.getElementById('cmCompressProgress');
+        if (el) el.textContent = text;
+    }
+    async function cmCompressInputFiles(input, label) {
+        if (!input || !input.files || !input.files.length) return;
+        if (typeof imageCompression === 'undefined') return; // lib failed to load — submit as-is
+        var files = Array.from(input.files);
+        var out = [];
+        var opts = { maxSizeMB: 1.5, maxWidthOrHeight: 1920, useWebWorker: true, fileType: 'image/jpeg', initialQuality: 0.82 };
+        for (var i = 0; i < files.length; i++) {
+            var f = files[i];
+            // Skip non-images and already-small files
+            if (!f.type || !f.type.startsWith('image/') || f.size < 500 * 1024) { out.push(f); continue; }
+            cmSetCompressProgress('Optimizing ' + label + ' ' + (i + 1) + ' of ' + files.length + '…');
+            try {
+                var c = await imageCompression(f, opts);
+                var newName = f.name.replace(/\.[^.]+$/, '') + '.jpg';
+                out.push(new File([c], newName, { type: 'image/jpeg', lastModified: Date.now() }));
+            } catch (err) {
+                out.push(f); // fall back to original
+            }
+        }
+        try {
+            var dt = new DataTransfer();
+            out.forEach(function(f) { dt.items.add(f); });
+            input.files = dt.files;
+        } catch (e) { /* DataTransfer unsupported — leave as-is */ }
+    }
+    document.getElementById('listingForm')?.addEventListener('submit', async function(e) {
+        if (this._cmReady) return; // already compressed — let it submit
+        e.preventDefault();
+        var submitBtn = this.querySelector('[type="submit"]');
+        if (submitBtn) submitBtn.disabled = true;
+        cmShowCompressOverlay();
+        try {
+            await cmCompressInputFiles(document.getElementById('cover_photo_input'), 'cover photo');
+            await cmCompressInputFiles(document.getElementById('photos_input'), 'photo');
+            cmSetCompressProgress('Uploading…');
+        } catch (err) { /* swallow — submit anyway */ }
+        this._cmReady = true;
+        this.submit();
     });
 
     @if(session('error_section'))
