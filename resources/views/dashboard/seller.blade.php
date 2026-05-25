@@ -2009,7 +2009,11 @@ document.getElementById('deleteListingModal') && document.getElementById('delete
                 <div class="mb-4">
                     <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">New Password</label>
                     <div class="relative">
-                        <input type="password" id="modal_new_password" name="password" required minlength="8"
+                        <input type="password" id="modal_new_password" name="password" required
+                               minlength="8" maxlength="15"
+                               data-password-strength
+                               data-cm-validate="password-register"
+                               data-cm-label="New password"
                                class="w-full border border-gray-200 rounded-xl px-4 py-2.5 pr-10 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
                                 onclick="togglePasswordModal('modal_new_password', this)" aria-label="Toggle password visibility">
@@ -2020,13 +2024,16 @@ document.getElementById('deleteListingModal') && document.getElementById('delete
                             </svg>
                         </button>
                     </div>
-                    <p class="text-[11px] text-gray-400 mt-1">Minimum 8 characters. Must differ from current password.</p>
+                    <p class="text-[11px] text-gray-400 mt-1">8–15 characters · One uppercase · One number · One special character (e.g. !@#$%)</p>
                 </div>
                 <!-- Confirm Password -->
                 <div class="mb-5">
                     <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Confirm New Password</label>
                     <div class="relative">
-                        <input type="password" id="modal_confirm_password" name="password_confirmation" required minlength="8"
+                        <input type="password" id="modal_confirm_password" name="password_confirmation" required
+                               minlength="8" maxlength="15"
+                               data-cm-match="#modal_new_password"
+                               data-cm-label="Confirm password"
                                class="w-full border border-gray-200 rounded-xl px-4 py-2.5 pr-10 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
                                 onclick="togglePasswordModal('modal_confirm_password', this)" aria-label="Toggle password visibility">

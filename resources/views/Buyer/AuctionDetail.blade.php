@@ -792,7 +792,7 @@
                                     </li>
                                     @endforeach
                                 </ul>
-                                <a href="{{ route('buyer.profile') }}" style="display:inline-flex;align-items:center;gap:0.35rem;background:#ea580c;color:#fff;font-size:0.82rem;font-weight:600;padding:0.45rem 1rem;border-radius:8px;text-decoration:none;">
+                                <a href="{{ route('buyer.user') }}" style="display:inline-flex;align-items:center;gap:0.35rem;background:#ea580c;color:#fff;font-size:0.82rem;font-weight:600;padding:0.45rem 1rem;border-radius:8px;text-decoration:none;">
                                     <span class="material-icons" style="font-size:1rem;">manage_accounts</span>
                                     Go to Account Settings
                                 </a>
