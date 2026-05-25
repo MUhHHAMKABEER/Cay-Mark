@@ -1,39 +1,42 @@
-<IfModule mod_php.c>
-    php_value upload_max_filesize 50M
-    php_value post_max_size 120M
-    php_value max_execution_time 300
-    php_value max_input_time 300
-    php_value memory_limit 512M
-    php_value max_file_uploads 30
+# ── PHP limits (LiteSpeed reads these directly — no IfModule wrapper) ──────
+php_value upload_max_filesize 50M
+php_value post_max_size 120M
+php_value max_execution_time 60
+php_value max_input_time 120
+php_value memory_limit 256M
+php_value max_file_uploads 30
+
+# ── LiteSpeed body-size limit ────────────────────────────────────────────────
+<IfModule LiteSpeed>
+    LimitRequestBody 125829120
+
+    # Disable LiteSpeed cache for registration & auth pages so POST is never
+    # blocked by a cached GET response (most common cause of 405 on LiteSpeed).
+    CacheEnable off /finish-registration
+    CacheEnable off /register
+    CacheEnable off /upgrade-membership
+    CacheEnable off /dashboard
+    CacheEnable off /login
 </IfModule>
 
-<IfModule mod_php7.c>
-    php_value upload_max_filesize 50M
-    php_value post_max_size 120M
-    php_value max_execution_time 300
-    php_value max_input_time 300
-    php_value memory_limit 512M
-    php_value max_file_uploads 30
-</IfModule>
-
-<IfModule mod_php8.c>
-    php_value upload_max_filesize 50M
-    php_value post_max_size 120M
-    php_value max_execution_time 300
-    php_value max_input_time 300
-    php_value memory_limit 512M
-    php_value max_file_uploads 30
-</IfModule>
-
+# ── mod_fcgid fallback ───────────────────────────────────────────────────────
 <IfModule mod_fcgid.c>
     FcgidMaxRequestLen 125829120
 </IfModule>
 
-# LiteSpeed body-size limit (host runs LiteSpeed — see x-lscache header)
-<IfModule LiteSpeed>
-    LimitRequestBody 125829120
+# ── Disable ModSecurity for file-upload registration endpoints ───────────────
+# (Hostinger WAF can block multipart/form-data POST with ID document uploads)
+<IfModule mod_security2.c>
+    <LocationMatch "^/(finish-registration|register|upgrade-membership)">
+        SecRuleEngine Off
+    </LocationMatch>
+</IfModule>
+<IfModule mod_security.c>
+    SecFilterEngine Off
+    SecFilterScanPOST Off
 </IfModule>
 
+# ── Laravel routing ──────────────────────────────────────────────────────────
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
@@ -45,12 +48,14 @@
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
-    # Redirect Trailing Slashes If Not A Folder...
+    # Redirect Trailing Slashes If Not A Folder
+    # Use R=302 (temporary) so browsers/proxies do NOT permanently cache the
+    # redirect — a cached 301 can cause POST→GET method conversion in Edge.
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_URI} (.+)/$
-    RewriteRule ^ %1 [L,R=301]
+    RewriteRule ^ %1 [L,R=302]
 
-    # Send Requests To Front Controller...
+    # Send Requests To Front Controller
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]

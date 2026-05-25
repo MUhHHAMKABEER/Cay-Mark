@@ -836,10 +836,15 @@ public function step3(Request $request)
         $buyerPackages = Package::forRole('buyer')->get();
         $sellerPackages = Package::forRole('seller')->get();
 
-        return view('auth.finish-registration', [
-            'buyerPackages' => $buyerPackages,
-            'sellerPackages' => $sellerPackages,
-        ]);
+        return response()
+            ->view('auth.finish-registration', [
+                'buyerPackages'  => $buyerPackages,
+                'sellerPackages' => $sellerPackages,
+            ])
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->header('Pragma',        'no-cache')
+            ->header('Expires',       '0')
+            ->header('X-Accel-Buffering', 'no');
     }
 
     /**
@@ -873,6 +878,10 @@ public function step3(Request $request)
 
     /**
      * Show Step 3: Verification & Payment page.
+     *
+     * Returns no-cache headers so LiteSpeed / nginx proxy never stores this
+     * page as a static response — a cached GET would block the subsequent POST
+     * with a 405 Method Not Allowed at the server level.
      */
     public function showCompleteRegistration()
     {
@@ -886,11 +895,16 @@ public function step3(Request $request)
 
         $package = Package::find($finishData['package_id']);
 
-        return view('auth.complete-registration', [
-            'user' => $user,
-            'package' => $package,
-            'finishData' => $finishData,
-        ]);
+        return response()
+            ->view('auth.complete-registration', [
+                'user'       => $user,
+                'package'    => $package,
+                'finishData' => $finishData,
+            ])
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->header('Pragma',        'no-cache')
+            ->header('Expires',       '0')
+            ->header('X-Accel-Buffering', 'no'); // disable nginx upstream buffering
     }
 
     /**
