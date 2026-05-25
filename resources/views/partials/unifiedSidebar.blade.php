@@ -243,44 +243,46 @@
 
     /* ── Business Seller profile card ─────────────────────────────── */
     .unified-sidebar .user-profile--business {
-        background: linear-gradient(135deg, #0a1628 0%, #162848 100%);
-        border-bottom: 1px solid rgba(212,175,55,0.18);
-        padding: 0.8rem 1rem;
+        background: #063466;
+        border-bottom: 2px solid rgba(255,255,255,0.08);
+        padding: 1rem 1.1rem;
     }
     .unified-sidebar .user-profile--business:hover {
-        background: linear-gradient(135deg, #0d1e3a 0%, #1c3460 100%);
+        background: #074585;
     }
     .biz-profile-card {
         display: flex;
         align-items: center;
-        gap: 0.7rem;
+        gap: 0.75rem;
         width: 100%;
     }
-    .biz-avatar {
+    .biz-avatar-wrap {
         position: relative;
         flex-shrink: 0;
+    }
+    .biz-avatar {
         width: 40px;
         height: 40px;
         border-radius: 10px;
-        background: linear-gradient(135deg, #b8860b 0%, #f0d060 100%);
+        background: rgba(255,255,255,0.12);
+        border: 1.5px solid rgba(255,255,255,0.22);
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 0.875rem;
-        font-weight: 800;
-        color: #0a1628;
+        font-weight: 700;
+        color: #ffffff;
         letter-spacing: 0.04em;
-        box-shadow: 0 2px 10px rgba(212,175,55,0.35), 0 0 0 2px rgba(212,175,55,0.12);
     }
     .biz-verified-dot {
         position: absolute;
         bottom: -4px;
         right: -4px;
-        width: 16px;
-        height: 16px;
-        background: linear-gradient(135deg, #b8860b, #f0d060);
+        width: 15px;
+        height: 15px;
+        background: #22c55e;
         border-radius: 50%;
-        border: 2px solid #0a1628;
+        border: 2px solid #063466;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -292,45 +294,58 @@
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        line-height: 1.2;
+        line-height: 1.25;
     }
     .biz-badge {
         display: inline-flex;
         align-items: center;
         gap: 3px;
         font-size: 9px;
-        font-weight: 800;
-        letter-spacing: 0.07em;
-        color: #0a1628;
-        background: linear-gradient(135deg, #b8860b 0%, #f0d060 100%);
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        color: rgba(255,255,255,0.85);
+        background: rgba(255,255,255,0.12);
+        border: 1px solid rgba(255,255,255,0.18);
         padding: 2px 7px 2px 5px;
         border-radius: 999px;
         white-space: nowrap;
-        margin-top: 3px;
+        margin-top: 4px;
     }
-    body.sidebar-collapsed .unified-sidebar .user-profile--business { justify-content: center; padding: 0.8rem 0.25rem; }
+    body.sidebar-collapsed .unified-sidebar .user-profile--business { justify-content: center; padding: 1rem 0.25rem; }
 
     /* ── Individual Seller profile card ───────────────────────────── */
     .unified-sidebar .user-profile--casual {
-        background: #f8fafc;
-        border-bottom: 1px solid #e9edf2;
-        border-left: 3px solid #063466;
-        padding-left: calc(1.1rem - 3px);
+        background: #ffffff;
+        border-bottom: 1px solid var(--cm-border-soft);
+        padding: 1rem 1.1rem;
+        position: relative;
     }
-    .unified-sidebar .user-profile--casual:hover { background: #eef2f7; }
+    .unified-sidebar .user-profile--casual::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        background: #063466;
+        border-radius: 0 2px 2px 0;
+    }
+    .unified-sidebar .user-profile--casual { padding-left: calc(1.1rem + 3px); }
+    .unified-sidebar .user-profile--casual:hover { background: var(--cm-hover-bg); }
     .casual-badge {
         display: inline-flex;
         align-items: center;
         gap: 3px;
         font-size: 9px;
-        font-weight: 800;
-        letter-spacing: 0.07em;
-        color: #ffffff;
-        background: #063466;
-        padding: 2px 8px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        color: #063466;
+        background: #e8eef6;
+        border: 1px solid #c3d4e8;
+        padding: 2px 7px 2px 5px;
         border-radius: 999px;
         white-space: nowrap;
-        margin-top: 1px;
+        margin-top: 3px;
     }
 
     /* Navigation — scroll only inner wrapper so flyout tooltips are not clipped */
@@ -612,17 +627,17 @@
     @endphp
     <a href="{{ $profileUrl }}" class="user-profile user-profile--business" title="{{ $displayName ?: 'Account' }} · Business Seller">
         <div class="biz-profile-card">
-            <div class="biz-avatar">
-                {{ $bpInitials }}
+            <div class="biz-avatar-wrap">
+                <div class="biz-avatar">{{ $bpInitials }}</div>
                 <span class="biz-verified-dot">
-                    <span class="material-icons-round" style="font-size:9px;color:#0a1628;line-height:1">check</span>
+                    <span class="material-icons-round" style="font-size:8px;color:#ffffff;line-height:1">check</span>
                 </span>
             </div>
             <div class="user-profile-meta" style="gap:0">
                 <span class="biz-name">{{ Str::ucfirst($user->name) }}</span>
                 <span class="biz-badge">
-                    <span class="material-icons-round" style="font-size:9px;line-height:1">business</span>
-                    BUSINESS
+                    <span class="material-icons-round" style="font-size:9px;line-height:1">verified</span>
+                    BUSINESS SELLER
                 </span>
             </div>
         </div>
@@ -635,8 +650,8 @@
         <div class="user-profile-meta">
             <span class="user-name">{{ Str::ucfirst($user->name) }}</span>
             <span class="casual-badge">
-                <span class="material-icons-round" style="font-size:9px;line-height:1">person</span>
-                SELLER
+                <span class="material-icons-round" style="font-size:9px;line-height:1">storefront</span>
+                INDIVIDUAL SELLER
             </span>
         </div>
     </a>
