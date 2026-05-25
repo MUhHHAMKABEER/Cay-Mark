@@ -128,11 +128,6 @@ Route::get('/sellers-guide', function () {
     return view('sellers-guide');
 })->name('sellers-guide');
 
-Route::get('/enterprise-seller', function () {
-    return view('enterprise-seller');
-})->name('enterprise-seller');
-
-
 
 Route::get('/buyer-guide', function () {
     return view('buyer-guide');
@@ -269,6 +264,9 @@ Route::post('/register/step1', [RegisteredUserController::class, 'step1'])->name
 Route::post('/register/step2', [RegisteredUserController::class, 'step2'])->name('register.step2');
 Route::post('/register/step3', [RegisteredUserController::class, 'step3'])->name('register.step3');
 Route::post('/register/back', [RegisteredUserController::class, 'back'])->name('register.back');
+
+// Upgrade membership (casual seller → business seller)
+Route::get('/upgrade-membership', [RegisteredUserController::class, 'upgradeMembership'])->middleware('auth')->name('upgrade.membership');
 
 // Finish Registration Routes (for users who created basic account)
 Route::get('/finish-registration', [RegisteredUserController::class, 'finishRegistration'])->middleware('auth')->name('finish.registration');

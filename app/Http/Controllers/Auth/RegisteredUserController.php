@@ -704,6 +704,21 @@ public function step3(Request $request)
     }
 
     /**
+     * Show membership selection page for already-registered sellers wanting to upgrade.
+     */
+    public function upgradeMembership()
+    {
+        $buyerPackages  = Package::forRole('buyer')->get();
+        $sellerPackages = Package::forRole('seller')->get();
+
+        return view('auth.finish-registration', [
+            'buyerPackages'  => $buyerPackages,
+            'sellerPackages' => $sellerPackages,
+            'isUpgrade'      => true,
+        ]);
+    }
+
+    /**
      * Show membership selection page (for users who created basic account).
      */
     public function finishRegistration()

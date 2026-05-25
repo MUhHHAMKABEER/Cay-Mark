@@ -53,7 +53,7 @@
         : ($isSeller ? route('seller.notifications') : route('finish.registration'));
     $homeActive = request()->routeIs('welcome');
     $auctionActive = request()->routeIs('Auction.index', 'auction.show', 'auction.dashboard', 'listing.show');
-    $gettingStartedActive = request()->routeIs('buyer-guide', 'sellers-guide', 'enterprise-seller');
+    $gettingStartedActive = request()->routeIs('buyer-guide', 'sellers-guide');
     $contactActive = request()->routeIs('contact');
 @endphp
 

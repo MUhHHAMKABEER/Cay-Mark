@@ -53,8 +53,8 @@
                             <span class="inline-flex items-center px-3 py-1 bg-gray-100 rounded-full text-xs font-semibold text-gray-600">
                                 Casual Seller Account
                             </span>
-                            <a href="{{ route('enterprise-seller') }}"
-                               class="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-gray-300 hover:border-indigo-400 hover:bg-indigo-50 rounded-full text-xs font-semibold text-gray-700 hover:text-indigo-700 transition-all duration-200 shadow-sm">
+                            <a href="{{ route('upgrade.membership') }}"
+                               class="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-gray-300 hover:border-[#063466] hover:bg-blue-50 rounded-full text-xs font-semibold text-gray-700 hover:text-[#063466] transition-all duration-200 shadow-sm">
                                 <span class="material-icons-round" style="font-size:13px">arrow_upward</span>
                                 Upgrade to Business Seller
                             </a>
@@ -149,11 +149,11 @@
 
                 </div>{{-- end row 1 --}}
 
-                <!-- ── Row 2: Recent Activity (left) + Grow Your Business (right) ── -->
-                <div class="grid grid-cols-1 lg:grid-cols-5 gap-4 mb-4">
+                <!-- ── Row 2: Recent Activity ── -->
+                <div class="mb-4">
 
                     <!-- Recent Activity -->
-                    <div class="lg:col-span-3 bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
                         <div class="flex items-center justify-between mb-4">
                             <h3 class="text-sm font-bold text-gray-900 flex items-center gap-2">
                                 <span class="material-icons-round text-blue-500" style="font-size:16px">bolt</span>
@@ -198,20 +198,6 @@
                         @endif
                     </div>
 
-                    <!-- Grow Your Business CTA -->
-                    <div class="lg:col-span-2 bg-indigo-50 rounded-2xl border border-indigo-100 p-5 flex flex-col items-center justify-center text-center gap-3">
-                        <div class="w-16 h-16 rounded-full bg-indigo-200/60 flex items-center justify-center mb-1">
-                            <span class="material-icons-round text-indigo-600" style="font-size:32px">local_offer</span>
-                        </div>
-                        <div>
-                            <h3 class="text-base font-bold text-gray-900 mb-1">Grow Your Business</h3>
-                            <p class="text-sm text-gray-500 leading-relaxed">Upgrade to Business Seller and get more listings, analytics, and features.</p>
-                        </div>
-                        <a href="{{ route('enterprise-seller') }}"
-                           class="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-colors duration-200 shadow-sm">
-                            Upgrade Now
-                        </a>
-                    </div>
 
                 </div>{{-- end row 2 --}}
 
@@ -951,13 +937,6 @@
                                         <span class="material-icons-round" style="font-size:13px">workspace_premium</span>
                                         Business Seller
                                     </span>
-                                    @if($showRenew)
-                                        <a href="{{ route('enterprise-seller') }}"
-                                           class="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition-colors duration-200">
-                                            <span class="material-icons-round" style="font-size:14px">autorenew</span>
-                                            Renew Plan
-                                        </a>
-                                    @endif
                                 </div>
                             </div>
                         @else
@@ -965,12 +944,11 @@
                             <div class="flex flex-wrap items-start justify-between gap-4">
                                 <div>
                                     <p class="font-bold text-gray-900 text-base mb-2">Casual Seller Account</p>
-                                    <a href="{{ route('enterprise-seller') }}"
-                                       class="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-colors duration-200 mb-2">
+                                    <a href="{{ route('upgrade.membership') }}"
+                                       class="inline-flex items-center gap-1.5 px-4 py-2 bg-[#063466] hover:bg-[#052a52] text-white text-sm font-semibold rounded-xl transition-colors duration-200">
                                         <span class="material-icons-round" style="font-size:15px">upgrade</span>
                                         Upgrade to Business Seller
                                     </a>
-                                    <p class="text-xs text-gray-500 mt-1">Unlock additional listings, analytics, and business seller features.</p>
                                 </div>
                                 <span class="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-semibold">
                                     Casual Seller
@@ -2014,9 +1992,12 @@ document.getElementById('deleteListingModal') && document.getElementById('delete
                         <input type="password" id="modal_current_password" name="current_password" required
                                class="w-full border border-gray-200 rounded-xl px-4 py-2.5 pr-10 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-                                onclick="togglePasswordModal('modal_current_password', 'modal_current_eye', 'modal_current_eye_slash')">
-                            <span id="modal_current_eye" class="material-icons-round text-lg">visibility</span>
-                            <span id="modal_current_eye_slash" class="material-icons-round text-lg hidden">visibility_off</span>
+                                onclick="togglePasswordModal('modal_current_password', this)" aria-label="Toggle password visibility">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path class="eye-open" stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                <path class="eye-open" stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                <path class="eye-closed hidden" stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.477 0-8.268-2.943-9.542-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.477 0 8.268 2.943 9.542 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+                            </svg>
                         </button>
                     </div>
                 </div>
@@ -2027,9 +2008,12 @@ document.getElementById('deleteListingModal') && document.getElementById('delete
                         <input type="password" id="modal_new_password" name="password" required minlength="8"
                                class="w-full border border-gray-200 rounded-xl px-4 py-2.5 pr-10 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-                                onclick="togglePasswordModal('modal_new_password', 'modal_new_eye', 'modal_new_eye_slash')">
-                            <span id="modal_new_eye" class="material-icons-round text-lg">visibility</span>
-                            <span id="modal_new_eye_slash" class="material-icons-round text-lg hidden">visibility_off</span>
+                                onclick="togglePasswordModal('modal_new_password', this)" aria-label="Toggle password visibility">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path class="eye-open" stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                <path class="eye-open" stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                <path class="eye-closed hidden" stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.477 0-8.268-2.943-9.542-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.477 0 8.268 2.943 9.542 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+                            </svg>
                         </button>
                     </div>
                     <p class="text-[11px] text-gray-400 mt-1">Minimum 8 characters. Must differ from current password.</p>
@@ -2041,9 +2025,12 @@ document.getElementById('deleteListingModal') && document.getElementById('delete
                         <input type="password" id="modal_confirm_password" name="password_confirmation" required minlength="8"
                                class="w-full border border-gray-200 rounded-xl px-4 py-2.5 pr-10 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-                                onclick="togglePasswordModal('modal_confirm_password', 'modal_confirm_eye', 'modal_confirm_eye_slash')">
-                            <span id="modal_confirm_eye" class="material-icons-round text-lg">visibility</span>
-                            <span id="modal_confirm_eye_slash" class="material-icons-round text-lg hidden">visibility_off</span>
+                                onclick="togglePasswordModal('modal_confirm_password', this)" aria-label="Toggle password visibility">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path class="eye-open" stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                <path class="eye-open" stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                <path class="eye-closed hidden" stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.477 0-8.268-2.943-9.542-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.477 0 8.268 2.943 9.542 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+                            </svg>
                         </button>
                     </div>
                 </div>
@@ -2477,20 +2464,13 @@ function _modalHide(id) {
 function showPasswordModal() { _modalShow('passwordModal'); }
 function hidePasswordModal()  { _modalHide('passwordModal'); }
 
-function togglePasswordModal(inputId, eyeIconId) {
+function togglePasswordModal(inputId, btn) {
     var input = document.getElementById(inputId);
-    var eye   = document.getElementById(eyeIconId);
-    var slash = document.getElementById(eyeIconId + '_slash');
-    if (!input || !eye || !slash) return;
-    if (input.type === 'password') {
-        input.type = 'text';
-        eye.classList.add('hidden');
-        slash.classList.remove('hidden');
-    } else {
-        input.type = 'password';
-        eye.classList.remove('hidden');
-        slash.classList.add('hidden');
-    }
+    if (!input) return;
+    var showing = input.type === 'text';
+    input.type = showing ? 'password' : 'text';
+    btn.querySelectorAll('.eye-open').forEach(function(el) { el.classList.toggle('hidden', !showing); });
+    btn.querySelectorAll('.eye-closed').forEach(function(el) { el.classList.toggle('hidden', showing); });
 }
 
 // Payout Modal

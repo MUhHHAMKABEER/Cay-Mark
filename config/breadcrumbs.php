@@ -54,10 +54,6 @@ return [
             ['label' => 'Home', 'route' => 'welcome'],
             ['label' => "Seller's Guide"],
         ],
-        'enterprise-seller' => [
-            ['label' => 'Home', 'route' => 'welcome'],
-            ['label' => 'Enterprise Seller'],
-        ],
         'fee-calculator' => [
             ['label' => 'Home', 'route' => 'welcome'],
             ['label' => 'Fee Calculator'],
