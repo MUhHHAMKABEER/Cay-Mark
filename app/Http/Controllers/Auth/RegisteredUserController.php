@@ -737,7 +737,32 @@ public function step3(Request $request)
             'price'        => $package->price ?? 0,
         ]);
 
-        return redirect()->route('finish.registration.complete.show');
+        return redirect()->route('upgrade.complete.show');
+    }
+
+    /**
+     * Show upgrade documents & payment page (step 2 of upgrade flow).
+     */
+    public function showUpgradeComplete()
+    {
+        $finishData = session('finish_registration');
+
+        if (!$finishData) {
+            return redirect()->route('upgrade.membership')
+                ->with('error', 'Please select a plan first.');
+        }
+
+        $package = Package::find($finishData['package_id']);
+
+        if (!$package || $package->role !== 'seller' || $package->price <= 0) {
+            return redirect()->route('upgrade.membership')
+                ->with('error', 'Invalid plan selected. Please choose a Business Seller plan.');
+        }
+
+        return view('upgrade.complete', [
+            'package'    => $package,
+            'finishData' => $finishData,
+        ]);
     }
 
     /**
