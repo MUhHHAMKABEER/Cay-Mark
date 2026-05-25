@@ -153,7 +153,8 @@
         });
         document.querySelectorAll('.condition-modal-close').forEach(function(btn) {
             btn.addEventListener('click', function() {
-                this.closest('.fixed')?.style && (this.closest('.fixed').style.display = 'none');
+                var overlay = this.closest('.cond-modal-overlay');
+                if (overlay) overlay.style.display = 'none';
             });
         });
         document.getElementById('title_status_select')?.addEventListener('change', function() {

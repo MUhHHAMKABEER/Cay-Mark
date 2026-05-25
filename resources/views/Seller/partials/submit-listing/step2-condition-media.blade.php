@@ -9,20 +9,30 @@
 
     <h3 class="text-base font-semibold text-gray-900 mb-3">Condition</h3>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+
+        {{-- Title --}}
         <div>
-            <label class="form-label flex items-center w-full">Title <span class="text-red-500">*</span>
-                <button type="button" class="condition-info-btn text-blue-500 hover:text-blue-700 leading-none ml-auto" data-modal="modal-title-yes" aria-label="Info"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></button>
-            </label>
+            <div class="flex items-center justify-between mb-1">
+                <label class="form-label !mb-0">Title <span class="text-red-500">*</span></label>
+                <button type="button" class="condition-info-btn flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[#063466] hover:bg-blue-50 transition-colors duration-150" data-modal="modal-title-yes" aria-label="About Title">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                </button>
+            </div>
             <select name="title_status" required class="form-input" id="title_status_select">
                 <option value="">Select</option>
                 <option value="yes" {{ old('title_status', isset($listing) && $listing->title_status === 'CLEAN' ? 'yes' : '') == 'yes' ? 'selected' : '' }}>Yes</option>
                 <option value="no" {{ old('title_status', isset($listing) && $listing->title_status === 'SALVAGE' ? 'no' : '') == 'no' ? 'selected' : '' }}>No</option>
             </select>
         </div>
+
+        {{-- Salvage --}}
         <div>
-            <label class="form-label flex items-center w-full">Salvage <span class="text-red-500">*</span>
-                <button type="button" class="condition-info-btn text-blue-500 hover:text-blue-700 leading-none ml-auto" data-modal="modal-salvage" aria-label="Info"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></button>
-            </label>
+            <div class="flex items-center justify-between mb-1">
+                <label class="form-label !mb-0">Salvage <span class="text-red-500">*</span></label>
+                <button type="button" class="condition-info-btn flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[#063466] hover:bg-blue-50 transition-colors duration-150" data-modal="modal-salvage" aria-label="About Salvage">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                </button>
+            </div>
             <select name="is_salvaged" required class="form-input" id="is_salvaged_select">
                 <option value="">Select</option>
                 @php $salVal = old('is_salvaged', isset($listing) && $listing->condition === 'salvaged' ? '1' : '0'); @endphp
@@ -30,10 +40,15 @@
                 <option value="1" {{ $salVal === '1' ? 'selected' : '' }}>Yes</option>
             </select>
         </div>
+
+        {{-- Runs & Drives --}}
         <div>
-            <label class="form-label flex items-center w-full">Runs &amp; Drives <span class="text-red-500">*</span>
-                <button type="button" class="condition-info-btn text-blue-500 hover:text-blue-700 leading-none ml-auto" data-modal="modal-runs-drives" aria-label="Info"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></button>
-            </label>
+            <div class="flex items-center justify-between mb-1">
+                <label class="form-label !mb-0">Runs &amp; Drives <span class="text-red-500">*</span></label>
+                <button type="button" class="condition-info-btn flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[#063466] hover:bg-blue-50 transition-colors duration-150" data-modal="modal-runs-drives" aria-label="About Runs and Drives">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                </button>
+            </div>
             <select name="run_and_drive" required class="form-input">
                 <option value="">Select</option>
                 @php $rdVal = old('run_and_drive', $listing->run_and_drive ?? ''); @endphp
@@ -41,10 +56,15 @@
                 <option value="no" {{ $rdVal === 'no' ? 'selected' : '' }}>No</option>
             </select>
         </div>
+
+        {{-- Starts --}}
         <div>
-            <label class="form-label flex items-center w-full">Starts <span class="text-red-500">*</span>
-                <button type="button" class="condition-info-btn text-blue-500 hover:text-blue-700 leading-none ml-auto" data-modal="modal-starts" aria-label="Info"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></button>
-            </label>
+            <div class="flex items-center justify-between mb-1">
+                <label class="form-label !mb-0">Starts <span class="text-red-500">*</span></label>
+                <button type="button" class="condition-info-btn flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[#063466] hover:bg-blue-50 transition-colors duration-150" data-modal="modal-starts" aria-label="About Starts">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                </button>
+            </div>
             <select name="engine_starts" required class="form-input" id="engine_starts_select">
                 <option value="">Select</option>
                 @php $stVal = old('engine_starts', $listing->engine_starts ?? ''); @endphp
@@ -52,6 +72,8 @@
                 <option value="no" {{ $stVal === 'no' ? 'selected' : '' }}>No</option>
             </select>
         </div>
+
+        {{-- Has Key(s) --}}
         <div>
             <label class="form-label">Has Key(s) <span class="text-red-500">*</span></label>
             <select name="keys_available" required class="form-input">
@@ -61,6 +83,8 @@
                 <option value="no" {{ $keysVal === 'no' ? 'selected' : '' }}>No</option>
             </select>
         </div>
+
+        {{-- Primary Damage --}}
         <div>
             <label class="form-label">Primary Damage <span class="text-red-500">*</span></label>
             <select name="primary_damage" required class="form-input">
@@ -71,6 +95,8 @@
                 @endforeach
             </select>
         </div>
+
+        {{-- Secondary Damage --}}
         <div>
             <label class="form-label">Secondary Damage <span class="text-red-500">*</span></label>
             <select name="secondary_damage" required class="form-input">
@@ -81,6 +107,7 @@
                 @endforeach
             </select>
         </div>
+
     </div>
 
     <h3 class="text-base font-semibold text-gray-900 mb-2">Media Upload</h3>
