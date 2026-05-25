@@ -323,9 +323,11 @@
     function renderAdditionalPhotosPreviews() {
         var count = additionalPhotosFiles.length;
         if (photoCountEl) photoCountEl.textContent = count + ' photo(s) selected';
-        if (photoWarningEl) photoWarningEl.style.display = (count > 0 && count < MIN_ADDITIONAL_PHOTOS) ? 'block' : 'none';
+        if (photoWarningEl) photoWarningEl.style.display = 'none'; // handled by tile now
         if (!photoPreviewEl) return;
         photoPreviewEl.innerHTML = '';
+
+        // Render photo thumbnails
         additionalPhotosFiles.forEach(function(file, index) {
             var div = document.createElement('div');
             div.className = 'photo-preview-item';
@@ -345,6 +347,38 @@
             div.appendChild(rm);
             photoPreviewEl.appendChild(div);
         });
+
+        // "Add more" tile — shown when photos exist but max not reached
+        if (count > 0 && count < MAX_ADDITIONAL_PHOTOS) {
+            var belowMin   = count < MIN_ADDITIONAL_PHOTOS;
+            var stillNeed  = MIN_ADDITIONAL_PHOTOS - count;
+
+            var tile = document.createElement('button');
+            tile.type = 'button';
+            tile.className = 'photo-preview-add-tile';
+
+            // Amber warning style when below the required minimum
+            if (belowMin) {
+                tile.style.cssText =
+                    'border-color:#f59e0b;' +
+                    'background:linear-gradient(135deg,#fffbeb 0%,#fef3c7 100%);' +
+                    'color:#92400e;';
+            }
+
+            tile.innerHTML =
+                '<i class="fas fa-plus"></i>' +
+                '<span class="add-hint">' +
+                    (belowMin
+                        ? 'Need&nbsp;' + stillNeed + '&nbsp;more'
+                        : 'Add&nbsp;More') +
+                '</span>';
+
+            tile.addEventListener('click', function () {
+                document.getElementById('photos_add_more_input')?.click();
+            });
+
+            photoPreviewEl.appendChild(tile);
+        }
     }
     photosInputEl?.addEventListener('change', function(e) {
         var files = Array.from(e.target.files || []);
