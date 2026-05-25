@@ -265,14 +265,22 @@ class AdminController extends Controller
      */
     public function userManagement(Request $request)
     {
-        $query = User::with(['subscriptions', 'activeSubscription.package']);
+        // Only eager-load what the view needs
+        $query = User::with(['activeSubscription.package']);
 
-        // Filters
-        if ($request->has('role') && in_array($request->role, ['buyer', 'seller'])) {
-            $query->where('role', $request->role);
+        // Role filter — includes "incomplete" (no role assigned yet)
+        if ($request->filled('role')) {
+            if ($request->role === 'incomplete') {
+                $query->where(function ($q) {
+                    $q->whereNull('role')->orWhere('role', '');
+                });
+            } elseif (in_array($request->role, ['buyer', 'seller'])) {
+                $query->where('role', $request->role);
+            }
         }
 
-        if ($request->has('status')) {
+        // Account-status filter
+        if ($request->filled('status')) {
             if ($request->status === 'restricted') {
                 $query->where('is_restricted', true);
             } elseif ($request->status === 'active') {
@@ -280,22 +288,28 @@ class AdminController extends Controller
             }
         }
 
-        if ($request->has('search')) {
+        // Search by name, email, or phone
+        if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%")
-                    ->orWhere('phone', 'like', "%{$search}%");
+                $q->where('name',  'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%");
             });
         }
 
-        $users = $query->orderBy('created_at', 'desc')->paginate(20);
-                    
+        $users = $query->orderBy('created_at', 'desc')
+                       ->paginate(25)
+                       ->appends($request->query());
+
         $userStats = [
-            'total' => User::count(),
-            'buyers' => User::where('role', 'buyer')->count(),
-            'sellers' => User::where('role', 'seller')->count(),
+            'total'      => User::count(),
+            'buyers'     => User::where('role', 'buyer')->count(),
+            'sellers'    => User::where('role', 'seller')->count(),
             'restricted' => User::where('is_restricted', true)->count(),
+            'incomplete' => User::where(function ($q) {
+                                $q->whereNull('role')->orWhere('role', '');
+                            })->count(),
         ];
 
         return view('admin.user-management', compact('users', 'userStats'));
