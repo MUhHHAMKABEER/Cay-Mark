@@ -31,19 +31,27 @@
         }
     }
 
+    function cmError(msg) {
+        if (window.CaymarkUI && typeof CaymarkUI.showError === 'function') {
+            CaymarkUI.showError('Please check your form', msg);
+        } else {
+            alert(msg);
+        }
+    }
+
     function validateStep1() {
         var required = ['make', 'model', 'year', 'vehicle_type', 'island', 'color', 'interior_color'];
         for (var i = 0; i < required.length; i++) {
             var el = document.querySelector('[name="' + required[i] + '"]');
             if (!el || !String(el.value || '').trim()) {
-                alert('Please complete all required fields marked with * in Vehicle Information.');
+                cmError('Please complete all required fields marked with * in Vehicle Information.');
                 if (el) el.focus();
                 return false;
             }
         }
         var y = parseInt(document.querySelector('[name="year"]')?.value, 10);
         if (y < 1995 || y > MAX_YEAR) {
-            alert('Year must be between 1995 and ' + MAX_YEAR + '.');
+            cmError('Year must be between 1995 and ' + MAX_YEAR + '.');
             return false;
         }
         return true;
@@ -54,35 +62,35 @@
         for (var i = 0; i < fields.length; i++) {
             var el = document.querySelector('[name="' + fields[i] + '"]');
             if (!el || !String(el.value || '').trim()) {
-                alert('Please complete all condition fields.');
+                cmError('Please complete all condition fields.');
                 return false;
             }
         }
         var cover = document.getElementById('cover_photo_input');
         var photos = document.getElementById('photos_input');
         @if(!$isEdit)
-        if (!cover?.files?.length) { alert('Cover photo is required.'); return false; }
+        if (!cover?.files?.length) { cmError('Cover photo is required.'); return false; }
         var addCount = typeof additionalPhotosFiles !== 'undefined' ? additionalPhotosFiles.length : (photos?.files?.length || 0);
         if (addCount < MIN_ADDITIONAL_PHOTOS) {
-            alert('Upload at least ' + (MIN_ADDITIONAL_PHOTOS + 1) + ' photos total (1 cover + ' + MIN_ADDITIONAL_PHOTOS + ' additional).');
+            cmError('Upload at least ' + (MIN_ADDITIONAL_PHOTOS + 1) + ' photos total (1 cover + ' + MIN_ADDITIONAL_PHOTOS + ' additional).');
             return false;
         }
         if (addCount > MAX_ADDITIONAL_PHOTOS) {
-            alert('Maximum ' + (MAX_ADDITIONAL_PHOTOS + 1) + ' photos allowed.');
+            cmError('Maximum ' + (MAX_ADDITIONAL_PHOTOS + 1) + ' photos allowed.');
             return false;
         }
         @endif
         if (document.getElementById('engine_starts_select')?.value === 'yes') {
             var vid = document.getElementById('engine_video_input');
             if (!vid?.files?.length) {
-                alert('Engine video is required when Starts is Yes.');
+                cmError('Engine video is required when engine starts is Yes.');
                 return false;
             }
             // Best-effort duration check (30s–60s). If browser cannot determine
             // the duration we proceed; server should also validate.
             if (typeof vid._duration === 'number' && isFinite(vid._duration)) {
                 if (vid._duration < 30 || vid._duration > 60) {
-                    alert('Engine video must be between 30 seconds and under 1 minute.');
+                    cmError('Engine video must be between 30 seconds and under 1 minute.');
                     return false;
                 }
             }
@@ -210,7 +218,17 @@
         });
         // Show/hide the lock badge above the MMY grid
         var badge = document.getElementById('vinLockBadge');
-        if (badge) badge.style.display = locked ? 'flex' : 'none';
+        if (!badge) return;
+        if (locked) {
+            badge.style.display = 'flex';
+            clearTimeout(badge._hideTimer);
+            badge._hideTimer = setTimeout(function() {
+                badge.style.display = 'none';
+            }, 4000);
+        } else {
+            clearTimeout(badge._hideTimer);
+            badge.style.display = 'none';
+        }
     }
     function applyDecodedData(data) {
         var map = {
@@ -325,7 +343,7 @@
     photosInputEl?.addEventListener('change', function(e) {
         var files = Array.from(e.target.files || []);
         if (files.length > MAX_ADDITIONAL_PHOTOS) {
-            alert('Maximum ' + MAX_ADDITIONAL_PHOTOS + ' additional photos.');
+            cmError('Maximum ' + MAX_ADDITIONAL_PHOTOS + ' additional photos allowed.');
             return;
         }
         additionalPhotosFiles = files;
