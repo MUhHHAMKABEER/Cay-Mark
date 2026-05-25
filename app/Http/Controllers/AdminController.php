@@ -634,7 +634,7 @@ class AdminController extends Controller
      */
     public function auctionManagement(Request $request)
     {
-        $query = Listing::with(['seller', 'bids.user'])
+        $query = Listing::with(['seller', 'images', 'bids.user'])
             ->where('listing_method', 'auction')
             ->where('status', 'approved');
 
