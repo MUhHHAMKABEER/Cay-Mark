@@ -358,6 +358,7 @@
                                     $excludeNotifKeywords = ['welcome to caymark','registration','account is now active','account is active','account on caymark is now','registration on caymark'];
                                     $recentNotifs = $notifications->sortByDesc('created_at')
                                         ->filter(function($n) use ($excludeNotifTypes, $excludeNotifKeywords) {
+                                            if ($n->read_at !== null) return false;
                                             $d    = is_array($n->data) ? $n->data : (json_decode($n->data ?? '{}', true) ?: []);
                                             $type = strtolower($d['type'] ?? '');
                                             $msg  = strtolower($d['message'] ?? $d['title'] ?? '');
