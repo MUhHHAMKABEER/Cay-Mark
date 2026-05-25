@@ -47,11 +47,11 @@
                                 </div>
                                 <div>
                                     <p class="text-xs text-gray-400 font-medium uppercase tracking-wide">Plan Expires</p>
-                                    <p class="font-bold text-blue-600 text-sm mt-0.5">{{ $user->activeSubscription?->ends_at?->format('M d, Y') ?? '—' }}</p>
+                                    <p class="font-bold text-blue-600 text-sm mt-0.5">{{ $user->activeSubscription?->ends_at?->format('M d, Y') ?? 'No Expiry' }}</p>
                                 </div>
-                                <a href="#" class="inline-flex items-center px-4 py-2 rounded-xl border border-gray-200 text-gray-700 text-xs font-semibold hover:border-blue-400 hover:text-blue-600 transition whitespace-nowrap">
+                                <button type="button" onclick="showPlanModal()" class="inline-flex items-center px-4 py-2 rounded-xl border border-gray-200 text-gray-700 text-xs font-semibold hover:border-blue-400 hover:text-blue-600 transition whitespace-nowrap">
                                     View Plan
-                                </a>
+                                </button>
                             </div>
                         </div>
 
@@ -1449,6 +1449,99 @@
             </div>
         </div>
 
+<!-- Plan Modal -->
+@php
+    $planSub     = $user->activeSubscription;
+    $planPkg     = $planSub?->package;
+    $planModalName      = $planPkg?->title ?? 'Standard Buyer';
+    $planModalPrice     = $planPkg ? '$' . number_format((float)$planPkg->price, 2) : 'Free';
+    $planModalStartDate = $planSub?->starts_at?->format('M d, Y') ?? $user->created_at->format('M d, Y');
+    $planModalEndDate   = $planSub?->ends_at?->format('M d, Y') ?? 'No Expiry';
+    $planModalIsFreePlan = !$planSub;
+    $planModalStatus    = $planSub ? 'Active' : 'Free Plan';
+    $planModalFeatures  = (is_array($planPkg?->features) && count($planPkg->features)) ? $planPkg->features : [
+        'Browse & search all vehicle listings',
+        'Place bids on live auctions',
+        'Save & watchlist vehicles',
+        'Buyer dashboard & bid history',
+        'Post-auction messaging with sellers',
+    ];
+@endphp
+<div id="planModal" class="hidden fixed inset-0 flex items-center justify-center z-50 p-4" style="background:rgba(0,0,0,0.5);">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+            <h3 class="text-base font-bold text-gray-900">Your Current Plan</h3>
+            <button type="button" onclick="hidePlanModal()" class="text-gray-400 hover:text-gray-600">
+                <span class="material-icons-round">close</span>
+            </button>
+        </div>
+        <div class="px-6 pt-5 pb-4">
+            {{-- Gradient plan header --}}
+            <div class="rounded-xl p-4 mb-4" style="background: linear-gradient(135deg, #063466 0%, #1e3a8a 100%);">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-widest mb-0.5" style="color:#bfdbfe">Buyer Plan</p>
+                        <p class="text-xl font-bold text-white">{{ $planModalName }}</p>
+                    </div>
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold {{ $planModalIsFreePlan ? 'bg-blue-200 text-blue-900' : 'bg-emerald-400 text-white' }}">
+                        {{ $planModalStatus }}
+                    </span>
+                </div>
+                <div class="mt-3 pt-3 flex items-center justify-between" style="border-top:1px solid rgba(255,255,255,0.2)">
+                    <div>
+                        <p class="text-xs" style="color:#bfdbfe">Price</p>
+                        <p class="text-lg font-bold text-white">{{ $planModalPrice }}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-xs" style="color:#bfdbfe">{{ $planModalIsFreePlan ? 'Member Since' : 'Valid From' }}</p>
+                        <p class="text-sm font-semibold text-white">{{ $planModalStartDate }}</p>
+                    </div>
+                </div>
+            </div>
+            {{-- Status / Expires grid --}}
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <div class="rounded-xl bg-gray-50 border border-gray-100 p-3">
+                    <p class="text-xs text-gray-400 font-medium uppercase tracking-wide mb-0.5">Status</p>
+                    <p class="text-sm font-bold {{ $planModalIsFreePlan ? 'text-blue-600' : 'text-emerald-600' }}">{{ $planModalStatus }}</p>
+                </div>
+                <div class="rounded-xl bg-gray-50 border border-gray-100 p-3">
+                    <p class="text-xs text-gray-400 font-medium uppercase tracking-wide mb-0.5">Expires</p>
+                    <p class="text-sm font-bold text-gray-900">{{ $planModalEndDate }}</p>
+                </div>
+            </div>
+            {{-- Features --}}
+            <div class="rounded-xl border border-gray-100 overflow-hidden">
+                <div class="px-4 py-2.5 bg-gray-50 border-b border-gray-100">
+                    <p class="text-xs font-bold text-gray-600 uppercase tracking-wide">Plan Features</p>
+                </div>
+                <ul class="divide-y divide-gray-50 px-4 py-1">
+                    @foreach($planModalFeatures as $feat)
+                    <li class="flex items-center gap-2.5 py-2">
+                        <span class="material-icons-round flex-shrink-0" style="font-size:16px;color:#10b981">check_circle</span>
+                        <span class="text-sm text-gray-700">{{ $feat }}</span>
+                    </li>
+                    @endforeach
+                </ul>
+            </div>
+        </div>
+        <div class="px-6 pb-5">
+            @if($planModalIsFreePlan)
+            <a href="{{ route('upgrade.membership') }}"
+               class="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-bold text-white transition-all duration-200"
+               style="background: linear-gradient(135deg, #063466 0%, #1e3a8a 100%);">
+                <span class="material-icons-round" style="font-size:18px">rocket_launch</span>
+                Upgrade Plan
+            </a>
+            @else
+            <button type="button" onclick="hidePlanModal()"
+                    class="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-all duration-200">
+                Close
+            </button>
+            @endif
+        </div>
+    </div>
+</div>
+
 <!-- Password Modal -->
 <div id="passwordModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
@@ -1570,6 +1663,9 @@ function showDashAuctionTab(tab) {
 function showPasswordModal() { document.getElementById('passwordModal').classList.remove('hidden'); }
 function hidePasswordModal() { document.getElementById('passwordModal').classList.add('hidden'); }
 document.getElementById('passwordModal')?.addEventListener('click', function(e) { if (e.target === this) hidePasswordModal(); });
+function showPlanModal() { document.getElementById('planModal').classList.remove('hidden'); }
+function hidePlanModal() { document.getElementById('planModal').classList.add('hidden'); }
+document.getElementById('planModal')?.addEventListener('click', function(e) { if (e.target === this) hidePlanModal(); });
 
 function togglePasswordModal(inputId, btn) {
     var input = document.getElementById(inputId);
