@@ -265,10 +265,9 @@ Route::post('/register/step2', [RegisteredUserController::class, 'step2'])->name
 Route::post('/register/step3', [RegisteredUserController::class, 'step3'])->name('register.step3');
 Route::post('/register/back', [RegisteredUserController::class, 'back'])->name('register.back');
 
-// Upgrade membership (casual seller → business seller)
-Route::get('/upgrade-membership', [RegisteredUserController::class, 'upgradeMembership'])->middleware('auth')->name('upgrade.membership');
-Route::post('/upgrade-membership', [RegisteredUserController::class, 'storeUpgradeMembership'])->middleware('auth')->name('upgrade.membership.store');
-Route::get('/upgrade-membership/complete', [RegisteredUserController::class, 'showUpgradeComplete'])->middleware('auth')->name('upgrade.complete.show');
+// Upgrade membership (casual seller → business seller) — single-page form
+Route::get('/upgrade-membership',  [RegisteredUserController::class, 'upgradeMembership'])->middleware('auth')->name('upgrade.membership');
+Route::post('/upgrade-membership', [RegisteredUserController::class, 'processUpgradeMembership'])->middleware('auth')->name('upgrade.membership.submit');
 
 // Finish Registration Routes (for users who created basic account)
 Route::get('/finish-registration', [RegisteredUserController::class, 'finishRegistration'])->middleware('auth')->name('finish.registration');

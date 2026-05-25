@@ -704,65 +704,115 @@ public function step3(Request $request)
     }
 
     /**
-     * Show Business Seller plan selection page for casual sellers upgrading.
+     * Show the single-page upgrade form (plan + docs + payment in one screen).
      */
     public function upgradeMembership()
     {
-        // Only paid seller packages qualify as "Business Seller"
         $packages = Package::forRole('seller')->where('price', '>', 0)->get();
 
-        return view('upgrade.select-plan', compact('packages'));
+        return view('upgrade.index', compact('packages'));
     }
 
     /**
-     * Store the chosen upgrade package in session and proceed to payment/docs step.
+     * Process the upgrade: validate plan + docs + payment, create subscription, upgrade user.
      */
-    public function storeUpgradeMembership(Request $request)
+    public function processUpgradeMembership(Request $request)
     {
-        $validated = $request->validate([
-            'package_id' => 'required|exists:packages,id',
+        $request->validate([
+            'package_id'               => 'required|exists:packages,id',
+            'id_type'                  => ['required', Rule::in(self::ID_TYPES)],
+            'id_document'              => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'id_type_2'                => ['required', Rule::in(self::ID_TYPES)],
+            'id_document_2'            => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'business_license'         => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'relationship_to_business' => 'required|in:Owner,Founder,Shareholder,Employee,Authorized Representative,Manager',
+            'card_number'              => 'required|string',
+            'expiry_month'             => 'required|numeric|min:1|max:12',
+            'expiry_year'              => 'required|numeric|min:' . date('Y'),
+            'cvc'                      => 'required|string|size:3',
+            'agree_terms'              => 'accepted',
         ]);
 
-        $package = Package::findOrFail($validated['package_id']);
+        $package = Package::findOrFail($request->package_id);
 
-        // Guard: must be a paid seller package
         if ($package->role !== 'seller' || $package->price <= 0) {
             return back()->withErrors(['package_id' => 'Please select a valid Business Seller plan.']);
         }
 
-        $request->session()->put('finish_registration', [
-            'role'         => 'seller',
-            'package_id'   => $package->id,
-            'package_name' => $package->title ?? null,
-            'price'        => $package->price ?? 0,
-        ]);
+        $user = Auth::user();
 
-        return redirect()->route('upgrade.complete.show');
-    }
+        DB::beginTransaction();
+        try {
+            // ID doc 1
+            $idPath = $request->file('id_document')->store('user_documents/' . $user->id, 'public');
+            UserDocument::create([
+                'user_id'   => $user->id,
+                'doc_type'  => 'id',
+                'path'      => $idPath,
+                'filename'  => $request->file('id_document')->getClientOriginalName(),
+                'mime_type' => $request->file('id_document')->getMimeType(),
+                'size'      => $request->file('id_document')->getSize(),
+                'verified'  => false,
+            ]);
 
-    /**
-     * Show upgrade documents & payment page (step 2 of upgrade flow).
-     */
-    public function showUpgradeComplete()
-    {
-        $finishData = session('finish_registration');
+            // ID doc 2
+            $idPath2 = $request->file('id_document_2')->store('user_documents/' . $user->id, 'public');
+            UserDocument::create([
+                'user_id'   => $user->id,
+                'doc_type'  => 'id_2',
+                'path'      => $idPath2,
+                'filename'  => $request->file('id_document_2')->getClientOriginalName(),
+                'mime_type' => $request->file('id_document_2')->getMimeType(),
+                'size'      => $request->file('id_document_2')->getSize(),
+                'verified'  => false,
+            ]);
 
-        if (!$finishData) {
-            return redirect()->route('upgrade.membership')
-                ->with('error', 'Please select a plan first.');
+            // Business licence
+            $licensePath = $request->file('business_license')->store('user_documents/' . $user->id, 'public');
+            UserDocument::create([
+                'user_id'   => $user->id,
+                'doc_type'  => 'business_license',
+                'path'      => $licensePath,
+                'filename'  => $request->file('business_license')->getClientOriginalName(),
+                'mime_type' => $request->file('business_license')->getMimeType(),
+                'size'      => $request->file('business_license')->getSize(),
+                'verified'  => false,
+            ]);
+
+            // Subscription + payment
+            $subscription = Subscription::create([
+                'user_id'    => $user->id,
+                'package_id' => $package->id,
+                'starts_at'  => now(),
+                'ends_at'    => $package->duration_days ? now()->addDays($package->duration_days) : null,
+                'status'     => 'pending',
+            ]);
+
+            Payment::create([
+                'user_id'         => $user->id,
+                'subscription_id' => $subscription->id,
+                'amount'          => $package->price,
+                'method'          => 'credit_card',
+                'status'          => 'pending',
+                'metadata'        => ['card_last4' => substr(preg_replace('/\D/', '', $request->card_number), -4)],
+            ]);
+
+            // Upgrade user
+            $user->business_license_path      = $licensePath;
+            $user->id_type                    = $request->id_type;
+            $user->id_type_2                  = $request->id_type_2;
+            $user->relationship_to_business   = $request->relationship_to_business;
+            $user->save();
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Upgrade membership failed', ['error' => $e->getMessage(), 'user_id' => $user->id]);
+            return back()->with('error', 'Something went wrong processing your upgrade. Please try again.');
         }
 
-        $package = Package::find($finishData['package_id']);
-
-        if (!$package || $package->role !== 'seller' || $package->price <= 0) {
-            return redirect()->route('upgrade.membership')
-                ->with('error', 'Invalid plan selected. Please choose a Business Seller plan.');
-        }
-
-        return view('upgrade.complete', [
-            'package'    => $package,
-            'finishData' => $finishData,
-        ]);
+        return redirect()->route('seller.account')
+            ->with('success', 'Your upgrade to Business Seller is being processed. You\'ll be notified once verified.');
     }
 
     /**

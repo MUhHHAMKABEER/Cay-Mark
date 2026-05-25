@@ -54,7 +54,9 @@
                                 Casual Seller Account
                             </span>
                             <a href="{{ route('upgrade.membership') }}"
-                               class="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-gray-300 hover:border-[#063466] hover:bg-blue-50 rounded-full text-xs font-semibold text-gray-700 hover:text-[#063466] transition-all duration-200 shadow-sm">
+                               class="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-gray-300 rounded-full text-xs font-semibold text-gray-700 transition-all duration-200 shadow-sm"
+                               onmouseover="this.style.borderColor='#063466';this.style.color='#063466';this.style.backgroundColor='#eff6ff';"
+                               onmouseout="this.style.borderColor='';this.style.color='';this.style.backgroundColor='';">
                                 <span class="material-icons-round" style="font-size:13px">arrow_upward</span>
                                 Upgrade to Business Seller
                             </a>
@@ -945,7 +947,9 @@
                                 <div>
                                     <p class="font-bold text-gray-900 text-base mb-2">Casual Seller Account</p>
                                     <a href="{{ route('upgrade.membership') }}"
-                                       class="inline-flex items-center gap-1.5 px-4 py-2 bg-[#063466] hover:bg-[#052a52] text-white text-sm font-semibold rounded-xl transition-colors duration-200">
+                                       class="inline-flex items-center gap-1.5 px-4 py-2 text-white text-sm font-semibold rounded-xl transition-colors duration-200"
+                                       style="background-color:#063466;"
+                                       onmouseover="this.style.backgroundColor='#052a52'" onmouseout="this.style.backgroundColor='#063466'">
                                         <span class="material-icons-round" style="font-size:15px">upgrade</span>
                                         Upgrade to Business Seller
                                     </a>
