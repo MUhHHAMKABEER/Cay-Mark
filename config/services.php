@@ -55,12 +55,11 @@ return [
         'host' => env('RAPIDAPI_HIN_HOST', 'hull-id-boat-hin-decoder.p.rapidapi.com'),
     ],
 
-    'vonage' => [
-        'api_key'    => env('VONAGE_API_KEY'),
-        'api_secret' => env('VONAGE_API_SECRET'),
-        // Alphanumeric sender ID (max 11 chars) shown to recipient, e.g. "CayMark"
-        // OR a Vonage virtual number e.g. "+12015555555"
-        'from'       => env('VONAGE_FROM', 'CayMark'),
+    'twilio' => [
+        'account_sid' => env('TWILIO_ACCOUNT_SID'),
+        'auth_token'  => env('TWILIO_AUTH_TOKEN'),
+        // E.164 Twilio phone number (e.g. "+12425551234") OR a Messaging Service SID ("MGxxx...")
+        'from'        => env('TWILIO_FROM'),
     ],
 
 ];

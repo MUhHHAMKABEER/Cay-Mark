@@ -2,87 +2,78 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Twilio\Rest\Client;
+use Twilio\Exceptions\TwilioException;
 
 class SmsService
 {
     /**
-     * Send an SMS via Vonage REST API.
-     *
-     * No SDK — plain HTTPS POST, so no Windows/WAMP SSL certificate issues.
-     * Works identically on local and production.
+     * Send an SMS via Twilio.
      *
      * Required .env keys:
-     *   VONAGE_API_KEY=xxxxxxxx
-     *   VONAGE_API_SECRET=xxxxxxxxxxxxxxxx
-     *   VONAGE_FROM=CayMark   (alphanumeric sender ID, max 11 chars — or a Vonage virtual number)
+     *   TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+     *   TWILIO_AUTH_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+     *   TWILIO_FROM=+12425551234   (E.164 Twilio phone number or Messaging Service SID)
      */
     public function send(string $to, string $message): bool
     {
-        $digits = preg_replace('/\D/', '', $to);
+        // Normalise to E.164 — keep leading + if present, strip everything else
+        $to = preg_replace('/[^\d+]/', '', $to);
+        if (!str_starts_with($to, '+')) {
+            $to = '+' . ltrim($to, '+');
+        }
 
         Log::info('SMS send attempt', [
-            'to_raw'          => $to,
-            'to_digits'       => $digits,
+            'to'              => $to,
             'message_preview' => substr($message, 0, 60),
         ]);
 
-        if (strlen($digits) < 10) {
-            Log::warning('SMS rejected: number too short', ['to_digits' => $digits]);
+        if (strlen(preg_replace('/\D/', '', $to)) < 10) {
+            Log::warning('SMS rejected: number too short', ['to' => $to]);
             return false;
         }
 
-        $apiKey    = config('services.vonage.api_key');
-        $apiSecret = config('services.vonage.api_secret');
-        $from      = config('services.vonage.from', 'CayMark');
+        $accountSid = config('services.twilio.account_sid');
+        $authToken  = config('services.twilio.auth_token');
+        $from       = config('services.twilio.from');
 
-        // No credentials configured — log and return true (pure local dev with no account yet)
-        if (empty($apiKey) || empty($apiSecret)) {
-            Log::info('SMS (Vonage not configured): skipping real send', [
-                'to'      => $digits,
+        // No credentials configured — log and silently succeed (local dev without a Twilio account)
+        if (empty($accountSid) || empty($authToken) || empty($from)) {
+            Log::info('SMS (Twilio not configured): skipping real send', [
+                'to'      => $to,
                 'message' => $message,
             ]);
             return true;
         }
 
         try {
-            // On local/Windows WAMP, SSL verification can fail — skip it only in local env.
-            // On the live server, full SSL verification runs normally.
-            $sslVerify = !app()->environment('local');
+            $client = new Client($accountSid, $authToken);
 
-            $response = Http::withOptions(['verify' => $sslVerify])
-                ->asForm()
-                ->post('https://rest.nexmo.com/sms/json', [
-                    'api_key'    => $apiKey,
-                    'api_secret' => $apiSecret,
-                    'to'         => $digits,
-                    'from'       => $from,
-                    'text'       => $message,
-                ]);
-
-            $body   = $response->json();
-            $msg    = $body['messages'][0] ?? [];
-            $status = $msg['status'] ?? null;
-
-            Log::info('Vonage SMS response', ['status' => $status, 'body' => $body]);
-
-            if ($status === '0') {
-                Log::info('Vonage SMS sent successfully', ['to' => $digits]);
-                return true;
-            }
-
-            Log::error('Vonage SMS failed', [
-                'to'         => $digits,
-                'status'     => $status,
-                'error_text' => $msg['error-text'] ?? 'Unknown error',
+            $sent = $client->messages->create($to, [
+                'from' => $from,
+                'body' => $message,
             ]);
 
+            Log::info('Twilio SMS sent', [
+                'to'   => $to,
+                'sid'  => $sent->sid,
+                'status' => $sent->status,
+            ]);
+
+            return true;
+
+        } catch (TwilioException $e) {
+            Log::error('Twilio SMS failed', [
+                'to'      => $to,
+                'code'    => $e->getCode(),
+                'message' => $e->getMessage(),
+            ]);
             return false;
 
         } catch (\Throwable $e) {
-            Log::error('Vonage SMS exception', [
-                'to'      => $digits,
+            Log::error('Twilio SMS exception', [
+                'to'      => $to,
                 'message' => $e->getMessage(),
                 'file'    => $e->getFile(),
                 'line'    => $e->getLine(),
