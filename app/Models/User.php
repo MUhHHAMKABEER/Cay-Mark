@@ -151,7 +151,12 @@ public function watchlist()
 
     public function activeSubscription()
     {
-        return $this->hasOne(Subscription::class)->where('status', 'active');
+        // ofMany with max(id) ensures we always get the LATEST active subscription,
+        // so users who upgraded don't show their old plan.
+        return $this->hasOne(Subscription::class)->ofMany(
+            ['id' => 'max'],
+            fn ($query) => $query->where('status', 'active')
+        );
     }
 
     /**

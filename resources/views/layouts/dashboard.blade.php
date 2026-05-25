@@ -256,6 +256,7 @@
         });
     </script>
     @include('partials.caymark-ui-kit')
+    @include('partials.cm-custom-select')
     @stack('scripts')
 </body>
 

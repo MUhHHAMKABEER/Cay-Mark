@@ -694,6 +694,7 @@ html, body {
     </main>
 
     @include('partials.caymark-ui-kit')
+    @include('partials.cm-custom-select')
 </body>
 
 </html>

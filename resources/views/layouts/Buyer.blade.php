@@ -158,6 +158,7 @@
 
     {{-- Optional: Place Shepherd.js tour starter here --}}
     @include('partials.caymark-ui-kit')
+    @include('partials.cm-custom-select')
     @stack('scripts')
 </body>
 
