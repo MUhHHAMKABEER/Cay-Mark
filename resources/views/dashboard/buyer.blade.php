@@ -706,7 +706,7 @@
                                 <div class="flex items-center justify-between gap-2 rounded-xl bg-gray-50 border border-gray-200 px-4 py-3">
                                     <p class="text-sm font-medium text-gray-900">{{ ucfirst(str_replace('_', ' ', $doc->doc_type ?? 'Document')) }}</p>
                                     @if($doc->path ?? null)
-                                        <a href="{{ asset('storage/' . $doc->path) }}" target="_blank" rel="noopener"
+                                        <a href="{{ route('user.document.view', $doc->id) }}" target="_blank" rel="noopener"
                                            class="text-blue-600 hover:text-blue-800 text-sm font-semibold shrink-0">View</a>
                                     @else
                                         <span class="text-gray-400 text-sm shrink-0">—</span>
