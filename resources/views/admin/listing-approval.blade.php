@@ -6,368 +6,462 @@
 @php
     $resolveListingImageUrl = function ($imagePath) {
         $path = trim((string) $imagePath);
-        if ($path === '') {
-            return asset('images/placeholder-product.png');
-        }
-        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
-            return $path;
-        }
+        if ($path === '') return asset('images/placeholder-product.png');
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) return $path;
         $normalized = ltrim(str_replace('\\', '/', $path), '/');
-        if (str_starts_with($normalized, 'storage/') || str_starts_with($normalized, 'uploads/')) {
-            return asset($normalized);
-        }
+        if (str_starts_with($normalized, 'storage/') || str_starts_with($normalized, 'uploads/')) return asset($normalized);
         return asset('uploads/listings/' . $normalized);
     };
 @endphp
 
 <style>
-    .listing-review-thumb {
-        position: relative;
-        width: 68px;
-        height: 52px;
-        flex-shrink: 0;
-        border-radius: 12px;
-        overflow: hidden;
-        border: 1px solid #dbe4ee;
-        background: #f8fafc;
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+    :root { --navy:#063466; --navy-light:#e8eef6; --navy-mid:#0d4d8c; }
+
+    /* ── Page header ── */
+    .lr-header {
+        background:#fff;
+        border-radius:12px;
+        padding:1.5rem 1.75rem;
+        margin-bottom:1.5rem;
+        border-left:4px solid var(--navy);
+        box-shadow:0 1px 4px rgba(6,52,102,0.07);
     }
-    .listing-review-thumb img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
+    .lr-header h1 { font-size:1.35rem; font-weight:700; color:var(--navy); margin:0 0 0.2rem; }
+    .lr-header p  { margin:0; color:#64748b; font-size:0.875rem; }
+
+    /* ── Stat cards ── */
+    .lr-stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:1rem; margin-bottom:1.5rem; }
+    .lr-stat-card {
+        background:#fff; border-radius:12px;
+        padding:1.25rem 1.5rem;
+        box-shadow:0 1px 4px rgba(6,52,102,0.07);
+        display:flex; align-items:center; gap:1rem;
     }
-    .listing-review-thumb-button {
-        display: block;
-        width: 100%;
-        height: 100%;
-        padding: 0;
-        border: 0;
-        background: transparent;
-        cursor: pointer;
+    .lr-stat-icon {
+        width:44px; height:44px; border-radius:10px;
+        display:flex; align-items:center; justify-content:center; flex-shrink:0;
     }
-    .listing-review-thumb-badge {
-        position: absolute;
-        right: 6px;
-        bottom: 6px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 22px;
-        height: 22px;
-        border-radius: 9999px;
-        background: rgba(15, 23, 42, 0.72);
-        color: #fff;
-        font-size: 11px;
-        pointer-events: none;
+    .lr-stat-icon .material-icons-round { font-size:22px; }
+    .lr-stat-label { font-size:0.75rem; font-weight:600; color:#64748b; margin-bottom:2px; }
+    .lr-stat-value { font-size:1.5rem; font-weight:700; line-height:1; color:#0f172a; }
+
+    /* ── Filter bar ── */
+    .lr-filter-bar {
+        background:#fff; border-radius:12px;
+        padding:1rem 1.25rem; margin-bottom:1.5rem;
+        box-shadow:0 1px 4px rgba(6,52,102,0.07);
+        display:flex; flex-wrap:wrap; gap:0.75rem; align-items:center;
     }
-    .listing-image-preview-modal {
-        position: fixed;
-        inset: 0;
-        display: none;
-        align-items: center;
-        justify-content: center;
-        padding: 1.5rem;
-        background: rgba(15, 23, 42, 0.45);
-        backdrop-filter: blur(2px);
-        z-index: 60;
+    .lr-filter-bar input[type=text] {
+        flex:1; min-width:240px;
+        padding:0.5rem 0.875rem;
+        border:1.5px solid #e2e8f0; border-radius:8px;
+        font-size:0.875rem; color:#374151; background:#fff;
+        outline:none; transition:border-color 0.2s;
     }
-    .listing-image-preview-modal.is-visible {
-        display: flex;
+    .lr-filter-bar input[type=text]:focus { border-color:var(--navy); }
+    .lr-filter-btn {
+        padding:0.5rem 1.25rem; border-radius:8px;
+        font-size:0.875rem; font-weight:600; border:none; cursor:pointer;
+        display:inline-flex; align-items:center; gap:6px;
+        transition:background 0.2s; text-decoration:none;
     }
-    .listing-image-preview-card {
-        width: min(720px, 100%);
-        background: #fff;
-        border-radius: 20px;
-        overflow: hidden;
-        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25);
+    .lr-filter-btn--primary { background:var(--navy); color:#fff; }
+    .lr-filter-btn--primary:hover { background:var(--navy-mid); }
+    .lr-filter-btn--clear { background:#f1f5f9; color:#475569; }
+    .lr-filter-btn--clear:hover { background:#e2e8f0; }
+    .lr-filter-btn .material-icons-round { font-size:16px; }
+
+    /* ── Table card ── */
+    .lr-card {
+        background:#fff; border-radius:12px;
+        box-shadow:0 1px 4px rgba(6,52,102,0.07);
+        overflow:hidden; margin-bottom:1.5rem;
     }
-    .listing-image-preview-frame {
-        background: #0f172a;
-        max-height: 70vh;
+    .lr-card-header {
+        padding:1rem 1.5rem; border-bottom:1px solid #f1f5f9;
+        display:flex; align-items:center; justify-content:space-between;
     }
-    .listing-image-preview-frame img {
-        width: 100%;
-        max-height: 70vh;
-        object-fit: contain;
-        display: block;
+    .lr-card-header h2 { font-size:0.9375rem; font-weight:700; color:#0f172a; margin:0; display:flex; align-items:center; gap:6px; }
+    .lr-card-header h2 .material-icons-round { font-size:18px; }
+    .lr-count { font-size:0.75rem; font-weight:600; color:var(--navy); background:var(--navy-light); padding:2px 10px; border-radius:999px; }
+    .lr-count--red { color:#dc2626; background:#fee2e2; }
+
+    .lr-table { width:100%; border-collapse:collapse; }
+    .lr-table thead th {
+        padding:0.75rem 1.25rem; text-align:left;
+        font-size:0.6875rem; font-weight:700; text-transform:uppercase;
+        letter-spacing:0.06em; color:#64748b; background:#f8fafc;
+        border-bottom:1px solid #f1f5f9; white-space:nowrap;
     }
+    .lr-table tbody tr { border-bottom:1px solid #f8fafc; transition:background 0.1s; }
+    .lr-table tbody tr:last-child { border-bottom:none; }
+    .lr-table tbody tr:hover { background:#fafbfc; }
+    .lr-table tbody td { padding:0.875rem 1.25rem; font-size:0.875rem; color:#374151; vertical-align:middle; }
+
+    /* ── Thumbnail ── */
+    .lr-thumb {
+        position:relative; width:68px; height:52px; flex-shrink:0;
+        border-radius:10px; overflow:hidden;
+        border:1px solid #e2e8f0; background:#f8fafc;
+        box-shadow:0 1px 2px rgba(15,23,42,0.06); cursor:pointer;
+    }
+    .lr-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+    .lr-thumb-zoom {
+        position:absolute; inset:0;
+        display:flex; align-items:center; justify-content:center;
+        background:rgba(6,52,102,0); transition:background 0.2s;
+    }
+    .lr-thumb:hover .lr-thumb-zoom { background:rgba(6,52,102,0.45); }
+    .lr-thumb-zoom .material-icons-round { font-size:20px; color:#fff; opacity:0; transition:opacity 0.2s; }
+    .lr-thumb:hover .lr-thumb-zoom .material-icons-round { opacity:1; }
+    .lr-thumb-btn { display:block; width:100%; height:100%; border:none; background:transparent; padding:0; cursor:pointer; }
+    .lr-thumb-no {
+        width:68px; height:52px; border-radius:10px;
+        background:#f1f5f9; display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    }
+    .lr-thumb-no .material-icons-round { font-size:22px; color:#cbd5e1; }
+
+    /* ── Cell helpers ── */
+    .lr-id    { font-size:0.75rem; font-weight:700; color:var(--navy); font-family:monospace; }
+    .lr-sub   { font-size:0.72rem; color:#94a3b8; margin-top:2px; }
+    .lr-name  { font-weight:600; color:#0f172a; }
+    .lr-email { font-size:0.72rem; color:#94a3b8; }
+    .lr-price { font-weight:700; color:#0f172a; }
+    .lr-price-sub { font-size:0.72rem; color:#94a3b8; margin-top:2px; }
+    .lr-date  { color:#374151; }
+    .lr-date-rel { font-size:0.72rem; color:#94a3b8; margin-top:2px; }
+
+    /* ── Action buttons ── */
+    .lr-btn-review {
+        display:inline-flex; align-items:center; gap:5px;
+        padding:0.375rem 0.875rem;
+        background:var(--navy); color:#fff;
+        border-radius:7px; font-size:0.8125rem; font-weight:600;
+        text-decoration:none; transition:background 0.2s; white-space:nowrap;
+    }
+    .lr-btn-review:hover { background:var(--navy-mid); }
+    .lr-btn-review .material-icons-round { font-size:15px; }
+    .lr-btn-view {
+        display:inline-flex; align-items:center; gap:5px;
+        padding:0.375rem 0.875rem;
+        background:#f1f5f9; color:#475569;
+        border-radius:7px; font-size:0.8125rem; font-weight:600;
+        text-decoration:none; transition:background 0.2s; white-space:nowrap;
+    }
+    .lr-btn-view:hover { background:#e2e8f0; }
+    .lr-btn-view .material-icons-round { font-size:15px; }
+
+    /* ── Rejected section header ── */
+    .lr-section-header {
+        background:#fff; border-radius:12px;
+        padding:1.25rem 1.5rem; margin-bottom:1rem;
+        border-left:4px solid #dc2626;
+        box-shadow:0 1px 4px rgba(6,52,102,0.07);
+        display:flex; align-items:center; justify-content:space-between;
+        flex-wrap:wrap; gap:0.75rem;
+    }
+    .lr-section-header h2 { font-size:1rem; font-weight:700; color:#0f172a; margin:0; display:flex; align-items:center; gap:8px; }
+    .lr-section-header h2 .material-icons-round { font-size:20px; color:#dc2626; }
+    .lr-section-header p { margin:0.2rem 0 0; color:#64748b; font-size:0.8125rem; }
+
+    /* ── Rejection reason ── */
+    .lr-rej-reason {
+        display:inline-block; background:#fee2e2; color:#b91c1c;
+        font-size:0.72rem; font-weight:700; padding:2px 8px; border-radius:5px;
+    }
+    .lr-rej-notes { font-size:0.75rem; color:#64748b; margin-top:4px; max-width:220px; }
+
+    /* ── Empty state ── */
+    .lr-empty { text-align:center; padding:3.5rem 1rem; color:#94a3b8; }
+    .lr-empty .material-icons-round { font-size:48px; display:block; margin-bottom:0.75rem; opacity:0.35; }
+    .lr-empty p { margin:0; font-size:0.9375rem; }
+
+    .lr-pagination { padding:1rem 1.25rem; border-top:1px solid #f1f5f9; }
+
+    /* ── Image preview modal ── */
+    .lr-modal {
+        position:fixed; inset:0;
+        display:none; align-items:center; justify-content:center;
+        padding:1.5rem; background:rgba(15,23,42,0.5);
+        backdrop-filter:blur(3px); z-index:9999;
+    }
+    .lr-modal.is-open { display:flex; }
+    .lr-modal-card {
+        width:min(720px,100%); background:#fff;
+        border-radius:16px; overflow:hidden;
+        box-shadow:0 24px 60px rgba(15,23,42,0.3);
+    }
+    .lr-modal-img-wrap { background:#0f172a; max-height:70vh; }
+    .lr-modal-img-wrap img { width:100%; max-height:70vh; object-fit:contain; display:block; }
+    .lr-modal-footer {
+        padding:1rem 1.25rem; border-top:1px solid #f1f5f9;
+        display:flex; align-items:center; justify-content:space-between; gap:1rem;
+    }
+    .lr-modal-footer-info h3 { font-size:0.9375rem; font-weight:700; color:#0f172a; margin:0 0 2px; }
+    .lr-modal-footer-info p  { font-size:0.8125rem; color:#64748b; margin:0; }
+    .lr-modal-close-hint { font-size:0.75rem; color:#94a3b8; white-space:nowrap; }
 </style>
 
-<div class="bg-gray-50 min-h-screen">
-    <!-- Header -->
-    <div class="bg-white shadow-sm mb-6 rounded-lg p-6">
-        <h1 class="text-3xl font-bold text-gray-900">Listing Review</h1>
-        <p class="text-gray-600 mt-2">Review and approve pending listings</p>
+<div>
+    {{-- ── Page header ── --}}
+    <div class="lr-header">
+        <h1>
+            <span class="material-icons-round" style="font-size:1.25rem;vertical-align:-3px;margin-right:6px">pending_actions</span>
+            Listing Review
+        </h1>
+        <p>Review and approve pending vehicle listings before they go live</p>
     </div>
 
-    <!-- Stats Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600">Pending Approval</p>
-                    <p class="text-2xl font-bold text-orange-600 mt-1">{{ $pendingListings->total() ?? 0 }}</p>
-                </div>
-                <div class="p-3 bg-orange-100 rounded-full">
-                    <i class="fas fa-clock text-orange-600 text-xl"></i>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600">Total Pending</p>
-                    <p class="text-2xl font-bold text-blue-600 mt-1">{{ \App\Models\Listing::where('status', 'pending')->count() }}</p>
-                </div>
-                <div class="p-3 bg-blue-100 rounded-full">
-                    <i class="fas fa-list text-blue-600 text-xl"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Search -->
-    <div class="bg-white rounded-lg shadow mb-6 p-6">
-        <form method="GET" action="{{ route('admin.listing-review') }}" class="flex flex-wrap gap-4">
-            <div class="flex-1 min-w-[250px]">
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by item number, make, model, or VIN..." 
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+    {{-- ── Stat cards ── --}}
+    <div class="lr-stats">
+        <div class="lr-stat-card">
+            <div class="lr-stat-icon" style="background:#fef9c3">
+                <span class="material-icons-round" style="color:#a16207">hourglass_top</span>
             </div>
             <div>
-                <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-                    <i class="fas fa-search mr-2"></i>Search
-                </button>
+                <div class="lr-stat-label">Pending Review</div>
+                <div class="lr-stat-value" style="color:#a16207">{{ $pendingListings->total() }}</div>
             </div>
+        </div>
+        <div class="lr-stat-card">
+            <div class="lr-stat-icon" style="background:#fee2e2">
+                <span class="material-icons-round" style="color:#dc2626">cancel</span>
+            </div>
+            <div>
+                <div class="lr-stat-label">Rejected</div>
+                <div class="lr-stat-value" style="color:#dc2626">{{ $rejectedListings->total() }}</div>
+            </div>
+        </div>
+        <div class="lr-stat-card">
+            <div class="lr-stat-icon" style="background:#dcfce7">
+                <span class="material-icons-round" style="color:#16a34a">check_circle</span>
+            </div>
+            <div>
+                <div class="lr-stat-label">Active Live</div>
+                <div class="lr-stat-value" style="color:#16a34a">{{ \App\Models\Listing::where('status','active')->count() }}</div>
+            </div>
+        </div>
+        <div class="lr-stat-card">
+            <div class="lr-stat-icon" style="background:var(--navy-light)">
+                <span class="material-icons-round" style="color:var(--navy)">inventory_2</span>
+            </div>
+            <div>
+                <div class="lr-stat-label">Total Listings</div>
+                <div class="lr-stat-value" style="color:var(--navy)">{{ \App\Models\Listing::count() }}</div>
+            </div>
+        </div>
+    </div>
+
+    {{-- ── Search / filter ── --}}
+    <form method="GET" action="{{ route('admin.listing-review') }}">
+        <div class="lr-filter-bar">
+            <input type="text" name="search" value="{{ request('search') }}"
+                placeholder="Search by make, model, VIN, listing ID or seller name…">
+            <button type="submit" class="lr-filter-btn lr-filter-btn--primary">
+                <span class="material-icons-round">search</span> Search
+            </button>
             @if(request('search'))
-            <div>
-                <a href="{{ route('admin.listing-review') }}" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
-                    Clear
-                </a>
-            </div>
+            <a href="{{ route('admin.listing-review') }}" class="lr-filter-btn lr-filter-btn--clear">
+                <span class="material-icons-round">close</span> Clear
+            </a>
             @endif
-        </form>
-    </div>
-
-    <!-- Pending Listings Table -->
-    <div class="bg-white rounded-lg shadow overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-200">
-            <h2 class="text-xl font-semibold text-gray-900">Pending Listings for Approval</h2>
         </div>
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
+    </form>
+
+    {{-- ── Pending listings table ── --}}
+    <div class="lr-card">
+        <div class="lr-card-header">
+            <h2>
+                <span class="material-icons-round" style="color:#a16207">schedule</span>
+                Pending Listings
+            </h2>
+            <span class="lr-count">{{ $pendingListings->total() }} {{ Str::plural('listing', $pendingListings->total()) }}</span>
+        </div>
+        <div style="overflow-x:auto">
+            <table class="lr-table">
+                <thead>
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Listing</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Seller</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vehicle</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Starting Price</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Submitted</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        <th>Listing</th>
+                        <th>Seller</th>
+                        <th>Vehicle</th>
+                        <th>Starting Price</th>
+                        <th>Submitted</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
+                <tbody>
                     @forelse($pendingListings as $listing)
                     @php
-                        $mainImage = $listing->images->first();
-                        $imageUrl = $mainImage ? $resolveListingImageUrl($mainImage->image_path) : asset('images/placeholder-product.png');
+                        $mainImage   = $listing->images->first();
+                        $imageUrl    = $mainImage ? $resolveListingImageUrl($mainImage->image_path) : asset('images/placeholder-product.png');
                         $vehicleName = trim(($listing->year ?? '') . ' ' . ($listing->make ?? '') . ' ' . ($listing->model ?? ''));
                     @endphp
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex items-center">
+                    <tr>
+                        <td>
+                            <div style="display:flex;align-items:center;gap:10px">
                                 @if($listing->images && $listing->images->count() > 0)
-                                <div class="listing-review-thumb mr-3">
-                                    <button type="button"
-                                        class="listing-review-thumb-button js-listing-image-trigger"
+                                <div class="lr-thumb">
+                                    <button type="button" class="lr-thumb-btn js-lr-img-trigger"
                                         data-image="{{ $imageUrl }}"
-                                        data-title="{{ $vehicleName !== '' ? $vehicleName : 'Pending Listing' }}"
-                                        data-listing="#{{ $listing->id }}"
-                                        data-seller="{{ $listing->seller->name ?? 'N/A' }}">
-                                        <img src="{{ $imageUrl }}"
-                                            alt="{{ $listing->make ?? '' }} {{ $listing->model ?? '' }}">
-                                        <span class="listing-review-thumb-badge">
-                                            <i class="fas fa-search-plus"></i>
-                                        </span>
+                                        data-title="{{ $vehicleName ?: 'Pending Listing' }}"
+                                        data-meta="Listing #{{ $listing->id }} · {{ $listing->seller->name ?? 'N/A' }}">
+                                        <img src="{{ $imageUrl }}" alt="{{ $listing->make ?? '' }} {{ $listing->model ?? '' }}">
+                                        <div class="lr-thumb-zoom"><span class="material-icons-round">zoom_in</span></div>
                                     </button>
                                 </div>
                                 @else
-                                <div class="h-12 w-16 bg-gray-200 rounded mr-3 flex items-center justify-center">
-                                    <i class="fas fa-car text-gray-400"></i>
+                                <div class="lr-thumb-no">
+                                    <span class="material-icons-round">directions_car</span>
                                 </div>
                                 @endif
                                 <div>
-                                    <div class="text-sm font-medium text-gray-900">#{{ $listing->id }}</div>
-                                    <div class="text-xs text-gray-500">{{ $listing->subcategory ?? 'N/A' }}</div>
+                                    <div class="lr-id">#{{ $listing->id }}</div>
+                                    @if($listing->subcategory)
+                                    <div class="lr-sub">{{ $listing->subcategory }}</div>
+                                    @endif
                                 </div>
                             </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900">{{ $listing->seller->name ?? '—' }}</div>
-                            <div class="text-xs text-gray-500">{{ $listing->seller->email ?? '' }}</div>
-                            @if($listing->seller->phone ?? false)
-                            <div class="text-xs text-gray-400 font-mono">{{ $listing->seller->phone }}</div>
-                            @endif
+                        <td>
+                            <div class="lr-name">{{ $listing->seller->name ?? '—' }}</div>
+                            <div class="lr-email">{{ $listing->seller->email ?? '' }}</div>
                         </td>
-                        <td class="px-6 py-4">
-                            <div class="text-sm font-medium text-gray-900">
-                                {{ ($listing->year ?? '') . ' ' . ($listing->make ?? '') . ' ' . ($listing->model ?? '') }}
-                            </div>
-                            <div class="text-xs text-gray-500">
-                                @if($listing->vin)
-                                VIN: {{ $listing->vin }}
-                                @else
-                                No VIN
-                                @endif
-                            </div>
+                        <td>
+                            <div style="font-weight:600;color:#0f172a">{{ $vehicleName ?: '—' }}</div>
+                            <div class="lr-sub" style="font-family:monospace">{{ $listing->vin ? 'VIN: '.$listing->vin : 'No VIN' }}</div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900">${{ number_format($listing->starting_price ?? 0, 2) }}</div>
+                        <td>
+                            <div class="lr-price">${{ number_format($listing->starting_price ?? 0, 2) }}</div>
                             @if($listing->reserve_price)
-                            <div class="text-xs text-gray-500">Reserve: ${{ number_format($listing->reserve_price, 2) }}</div>
+                            <div class="lr-price-sub">Reserve: ${{ number_format($listing->reserve_price, 2) }}</div>
                             @endif
                             @if($listing->auction_duration)
-                            <div class="text-xs text-gray-400">{{ $listing->auction_duration }}-day auction</div>
+                            <div class="lr-price-sub">{{ $listing->auction_duration }}-day auction</div>
                             @endif
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {{ $listing->created_at->format('M j, Y') }}<br>
-                            <span class="text-xs">{{ $listing->created_at->format('g:i A') }}</span>
+                        <td>
+                            <div class="lr-date">{{ $listing->created_at->format('M j, Y') }}</div>
+                            <div class="lr-date-rel">{{ $listing->created_at->diffForHumans() }}</div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <div class="flex space-x-2">
-                                <a href="{{ route('admin.listings.approval-detail', $listing->id) }}" 
-                                    class="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded hover:bg-blue-700 transition">
-                                    <i class="fas fa-eye mr-1"></i>Review
-                                </a>
-                            </div>
+                        <td>
+                            <a href="{{ route('admin.listings.approval-detail', $listing->id) }}" class="lr-btn-review">
+                                <span class="material-icons-round">rate_review</span> Review
+                            </a>
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="6" class="px-6 py-12 text-center text-gray-500">
-                            <div class="mb-4">
-                                <i class="fas fa-check-circle text-4xl text-green-300"></i>
+                        <td colspan="6">
+                            <div class="lr-empty">
+                                <span class="material-icons-round">task_alt</span>
+                                <p>No pending listings — all caught up!</p>
                             </div>
-                            <p class="text-lg font-medium mb-2">No pending listings</p>
-                            <p class="text-sm text-gray-400">All listings have been reviewed. New listings will appear here when sellers submit them.</p>
                         </td>
                     </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
-        
-        <!-- Pagination -->
         @if($pendingListings->hasPages())
-        <div class="px-6 py-4 border-t border-gray-200">
-            {{ $pendingListings->links() }}
-        </div>
+        <div class="lr-pagination">{{ $pendingListings->links() }}</div>
         @endif
     </div>
-</div>
 
-{{-- ══════════════ REJECTED LISTINGS ══════════════ --}}
-<div class="bg-gray-50 mt-8">
-    <div class="bg-white shadow-sm mb-6 rounded-lg p-6 border-l-4 border-red-500">
-        <div class="flex items-center justify-between">
-            <div>
-                <h2 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                    <i class="fas fa-ban text-red-500"></i> Rejected Listings
-                </h2>
-                <p class="text-gray-600 mt-1">Listings that were rejected and require seller attention or re-submission</p>
-            </div>
-            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
-                {{ $rejectedListings->total() }} rejected
-            </span>
+    {{-- ══ REJECTED LISTINGS ══ --}}
+    <div class="lr-section-header">
+        <div>
+            <h2>
+                <span class="material-icons-round">block</span>
+                Rejected Listings
+            </h2>
+            <p>Listings returned to sellers for correction or re-submission</p>
         </div>
+        <span class="lr-count lr-count--red">{{ $rejectedListings->total() }} {{ Str::plural('record', $rejectedListings->total()) }}</span>
     </div>
 
-    <div class="bg-white rounded-lg shadow overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-red-50">
+    <div class="lr-card">
+        <div style="overflow-x:auto">
+            <table class="lr-table">
+                <thead>
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Listing</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Seller</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vehicle</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rejection Reason</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rejected</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        <th>Listing</th>
+                        <th>Seller</th>
+                        <th>Vehicle</th>
+                        <th>Rejection Reason</th>
+                        <th>Rejected</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
+                <tbody>
                     @forelse($rejectedListings as $listing)
                     @php
-                        $mainImageRej = $listing->images->first();
-                        $imageUrlRej  = $mainImageRej ? $resolveListingImageUrl($mainImageRej->image_path) : asset('images/placeholder-product.png');
-                        $vehicleNameRej = trim(($listing->year ?? '') . ' ' . ($listing->make ?? '') . ' ' . ($listing->model ?? ''));
+                        $rejImg    = $listing->images->first();
+                        $rejImgUrl = $rejImg ? $resolveListingImageUrl($rejImg->image_path) : asset('images/placeholder-product.png');
+                        $rejName   = trim(($listing->year ?? '') . ' ' . ($listing->make ?? '') . ' ' . ($listing->model ?? ''));
                     @endphp
-                    <tr class="hover:bg-red-50/40">
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex items-center">
+                    <tr>
+                        <td>
+                            <div style="display:flex;align-items:center;gap:10px">
                                 @if($listing->images && $listing->images->count() > 0)
-                                <div class="listing-review-thumb mr-3">
-                                    <button type="button"
-                                        class="listing-review-thumb-button js-listing-image-trigger"
-                                        data-image="{{ $imageUrlRej }}"
-                                        data-title="{{ $vehicleNameRej ?: 'Rejected Listing' }}"
-                                        data-listing="#{{ $listing->id }}"
-                                        data-seller="{{ $listing->seller->name ?? '—' }}">
-                                        <img src="{{ $imageUrlRej }}" alt="{{ $listing->make ?? '' }} {{ $listing->model ?? '' }}">
-                                        <span class="listing-review-thumb-badge"><i class="fas fa-search-plus"></i></span>
+                                <div class="lr-thumb">
+                                    <button type="button" class="lr-thumb-btn js-lr-img-trigger"
+                                        data-image="{{ $rejImgUrl }}"
+                                        data-title="{{ $rejName ?: 'Rejected Listing' }}"
+                                        data-meta="Listing #{{ $listing->id }} · {{ $listing->seller->name ?? '—' }}">
+                                        <img src="{{ $rejImgUrl }}" alt="{{ $listing->make ?? '' }} {{ $listing->model ?? '' }}">
+                                        <div class="lr-thumb-zoom"><span class="material-icons-round">zoom_in</span></div>
                                     </button>
                                 </div>
                                 @else
-                                <div class="h-12 w-16 bg-red-100 rounded mr-3 flex items-center justify-center">
-                                    <i class="fas fa-car text-red-400"></i>
+                                <div class="lr-thumb-no">
+                                    <span class="material-icons-round">directions_car</span>
                                 </div>
                                 @endif
                                 <div>
-                                    <div class="text-sm font-medium text-gray-900">#{{ $listing->id }}</div>
-                                    <div class="text-xs text-gray-500">{{ $listing->subcategory ?? '—' }}</div>
+                                    <div class="lr-id">#{{ $listing->id }}</div>
+                                    @if($listing->subcategory)
+                                    <div class="lr-sub">{{ $listing->subcategory }}</div>
+                                    @endif
                                 </div>
                             </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900">{{ $listing->seller->name ?? '—' }}</div>
-                            <div class="text-xs text-gray-500">{{ $listing->seller->email ?? '' }}</div>
-                            @if($listing->seller->phone ?? false)
-                            <div class="text-xs text-gray-400">{{ $listing->seller->phone }}</div>
-                            @endif
+                        <td>
+                            <div class="lr-name">{{ $listing->seller->name ?? '—' }}</div>
+                            <div class="lr-email">{{ $listing->seller->email ?? '' }}</div>
                         </td>
-                        <td class="px-6 py-4">
-                            <div class="text-sm font-medium text-gray-900">{{ $vehicleNameRej ?: '—' }}</div>
-                            <div class="text-xs text-gray-500">{{ $listing->vin ? 'VIN: '.$listing->vin : 'No VIN' }}</div>
+                        <td>
+                            <div style="font-weight:600;color:#0f172a">{{ $rejName ?: '—' }}</div>
+                            <div class="lr-sub" style="font-family:monospace">{{ $listing->vin ? 'VIN: '.$listing->vin : 'No VIN' }}</div>
                         </td>
-                        <td class="px-6 py-4">
+                        <td>
                             @if($listing->rejection_reason)
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
-                                {{ $listing->rejection_reason }}
-                            </span>
+                            <span class="lr-rej-reason">{{ $listing->rejection_reason }}</span>
                             @endif
                             @if($listing->rejection_notes)
-                            <p class="text-xs text-gray-500 mt-1 max-w-xs">{{ Str::limit($listing->rejection_notes, 80) }}</p>
+                            <div class="lr-rej-notes">{{ Str::limit($listing->rejection_notes, 80) }}</div>
+                            @endif
+                            @if(!$listing->rejection_reason && !$listing->rejection_notes)
+                            <span style="color:#cbd5e1">—</span>
                             @endif
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {{ $listing->updated_at->format('M j, Y') }}<br>
-                            <span class="text-xs">{{ $listing->updated_at->format('g:i A') }}</span>
+                        <td>
+                            <div class="lr-date">{{ $listing->updated_at->format('M j, Y') }}</div>
+                            <div class="lr-date-rel">{{ $listing->updated_at->diffForHumans() }}</div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <a href="{{ route('admin.listings.approval-detail', $listing->id) }}"
-                                class="inline-flex items-center px-3 py-1.5 bg-gray-600 text-white text-xs font-medium rounded hover:bg-gray-700 transition">
-                                <i class="fas fa-eye mr-1"></i>View
+                        <td>
+                            <a href="{{ route('admin.listings.approval-detail', $listing->id) }}" class="lr-btn-view">
+                                <span class="material-icons-round">visibility</span> View
                             </a>
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="6" class="px-6 py-10 text-center text-gray-500">
-                            <i class="fas fa-check-circle text-3xl mb-3 text-green-300"></i>
-                            <p>No rejected listings</p>
+                        <td colspan="6">
+                            <div class="lr-empty">
+                                <span class="material-icons-round">thumb_up</span>
+                                <p>No rejected listings</p>
+                            </div>
                         </td>
                     </tr>
                     @endforelse
@@ -375,66 +469,63 @@
             </table>
         </div>
         @if($rejectedListings->hasPages())
-        <div class="px-6 py-4 border-t border-gray-200">
-            {{ $rejectedListings->appends(request()->query())->links() }}
-        </div>
+        <div class="lr-pagination">{{ $rejectedListings->appends(request()->query())->links() }}</div>
         @endif
     </div>
 </div>
 
-<div id="listingImagePreviewModal" class="listing-image-preview-modal" aria-hidden="true">
-    <div id="listingImagePreviewCard" class="listing-image-preview-card">
-        <div class="listing-image-preview-frame">
-            <img id="listingImagePreviewModalImg" src="" alt="Listing preview">
+{{-- ── Image quick-preview modal ── --}}
+<div id="lrImgModal" class="lr-modal" aria-hidden="true">
+    <div class="lr-modal-card" id="lrImgModalCard">
+        <div class="lr-modal-img-wrap">
+            <img id="lrImgModalImg" src="" alt="Listing preview">
         </div>
-        <div class="px-5 py-4 border-t border-gray-100">
-            <div class="flex items-start justify-between gap-4">
-                <div>
-                    <h3 id="listingImagePreviewModalTitle" class="text-lg font-semibold text-gray-900">Listing Preview</h3>
-                    <p id="listingImagePreviewModalMeta" class="text-sm text-gray-500 mt-1"></p>
-                </div>
-                <div class="text-xs text-gray-400 whitespace-nowrap">Click outside to close</div>
+        <div class="lr-modal-footer">
+            <div class="lr-modal-footer-info">
+                <h3 id="lrImgModalTitle">Listing Preview</h3>
+                <p id="lrImgModalMeta"></p>
             </div>
+            <span class="lr-modal-close-hint">Click outside to close</span>
         </div>
     </div>
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        var modal = document.getElementById('listingImagePreviewModal');
-        var modalCard = document.getElementById('listingImagePreviewCard');
-        var modalImg = document.getElementById('listingImagePreviewModalImg');
-        var modalTitle = document.getElementById('listingImagePreviewModalTitle');
-        var modalMeta = document.getElementById('listingImagePreviewModalMeta');
+document.addEventListener('DOMContentLoaded', function () {
+    var modal     = document.getElementById('lrImgModal');
+    var modalCard = document.getElementById('lrImgModalCard');
+    var modalImg  = document.getElementById('lrImgModalImg');
+    var modalTitle= document.getElementById('lrImgModalTitle');
+    var modalMeta = document.getElementById('lrImgModalMeta');
 
-        if (!modal || !modalCard || !modalImg || !modalTitle || !modalMeta) return;
+    if (!modal) return;
 
-        function showModal(trigger) {
-            modalImg.src = trigger.dataset.image || '';
-            modalTitle.textContent = trigger.dataset.title || 'Listing Preview';
-            modalMeta.textContent = (trigger.dataset.listing || '') + '  Seller: ' + (trigger.dataset.seller || 'N/A');
-            modal.classList.add('is-visible');
+    document.querySelectorAll('.js-lr-img-trigger').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            modalImg.src           = btn.dataset.image || '';
+            modalTitle.textContent = btn.dataset.title || 'Preview';
+            modalMeta.textContent  = btn.dataset.meta  || '';
+            modal.classList.add('is-open');
             modal.setAttribute('aria-hidden', 'false');
-        }
+        });
+    });
 
-        function hideModal() {
-            modal.classList.remove('is-visible');
+    modal.addEventListener('click', function (e) {
+        if (!modalCard.contains(e.target)) {
+            modal.classList.remove('is-open');
             modal.setAttribute('aria-hidden', 'true');
             modalImg.src = '';
         }
-
-        document.querySelectorAll('.js-listing-image-trigger').forEach(function (trigger) {
-            trigger.addEventListener('click', function (e) {
-                e.preventDefault();
-                showModal(trigger);
-            });
-        });
-
-        modal.addEventListener('click', function (event) {
-            if (!modalCard.contains(event.target)) {
-                hideModal();
-            }
-        });
     });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+            modal.classList.remove('is-open');
+            modal.setAttribute('aria-hidden', 'true');
+            modalImg.src = '';
+        }
+    });
+});
 </script>
 @endsection
