@@ -911,6 +911,7 @@
 </style>
 
 @include('Seller.partials.submit-listing.scripts')
+@include('Seller.partials.submit-listing.custom-selects')
 
 @endsection
 
