@@ -62,9 +62,9 @@
                                     <span class="material-icons-round text-blue-600 text-2xl">gavel</span>
                                 </div>
                                 <div>
-                                    <p class="text-3xl font-bold text-gray-900">{{ $leadingCount }}</p>
+                                    <p class="text-3xl font-bold text-gray-900">{{ $currentAuctions->count() }}</p>
                                     <p class="text-sm font-bold text-gray-800 mt-0.5 tracking-wide">CURRENT</p>
-                                    <p class="text-xs text-gray-400 mt-0.5">Leading Auctions | Won</p>
+                                    <p class="text-xs text-gray-400 mt-0.5">Active Bids &bull; {{ $leadingCount }} Leading</p>
                                 </div>
                             </div>
                             <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 flex items-center gap-4">
