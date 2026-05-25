@@ -47,7 +47,7 @@
                                 </div>
                                 <div>
                                     <p class="text-xs text-gray-400 font-medium uppercase tracking-wide">Plan Expires</p>
-                                    <p class="font-bold text-blue-600 text-sm mt-0.5">{{ $user->activeSubscription?->ends_at?->format('M d, Y') ?? 'No Expiry' }}</p>
+                                    <p class="font-bold text-blue-600 text-sm mt-0.5">{{ $user->activeSubscription?->ends_at?->format('M d, Y') ?? $user->created_at->addYear()->format('M d, Y') }}</p>
                                 </div>
                                 <button type="button" onclick="showPlanModal()" class="inline-flex items-center px-4 py-2 rounded-xl border border-gray-200 text-gray-700 text-xs font-semibold hover:border-blue-400 hover:text-blue-600 transition whitespace-nowrap">
                                     View Plan
@@ -1456,7 +1456,7 @@
     $planModalName      = $planPkg?->title ?? 'Standard Buyer';
     $planModalPrice     = $planPkg ? '$' . number_format((float)$planPkg->price, 2) : 'Free';
     $planModalStartDate = $planSub?->starts_at?->format('M d, Y') ?? $user->created_at->format('M d, Y');
-    $planModalEndDate   = $planSub?->ends_at?->format('M d, Y') ?? 'No Expiry';
+    $planModalEndDate   = $planSub?->ends_at?->format('M d, Y') ?? $user->created_at->addYear()->format('M d, Y');
     $planModalIsFreePlan = !$planSub;
     $planModalStatus    = $planSub ? 'Active' : 'Free Plan';
     $planModalFeatures  = (is_array($planPkg?->features) && count($planPkg->features)) ? $planPkg->features : [
@@ -1525,19 +1525,10 @@
             </div>
         </div>
         <div class="px-6 pb-5">
-            @if($planModalIsFreePlan)
-            <a href="{{ route('upgrade.membership') }}"
-               class="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-bold text-white transition-all duration-200"
-               style="background: linear-gradient(135deg, #063466 0%, #1e3a8a 100%);">
-                <span class="material-icons-round" style="font-size:18px">rocket_launch</span>
-                Upgrade Plan
-            </a>
-            @else
             <button type="button" onclick="hidePlanModal()"
                     class="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-all duration-200">
                 Close
             </button>
-            @endif
         </div>
     </div>
 </div>
