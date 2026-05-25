@@ -50,6 +50,11 @@ return [
         'signup_fee_cents' => (int) env('TOW_PROVIDER_SIGNUP_FEE_CENTS', 5000), // $50.00 default
     ],
 
+    'rapidapi_hin' => [
+        'key'  => env('RAPIDAPI_HIN_KEY'),
+        'host' => env('RAPIDAPI_HIN_HOST', 'hull-id-boat-hin-decoder.p.rapidapi.com'),
+    ],
+
     'vonage' => [
         'api_key'    => env('VONAGE_API_KEY'),
         'api_secret' => env('VONAGE_API_SECRET'),

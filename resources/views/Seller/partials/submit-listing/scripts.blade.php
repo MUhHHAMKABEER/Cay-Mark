@@ -122,7 +122,7 @@
                 var input = document.getElementById('vin_hin');
                 if (kind === 'marine') {
                     if (label) label.textContent = 'HIN';
-                    if (input) { input.placeholder = 'Enter 14-character HIN'; input.maxLength = 14; input.value = ''; }
+                    if (input) { input.placeholder = 'Enter 12 or 14-character HIN'; input.maxLength = 14; input.value = ''; }
                 } else {
                     if (label) label.textContent = 'VIN';
                     if (input) { input.placeholder = 'Enter 17-character VIN'; input.maxLength = 17; input.value = ''; }
@@ -251,10 +251,15 @@
     document.getElementById('searchVinBtn')?.addEventListener('click', function() {
         var kind = document.getElementById('identifier_kind')?.value || 'vehicle';
         var vinHin = (document.getElementById('vin_hin')?.value || '').trim().toUpperCase();
-        var needLen = kind === 'marine' ? 14 : 17;
-        if (vinHin.length < needLen) {
+
+        // VIN = exactly 17 chars; HIN = 12–14 chars (US or international standard)
+        var validLength = kind === 'marine'
+            ? (vinHin.length >= 12 && vinHin.length <= 14)
+            : (vinHin.length === 17);
+
+        if (!validLength) {
             showVinMessage(kind === 'marine'
-                ? 'Please enter 14 characters to enable HIN reader.'
+                ? 'Please enter a valid HIN (12 or 14 characters).'
                 : 'Please enter 17 characters to enable VIN reader.', true);
             return;
         }

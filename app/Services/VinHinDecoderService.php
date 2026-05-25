@@ -9,20 +9,21 @@ use Illuminate\Support\Facades\Log;
 class VinHinDecoderService
 {
     /**
-     * Detect if input is VIN (17 chars) or HIN (12 chars).
-     * 
+     * Detect if input is VIN (17 chars) or HIN (12–14 chars).
+     * US standard HIN = 12 chars, ISO 10087 international HIN = 14 chars.
+     *
      * @param string $input
      * @return string 'vin' or 'hin'
      */
     public function detectType(string $input): string
     {
         $cleaned = strtoupper(preg_replace('/[^A-Z0-9]/', '', $input));
-        
-        // HIN is typically 12 characters, VIN is 17
-        if (strlen($cleaned) <= 12) {
+
+        // VIN is always exactly 17 characters; anything shorter is treated as HIN
+        if (strlen($cleaned) < 17) {
             return 'hin';
         }
-        
+
         return 'vin';
     }
 
@@ -203,95 +204,138 @@ class VinHinDecoderService
     }
 
     /**
-     * Decode HIN using Auto.dev API (if supported) or return failure.
-     * Note: Auto.dev primarily supports VIN decoding. HIN decoding may need separate service.
-     * 
+     * Decode HIN using RapidAPI Hull ID Boat HIN Decoder.
+     * Supports both 12-character (US Coast Guard) and 14-character (ISO 10087) HIN formats.
+     *
      * @param string $hin
      * @return array
      */
     protected function decodeHIN(string $hin): array
     {
-        $apiKey = config('services.auto_dev.api_key');
-        $baseUrl = config('services.auto_dev.base_url');
-        $url = $baseUrl ? "{$baseUrl}/vin/{$hin}" : '';
+        $apiKey  = config('services.rapidapi_hin.key');
+        $apiHost = config('services.rapidapi_hin.host', 'hull-id-boat-hin-decoder.p.rapidapi.com');
+        $url     = "https://{$apiHost}/api-decoder.php?HIN={$hin}";
 
-        Log::info('[VIN-API] HIN decode started', [
-            'hin' => $hin,
-            'base_url' => $baseUrl,
+        Log::info('[HIN-API] HIN decode started', [
+            'hin'         => $hin,
+            'hin_length'  => strlen($hin),
+            'api_host'    => $apiHost,
             'api_key_set' => !empty($apiKey),
         ]);
 
         if (empty($apiKey)) {
-            Log::error('[VIN-API] HIN decode failed: API key not configured', ['hin' => $hin]);
+            Log::error('[HIN-API] HIN decode failed: RapidAPI key not configured (RAPIDAPI_HIN_KEY)', [
+                'hin' => $hin,
+            ]);
             return [
                 'success' => false,
-                'data' => [],
-                'message' => 'VEHICLE/HULL NUMBER NOT FOUND. PLEASE ENTER DETAILS MANUALLY.',
+                'data'    => [],
+                'message' => 'HIN lookup is not configured. Please enter details manually.',
             ];
         }
-        if (empty($baseUrl)) {
-            Log::error('[VIN-API] HIN decode failed: Base URL not configured', ['hin' => $hin]);
-            return [
-                'success' => false,
-                'data' => [],
-                'message' => 'VEHICLE/HULL NUMBER NOT FOUND. PLEASE ENTER DETAILS MANUALLY.',
-            ];
-        }
+
+        $sslVerify = !app()->environment('local');
 
         try {
-            Log::info('[VIN-API] HIN request sending', ['url' => $url, 'hin' => $hin]);
-            $response = Http::withoutVerifying()->withHeaders([
-                'Authorization' => 'Bearer ' . $apiKey,
-                'Content-Type' => 'application/json',
-                'Accept' => 'application/json',
-            ])->timeout(30)->get($url);
+            Log::info('[HIN-API] Sending request', ['url' => $url]);
+
+            $response = Http::withOptions(['verify' => $sslVerify])
+                ->withHeaders([
+                    'x-rapidapi-key'  => $apiKey,
+                    'x-rapidapi-host' => $apiHost,
+                    'Content-Type'    => 'application/json',
+                    'User-Agent'      => 'rapidapi',
+                    'Referer'         => 'rapidapi',
+                ])
+                ->timeout(30)
+                ->get($url);
 
             $status = $response->status();
-            $body = $response->body();
-            Log::info('[VIN-API] HIN response received', [
-                'hin' => $hin,
-                'status' => $status,
-                'body_preview' => substr($body, 0, 300),
+            $body   = $response->body();
+
+            Log::info('[HIN-API] Response received', [
+                'hin'          => $hin,
+                'status'       => $status,
+                'body_preview' => substr($body, 0, 500),
             ]);
 
             if ($response->successful()) {
                 $data = $response->json();
-                $decodedData = $this->parseAutoDevResponse($data);
+
+                Log::debug('[HIN-API] Raw response', ['hin' => $hin, 'response' => $data]);
+
+                $decodedData = $this->parseRapidApiHinResponse($data);
+
                 if (!empty($decodedData)) {
-                    Log::info('[VIN-API] HIN decode success', ['hin' => $hin, 'fields' => array_keys($decodedData)]);
+                    Log::info('[HIN-API] Decode success', [
+                        'hin'    => $hin,
+                        'fields' => array_keys($decodedData),
+                    ]);
                     return [
                         'success' => true,
-                        'data' => $decodedData,
+                        'data'    => $decodedData,
                         'message' => 'Hull information decoded successfully.',
                     ];
                 }
-                Log::warning('[VIN-API] HIN decode failed: empty parsed data', ['hin' => $hin, 'raw' => $data]);
+
+                Log::warning('[HIN-API] Empty parsed data', ['hin' => $hin, 'raw' => $data]);
             } else {
-                Log::warning('[VIN-API] HIN decode failed: API error', [
-                    'hin' => $hin,
+                Log::warning('[HIN-API] API error response', [
+                    'hin'    => $hin,
                     'status' => $status,
-                    'body' => $body,
+                    'body'   => $body,
                 ]);
             }
         } catch (\Illuminate\Http\Client\ConnectionException $e) {
-            Log::error('[VIN-API] HIN decode failed: connection exception', [
-                'hin' => $hin,
-                'url' => $url,
+            Log::error('[HIN-API] Connection exception', [
+                'hin'     => $hin,
+                'url'     => $url,
                 'message' => $e->getMessage(),
             ]);
         } catch (\Exception $e) {
-            Log::error('[VIN-API] HIN decode failed: exception', [
-                'hin' => $hin,
+            Log::error('[HIN-API] Exception', [
+                'hin'     => $hin,
                 'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+                'trace'   => $e->getTraceAsString(),
             ]);
         }
 
         return [
             'success' => false,
-            'data' => [],
-            'message' => 'VEHICLE/HULL NUMBER NOT FOUND. PLEASE ENTER DETAILS MANUALLY.',
+            'data'    => [],
+            'message' => 'HULL NUMBER NOT FOUND. PLEASE ENTER DETAILS MANUALLY.',
         ];
+    }
+
+    /**
+     * Parse the RapidAPI Hull ID HIN Decoder response into our internal field format.
+     *
+     * @param array $apiResponse
+     * @return array
+     */
+    protected function parseRapidApiHinResponse(array $apiResponse): array
+    {
+        // RapidAPI Hull ID response may nest data under 'data', 'result', or root level
+        $data = $apiResponse;
+
+        if (isset($apiResponse['data']) && is_array($apiResponse['data'])) {
+            $data = array_merge($data, $apiResponse['data']);
+        }
+        if (isset($apiResponse['result']) && is_array($apiResponse['result'])) {
+            $data = array_merge($data, $apiResponse['result']);
+        }
+
+        $mapped = [
+            'make'         => $data['manufacturer'] ?? $data['make'] ?? $data['brand'] ?? $data['manufacturerName'] ?? null,
+            'model'        => $data['model'] ?? $data['modelName'] ?? null,
+            'year'         => $data['modelYear'] ?? $data['year'] ?? $data['model_year'] ?? null,
+            'vehicle_type' => 'Boat',   // HIN is always marine
+            'fuel_type'    => $this->normalizeFuelType($data['fuelType'] ?? $data['fuel'] ?? null),
+            'engine_size'  => $data['engineSize'] ?? $data['engine'] ?? null,
+        ];
+
+        // Remove null/empty values
+        return array_filter($mapped, fn($v) => $v !== null && $v !== '');
     }
 
     /**

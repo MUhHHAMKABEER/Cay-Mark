@@ -36,7 +36,7 @@
         <label class="form-label" id="vin_hin_label">{{ $identifierKind === 'marine' ? 'HIN' : 'VIN' }}</label>
         <div class="flex flex-col sm:flex-row gap-3">
             <input type="text" id="vin_hin" name="vin" class="form-input flex-1 uppercase"
-                   placeholder="{{ $identifierKind === 'marine' ? 'Enter 14-character HIN' : 'Enter 17-character VIN' }}"
+                   placeholder="{{ $identifierKind === 'marine' ? 'Enter 12 or 14-character HIN' : 'Enter 17-character VIN' }}"
                    maxlength="{{ $identifierKind === 'marine' ? 14 : 17 }}"
                    value="{{ old('vin', $listing->vin ?? '') }}">
             <button type="button" id="searchVinBtn" class="btn-primary whitespace-nowrap px-4 py-2.5 inline-flex items-center gap-2 transition-all">
