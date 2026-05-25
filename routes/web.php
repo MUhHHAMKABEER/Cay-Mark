@@ -227,7 +227,7 @@ Route::get('/buyer/dashboard', [ListingController::class, 'showBuyerDashboard'])
 
 // Removed duplicate routes - already defined in buyer prefix group above
 
-Route::get('/listing/{id}', [ListingController::class, 'show'])->name('listing.show');
+// listing.show is defined below with optional slug: /listing/{id}/{slug?}
 // Removed duplicate get-models route - already defined above and in seller routes
 
 
