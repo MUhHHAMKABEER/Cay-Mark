@@ -63,7 +63,8 @@
                                 </div>
                                 <div>
                                     <p class="text-3xl font-bold text-gray-900">{{ $leadingCount }}</p>
-                                    <p class="text-sm text-gray-500 mt-0.5">Leading Auctions</p>
+                                    <p class="text-sm font-bold text-gray-800 mt-0.5 tracking-wide">CURRENT</p>
+                                    <p class="text-xs text-gray-400 mt-0.5">Leading Auctions | Won</p>
                                 </div>
                             </div>
                             <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 flex items-center gap-4">
@@ -102,7 +103,7 @@
                                     <button onclick="showDashAuctionTab('current')" id="dash-auction-tab-current"
                                             class="dash-auction-tab flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg shadow-sm transition-all duration-200">
                                         <span class="material-icons-round text-sm mr-1.5 align-middle">schedule</span>
-                                        Current Bids
+                                        Current
                                     </button>
                                     <button onclick="showDashAuctionTab('won')" id="dash-auction-tab-won"
                                             class="dash-auction-tab flex-1 px-4 py-2.5 text-sm font-semibold text-gray-600 hover:text-gray-900 rounded-lg transition-all duration-200">
@@ -184,8 +185,8 @@
                                 @else
                                     <div class="py-10 text-center">
                                         <span class="material-icons-round text-gray-300 text-4xl block mb-2">gavel</span>
-                                        <p class="text-gray-500 text-sm font-medium">No Active Bids</p>
-                                        <p class="text-gray-400 text-xs mt-1 mb-3">Start bidding on auctions to see them here.</p>
+                                        <p class="text-gray-500 text-sm font-medium">No Current Bid Activity</p>
+                                        <p class="text-gray-400 text-xs mt-1 mb-3">This tab tracks all active auctions you've bid on — including auctions you're leading, auctions where you've been outbid, and any open bids.</p>
                                         <a href="{{ route('Auction.index') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition">
                                             Browse Auctions
                                         </a>
@@ -353,7 +354,20 @@
                             </div>
                             <div class="divide-y divide-gray-100">
                                 @php
-                                    $recentNotifs = $notifications->sortByDesc('created_at')->take(5);
+                                    $excludeNotifTypes = ['welcome','registration','account_created','account_active','system','onboarding'];
+                                    $excludeNotifKeywords = ['welcome to caymark','registration','account is now active','account is active','account on caymark is now','registration on caymark'];
+                                    $recentNotifs = $notifications->sortByDesc('created_at')
+                                        ->filter(function($n) use ($excludeNotifTypes, $excludeNotifKeywords) {
+                                            $d    = is_array($n->data) ? $n->data : (json_decode($n->data ?? '{}', true) ?: []);
+                                            $type = strtolower($d['type'] ?? '');
+                                            $msg  = strtolower($d['message'] ?? $d['title'] ?? '');
+                                            if (in_array($type, $excludeNotifTypes)) return false;
+                                            foreach ($excludeNotifKeywords as $kw) {
+                                                if (str_contains($msg, $kw)) return false;
+                                            }
+                                            return true;
+                                        })
+                                        ->take(5);
                                     $nfIconMap  = ['bid'=>'gavel','outbid'=>'trending_down','win'=>'celebration','payment'=>'payment','auction'=>'schedule','default'=>'notifications'];
                                     $nfColorMap = ['bid'=>'text-blue-600','outbid'=>'text-amber-600','win'=>'text-emerald-600','payment'=>'text-purple-600','auction'=>'text-orange-500','default'=>'text-gray-400'];
                                 @endphp
@@ -431,10 +445,13 @@
                                     <span class="material-icons-round text-gray-400 flex-shrink-0" style="font-size:18px">mail</span>
                                     support@caymark.com
                                 </a>
-                                <a href="tel:+12428066275" class="flex items-center gap-3 text-sm text-gray-700 hover:text-blue-600 transition">
-                                    <span class="material-icons-round text-gray-400 flex-shrink-0" style="font-size:18px">phone</span>
-                                    +1 (242) 806-6275
-                                </a>
+                                <div class="flex items-start gap-3">
+                                    <span class="material-icons-round text-gray-400 flex-shrink-0 mt-0.5" style="font-size:18px">phone</span>
+                                    <span class="text-sm text-gray-600 leading-relaxed">
+                                        For urgent matters call or WhatsApp us at
+                                        <a href="tel:+12428066275" class="font-semibold text-blue-600 hover:text-blue-700 transition">+1 (242) 806-6275</a>
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
@@ -849,8 +866,8 @@
                             <div class="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center">
                                 <span class="material-icons-round text-blue-600 text-4xl">gavel</span>
                             </div>
-                            <h3 class="text-lg font-bold text-gray-900 mb-2">No Active Bids</h3>
-                            <p class="text-gray-500 text-sm max-w-sm mx-auto mb-4">You don't have any active bids at the moment. Start bidding on auctions to see them here.</p>
+                            <h3 class="text-lg font-bold text-gray-900 mb-2">No Current Bid Activity</h3>
+                            <p class="text-gray-500 text-sm max-w-sm mx-auto mb-4">This tab tracks every active auction you've interacted with — auctions you're currently leading, auctions where you've been outbid, and any open bids. Start bidding to see your full active bid history here.</p>
                             <a href="{{ route('Auction.index') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-all">
                                 <span class="material-icons-round text-lg">search</span>
                                 Browse Auctions
