@@ -704,18 +704,40 @@ public function step3(Request $request)
     }
 
     /**
-     * Show membership selection page for already-registered sellers wanting to upgrade.
+     * Show Business Seller plan selection page for casual sellers upgrading.
      */
     public function upgradeMembership()
     {
-        $buyerPackages  = Package::forRole('buyer')->get();
-        $sellerPackages = Package::forRole('seller')->get();
+        // Only paid seller packages qualify as "Business Seller"
+        $packages = Package::forRole('seller')->where('price', '>', 0)->get();
 
-        return view('auth.finish-registration', [
-            'buyerPackages'  => $buyerPackages,
-            'sellerPackages' => $sellerPackages,
-            'isUpgrade'      => true,
+        return view('upgrade.select-plan', compact('packages'));
+    }
+
+    /**
+     * Store the chosen upgrade package in session and proceed to payment/docs step.
+     */
+    public function storeUpgradeMembership(Request $request)
+    {
+        $validated = $request->validate([
+            'package_id' => 'required|exists:packages,id',
         ]);
+
+        $package = Package::findOrFail($validated['package_id']);
+
+        // Guard: must be a paid seller package
+        if ($package->role !== 'seller' || $package->price <= 0) {
+            return back()->withErrors(['package_id' => 'Please select a valid Business Seller plan.']);
+        }
+
+        $request->session()->put('finish_registration', [
+            'role'         => 'seller',
+            'package_id'   => $package->id,
+            'package_name' => $package->title ?? null,
+            'price'        => $package->price ?? 0,
+        ]);
+
+        return redirect()->route('finish.registration.complete.show');
     }
 
     /**

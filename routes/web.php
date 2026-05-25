@@ -267,6 +267,7 @@ Route::post('/register/back', [RegisteredUserController::class, 'back'])->name('
 
 // Upgrade membership (casual seller → business seller)
 Route::get('/upgrade-membership', [RegisteredUserController::class, 'upgradeMembership'])->middleware('auth')->name('upgrade.membership');
+Route::post('/upgrade-membership', [RegisteredUserController::class, 'storeUpgradeMembership'])->middleware('auth')->name('upgrade.membership.store');
 
 // Finish Registration Routes (for users who created basic account)
 Route::get('/finish-registration', [RegisteredUserController::class, 'finishRegistration'])->middleware('auth')->name('finish.registration');
