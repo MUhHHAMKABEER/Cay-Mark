@@ -58,6 +58,12 @@
         <div id="vinDecoderMessage" class="mt-1 text-sm"></div>
     </div>
 
+    {{-- Lock badge: shown when Make/Model/Year are locked by a successful VIN decode --}}
+    <div id="vinLockBadge" class="mb-3 items-center gap-2 text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2" style="display:none;">
+        <i class="fas fa-lock text-green-500"></i>
+        <span>Make, Model &amp; Year locked by VIN lookup. Clear the VIN field to unlock and edit manually.</span>
+    </div>
+
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-4">
         <div id="mmyLockGroup">
             <label class="form-label">Make <span class="text-red-500">*</span></label>

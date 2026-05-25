@@ -91,6 +91,12 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
+        // Re-apply lock on page load if VIN was already decoded (edit mode / validation re-render)
+        var vinFlag = document.getElementById('vin_decode_success');
+        if (vinFlag && vinFlag.value === '1') {
+            setMmyLocked(true);
+        }
+
         document.getElementById('btn-continue-step2')?.addEventListener('click', function(e) {
             e.preventDefault();
             if (validateStep1()) showSection(2);
@@ -198,7 +204,13 @@
             if (!el) return;
             el.readOnly = locked;
             el.classList.toggle('bg-gray-100', locked);
+            el.classList.toggle('text-gray-500', locked);
+            el.style.cursor        = locked ? 'not-allowed' : '';
+            el.style.pointerEvents = locked ? 'none' : '';
         });
+        // Show/hide the lock badge above the MMY grid
+        var badge = document.getElementById('vinLockBadge');
+        if (badge) badge.style.display = locked ? 'flex' : 'none';
     }
     function applyDecodedData(data) {
         var map = {
