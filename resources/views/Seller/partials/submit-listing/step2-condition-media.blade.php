@@ -10,7 +10,7 @@
     <h3 class="text-base font-semibold text-gray-900 mb-3">Condition</h3>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         <div>
-            <label class="form-label flex items-center gap-1">Title <span class="text-red-500">*</span>
+            <label class="form-label flex items-center w-full">Title <span class="text-red-500">*</span>
                 <button type="button" class="condition-info-btn text-blue-500 hover:text-blue-700 leading-none ml-auto" data-modal="modal-title-yes" aria-label="Info"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></button>
             </label>
             <select name="title_status" required class="form-input" id="title_status_select">
@@ -20,7 +20,7 @@
             </select>
         </div>
         <div>
-            <label class="form-label flex items-center gap-1">Salvage <span class="text-red-500">*</span>
+            <label class="form-label flex items-center w-full">Salvage <span class="text-red-500">*</span>
                 <button type="button" class="condition-info-btn text-blue-500 hover:text-blue-700 leading-none ml-auto" data-modal="modal-salvage" aria-label="Info"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></button>
             </label>
             <select name="is_salvaged" required class="form-input" id="is_salvaged_select">
@@ -31,7 +31,7 @@
             </select>
         </div>
         <div>
-            <label class="form-label flex items-center gap-1">Runs &amp; Drives <span class="text-red-500">*</span>
+            <label class="form-label flex items-center w-full">Runs &amp; Drives <span class="text-red-500">*</span>
                 <button type="button" class="condition-info-btn text-blue-500 hover:text-blue-700 leading-none ml-auto" data-modal="modal-runs-drives" aria-label="Info"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></button>
             </label>
             <select name="run_and_drive" required class="form-input">
@@ -42,7 +42,7 @@
             </select>
         </div>
         <div>
-            <label class="form-label flex items-center gap-1">Starts <span class="text-red-500">*</span>
+            <label class="form-label flex items-center w-full">Starts <span class="text-red-500">*</span>
                 <button type="button" class="condition-info-btn text-blue-500 hover:text-blue-700 leading-none ml-auto" data-modal="modal-starts" aria-label="Info"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></button>
             </label>
             <select name="engine_starts" required class="form-input" id="engine_starts_select">
