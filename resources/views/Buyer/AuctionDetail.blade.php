@@ -66,7 +66,7 @@
 .ad-page { background:#f0f2f5; min-height:100vh; font-family:'Inter',sans-serif; }
 
 /* ── Page header ── */
-.adh-wrap  { background:#fff; border-bottom:1px solid #e2e8f0; }
+.adh-wrap  { background:#fff; border-bottom:1px solid #e2e8f0; position:sticky; top:124px; z-index:39; }
 .adh-inner { max-width:1440px; margin:0 auto; padding:18px 24px; }
 .adh-title { font-size:clamp(18px,2vw,24px); font-weight:800; color:#0f2752; letter-spacing:-.3px; text-transform:uppercase; line-height:1.2; }
 .adh-meta  { display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; margin-top:8px; font-size:13px; color:#64748b; }
@@ -167,14 +167,6 @@
 .bid-status-pill.orange { background:#fef3c7; color:#92400e; }
 .bid-disclaimer { font-size:10.5px; color:#94a3b8; line-height:1.5; margin-top:14px; text-align:center; }
 
-/* Sidebar ad */
-.sidebar-ad { border-radius:10px; overflow:hidden; background:linear-gradient(135deg,#1e1e2e 0%,#2d1b0e 50%,#1e1e2e 100%); min-height:160px; display:flex; flex-direction:column; justify-content:flex-end; padding:20px; position:relative; }
-.sidebar-ad::before { content:''; position:absolute; inset:0; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Ccircle cx='30' cy='30' r='28' fill='none' stroke='rgba(255,255,255,.06)' stroke-width='1'/%3E%3C/svg%3E") repeat; opacity:.5; }
-.sidebar-ad-year { font-size:46px; font-weight:900; color:rgba(255,255,255,.07); letter-spacing:-2px; position:absolute; top:10px; left:12px; line-height:1; }
-.sidebar-ad-tag  { font-size:10px; font-weight:700; color:#dc2626; text-transform:uppercase; letter-spacing:.12em; margin-bottom:4px; position:relative; }
-.sidebar-ad-title { font-size:17px; font-weight:800; color:#fff; line-height:1.25; position:relative; margin-bottom:12px; }
-.sidebar-ad-btn  { display:inline-flex; align-items:center; gap:6px; background:#fff; color:#1e1e2e; font-size:12px; font-weight:700; padding:8px 18px; border-radius:6px; text-decoration:none; position:relative; width:fit-content; transition:background .15s; }
-.sidebar-ad-btn:hover { background:#f0f0f0; }
 
 /* ── Damage diagram ── */
 #ad-damage { grid-area:damage; }
@@ -535,7 +527,7 @@
     <div id="ad-bid">
 
         {{-- Bidding widget --}}
-        <div class="ad-card bid-widget" style="position:sticky;top:9.5rem;">
+        <div class="ad-card bid-widget" style="position:sticky;top:13.5rem;">
 
             {{-- Auction ended banner --}}
             @if($isExpired)
@@ -697,16 +689,6 @@
             </p>
         </div>
 
-        {{-- ── Sidebar ad banner ── --}}
-        <div class="sidebar-ad">
-            <div class="sidebar-ad-year">25</div>
-            <div class="sidebar-ad-tag">Anniversary Sale</div>
-            <div class="sidebar-ad-title">25 YEARS OF<br>CAYMARK AUCTIONS</div>
-            <a href="{{ route('Auction.index') }}" class="sidebar-ad-btn">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                View Inventory
-            </a>
-        </div>
     </div>
 
     {{-- ─────────────────────────────────────
