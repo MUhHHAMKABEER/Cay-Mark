@@ -67,7 +67,7 @@
 
             {{-- ── Desktop search bar ── --}}
             <div class="flex-grow max-w-2xl hidden md:flex mx-8"
-                 x-data="cmSearch('{{ route('auction.suggest') }}', '{{ route('Auction.index') }}')"
+                 x-data="cmSearch('{{ Route::has('auction.suggest') ? route('auction.suggest') : url('/auction-suggest') }}', '{{ route('Auction.index') }}')"
                  @click.outside="close()"
                  @keydown.escape.window="close()">
 
@@ -433,7 +433,7 @@
     <div class="px-4 py-4 space-y-2">
         {{-- Mobile search --}}
         <div class="relative mb-4"
-             x-data="cmSearch('{{ route('auction.suggest') }}', '{{ route('Auction.index') }}')"
+             x-data="cmSearch('{{ Route::has('auction.suggest') ? route('auction.suggest') : url('/auction-suggest') }}', '{{ route('Auction.index') }}')"
              @click.outside="close()"
              @keydown.escape.window="close()">
             <form method="GET" :action="auctionUrl" @submit.prevent="submit()" class="relative flex">
@@ -644,14 +644,14 @@ function cmSearch(suggestUrl, auctionUrl) {
             const ctrl = new AbortController();
             this._req = ctrl;
             fetch(this.suggestUrl + '?q=' + encodeURIComponent(q), { signal: ctrl.signal })
-                .then(r => r.json())
+                .then(r => r.ok ? r.json() : Promise.reject())
                 .then(data => {
                     this.suggested = data.suggested || [];
                     this.popular   = data.popular   || [];
                     this._cache[q] = { suggested: this.suggested, popular: this.popular };
                     this.loading = false;
                 })
-                .catch(() => { this.loading = false; });
+                .catch(() => { this.loading = false; this.isOpen = false; });
         },
     };
 }
