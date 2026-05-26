@@ -65,8 +65,11 @@
 /* ── Base ── */
 .ad-page { background:#f0f2f5; min-height:100vh; font-family:'Inter',sans-serif; }
 
+/* ── Override: let the main site nav scroll off naturally on this page ── */
+header { position: relative !important; box-shadow: none !important; }
+
 /* ── Page header ── */
-.adh-wrap  { background:#fff; border-bottom:1px solid #e2e8f0; }
+.adh-wrap  { background:#fff; border-bottom:1px solid #e2e8f0; position:sticky; top:0; z-index:50; box-shadow:0 4px 6px -1px rgba(0,0,0,.08),0 2px 4px -2px rgba(0,0,0,.05); }
 .adh-inner { max-width:1440px; margin:0 auto; padding:18px 24px; }
 .adh-title { font-size:clamp(18px,2vw,24px); font-weight:800; color:#0f2752; letter-spacing:-.3px; text-transform:uppercase; line-height:1.2; }
 .adh-meta  { display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; margin-top:8px; font-size:13px; color:#64748b; }
@@ -527,7 +530,7 @@
     <div id="ad-bid">
 
         {{-- Bidding widget --}}
-        <div class="ad-card bid-widget" style="position:sticky;top:9.5rem;">
+        <div class="ad-card bid-widget" style="position:sticky;top:5.5rem;">
 
             {{-- Auction ended banner --}}
             @if($isExpired)
