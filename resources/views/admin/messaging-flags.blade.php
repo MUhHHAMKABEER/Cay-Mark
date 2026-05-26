@@ -25,7 +25,14 @@
     :root { --mf-navy:#063466; --mf-navy-lt:#e8eef6; --mf-navy-mid:#0d4d8c; }
 
     /* ── Shell ─────────────────────────────────────────────────── */
-    .mf-shell { padding:1.5rem; width:100%; box-sizing:border-box; }
+    .mf-shell {
+        padding: 1.5rem;
+        width: 100%;
+        box-sizing: border-box;
+        flex: 1;
+        overflow-y: auto;
+        min-height: 0;
+    }
 
     /* ── Page header ───────────────────────────────────────────── */
     .mf-header {
