@@ -43,6 +43,11 @@
 
     $maskedVin = method_exists($listing,'maskedVinOrHin') ? $listing->maskedVinOrHin() : ($listing->vin ? substr($listing->vin,0,10).'******' : 'N/A');
 
+    // Video (if seller uploaded one)
+    $videoUrl    = $listing->video_path ? asset('uploads/listings/'.ltrim($listing->video_path,'/')) : null;
+    $totalMedia  = $images->count() + ($videoUrl ? 1 : 0);
+    $videoIndex  = $videoUrl ? $images->count() : -1;
+
     // Countdown parts
     $cdDays  = $timeRemaining ? $timeRemaining->d : 0;
     $cdHours = $timeRemaining ? $timeRemaining->h : 0;
@@ -213,6 +218,29 @@
 .bid-modal-ok    { padding:.75rem 2rem; font-size:1rem; font-weight:700; color:#fff; background:#1d4ed8; border:none; border-radius:10px; cursor:pointer; transition:background .2s; }
 .bid-modal-ok:hover { background:#1e40af; }
 
+/* ── Video in main area ── */
+.gal-main video {
+    position:absolute; inset:0; width:100%; height:100%;
+    object-fit:contain; background:#000; display:none; z-index:3;
+}
+
+/* ── Video thumbnail in strip ── */
+.gal-thumb--video {
+    background:#111827; display:flex; align-items:center; justify-content:center;
+    flex-direction:column; gap:5px; cursor:pointer;
+    border:2px solid transparent; border-radius:4px; aspect-ratio:4/3;
+    transition:border-color .15s, transform .15s;
+}
+.gal-thumb--video:hover { transform:scale(1.03); border-color:#475569; }
+.gal-thumb--video.active { border-color:#1d4ed8; box-shadow:0 0 0 2px #bfdbfe; }
+.gal-thumb--video .vt-play {
+    width:32px; height:32px; background:rgba(255,255,255,.15); border:2px solid rgba(255,255,255,.4);
+    border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.gal-thumb--video .vt-label {
+    font-size:9px; font-weight:700; color:rgba(255,255,255,.7); letter-spacing:.1em; text-transform:uppercase;
+}
+
 /* ── Watchlist animation ── */
 @keyframes heartPop { 0%{transform:scale(1)} 35%{transform:scale(1.3)} 60%{transform:scale(.9)} 100%{transform:scale(1)} }
 .wl-btn.pop { animation:heartPop .4s ease; }
@@ -305,6 +333,13 @@
         <div class="gal-main" id="galMain">
             <img src="{{ $mainImage }}" alt="{{ $listingTitle }}" id="galMainImg"
                  onerror="this.src='{{ asset('images/placeholder.png') }}'"/>
+            @if($videoUrl)
+            <video id="galMainVideo" controls preload="metadata"
+                   style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;z-index:3;">
+                <source src="{{ $videoUrl }}" type="video/mp4">
+                Your browser does not support HTML5 video.
+            </video>
+            @endif
 
             {{-- Nav arrows --}}
             <button class="gal-arrow left" onclick="galNav(-1)" aria-label="Previous photo">&#8249;</button>
@@ -327,7 +362,7 @@
                     ⚠ View damage
                 </button>
                 <span class="gal-pill" id="galCounter">
-                    1 / {{ $images->count() ?: 1 }}
+                    1 / {{ $totalMedia ?: 1 }}
                 </span>
             </div>
         </div>
@@ -344,6 +379,15 @@
                 <img src="{{ asset('images/placeholder.png') }}" alt="No photo"/>
             </div>
             @endforelse
+            @if($videoUrl)
+            <div class="gal-thumb gal-thumb--video {{ $images->isEmpty() ? 'active' : '' }}"
+                 onclick="galSelect({{ $images->count() }})">
+                <div class="vt-play">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="rgba(255,255,255,0.9)"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                </div>
+                <span class="vt-label">VIDEO</span>
+            </div>
+            @endif
         </div>
     </div>
 
@@ -877,19 +921,41 @@ window.CaymarkUIAuctionConfig = {
 };
 
 /* ── Gallery ── */
-var galImages = @json($images->values()->toArray());
-var galIndex  = 0;
+var galImages     = @json($images->values()->toArray());
+var galVideoUrl   = @json($videoUrl);
+var galVideoIndex = {{ $videoIndex }};
+var galTotalMedia = {{ $totalMedia ?: 1 }};
+var galIndex      = 0;
 
 function galSelect(i) {
-    if (!galImages.length) return;
-    galIndex = ((i % galImages.length) + galImages.length) % galImages.length;
-    var img = document.getElementById('galMainImg');
-    if (img) { img.style.opacity='.4'; setTimeout(function(){ img.src=galImages[galIndex]; img.style.opacity='1'; },150); }
-    document.getElementById('galCounter').textContent = (galIndex+1)+' / '+galImages.length;
-    document.querySelectorAll('.gal-thumb').forEach(function(t,j){ t.classList.toggle('active', j===galIndex); });
-    // scroll thumb into view
+    if (galTotalMedia === 0) return;
+    galIndex = ((i % galTotalMedia) + galTotalMedia) % galTotalMedia;
+    var img   = document.getElementById('galMainImg');
+    var video = document.getElementById('galMainVideo');
+    var isVideo = (galVideoUrl && galIndex === galVideoIndex);
+
+    if (isVideo) {
+        if (img)   { img.style.display = 'none'; }
+        if (video) {
+            video.style.display = 'block';
+            if (video.querySelector('source').getAttribute('src') !== galVideoUrl) {
+                video.querySelector('source').setAttribute('src', galVideoUrl);
+                video.load();
+            }
+        }
+    } else {
+        if (video) { video.pause(); video.style.display = 'none'; }
+        if (img) {
+            img.style.display = 'block';
+            img.style.opacity = '.4';
+            setTimeout(function(){ img.src = galImages[galIndex]; img.style.opacity = '1'; }, 150);
+        }
+    }
+
+    document.getElementById('galCounter').textContent = (galIndex + 1) + ' / ' + galTotalMedia;
+    document.querySelectorAll('.gal-thumb').forEach(function(t, j) { t.classList.toggle('active', j === galIndex); });
     var activeThumb = document.querySelector('.gal-thumb.active');
-    if (activeThumb) activeThumb.scrollIntoView({block:'nearest',inline:'nearest'});
+    if (activeThumb) activeThumb.scrollIntoView({ block: 'nearest', inline: 'nearest' });
 }
 function galNav(dir) { galSelect(galIndex + dir); }
 
