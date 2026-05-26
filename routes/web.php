@@ -239,6 +239,7 @@ Route::get('/subscription/simulate', [SubscriptionController::class, 'simulate']
 
     Route::get('/AuctionPage',[AuctionController::class, 'index'])->name("Auction.index");
     Route::get('/auction-suggest', [AuctionController::class, 'suggest'])->name('auction.suggest');
+    Route::get('/auctions', fn () => view('Buyer.AuctionListings'))->name('auctions.listings');
 
 Route::middleware(['auth'])->group(function () {
     Route::post('/listing/{listing}/watchlist', [WatchlistController::class, 'toggle'])->name('listing.watchlist');

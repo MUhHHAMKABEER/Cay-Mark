@@ -130,7 +130,7 @@
                                 @if($pipe['key'] === 'ready_for_payout' && $payout && in_array($payout->status, ['pending', 'processing', 'on_hold'], true))
                                     @php
                                         $pm = $invoice->seller?->payoutMethod;
-                                        $bankPayload = htmlspecialchars(json_encode([
+                                        $bankPayload = json_encode([
                                             'bank' => $pm?->bank_name ?? '',
                                             'holder' => $pm?->account_holder_name ?? '',
                                             'account' => $pm?->account_number ?? '',
@@ -139,7 +139,7 @@
                                             'country' => $pm?->country ?? '',
                                             'card_last4' => ($pm && $pm->card_number && strlen($pm->card_number) >= 4) ? substr($pm->card_number, -4) : '',
                                             'extra' => $pm?->additional_instructions ?? '',
-                                        ]), ENT_QUOTES, 'UTF-8');
+                                        ], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
                                     @endphp
                                     <button type="button"
                                             data-open-pay-seller
