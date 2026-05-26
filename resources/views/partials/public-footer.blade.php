@@ -6,9 +6,9 @@
             {{-- Brand --}}
             <div class="lg:col-span-1 space-y-5">
                 <a href="{{ route('welcome') }}">
-                    <img src="{{ asset(config('logos.footer', 'Logos/Caymark Logo.png')) }}"
+                    <img src="{{ asset(config('logos.footer', 'Logos/Caymark Logo White.png')) }}"
                          alt="CayMark Island Exchange"
-                         class="h-[56px] w-auto object-contain"/>
+                         class="h-[52px] w-auto object-contain brightness-0 invert-0"/>
                 </a>
                 <p class="text-sm text-white/60 leading-relaxed">
                     The Bahamas' premier digital trading center for vehicles and marine vessels. Transforming how the islands buy, sell, and trade.

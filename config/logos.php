@@ -9,7 +9,7 @@ return [
     | Assign which file is used where. Use same file for multiple keys if needed.
     */
     'header' => 'Logos/Caymark Logo.png',
-    'footer' => 'Logos/Caymark Logo.png',
+    'footer' => 'Logos/Caymark Logo White.png',
     'sidebar' => 'Logos/Caymark Logo.png',
     'admin_sidebar' => 'Logos/Caymark Logo.png',
     'invoice' => 'Logos/Caymark Logo.png',
