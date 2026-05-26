@@ -51,57 +51,70 @@
 {{-- ══════════════════════════════════════════════════════════════
      MAIN HEADER STRIP: Logo · Search · Auth Actions
 ══════════════════════════════════════════════════════════════ --}}
-<header class="bg-white sticky top-0 z-50 border-b border-gray-200 shadow-sm">
-    <div class="w-full max-w-[1280px] mx-auto px-4 md:px-16 py-4">
-        <div class="flex justify-between items-center gap-4">
+<header class="bg-white sticky top-0 z-50 border-b border-slate-100 shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
+    <div class="w-full max-w-[1280px] mx-auto px-4 md:px-10 py-3">
+        <div class="flex items-center gap-4">
 
             {{-- ── Logo ── --}}
             <div class="flex-shrink-0">
                 <a href="{{ route('welcome') }}">
                     <img src="{{ asset(config('logos.header', 'Logos/Caymark Logo.png')) }}"
                          alt="CayMark Island Exchange"
-                         class="h-[68px] w-auto object-contain"
-                         width="200" height="68" loading="eager"/>
+                         class="h-[56px] w-auto object-contain"
+                         width="180" height="56" loading="eager"/>
                 </a>
             </div>
 
-            {{-- ── Desktop search bar ── --}}
-            <div class="flex-grow max-w-2xl hidden md:flex mx-8"
+            {{-- ── Desktop search bar — pill style ── --}}
+            <div class="flex-grow max-w-2xl hidden md:flex mx-auto"
                  x-data="cmSearch('{{ Route::has('auction.suggest') ? route('auction.suggest') : url('/auction-suggest') }}', '{{ route('Auction.index') }}')"
                  @click.outside="close()"
                  @keydown.escape.window="close()">
 
-                <form method="GET" action="{{ route('Auction.index') }}" :action="auctionUrl" class="relative w-full flex" @submit.prevent="submit()">
-                    <input
-                        type="text"
-                        name="search"
-                        x-model="query"
-                        @focus="open()"
-                        @input.debounce.250ms="fetch()"
-                        @keydown.arrow-down.prevent="moveDown()"
-                        @keydown.arrow-up.prevent="moveUp()"
-                        @keydown.enter.prevent="selectActive()"
-                        placeholder="Search vehicle auctions by make, model…"
-                        autocomplete="off"
-                        class="w-full pl-4 pr-12 py-3 border border-gray-300 bg-white text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-body-sm font-body-sm placeholder:text-outline"
-                        style="border-radius:0"
-                    />
-                    {{-- Clear button --}}
-                    <button type="button" x-show="query" @click="query=''; $el.previousElementSibling.focus(); fetch()"
-                        class="absolute right-12 top-1/2 -translate-y-1/2 flex items-center justify-center w-6 h-6 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors"
-                        style="border-radius:50%">
-                        <span class="material-symbols-outlined text-gray-500" style="font-size:14px">close</span>
-                    </button>
-                    <button type="submit"
-                        class="absolute right-0 top-0 bottom-0 px-4 bg-primary text-white border border-primary hover:bg-[#003377] transition-colors flex items-center justify-center"
-                        style="border-radius:0">
-                        <span class="material-symbols-outlined text-[20px]">search</span>
-                    </button>
+                <form method="GET" action="{{ route('Auction.index') }}" :action="auctionUrl" class="relative w-full" @submit.prevent="submit()">
+                    {{-- Pill wrapper --}}
+                    <div class="flex items-center rounded-full bg-slate-50 border border-slate-200/80 hover:border-slate-300 focus-within:border-primary focus-within:bg-white focus-within:ring-2 focus-within:ring-primary/10 transition-all duration-150">
+                        {{-- Search icon --}}
+                        <svg class="flex-shrink-0 ml-4 text-slate-400" width="16" height="16" viewBox="0 0 24 24"
+                             fill="none" stroke="currentColor" stroke-width="2.2"
+                             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                        </svg>
+                        <input
+                            type="text"
+                            name="search"
+                            x-model="query"
+                            @focus="open()"
+                            @input.debounce.250ms="fetch()"
+                            @keydown.arrow-down.prevent="moveDown()"
+                            @keydown.arrow-up.prevent="moveUp()"
+                            @keydown.enter.prevent="selectActive()"
+                            placeholder="Search vehicle auctions by make, model…"
+                            autocomplete="off"
+                            class="flex-1 bg-transparent py-2.5 px-3 text-[13.5px] text-slate-800 placeholder:text-slate-400 focus:outline-none min-w-0"
+                        />
+                        {{-- Clear button --}}
+                        <button type="button" x-show="query" x-cloak
+                            @click="query=''; $el.closest('form').querySelector('input').focus(); fetch()"
+                            class="flex-shrink-0 flex items-center justify-center w-5 h-5 rounded-full bg-slate-200 hover:bg-slate-300 transition-colors mr-1">
+                            <svg width="8" height="8" viewBox="0 0 12 12" fill="currentColor" class="text-slate-500">
+                                <path d="M10.5 1.5 6 6m0 0L1.5 10.5M6 6 10.5 10.5M6 6 1.5 1.5"/>
+                            </svg>
+                        </button>
+                        {{-- Submit icon button --}}
+                        <button type="submit"
+                            class="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-primary text-white hover:bg-[#003377] transition-colors mr-1.5 my-1">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                 stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                            </svg>
+                        </button>
+                    </div>
 
                     {{-- Dropdown panel --}}
                     <div x-show="isOpen" x-cloak
-                         class="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 shadow-xl z-[9999] overflow-hidden"
-                         style="border-radius:0; display:none">
+                         class="absolute left-0 right-0 top-full mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl z-[9999] overflow-hidden"
+                         style="display:none">
 
                         {{-- Suggested (when typing) --}}
                         <template x-if="suggested.length > 0">
@@ -151,83 +164,74 @@
             </div>
 
             {{-- ── Right side: Guest → Login/Register | Auth → Stats + Bell + Avatar ── --}}
-            <div class="flex items-center gap-3 flex-shrink-0">
+            <div class="flex items-center gap-2.5 flex-shrink-0">
 
                 @if($phIsGuest)
-                    {{-- GUEST: Login + Register buttons --}}
+                    {{-- GUEST --}}
                     <a href="{{ route('login') }}"
-                        class="px-6 py-2.5 bg-white border-2 border-primary text-primary hover:bg-gray-50 transition-colors text-label-md font-bold hidden md:inline-block"
-                        style="border-radius:0">
-                        Login
+                        class="hidden md:inline-flex items-center px-4 py-2 rounded-full border border-slate-300 text-slate-700 hover:border-primary hover:text-primary text-[12.5px] font-semibold transition-colors">
+                        Log In
                     </a>
                     <a href="{{ route('register') }}"
-                        class="px-6 py-2.5 bg-primary text-white hover:bg-[#003377] transition-colors text-label-md font-bold hidden md:inline-block"
-                        style="border-radius:0">
+                        class="hidden md:inline-flex items-center px-4 py-2 rounded-full bg-primary text-white hover:bg-[#003377] text-[12.5px] font-semibold transition-colors">
                         Register
                     </a>
 
                 @elseif($phIsBuyer)
-                    {{-- BUYER: Buying power chip --}}
+                    {{-- Wallet balance --}}
                     @if($phBuyingPower !== null)
                     <a href="{{ route('buyer.deposit-withdrawal') }}"
-                        class="hidden lg:flex items-center gap-2 px-3 py-2 bg-[#f0f4fb] border border-[#d7e2ff] hover:bg-[#e4ecf8] transition-colors"
-                        style="border-radius:0" title="Available buying power">
-                        <span class="material-symbols-outlined text-primary text-[16px]">account_balance_wallet</span>
-                        <span class="text-[11px] font-bold text-primary uppercase tracking-widest whitespace-nowrap">
+                        class="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-colors"
+                        title="Available buying power">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#002452" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/>
+                        </svg>
+                        <span class="text-[11.5px] font-bold text-primary whitespace-nowrap">
                             ${{ number_format($phBuyingPower, 0) }}
                         </span>
                     </a>
                     @endif
-                    {{-- Active bids pill --}}
+
+                    {{-- Active bids badge --}}
                     @if($phActiveBids > 0)
                     <a href="{{ route('buyer.auctions') }}"
-                        class="hidden lg:flex items-center gap-1 px-2.5 py-1.5 bg-green-50 border border-green-200 text-green-700 hover:bg-green-100 transition-colors"
-                        style="border-radius:0" title="Active bids">
-                        <span class="material-symbols-outlined text-[14px]">gavel</span>
-                        <span class="text-[11px] font-bold">{{ $phActiveBids }} bid{{ $phActiveBids !== 1 ? 's' : '' }}</span>
+                        class="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 transition-colors"
+                        title="Active bids">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0"></span>
+                        <span class="text-[11.5px] font-bold whitespace-nowrap">{{ $phActiveBids }} Bid{{ $phActiveBids !== 1 ? 's' : '' }}</span>
                     </a>
                     @endif
-                    {{-- Watchlist --}}
-                    <a href="{{ route('buyer.watchlist') }}"
-                        class="relative hidden md:flex items-center justify-center w-10 h-10 text-gray-500 hover:text-primary transition-colors"
-                        title="Watchlist ({{ $phWatchlistCount }})">
-                        <span class="material-symbols-outlined text-[22px]">favorite_border</span>
-                        @if($phWatchlistCount > 0)
-                        <span class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-primary text-white text-[9px] font-bold flex items-center justify-center">
-                            {{ $phWatchlistCount > 9 ? '9+' : $phWatchlistCount }}
-                        </span>
-                        @endif
-                    </a>
+
                     {{-- Notification bell --}}
                     <a href="{{ $phNotifsUrl }}"
-                        class="relative flex items-center justify-center w-10 h-10 text-gray-500 hover:text-primary transition-colors"
+                        class="relative flex items-center justify-center w-9 h-9 rounded-full text-slate-500 hover:text-primary hover:bg-slate-100 transition-colors"
                         title="Notifications">
-                        <span class="material-symbols-outlined text-[22px]">notifications</span>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                        </svg>
                         @if($phUnreadCount > 0)
-                        <span class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center">
-                            {{ $phUnreadCount > 9 ? '9+' : $phUnreadCount }}
-                        </span>
+                        <span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-500 ring-2 ring-white"></span>
                         @endif
                     </a>
                     {{-- User avatar + dropdown --}}
                     <div class="relative" id="phMenuWrap">
                         <button id="phMenuBtn" type="button"
-                            class="flex items-center gap-2 px-2 py-1 border border-gray-200 hover:bg-gray-50 transition-colors focus:outline-none"
-                            style="border-radius:0">
+                            class="flex items-center gap-2 pl-1 pr-2.5 py-1 rounded-full border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-colors focus:outline-none">
                             <div class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
                                 {{ $phInitial }}
                             </div>
-                            <span class="hidden md:block text-sm font-semibold text-gray-800 max-w-[110px] truncate">{{ $phUser->name }}</span>
-                            <span class="material-symbols-outlined text-gray-400 text-[16px]" id="phMenuChevron">expand_more</span>
+                            <span class="hidden md:block text-[12.5px] font-semibold text-slate-700 max-w-[100px] truncate">{{ explode(' ', $phUser->name)[0] }}</span>
+                            <svg id="phMenuChevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400 transition-transform duration-200 flex-shrink-0">
+                                <polyline points="6 9 12 15 18 9"/>
+                            </svg>
                         </button>
                         <div id="phMenuDropdown"
-                            class="absolute right-0 top-full mt-2 w-60 bg-white border border-gray-200 shadow-2xl z-[9999] hidden"
-                            style="border-radius:0">
+                            class="absolute right-0 top-full mt-2 w-60 bg-white border border-slate-200 rounded-2xl shadow-xl z-[9999] hidden overflow-hidden">
                             {{-- User info --}}
-                            <div class="px-4 py-3 border-b border-gray-100 bg-[#f0f4fb]">
+                            <div class="px-4 py-3 border-b border-slate-100 bg-slate-50">
                                 <p class="text-[10px] font-bold text-primary uppercase tracking-widest mb-0.5">Buyer Account</p>
-                                <p class="text-sm font-bold text-gray-900 truncate">{{ $phUser->name }}</p>
-                                <p class="text-xs text-gray-500 truncate">{{ $phUser->email }}</p>
+                                <p class="text-sm font-bold text-slate-900 truncate">{{ $phUser->name }}</p>
+                                <p class="text-xs text-slate-500 truncate">{{ $phUser->email }}</p>
                             </div>
                             <a href="{{ route('buyer.dashboard') }}" class="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-50">
                                 <span class="material-symbols-outlined text-primary text-[18px]">dashboard</span> Dashboard
@@ -284,21 +288,21 @@
                     {{-- Seller avatar + dropdown --}}
                     <div class="relative" id="phMenuWrap">
                         <button id="phMenuBtn" type="button"
-                            class="flex items-center gap-2 px-2 py-1 border border-gray-200 hover:bg-gray-50 transition-colors focus:outline-none"
-                            style="border-radius:0">
+                            class="flex items-center gap-2 pl-1 pr-2.5 py-1 rounded-full border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-colors focus:outline-none">
                             <div class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
                                 {{ $phInitial }}
                             </div>
-                            <span class="hidden md:block text-sm font-semibold text-gray-800 max-w-[110px] truncate">{{ $phUser->name }}</span>
-                            <span class="material-symbols-outlined text-gray-400 text-[16px]">expand_more</span>
+                            <span class="hidden md:block text-[12.5px] font-semibold text-slate-700 max-w-[100px] truncate">{{ explode(' ', $phUser->name)[0] }}</span>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400 transition-transform duration-200 flex-shrink-0">
+                                <polyline points="6 9 12 15 18 9"/>
+                            </svg>
                         </button>
                         <div id="phMenuDropdown"
-                            class="absolute right-0 top-full mt-2 w-60 bg-white border border-gray-200 shadow-2xl z-[9999] hidden"
-                            style="border-radius:0">
-                            <div class="px-4 py-3 border-b border-gray-100 bg-[#f0f4fb]">
+                            class="absolute right-0 top-full mt-2 w-60 bg-white border border-slate-200 rounded-2xl shadow-xl z-[9999] hidden overflow-hidden">
+                            <div class="px-4 py-3 border-b border-slate-100 bg-slate-50">
                                 <p class="text-[10px] font-bold text-primary uppercase tracking-widest mb-0.5">Seller Account</p>
-                                <p class="text-sm font-bold text-gray-900 truncate">{{ $phUser->name }}</p>
-                                <p class="text-xs text-gray-500 truncate">{{ $phUser->email }}</p>
+                                <p class="text-sm font-bold text-slate-900 truncate">{{ $phUser->name }}</p>
+                                <p class="text-xs text-slate-500 truncate">{{ $phUser->email }}</p>
                             </div>
                             <a href="{{ route('seller.dashboard') }}" class="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-50">
                                 <span class="material-symbols-outlined text-primary text-[18px]">dashboard</span> Dashboard
@@ -345,41 +349,42 @@
 {{-- ══════════════════════════════════════════════════════════════
      SECONDARY NAV BAR: Page links + Language selector
 ══════════════════════════════════════════════════════════════ --}}
-<div class="bg-white border-b border-gray-200 hidden md:block">
-    <div class="w-full max-w-[1280px] mx-auto px-4 md:px-16 py-3 flex justify-between items-center">
-        <nav class="flex items-center gap-8">
+<div class="bg-white border-b border-slate-100 hidden md:block">
+    <div class="relative w-full max-w-[1280px] mx-auto px-4 md:px-10 py-0 flex justify-center items-center min-h-[44px]">
+        <nav class="flex items-center gap-6">
 
             {{-- Home --}}
             <a href="{{ route('welcome') }}"
-                class="{{ $phHomeActive ? 'text-primary border-b-2 border-primary pb-1' : 'text-gray-600 hover:text-primary' }} transition-colors text-label-sm font-bold font-headline-sm uppercase tracking-widest whitespace-nowrap">
+                class="inline-flex items-center py-3 border-b-2 {{ $phHomeActive ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-primary hover:border-slate-300' }} transition-colors text-[11.5px] font-bold uppercase tracking-widest whitespace-nowrap">
                 Home
             </a>
 
             {{-- Auction --}}
             <a href="{{ route('Auction.index') }}"
-                class="{{ $phAuctionActive ? 'text-primary border-b-2 border-primary pb-1' : 'text-gray-600 hover:text-primary' }} transition-colors text-label-sm font-bold font-headline-sm uppercase tracking-widest whitespace-nowrap">
+                class="inline-flex items-center py-3 border-b-2 {{ $phAuctionActive ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-primary hover:border-slate-300' }} transition-colors text-[11.5px] font-bold uppercase tracking-widest whitespace-nowrap">
                 Auction
             </a>
 
             {{-- Getting Started --}}
             <a href="{{ route('buyer-guide') }}"
-                class="{{ $phGettingStartedActive ? 'text-primary border-b-2 border-primary pb-1' : 'text-gray-600 hover:text-primary' }} transition-colors text-label-sm font-bold font-headline-sm uppercase tracking-widest whitespace-nowrap">
+                class="inline-flex items-center py-3 border-b-2 {{ $phGettingStartedActive ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-primary hover:border-slate-300' }} transition-colors text-[11.5px] font-bold uppercase tracking-widest whitespace-nowrap">
                 Getting Started
             </a>
 
             {{-- Services & Support (dropdown) --}}
             <div class="relative" id="phSupportWrap">
                 <button type="button" id="phSupportBtn"
-                    class="flex items-center gap-1 text-gray-600 hover:text-primary transition-colors text-label-sm font-bold font-headline-sm uppercase tracking-widest whitespace-nowrap focus:outline-none"
+                    class="inline-flex items-center gap-1 py-3 border-b-2 border-transparent text-slate-500 hover:text-primary hover:border-slate-300 transition-colors text-[11.5px] font-bold uppercase tracking-widest whitespace-nowrap focus:outline-none"
                     aria-haspopup="true" aria-expanded="false">
                     Services &amp; Support
-                    <span class="material-symbols-outlined text-[16px] transition-transform duration-200" id="phSupportChevron">expand_more</span>
+                    <svg id="phSupportChevron" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform duration-200">
+                        <polyline points="6 9 12 15 18 9"/>
+                    </svg>
                 </button>
 
                 {{-- Dropdown panel --}}
                 <div id="phSupportDropdown"
-                    class="absolute left-0 top-full mt-2 w-56 bg-white border border-gray-200 shadow-xl z-[9999] hidden"
-                    style="border-radius:0">
+                    class="absolute left-0 top-full mt-1 w-56 bg-white border border-slate-200 rounded-2xl shadow-xl z-[9999] hidden overflow-hidden">
 
                     <a href="{{ route('help-center') }}"
                        class="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100 font-semibold transition-colors">
@@ -411,17 +416,21 @@
 
             {{-- Contact Us --}}
             <a href="{{ route('contact') }}"
-                class="{{ $phContactActive ? 'text-primary border-b-2 border-primary pb-1' : 'text-gray-600 hover:text-primary' }} transition-colors text-label-sm font-bold font-headline-sm uppercase tracking-widest whitespace-nowrap">
+                class="inline-flex items-center py-3 border-b-2 {{ $phContactActive ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-primary hover:border-slate-300' }} transition-colors text-[11.5px] font-bold uppercase tracking-widest whitespace-nowrap">
                 Contact Us
             </a>
 
         </nav>
 
-        {{-- Language / Region --}}
-        <div class="flex items-center gap-1.5 cursor-pointer px-3 py-1.5 bg-gray-50 border border-gray-200 hover:bg-gray-100 transition-colors" style="border-radius:0">
-            <span class="material-symbols-outlined text-gray-700 text-[16px]">language</span>
-            <span class="text-[11px] font-bold text-gray-700 uppercase tracking-wider">EN</span>
-            <span class="material-symbols-outlined text-gray-500 text-[14px]">expand_more</span>
+        {{-- Language / Region — absolutely pinned to the right --}}
+        <div class="absolute right-4 md:right-10 flex items-center gap-1.5 cursor-pointer px-2.5 py-1 rounded-full bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-colors">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-500">
+                <circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+            </svg>
+            <span class="text-[11px] font-bold text-slate-600 uppercase tracking-wider">EN</span>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400">
+                <polyline points="6 9 12 15 18 9"/>
+            </svg>
         </div>
     </div>
 </div>

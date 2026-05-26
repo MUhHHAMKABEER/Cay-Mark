@@ -135,19 +135,24 @@
             <div class="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border border-outline-variant bg-white rounded-xl shadow-sm">
                 <div class="flex flex-wrap items-center gap-2">
                     {{-- View toggle --}}
-                    <div class="inline-flex border border-outline-variant rounded-lg overflow-hidden">
+                    <div class="inline-flex items-center rounded-lg border border-slate-200 bg-white overflow-hidden p-0.5 gap-0.5">
                         <button type="button"
                             @click="viewMode = 'grid'"
-                            :class="viewMode === 'grid' ? 'bg-primary text-on-primary' : 'bg-white text-on-surface-variant hover:bg-surface-container-low'"
-                            class="inline-flex items-center gap-1.5 px-3 py-2 text-label-md font-label-md transition-colors">
-                            <span class="material-symbols-outlined text-[17px]">grid_view</span>
+                            :class="viewMode === 'grid' ? 'bg-slate-800 text-white' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'"
+                            class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11.5px] font-bold uppercase tracking-wide transition-all duration-150">
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                                <rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/>
+                                <rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/>
+                            </svg>
                             <span class="hidden sm:inline">Grid</span>
                         </button>
                         <button type="button"
                             @click="viewMode = 'detail'"
-                            :class="viewMode === 'detail' ? 'bg-primary text-on-primary' : 'bg-white text-on-surface-variant hover:bg-surface-container-low'"
-                            class="inline-flex items-center gap-1.5 px-3 py-2 text-label-md font-label-md transition-colors border-l border-outline-variant">
-                            <span class="material-symbols-outlined text-[17px]">view_list</span>
+                            :class="viewMode === 'detail' ? 'bg-slate-800 text-white' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'"
+                            class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11.5px] font-bold uppercase tracking-wide transition-all duration-150">
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                                <rect x="1" y="2" width="14" height="2.5" rx="1"/><rect x="1" y="6.75" width="14" height="2.5" rx="1"/><rect x="1" y="11.5" width="14" height="2.5" rx="1"/>
+                            </svg>
                             <span class="hidden sm:inline">List</span>
                         </button>
                     </div>
