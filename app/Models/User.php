@@ -560,4 +560,35 @@ public function watchlist()
 
         return $missing;
     }
+
+    /**
+     * Override Laravel's default password-reset notification so the
+     * branded CayMark template (emails.caymark.password-reset) is sent
+     * instead of the generic Laravel mail.
+     */
+    public function sendPasswordResetNotification($token): void
+    {
+        $resetUrl = url(route('password.reset', [
+            'token' => $token,
+            'email' => $this->getEmailForPasswordReset(),
+        ], false));
+
+        try {
+            \Mail::send(
+                'emails.caymark.password-reset',
+                ['user' => $this, 'resetUrl' => $resetUrl, 'token' => $token],
+                function ($message) {
+                    $message->to($this->email, $this->name)
+                            ->subject('Reset Your CayMark Password');
+                }
+            );
+        } catch (\Throwable $e) {
+            \Log::error('[Password Reset] Custom email failed — falling back to default notification', [
+                'user_id' => $this->id,
+                'error'   => $e->getMessage(),
+            ]);
+            // Fallback: ensures user is never locked out even if template breaks
+            parent::sendPasswordResetNotification($token);
+        }
+    }
 }

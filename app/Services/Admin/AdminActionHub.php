@@ -81,6 +81,23 @@ class AdminActionHub
                 'restriction_ends_at' => now()->addDays(30),
             ]);
             AdminActivityLog::log('user.suspended', 'user', (int) $user->id, null, ['reason' => $request->reason]);
+
+            // ── Deactivation email ──────────────────────────────────────────
+            try {
+                \Mail::send(
+                    'emails.caymark.account-deactivated',
+                    ['user' => $user],
+                    function ($message) use ($user) {
+                        $message->to($user->email, $user->name)
+                                ->subject('Your Account Has Been Deactivated');
+                    }
+                );
+            } catch (\Throwable $e) {
+                \Log::error('[Account Deactivation] Failed to send email', [
+                    'user_id' => $user->id,
+                    'error'   => $e->getMessage(),
+                ]);
+            }
         } else {
             $user->update([
                 'is_restricted' => false,
@@ -88,6 +105,23 @@ class AdminActionHub
                 'restriction_ends_at' => null,
             ]);
             AdminActivityLog::log('user.reactivated', 'user', (int) $user->id);
+
+            // ── Reactivation email ──────────────────────────────────────────
+            try {
+                \Mail::send(
+                    'emails.caymark.account-reactivated',
+                    ['user' => $user],
+                    function ($message) use ($user) {
+                        $message->to($user->email, $user->name)
+                                ->subject('Your Account Has Been Reactivated');
+                    }
+                );
+            } catch (\Throwable $e) {
+                \Log::error('[Account Reactivation] Failed to send email', [
+                    'user_id' => $user->id,
+                    'error'   => $e->getMessage(),
+                ]);
+            }
         }
 
         return back()->with('success', 'User status updated successfully.');

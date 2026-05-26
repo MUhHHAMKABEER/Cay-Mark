@@ -37,6 +37,11 @@ Route::prefix('seller')->name('seller.')->middleware(['auth', 'seller'])->group(
     Route::post('/dashboard/confirm-pickup/{listingId}', [App\Http\Controllers\Seller\SellerDashboardController::class, 'confirmPickup'])
         ->name('dashboard.confirm-pickup');
 
+    // ── GET guards: redirect back-button / direct-URL navigation on POST-only form endpoints ──
+    Route::get('/dashboard/change-password', fn () => redirect()->route('seller.account'))->name('dashboard.change-password.get');
+    Route::get('/dashboard/update-payout',   fn () => redirect()->route('seller.account'))->name('dashboard.update-payout.get');
+    Route::get('/dashboard/update-email',    fn () => redirect()->route('seller.account'))->name('dashboard.update-email.get');
+
     // Payout Method Setup (REQUIRED before listing creation)
     Route::get('payout-method', [PayoutMethodController::class, 'create'])->name('payout-method');
     Route::post('payout-method', [PayoutMethodController::class, 'store'])->name('payout-method.store');

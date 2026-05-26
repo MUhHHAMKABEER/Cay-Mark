@@ -266,6 +266,12 @@ Route::post('/register/step2', [RegisteredUserController::class, 'step2'])->name
 Route::post('/register/step3', [RegisteredUserController::class, 'step3'])->name('register.step3');
 Route::post('/register/back', [RegisteredUserController::class, 'back'])->name('register.back');
 
+// ── GET guards: redirect back-button / direct-URL navigation on POST-only registration step endpoints ──
+Route::get('/register/step1', fn () => redirect()->route('register'))->name('register.step1.get');
+Route::get('/register/step2', fn () => redirect()->route('register'))->name('register.step2.get');
+Route::get('/register/step3', fn () => redirect()->route('register'))->name('register.step3.get');
+Route::get('/register/back',  fn () => redirect()->route('register'))->name('register.back.get');
+
 // Upgrade membership (casual seller → business seller) — single-page form
 Route::get('/upgrade-membership',  [RegisteredUserController::class, 'upgradeMembership'])->middleware('auth')->name('upgrade.membership');
 Route::post('/upgrade-membership', [RegisteredUserController::class, 'processUpgradeMembership'])->middleware('auth')->name('upgrade.membership.submit');
@@ -276,6 +282,10 @@ Route::post('/finish-registration/membership', [RegisteredUserController::class,
 Route::get('/finish-registration/complete', [RegisteredUserController::class, 'showCompleteRegistration'])->middleware('auth')->name('finish.registration.complete.show');
 // POST uses a distinct path so nginx/LiteSpeed never confuses it with the cached GET at /finish-registration/complete
 Route::post('/finish-registration/submit', [RegisteredUserController::class, 'completeRegistration'])->middleware('auth')->name('finish.registration.complete');
+
+// ── GET guards: redirect back-button / direct-URL navigation on POST-only finish-registration endpoints ──
+Route::get('/finish-registration/membership', fn () => redirect()->route('finish.registration'))->middleware('auth')->name('finish.registration.membership.get');
+Route::get('/finish-registration/submit',     fn () => redirect()->route('finish.registration'))->middleware('auth')->name('finish.registration.submit.get');
 
 Route::post('/registration/phone/send-code', [RegisteredUserController::class, 'sendPhoneVerificationCode'])->middleware('auth')->name('registration.phone.send-code');
 Route::post('/registration/phone/verify', [RegisteredUserController::class, 'verifyPhoneCode'])->middleware('auth')->name('registration.phone.verify');
