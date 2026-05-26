@@ -182,66 +182,57 @@
 
                 {{-- Grid skeleton --}}
                 <div x-show="isLoading && viewMode === 'grid'" x-cloak
-                    class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
+                    class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-5">
                     @for($i = 0; $i < 8; $i++)
-                    <div class="bg-white border border-outline-variant rounded-xl overflow-hidden flex flex-col">
-                        <div class="shimmer" style="height:176px"></div>
-                        <div class="p-3.5 flex-1 flex flex-col gap-2.5">
-                            <div class="h-4 shimmer rounded-md" style="width:72%"></div>
-                            <div class="h-3 shimmer rounded-md" style="width:48%"></div>
-                            <div class="grid grid-cols-2 gap-x-2 gap-y-2 mt-1">
-                                <div class="h-3 shimmer rounded-md"></div>
-                                <div class="h-3 shimmer rounded-md"></div>
-                                <div class="h-3 shimmer rounded-md"></div>
-                                <div class="h-3 shimmer rounded-md"></div>
+                    <div class="bg-white border border-gray-200 flex flex-col" style="border-radius:0">
+                        <div class="shimmer" style="height:200px"></div>
+                        <div class="shimmer" style="height:52px"></div>
+                        <div class="p-4 grid grid-cols-2 gap-3 flex-1">
+                            @for($j = 0; $j < 4; $j++)
+                            <div class="space-y-1.5">
+                                <div class="h-2 shimmer" style="width:55%"></div>
+                                <div class="h-3 shimmer" style="width:75%"></div>
                             </div>
-                            <div class="mt-auto pt-3 border-t border-outline-variant flex items-center justify-between gap-2">
-                                <div class="space-y-1.5">
-                                    <div class="h-2 shimmer rounded-md" style="width:52px"></div>
-                                    <div class="h-5 shimmer rounded-md" style="width:72px"></div>
-                                </div>
-                                <div class="h-9 shimmer rounded-lg" style="width:76px"></div>
+                            @endfor
+                        </div>
+                        <div class="border-t border-gray-100 px-4 py-3 flex items-center justify-between">
+                            <div class="space-y-1.5">
+                                <div class="h-2 shimmer" style="width:56px"></div>
+                                <div class="h-5 shimmer" style="width:72px"></div>
                             </div>
+                            <div class="h-9 shimmer" style="width:84px"></div>
                         </div>
                     </div>
                     @endfor
                 </div>
 
                 {{-- List skeleton --}}
-                <div x-show="isLoading && viewMode === 'detail'" x-cloak class="flex flex-col gap-4">
+                <div x-show="isLoading && viewMode === 'detail'" x-cloak class="flex flex-col gap-5">
                     @for($i = 0; $i < 5; $i++)
-                    <div class="bg-white border border-outline-variant rounded-xl overflow-hidden flex flex-col md:flex-row">
-                        <div class="flex-shrink-0 shimmer" style="min-height:220px; width:100%"
-                            :style="window.innerWidth >= 768 ? 'width:38%;min-height:0;height:auto' : ''"></div>
-                        <div class="flex-1 p-5 flex flex-col gap-4">
-                            <div class="flex items-start justify-between gap-3">
-                                <div class="flex-1 space-y-2">
-                                    <div class="h-5 shimmer rounded-md" style="width:68%"></div>
-                                    <div class="h-4 shimmer rounded-md" style="width:44%"></div>
-                                </div>
-                                <div class="h-5 shimmer rounded-md flex-shrink-0" style="width:20px"></div>
-                            </div>
-                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div class="bg-white border border-gray-200 flex flex-col md:flex-row" style="border-radius:0">
+                        <div class="shimmer flex-shrink-0" style="height:220px;width:100%"></div>
+                        <div class="flex-1 flex flex-col">
+                            <div class="shimmer" style="height:60px"></div>
+                            <div class="px-5 py-4 grid grid-cols-2 sm:grid-cols-4 gap-4 border-b border-gray-100">
                                 @for($j = 0; $j < 4; $j++)
                                 <div class="space-y-1.5">
-                                    <div class="h-2 shimmer rounded-md" style="width:60%"></div>
-                                    <div class="h-3 shimmer rounded-md" style="width:80%"></div>
+                                    <div class="h-2 shimmer" style="width:60%"></div>
+                                    <div class="h-3 shimmer" style="width:80%"></div>
                                 </div>
                                 @endfor
                             </div>
-                            <div class="flex flex-wrap gap-2">
-                                <div class="h-6 shimmer rounded-lg" style="width:88px"></div>
-                                <div class="h-6 shimmer rounded-lg" style="width:72px"></div>
-                                <div class="h-6 shimmer rounded-lg" style="width:96px"></div>
+                            <div class="px-5 py-3 flex gap-2 border-b border-gray-100">
+                                <div class="h-6 shimmer" style="width:88px"></div>
+                                <div class="h-6 shimmer" style="width:72px"></div>
                             </div>
-                            <div class="mt-auto pt-4 border-t border-outline-variant flex items-center justify-between gap-3">
+                            <div class="mt-auto px-5 py-4 flex items-center justify-between gap-3">
                                 <div class="space-y-1.5">
-                                    <div class="h-2 shimmer rounded-md" style="width:64px"></div>
-                                    <div class="h-6 shimmer rounded-md" style="width:88px"></div>
+                                    <div class="h-2 shimmer" style="width:64px"></div>
+                                    <div class="h-6 shimmer" style="width:88px"></div>
                                 </div>
                                 <div class="flex gap-2">
-                                    <div class="h-9 shimmer rounded-lg" style="width:96px"></div>
-                                    <div class="h-9 shimmer rounded-lg" style="width:40px"></div>
+                                    <div class="h-10 shimmer" style="width:100px"></div>
+                                    <div class="h-10 shimmer" style="width:40px"></div>
                                 </div>
                             </div>
                         </div>
@@ -251,7 +242,7 @@
 
                 {{-- Grid view --}}
                 <div x-show="!isLoading && viewMode === 'grid'" x-cloak
-                    class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
+                    class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-5">
                     @forelse($auctions as $listing)
                         @php
                             $img = $listing->images->first();
@@ -266,27 +257,36 @@
                             }
                             $endDate = $listing->getAuctionEndDate();
                         @endphp
-                        <div class="vehicle-card bg-white border border-outline-variant rounded-xl overflow-hidden flex flex-col">
-                            <div class="img-wrap bg-surface-container-high">
+                        <div class="vehicle-card bg-white border border-gray-200 flex flex-col" style="border-radius:0">
+
+                            {{-- Image --}}
+                            <div class="img-wrap bg-gray-100 relative" style="height:200px">
                                 <img src="{{ $imgUrl }}"
                                     alt="{{ $listing->year }} {{ $listing->make }} {{ $listing->model }}"
-                                    class="w-full h-44 object-cover cursor-pointer transition-transform duration-300 hover:scale-105"
+                                    class="w-full h-full object-cover cursor-pointer transition-transform duration-300 hover:scale-105"
                                     loading="lazy"
                                     onerror="this.onerror=null;this.src='{{ asset('images/placeholder-car.png') }}';"
                                     onclick="openImageModal('{{ $imgUrl }}')"/>
                                 <div class="img-overlay">
                                     <button onclick="openImageModal('{{ $imgUrl }}')"
-                                        class="bg-white text-primary text-label-md font-label-md px-4 py-1.5 rounded-lg hover:bg-surface-container transition-colors text-sm">
+                                        class="flex items-center gap-1.5 bg-white text-primary font-bold uppercase tracking-widest px-4 py-2 text-[11px] hover:bg-gray-100 transition-colors"
+                                        style="border-radius:0">
+                                        <span class="material-symbols-outlined text-[15px]">photo_camera</span>
                                         View Photo
                                     </button>
                                 </div>
-                                <div class="absolute top-2 left-2 flex flex-col gap-1 z-10">
+                                {{-- Badges top-left --}}
+                                <div class="absolute top-0 left-0 flex flex-col z-10">
                                     @if($listing->featured)
-                                        <span class="bg-secondary-fixed-dim text-primary text-[10px] font-bold px-2 py-0.5 rounded-sm uppercase tracking-widest">Featured</span>
+                                        <span class="bg-secondary-fixed-dim text-primary text-[9px] font-bold px-2.5 py-1 uppercase tracking-widest" style="border-radius:0">Featured</span>
                                     @endif
                                     <x-ui.ending-soon-badge :end="$endDate" />
+                                </div>
+                                {{-- Countdown bottom-left --}}
+                                <div class="absolute bottom-0 left-0 right-0 z-10">
                                     <x-ui.countdown :end="$endDate" :listing-id="$listing->id" variant="grid" />
                                 </div>
+                                {{-- Watchlist top-right --}}
                                 <div class="absolute top-2 right-2 z-10">
                                     <x-ui.watchlist-heart
                                         :listing="$listing"
@@ -295,47 +295,61 @@
                                 </div>
                             </div>
 
-                            <div class="p-3.5 flex-1 flex flex-col">
-                                <h3 class="font-headline-sm text-headline-sm text-primary mb-2.5 line-clamp-2 leading-snug" style="font-size:16px">
+                            {{-- Navy title bar --}}
+                            <div class="bg-primary px-4 py-3">
+                                <h3 class="text-white font-bold uppercase tracking-tight leading-snug line-clamp-1" style="font-size:14px">
                                     {{ $listing->year }} {{ $listing->make }} {{ $listing->model }}
                                 </h3>
-                                <div class="grid grid-cols-2 gap-y-1.5 gap-x-2 mb-3">
-                                    <div class="flex items-center gap-1 text-on-surface-variant min-w-0" style="font-size:12px">
-                                        <span class="material-symbols-outlined text-outline flex-shrink-0" style="font-size:13px">speed</span>
-                                        <span class="truncate">{{ $listing->odometer ? number_format($listing->odometer).' km' : 'N/A' }}</span>
-                                    </div>
-                                    <div class="flex items-center gap-1 text-on-surface-variant min-w-0" style="font-size:12px">
-                                        <span class="material-symbols-outlined text-outline flex-shrink-0" style="font-size:13px">location_on</span>
-                                        <span class="truncate">{{ $listing->island ?? 'N/A' }}</span>
-                                    </div>
-                                    <div class="flex items-center gap-1 text-on-surface-variant min-w-0" style="font-size:12px">
-                                        <span class="material-symbols-outlined text-outline flex-shrink-0" style="font-size:13px">receipt</span>
-                                        <span class="truncate">{{ $listing->title_status_display }}</span>
-                                    </div>
-                                    <div class="flex items-center gap-1 text-on-surface-variant min-w-0" style="font-size:12px">
-                                        <span class="material-symbols-outlined text-outline flex-shrink-0" style="font-size:13px">event</span>
-                                        <span class="truncate">{{ $listing->sale_date ? \Carbon\Carbon::parse($listing->sale_date)->format('M d, Y') : 'N/A' }}</span>
-                                    </div>
+                                @if($listing->island)
+                                    <p class="text-white/50 text-[11px] mt-0.5 flex items-center gap-1">
+                                        <span class="material-symbols-outlined" style="font-size:11px">location_on</span>
+                                        {{ $listing->island }}
+                                    </p>
+                                @endif
+                            </div>
+
+                            {{-- Specs --}}
+                            <div class="px-4 py-3 grid grid-cols-2 gap-x-3 gap-y-2.5 flex-1">
+                                <div>
+                                    <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Odometer</p>
+                                    <p class="text-[12px] font-semibold text-gray-800">{{ $listing->odometer ? number_format($listing->odometer).' mi' : 'N/A' }}</p>
                                 </div>
-                                <div class="mt-auto pt-3 border-t border-outline-variant flex items-center justify-between gap-2">
-                                    <div>
-                                        <p class="text-on-surface-variant" style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Current Bid</p>
-                                        <p class="text-primary font-bold" style="font-size:17px">${{ number_format($listing->current_bid ?? 0) }}</p>
-                                    </div>
-                                    <a href="{{ route('auction.show', $listing->getSlugOrGenerate()) }}"
-                                        class="bg-secondary-container text-on-secondary-container font-label-md text-label-md px-3.5 py-2 rounded-lg hover:bg-secondary transition-colors whitespace-nowrap text-sm">
-                                        Bid Now
-                                    </a>
+                                <div>
+                                    <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Title</p>
+                                    <p class="text-[12px] font-semibold text-gray-800 truncate">{{ $listing->title_status_display ?? 'N/A' }}</p>
                                 </div>
+                                <div>
+                                    <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Condition</p>
+                                    <p class="text-[12px] font-semibold text-gray-800 truncate">{{ ucfirst($listing->condition ?? 'N/A') }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Sale Date</p>
+                                    <p class="text-[12px] font-semibold text-gray-800">{{ $listing->sale_date ? \Carbon\Carbon::parse($listing->sale_date)->format('M d, Y') : 'N/A' }}</p>
+                                </div>
+                            </div>
+
+                            {{-- Bid footer --}}
+                            <div class="border-t border-gray-200 px-4 py-3 flex items-center justify-between gap-2">
+                                <div>
+                                    <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Current Bid</p>
+                                    <p class="text-primary font-bold" style="font-size:18px;line-height:1.2">${{ number_format($listing->current_bid ?? 0) }}</p>
+                                </div>
+                                <a href="{{ route('auction.show', $listing->getSlugOrGenerate()) }}"
+                                    class="flex items-center gap-1.5 bg-secondary-fixed-dim text-primary font-bold uppercase tracking-widest px-4 py-2.5 text-[11px] hover:bg-[#b8943b] transition-colors whitespace-nowrap"
+                                    style="border-radius:0">
+                                    <span class="material-symbols-outlined text-[14px]">gavel</span>
+                                    Bid Now
+                                </a>
                             </div>
                         </div>
                     @empty
                         <div class="col-span-full py-20 text-center">
-                            <span class="material-symbols-outlined text-outline text-[60px] mb-3 block">search_off</span>
-                            <h3 class="font-headline-sm text-headline-sm text-primary mb-2">No listings found</h3>
-                            <p class="text-body-md font-body-md text-on-surface-variant">Try adjusting your filters to find more results.</p>
+                            <span class="material-symbols-outlined text-gray-300 text-[60px] mb-3 block">search_off</span>
+                            <h3 class="text-xl font-bold text-primary uppercase tracking-tight mb-2">No listings found</h3>
+                            <p class="text-gray-500 text-sm mb-5">Try adjusting your filters to find more results.</p>
                             <button type="button" @click="clearAllFilters()"
-                                class="mt-4 bg-primary text-on-primary font-label-md text-label-md px-5 py-2 rounded-lg hover:bg-primary-container transition-colors">
+                                class="bg-primary text-white font-bold uppercase tracking-widest text-sm px-6 py-3 hover:bg-[#003377] transition-colors"
+                                style="border-radius:0">
                                 Clear Filters
                             </button>
                         </div>

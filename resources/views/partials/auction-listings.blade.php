@@ -15,104 +15,106 @@
         $endDate = $listing->getAuctionEndDate();
     @endphp
 
-    <div class="vehicle-card bg-white border border-outline-variant rounded-xl overflow-hidden flex flex-col md:flex-row">
+    <div class="vehicle-card bg-white border border-gray-200 flex flex-col md:flex-row" style="border-radius:0">
 
         {{-- Image --}}
-        <div class="md:w-2/5 xl:w-1/3 flex-shrink-0 img-wrap bg-surface-container-high min-h-[220px] md:min-h-0">
+        <div class="img-wrap flex-shrink-0 relative bg-gray-100 md:w-[280px]" style="min-height:220px">
             <img src="{{ $imgUrl }}"
                 alt="{{ $listing->year }} {{ $listing->make }} {{ $listing->model }}"
-                class="w-full h-full object-cover cursor-pointer transition-transform duration-300 hover:scale-105"
-                style="min-height:220px; max-height:280px"
+                class="w-full h-full object-cover cursor-pointer absolute inset-0"
                 loading="lazy"
                 onerror="this.onerror=null;this.src='{{ asset('images/placeholder-car.png') }}';"
                 onclick="openImageModal('{{ $imgUrl }}')"/>
 
             <div class="img-overlay">
                 <button onclick="openImageModal('{{ $imgUrl }}')"
-                    class="bg-white text-primary font-label-md text-label-md px-4 py-2 rounded-lg hover:bg-surface-container transition-colors">
+                    class="flex items-center gap-1.5 bg-white text-primary font-bold uppercase tracking-widest px-4 py-2 text-[11px] hover:bg-gray-100 transition-colors"
+                    style="border-radius:0">
+                    <span class="material-symbols-outlined text-[15px]">photo_camera</span>
                     View Photo
                 </button>
             </div>
 
-            <div class="absolute top-3 left-3 flex flex-col gap-1 z-10">
+            {{-- Badges --}}
+            <div class="absolute top-0 left-0 flex flex-col z-10">
                 @if($listing->featured)
-                    <span class="bg-secondary-fixed-dim text-primary text-[10px] font-bold px-2 py-0.5 rounded-sm uppercase tracking-widest">Featured</span>
+                    <span class="bg-secondary-fixed-dim text-primary text-[9px] font-bold px-2.5 py-1 uppercase tracking-widest" style="border-radius:0">Featured</span>
                 @endif
                 <x-ui.ending-soon-badge :end="$endDate" />
             </div>
-            <div class="absolute bottom-3 left-3 z-10">
+            <div class="absolute bottom-0 left-0 right-0 z-10">
                 <x-ui.countdown :end="$endDate" :listing-id="$listing->id" variant="grid" />
             </div>
-            <div class="absolute top-3 right-3 z-10">
+            <div class="absolute top-2 right-2 z-10">
                 <x-ui.watchlist-heart :listing="$listing" :in-watchlist="$liked" :likes-count="$likesCount"/>
             </div>
         </div>
 
-        {{-- Info --}}
-        <div class="flex-1 p-5 flex flex-col min-w-0">
-            <div class="flex items-start justify-between gap-3 mb-3">
-                <h3 class="font-headline-sm text-headline-sm text-primary line-clamp-2 min-w-0">
-                    {{ $listing->year }} {{ $listing->make }} {{ $listing->model }}
-                </h3>
-                <button type="button" title="Share" class="flex-shrink-0 text-on-surface-variant hover:text-primary transition-colors mt-0.5">
-                    <span class="material-symbols-outlined text-[20px]">share</span>
+        {{-- Content --}}
+        <div class="flex-1 min-w-0 flex flex-col">
+
+            {{-- Navy title bar --}}
+            <div class="bg-primary px-5 py-4 flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                    <h3 class="text-white font-bold uppercase tracking-tight leading-snug line-clamp-1" style="font-size:15px">
+                        {{ $listing->year }} {{ $listing->make }} {{ $listing->model }}
+                    </h3>
+                    @if($listing->island)
+                    <p class="text-white/50 text-[11px] mt-0.5 flex items-center gap-1">
+                        <span class="material-symbols-outlined" style="font-size:11px">location_on</span>
+                        {{ $listing->island }}
+                    </p>
+                    @endif
+                </div>
+                <button type="button" title="Share"
+                    class="flex-shrink-0 flex items-center justify-center w-8 h-8 border border-white/20 text-white/60 hover:text-white hover:border-white/40 transition-colors"
+                    style="border-radius:0">
+                    <span class="material-symbols-outlined text-[17px]">share</span>
                 </button>
             </div>
 
-            {{-- Key specs grid --}}
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-                <div class="flex items-start gap-2">
-                    <span class="material-symbols-outlined text-outline text-[16px] flex-shrink-0 mt-0.5">speed</span>
-                    <div class="min-w-0">
-                        <p class="text-label-sm font-label-sm text-on-surface-variant">Odometer</p>
-                        <p class="text-body-sm font-body-sm text-on-surface truncate">
-                            @if($listing->odometer)
-                                {{ number_format($listing->odometer) }} mi
-                                @if($listing->odometer_estimated)<span class="text-amber-600 text-[11px]"> (Est.)</span>@endif
-                            @else N/A @endif
-                        </p>
-                    </div>
+            {{-- Specs --}}
+            <div class="px-5 py-4 grid grid-cols-2 sm:grid-cols-4 gap-4 border-b border-gray-100">
+                <div>
+                    <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">Odometer</p>
+                    <p class="text-sm font-semibold text-gray-800">
+                        @if($listing->odometer)
+                            {{ number_format($listing->odometer) }} mi
+                            @if($listing->odometer_estimated)<span class="text-amber-500 text-[10px]"> (Est.)</span>@endif
+                        @else N/A @endif
+                    </p>
                 </div>
-                <div class="flex items-start gap-2">
-                    <span class="material-symbols-outlined text-outline text-[16px] flex-shrink-0 mt-0.5">receipt</span>
-                    <div class="min-w-0">
-                        <p class="text-label-sm font-label-sm text-on-surface-variant">Title</p>
-                        <p class="text-body-sm font-body-sm text-on-surface truncate">{{ $listing->title_status_display }}</p>
-                    </div>
+                <div>
+                    <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">Title</p>
+                    <p class="text-sm font-semibold text-gray-800 truncate">{{ $listing->title_status_display ?? 'N/A' }}</p>
                 </div>
-                <div class="flex items-start gap-2">
-                    <span class="material-symbols-outlined text-outline text-[16px] flex-shrink-0 mt-0.5">location_on</span>
-                    <div class="min-w-0">
-                        <p class="text-label-sm font-label-sm text-on-surface-variant">Location</p>
-                        <p class="text-body-sm font-body-sm text-on-surface truncate">{{ $listing->island ?? 'N/A' }}</p>
-                    </div>
+                <div>
+                    <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">Condition</p>
+                    <p class="text-sm font-semibold text-gray-800 truncate">{{ ucfirst($listing->condition ?? 'N/A') }}</p>
                 </div>
-                <div class="flex items-start gap-2">
-                    <span class="material-symbols-outlined text-outline text-[16px] flex-shrink-0 mt-0.5">event</span>
-                    <div class="min-w-0">
-                        <p class="text-label-sm font-label-sm text-on-surface-variant">Sale Date</p>
-                        <p class="text-body-sm font-body-sm text-on-surface truncate">
-                            {{ $listing->sale_date ? \Carbon\Carbon::parse($listing->sale_date)->format('M d, Y') : 'N/A' }}
-                        </p>
-                    </div>
+                <div>
+                    <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">Sale Date</p>
+                    <p class="text-sm font-semibold text-gray-800">
+                        {{ $listing->sale_date ? \Carbon\Carbon::parse($listing->sale_date)->format('M d, Y') : 'N/A' }}
+                    </p>
                 </div>
             </div>
 
-            {{-- Extra details --}}
+            {{-- Extra chips --}}
             @if($listing->primary_damage || $listing->transmission || $listing->fuel_type)
-            <div class="flex flex-wrap gap-2 mb-4">
+            <div class="px-5 py-3 flex flex-wrap gap-2 border-b border-gray-100">
                 @if($listing->primary_damage)
-                    <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-surface-container text-on-surface-variant text-label-sm font-label-sm rounded-lg">
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-100 text-gray-600 text-[11px] font-semibold uppercase tracking-wider" style="border-radius:0">
                         <span class="material-symbols-outlined text-[12px]">warning</span>{{ $listing->primary_damage }}
                     </span>
                 @endif
                 @if($listing->transmission)
-                    <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-surface-container text-on-surface-variant text-label-sm font-label-sm rounded-lg">
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-100 text-gray-600 text-[11px] font-semibold uppercase tracking-wider" style="border-radius:0">
                         <span class="material-symbols-outlined text-[12px]">settings</span>{{ ucfirst(strtolower($listing->transmission)) }}
                     </span>
                 @endif
                 @if($listing->fuel_type)
-                    <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-surface-container text-on-surface-variant text-label-sm font-label-sm rounded-lg">
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-100 text-gray-600 text-[11px] font-semibold uppercase tracking-wider" style="border-radius:0">
                         <span class="material-symbols-outlined text-[12px]">local_gas_station</span>{{ is_string($listing->fuel_type) ? ucfirst(strtolower($listing->fuel_type)) : $listing->fuel_type }}
                     </span>
                 @endif
@@ -120,20 +122,23 @@
             @endif
 
             {{-- Bid + Actions --}}
-            <div class="mt-auto pt-4 border-t border-outline-variant flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="mt-auto px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <p class="text-label-sm font-label-sm text-on-surface-variant">Current Bid</p>
-                    <p class="font-headline-md text-headline-md text-primary">${{ number_format($listing->current_bid ?? 0) }}</p>
+                    <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">Current Bid</p>
+                    <p class="text-primary font-bold" style="font-size:22px;line-height:1.2">${{ number_format($listing->current_bid ?? 0) }}</p>
                 </div>
                 <div class="flex items-center gap-2">
                     <a href="{{ route('auction.show', $listing->getSlugOrGenerate()) }}"
-                        class="flex-1 sm:flex-none text-center bg-secondary-container text-on-secondary-container font-label-md text-label-md px-6 py-2.5 rounded-lg hover:bg-secondary transition-colors">
+                        class="flex items-center gap-1.5 bg-secondary-fixed-dim text-primary font-bold uppercase tracking-widest px-5 py-3 text-[11px] hover:bg-[#b8943b] transition-colors whitespace-nowrap"
+                        style="border-radius:0">
+                        <span class="material-symbols-outlined text-[15px]">gavel</span>
                         Bid Now
                     </a>
                     <a href="{{ route('auction.show', $listing->getSlugOrGenerate()) }}"
-                        class="border border-outline-variant text-on-surface-variant px-3 py-2.5 rounded-lg hover:bg-surface-container hover:text-primary transition-colors"
+                        class="flex items-center justify-center w-10 h-10 border border-gray-200 text-gray-500 hover:border-primary hover:text-primary transition-colors"
+                        style="border-radius:0"
                         title="View details">
-                        <span class="material-symbols-outlined text-[20px]">open_in_new</span>
+                        <span class="material-symbols-outlined text-[18px]">open_in_new</span>
                     </a>
                 </div>
             </div>
@@ -141,9 +146,9 @@
     </div>
 
 @empty
-    <div class="text-center py-20">
-        <span class="material-symbols-outlined text-outline text-[64px] mb-3 block">search_off</span>
-        <h3 class="font-headline-sm text-headline-sm text-primary mb-2">No listings found</h3>
-        <p class="text-body-md font-body-md text-on-surface-variant">Try adjusting your filters to find more results.</p>
+    <div class="py-20 text-center border border-gray-200" style="border-radius:0">
+        <span class="material-symbols-outlined text-gray-300 text-[60px] mb-3 block">search_off</span>
+        <h3 class="text-xl font-bold text-primary uppercase tracking-tight mb-2">No listings found</h3>
+        <p class="text-gray-500 text-sm">Try adjusting your filters to find more results.</p>
     </div>
 @endforelse
