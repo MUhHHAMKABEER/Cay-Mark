@@ -7,6 +7,9 @@
     @include('partials.noindex-meta')
     <title>@yield('title', 'CayMark Island Exchange | Premium Vehicle Auctions')</title>
 
+    {{-- Alpine.js (must load before body init) --}}
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
     {{-- Tailwind CSS with forms + container-queries plugins --}}
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 
@@ -122,6 +125,7 @@
     </script>
 
     <style>
+        [x-cloak] { display: none !important; }
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }

@@ -59,6 +59,35 @@
     .filter-scroll::-webkit-scrollbar { width: 4px; }
     .filter-scroll::-webkit-scrollbar-track { background: #f6f3f2; }
     .filter-scroll::-webkit-scrollbar-thumb { background: #c4c6d0; border-radius: 2px; }
+    /* ── New card styles ── */
+    .cm-img-wrap { overflow: hidden; }
+    .cm-img-wrap img { transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
+    .cm-card:hover .cm-img-wrap img { transform: scale(1.04); }
+    .btn-bid {
+        background-color: #D99B16;
+        background-image: linear-gradient(135deg, #E5A820 0%, #C78A0E 100%);
+        color: #fff;
+        font-weight: 800;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        transition: filter 0.15s ease, transform 0.1s ease;
+    }
+    .btn-bid:hover  { filter: brightness(1.08); }
+    .btn-bid:active { transform: scale(0.97); }
+    .spec-label {
+        font-size: 8.5px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: #94a3b8;
+        display: block;
+    }
+    .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
 </style>
 
 <div class="bg-surface" id="cm-auction-pull-root" x-data="filterData()" x-init="initFilters()" @cm-pull-refresh.window="applyFilters()">
@@ -257,91 +286,137 @@
                             }
                             $endDate = $listing->getAuctionEndDate();
                         @endphp
-                        <div class="vehicle-card bg-white border border-gray-200 flex flex-col" style="border-radius:0">
+                        <article
+                            class="cm-card bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden
+                                   flex flex-col hover:shadow-md hover:border-gray-200/80 transition-shadow duration-200">
 
-                            {{-- Image --}}
-                            <div class="img-wrap bg-gray-100 relative" style="height:200px">
-                                <img src="{{ $imgUrl }}"
+                            {{-- Image — 16:9 aspect ratio --}}
+                            <div class="cm-img-wrap relative w-full bg-gray-100 flex-none" style="padding-top:56.25%">
+                                <img
+                                    src="{{ $imgUrl }}"
                                     alt="{{ $listing->year }} {{ $listing->make }} {{ $listing->model }}"
-                                    class="w-full h-full object-cover cursor-pointer transition-transform duration-300 hover:scale-105"
+                                    class="absolute inset-0 w-full h-full object-cover"
                                     loading="lazy"
-                                    onerror="this.onerror=null;this.src='{{ asset('images/placeholder-car.png') }}';"
-                                    onclick="openImageModal('{{ $imgUrl }}')"/>
-                                <div class="img-overlay">
-                                    <button onclick="openImageModal('{{ $imgUrl }}')"
-                                        class="flex items-center gap-1.5 bg-white text-primary font-bold uppercase tracking-widest px-4 py-2 text-[11px] hover:bg-gray-100 transition-colors"
-                                        style="border-radius:0">
-                                        <span class="material-symbols-outlined text-[15px]">photo_camera</span>
-                                        View Photo
-                                    </button>
-                                </div>
+                                    onerror="this.onerror=null;this.src='{{ asset('images/placeholder-car.png') }}';">
+
                                 {{-- Badges top-left --}}
                                 <div class="absolute top-0 left-0 flex flex-col z-10">
                                     @if($listing->featured)
-                                        <span class="bg-secondary-fixed-dim text-primary text-[9px] font-bold px-2.5 py-1 uppercase tracking-widest" style="border-radius:0">Featured</span>
+                                        <span class="bg-secondary-fixed-dim text-primary text-[9px] font-bold px-2.5 py-1 uppercase tracking-widest">Featured</span>
                                     @endif
                                     <x-ui.ending-soon-badge :end="$endDate" />
                                 </div>
-                                {{-- Countdown bottom-left --}}
-                                <div class="absolute bottom-0 left-0 right-0 z-10">
-                                    <x-ui.countdown :end="$endDate" :listing-id="$listing->id" variant="grid" />
-                                </div>
+
                                 {{-- Watchlist top-right --}}
-                                <div class="absolute top-2 right-2 z-10">
+                                <div class="absolute top-2.5 right-2.5 z-10">
                                     <x-ui.watchlist-heart
                                         :listing="$listing"
                                         :in-watchlist="$likedListingIds->contains($listing->id)"
                                         :likes-count="$listing->likes_count ?? 0"/>
                                 </div>
-                            </div>
 
-                            {{-- Navy title bar --}}
-                            <div class="bg-primary px-4 py-3">
-                                <h3 class="text-white font-bold uppercase tracking-tight leading-snug line-clamp-1" style="font-size:14px">
-                                    {{ $listing->year }} {{ $listing->make }} {{ $listing->model }}
-                                </h3>
-                                @if($listing->island)
-                                    <p class="text-white/50 text-[11px] mt-0.5 flex items-center gap-1">
-                                        <span class="material-symbols-outlined" style="font-size:11px">location_on</span>
-                                        {{ $listing->island }}
-                                    </p>
+                                {{-- Countdown bottom --}}
+                                <div class="absolute bottom-0 left-0 right-0 z-10">
+                                    <x-ui.countdown :end="$endDate" :listing-id="$listing->id" variant="grid" />
+                                </div>
+                            </div>{{-- /image --}}
+
+                            {{-- Card body --}}
+                            <div class="p-4 flex flex-col flex-1 min-w-0">
+
+                                {{-- Title + Location --}}
+                                <div class="mb-2.5">
+                                    <h3 class="font-bold text-slate-900 text-[14.5px] leading-snug line-clamp-2">
+                                        <a href="{{ route('auction.show', $listing->getSlugOrGenerate()) }}"
+                                           class="hover:text-blue-700 transition-colors duration-150">
+                                            {{ $listing->year }} {{ $listing->make }} {{ $listing->model }}
+                                        </a>
+                                    </h3>
+                                    @if($listing->island)
+                                    <div class="flex items-center gap-1 mt-[5px]">
+                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
+                                             stroke="#94a3b8" stroke-width="2.5"
+                                             stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+                                            <circle cx="12" cy="10" r="3"/>
+                                        </svg>
+                                        <span class="text-[11px] text-slate-400 font-medium">{{ $listing->island }}</span>
+                                    </div>
+                                    @endif
+                                </div>
+
+                                {{-- Spec tags --}}
+                                @if($listing->fuel_type || $listing->transmission)
+                                <div class="flex flex-wrap gap-1.5 mb-3">
+                                    @if($listing->fuel_type)
+                                    <span class="inline-flex items-center gap-[4px] bg-gray-100 text-slate-600
+                                                 text-[10.5px] font-semibold px-2.5 py-[4px] rounded-full whitespace-nowrap">
+                                        @if(strtolower($listing->fuel_type) === 'electric')
+                                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none"
+                                             stroke="currentColor" stroke-width="2.5"
+                                             stroke-linecap="round" stroke-linejoin="round">
+                                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                                        </svg>
+                                        @else
+                                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none"
+                                             stroke="currentColor" stroke-width="2.2"
+                                             stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M3 22V9a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v13"/>
+                                            <path d="M3 14h14"/><path d="M9 22v-4a3 3 0 0 1 6 0v4"/>
+                                        </svg>
+                                        @endif
+                                        {{ ucfirst(strtolower($listing->fuel_type)) }}
+                                    </span>
+                                    @endif
+                                    @if($listing->transmission)
+                                    <span class="inline-flex items-center gap-[4px] bg-gray-100 text-slate-600
+                                                 text-[10.5px] font-semibold px-2.5 py-[4px] rounded-full whitespace-nowrap">
+                                        {{ ucfirst(strtolower($listing->transmission)) }}
+                                    </span>
+                                    @endif
+                                </div>
                                 @endif
-                            </div>
 
-                            {{-- Specs --}}
-                            <div class="px-4 py-3 grid grid-cols-2 gap-x-3 gap-y-2.5 flex-1">
-                                <div>
-                                    <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Odometer</p>
-                                    <p class="text-[12px] font-semibold text-gray-800">{{ $listing->odometer ? number_format($listing->odometer).' mi' : 'N/A' }}</p>
+                                {{-- 2 × 2 Specs Grid --}}
+                                <div class="grid grid-cols-2 gap-x-4 gap-y-3 pb-3.5 mb-3.5 border-b border-gray-100">
+                                    <div>
+                                        <span class="spec-label mb-[3px]">Odometer</span>
+                                        <p class="text-[13px] font-bold text-slate-800">{{ $listing->odometer ? number_format($listing->odometer).' mi' : 'N/A' }}</p>
+                                    </div>
+                                    <div>
+                                        <span class="spec-label mb-[3px]">Condition</span>
+                                        <p class="text-[13px] font-bold text-slate-800">{{ ucfirst($listing->condition ?? 'N/A') }}</p>
+                                    </div>
+                                    <div>
+                                        <span class="spec-label mb-[3px]">Title</span>
+                                        <p class="text-[13px] font-bold text-slate-800">{{ $listing->title_status_display ?? 'N/A' }}</p>
+                                    </div>
+                                    <div>
+                                        <span class="spec-label mb-[3px]">Sale Date</span>
+                                        <p class="text-[13px] font-bold text-slate-800">
+                                            {{ $listing->sale_date ? \Carbon\Carbon::parse($listing->sale_date)->format('M d, Y') : 'N/A' }}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Title</p>
-                                    <p class="text-[12px] font-semibold text-gray-800 truncate">{{ $listing->title_status_display ?? 'N/A' }}</p>
-                                </div>
-                                <div>
-                                    <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Condition</p>
-                                    <p class="text-[12px] font-semibold text-gray-800 truncate">{{ ucfirst($listing->condition ?? 'N/A') }}</p>
-                                </div>
-                                <div>
-                                    <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Sale Date</p>
-                                    <p class="text-[12px] font-semibold text-gray-800">{{ $listing->sale_date ? \Carbon\Carbon::parse($listing->sale_date)->format('M d, Y') : 'N/A' }}</p>
-                                </div>
-                            </div>
 
-                            {{-- Bid footer --}}
-                            <div class="border-t border-gray-200 px-4 py-3 flex items-center justify-between gap-2">
-                                <div>
-                                    <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Current Bid</p>
-                                    <p class="text-primary font-bold" style="font-size:18px;line-height:1.2">${{ number_format($listing->current_bid ?? 0) }}</p>
+                                {{-- Bottom: Bid + Action --}}
+                                <div class="flex items-end justify-between mt-auto gap-3">
+                                    <div class="min-w-0">
+                                        <p class="text-[22px] font-extrabold text-slate-900 leading-none">
+                                            ${{ number_format($listing->current_bid ?? 0) }}
+                                        </p>
+                                        <span class="spec-label mt-[5px]">Current Bid</span>
+                                    </div>
+                                    <a href="{{ route('auction.show', $listing->getSlugOrGenerate()) }}"
+                                       class="btn-bid flex-none inline-flex items-center justify-center
+                                              px-4 py-2.5 rounded-lg text-[12px]
+                                              focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-yellow-500">
+                                        Bid Now
+                                    </a>
                                 </div>
-                                <a href="{{ route('auction.show', $listing->getSlugOrGenerate()) }}"
-                                    class="flex items-center gap-1.5 bg-secondary-fixed-dim text-primary font-bold uppercase tracking-widest px-4 py-2.5 text-[11px] hover:bg-[#b8943b] transition-colors whitespace-nowrap"
-                                    style="border-radius:0">
-                                    <span class="material-symbols-outlined text-[14px]">gavel</span>
-                                    Bid Now
-                                </a>
-                            </div>
-                        </div>
+
+                            </div>{{-- /card body --}}
+                        </article>{{-- /grid card --}}
                     @empty
                         <div class="col-span-full py-20 text-center">
                             <span class="material-symbols-outlined text-gray-300 text-[60px] mb-3 block">search_off</span>

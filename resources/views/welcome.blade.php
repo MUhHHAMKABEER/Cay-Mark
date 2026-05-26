@@ -29,21 +29,27 @@
         ->take(4)
         ->get();
 
-    /* ── Auction Finder dropdowns ──────────────────────────────── */
-    $finderMakes = \App\Models\Listing::where('status', 'approved')
+    /* ── Auction Finder dropdowns (auction listings only) ─────── */
+    $finderBase = \App\Models\Listing::where('listing_method', 'auction')
+        ->where('status', 'approved')
+        ->whereRaw(
+            "COALESCE(auction_end_time, DATE_ADD(COALESCE(auction_start_time, created_at), INTERVAL COALESCE(auction_duration, 7) DAY)) > ?",
+            [$now]
+        );
+
+    $finderMakes = (clone $finderBase)
         ->whereNotNull('make')
         ->distinct()
         ->orderBy('make')
         ->pluck('make');
 
-    $finderYears = range(date('Y'), 2000);   // newest first
+    $finderVehicleTypes = (clone $finderBase)
+        ->whereNotNull('major_category')
+        ->distinct()
+        ->orderBy('major_category')
+        ->pluck('major_category');
 
-    $finderCategories = [
-        'car'       => 'Passenger Vehicles',
-        'marine'    => 'Marine / Boats',
-        'truck'     => 'Trucks & SUVs',
-        'equipment' => 'Heavy Equipment',
-    ];
+    $finderYears = range(date('Y'), 2000);   // newest first
 
     /* ── Corporate stats (dynamic) ─────────────────────────────── */
     $statActiveAuctions = (clone $activeAuctionBase)->count();
@@ -145,23 +151,23 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                         <div>
                             <label class="block text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-widest">Asset Category</label>
-                            <select name="category"
+                            <select name="vehicle_type"
                                 class="w-full border-gray-300 text-gray-900 focus:ring-primary focus:border-primary text-sm py-3"
                                 style="border-radius:0">
                                 <option value="">All Categories</option>
-                                @foreach($finderCategories as $val => $label)
-                                <option value="{{ $val }}" {{ request('category') === $val ? 'selected' : '' }}>{{ $label }}</option>
+                                @foreach($finderVehicleTypes as $type)
+                                <option value="{{ $type }}" {{ request('vehicle_type') === $type ? 'selected' : '' }}>{{ $type }}</option>
                                 @endforeach
                             </select>
                         </div>
                         <div>
                             <label class="block text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-widest">Make / Brand</label>
-                            <select name="make"
+                            <select name="makes[]"
                                 class="w-full border-gray-300 text-gray-900 focus:ring-primary focus:border-primary text-sm py-3"
                                 style="border-radius:0">
                                 <option value="">All Brands</option>
                                 @foreach($finderMakes as $make)
-                                <option value="{{ $make }}" {{ request('make') === $make ? 'selected' : '' }}>{{ $make }}</option>
+                                <option value="{{ $make }}" {{ (is_array(request('makes')) ? in_array($make, request('makes')) : request('makes') === $make) ? 'selected' : '' }}>{{ $make }}</option>
                                 @endforeach
                             </select>
                         </div>

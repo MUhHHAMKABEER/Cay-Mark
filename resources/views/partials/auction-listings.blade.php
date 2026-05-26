@@ -15,69 +15,68 @@
         $endDate = $listing->getAuctionEndDate();
     @endphp
 
-    <div class="vehicle-card bg-white border border-gray-200 flex flex-col md:flex-row" style="border-radius:0">
+    <article class="cm-card bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden
+                    flex hover:shadow-md hover:border-gray-200/80 transition-shadow duration-200">
 
-        {{-- Image --}}
-        <div class="img-wrap flex-shrink-0 relative bg-gray-100 md:w-[280px]" style="min-height:220px">
-            <img src="{{ $imgUrl }}"
+        {{-- LEFT COLUMN · Image (~30%) --}}
+        <div class="cm-img-wrap relative flex-none w-[30%] min-w-[200px] max-w-[320px] self-stretch bg-gray-100">
+            <img
+                src="{{ $imgUrl }}"
                 alt="{{ $listing->year }} {{ $listing->make }} {{ $listing->model }}"
-                class="w-full h-full object-cover cursor-pointer absolute inset-0"
+                class="absolute inset-0 w-full h-full object-cover"
                 loading="lazy"
-                onerror="this.onerror=null;this.src='{{ asset('images/placeholder-car.png') }}';"
-                onclick="openImageModal('{{ $imgUrl }}')"/>
+                onerror="this.onerror=null;this.src='{{ asset('images/placeholder-car.png') }}';">
 
-            <div class="img-overlay">
-                <button onclick="openImageModal('{{ $imgUrl }}')"
-                    class="flex items-center gap-1.5 bg-white text-primary font-bold uppercase tracking-widest px-4 py-2 text-[11px] hover:bg-gray-100 transition-colors"
-                    style="border-radius:0">
-                    <span class="material-symbols-outlined text-[15px]">photo_camera</span>
-                    View Photo
-                </button>
-            </div>
-
-            {{-- Badges --}}
+            {{-- Badges top-left --}}
             <div class="absolute top-0 left-0 flex flex-col z-10">
                 @if($listing->featured)
-                    <span class="bg-secondary-fixed-dim text-primary text-[9px] font-bold px-2.5 py-1 uppercase tracking-widest" style="border-radius:0">Featured</span>
+                    <span class="bg-secondary-fixed-dim text-primary text-[9px] font-bold px-2.5 py-1 uppercase tracking-widest">Featured</span>
                 @endif
                 <x-ui.ending-soon-badge :end="$endDate" />
             </div>
+
+            {{-- Watchlist top-right --}}
+            <div class="absolute top-3 right-3 z-10">
+                <x-ui.watchlist-heart :listing="$listing" :in-watchlist="$liked" :likes-count="$likesCount"/>
+            </div>
+
+            {{-- Countdown bottom --}}
             <div class="absolute bottom-0 left-0 right-0 z-10">
                 <x-ui.countdown :end="$endDate" :listing-id="$listing->id" variant="grid" />
             </div>
-            <div class="absolute top-2 right-2 z-10">
-                <x-ui.watchlist-heart :listing="$listing" :in-watchlist="$liked" :likes-count="$likesCount"/>
+        </div>{{-- /left column --}}
+
+        {{-- CENTER COLUMN · Details --}}
+        <div class="flex-1 min-w-0 px-5 py-4 flex flex-col justify-center">
+
+            {{-- Title --}}
+            <h3 class="font-bold text-slate-900 text-lg leading-snug">
+                <a href="{{ route('auction.show', $listing->getSlugOrGenerate()) }}"
+                   class="hover:text-blue-700 transition-colors duration-150">
+                    {{ $listing->year }} {{ $listing->make }} {{ $listing->model }}
+                </a>
+            </h3>
+
+            {{-- Location --}}
+            @if($listing->island)
+            <div class="flex items-center gap-1 mt-[5px] mb-4">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+                     stroke="#94a3b8" stroke-width="2.5"
+                     stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+                    <circle cx="12" cy="10" r="3"/>
+                </svg>
+                <span class="text-xs text-slate-400 font-medium">{{ $listing->island }}</span>
             </div>
-        </div>
+            @else
+            <div class="mb-4"></div>
+            @endif
 
-        {{-- Content --}}
-        <div class="flex-1 min-w-0 flex flex-col">
-
-            {{-- Navy title bar --}}
-            <div class="bg-primary px-5 py-4 flex items-start justify-between gap-3">
-                <div class="min-w-0">
-                    <h3 class="text-white font-bold uppercase tracking-tight leading-snug line-clamp-1" style="font-size:15px">
-                        {{ $listing->year }} {{ $listing->make }} {{ $listing->model }}
-                    </h3>
-                    @if($listing->island)
-                    <p class="text-white/50 text-[11px] mt-0.5 flex items-center gap-1">
-                        <span class="material-symbols-outlined" style="font-size:11px">location_on</span>
-                        {{ $listing->island }}
-                    </p>
-                    @endif
-                </div>
-                <button type="button" title="Share"
-                    class="flex-shrink-0 flex items-center justify-center w-8 h-8 border border-white/20 text-white/60 hover:text-white hover:border-white/40 transition-colors"
-                    style="border-radius:0">
-                    <span class="material-symbols-outlined text-[17px]">share</span>
-                </button>
-            </div>
-
-            {{-- Specs --}}
-            <div class="px-5 py-4 grid grid-cols-2 sm:grid-cols-4 gap-4 border-b border-gray-100">
+            {{-- 1 × 4 Specs row --}}
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pb-3.5 mb-3.5 border-b border-gray-100/80">
                 <div>
-                    <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">Odometer</p>
-                    <p class="text-sm font-semibold text-gray-800">
+                    <span class="spec-label mb-1">Odometer</span>
+                    <p class="text-sm font-bold text-slate-800">
                         @if($listing->odometer)
                             {{ number_format($listing->odometer) }} mi
                             @if($listing->odometer_estimated)<span class="text-amber-500 text-[10px]"> (Est.)</span>@endif
@@ -85,68 +84,99 @@
                     </p>
                 </div>
                 <div>
-                    <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">Title</p>
-                    <p class="text-sm font-semibold text-gray-800 truncate">{{ $listing->title_status_display ?? 'N/A' }}</p>
+                    <span class="spec-label mb-1">Condition</span>
+                    <p class="text-sm font-bold text-slate-800">{{ ucfirst($listing->condition ?? 'N/A') }}</p>
                 </div>
                 <div>
-                    <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">Condition</p>
-                    <p class="text-sm font-semibold text-gray-800 truncate">{{ ucfirst($listing->condition ?? 'N/A') }}</p>
+                    <span class="spec-label mb-1">Title</span>
+                    <p class="text-sm font-bold text-slate-800 truncate">{{ $listing->title_status_display ?? 'N/A' }}</p>
                 </div>
                 <div>
-                    <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">Sale Date</p>
-                    <p class="text-sm font-semibold text-gray-800">
+                    <span class="spec-label mb-1">Sale Date</span>
+                    <p class="text-sm font-bold text-slate-800">
                         {{ $listing->sale_date ? \Carbon\Carbon::parse($listing->sale_date)->format('M d, Y') : 'N/A' }}
                     </p>
                 </div>
             </div>
 
-            {{-- Extra chips --}}
-            @if($listing->primary_damage || $listing->transmission || $listing->fuel_type)
-            <div class="px-5 py-3 flex flex-wrap gap-2 border-b border-gray-100">
-                @if($listing->primary_damage)
-                    <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-100 text-gray-600 text-[11px] font-semibold uppercase tracking-wider" style="border-radius:0">
-                        <span class="material-symbols-outlined text-[12px]">warning</span>{{ $listing->primary_damage }}
-                    </span>
+            {{-- Spec tags --}}
+            @if($listing->fuel_type || $listing->transmission || $listing->primary_damage)
+            <div class="flex flex-wrap gap-1.5">
+                @if($listing->fuel_type)
+                <span class="inline-flex items-center gap-[4px] bg-gray-100 text-slate-600
+                             text-[10.5px] font-semibold px-2.5 py-[4px] rounded-full whitespace-nowrap">
+                    @if(strtolower($listing->fuel_type) === 'electric')
+                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2.5"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                    </svg>
+                    @else
+                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2.2"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 22V9a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v13"/>
+                        <path d="M3 14h14"/><path d="M9 22v-4a3 3 0 0 1 6 0v4"/>
+                    </svg>
+                    @endif
+                    {{ ucfirst(strtolower($listing->fuel_type)) }}
+                </span>
                 @endif
                 @if($listing->transmission)
-                    <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-100 text-gray-600 text-[11px] font-semibold uppercase tracking-wider" style="border-radius:0">
-                        <span class="material-symbols-outlined text-[12px]">settings</span>{{ ucfirst(strtolower($listing->transmission)) }}
-                    </span>
+                <span class="inline-flex items-center gap-[4px] bg-gray-100 text-slate-600
+                             text-[10.5px] font-semibold px-2.5 py-[4px] rounded-full whitespace-nowrap">
+                    {{ ucfirst(strtolower($listing->transmission)) }}
+                </span>
                 @endif
-                @if($listing->fuel_type)
-                    <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-100 text-gray-600 text-[11px] font-semibold uppercase tracking-wider" style="border-radius:0">
-                        <span class="material-symbols-outlined text-[12px]">local_gas_station</span>{{ is_string($listing->fuel_type) ? ucfirst(strtolower($listing->fuel_type)) : $listing->fuel_type }}
-                    </span>
+                @if($listing->primary_damage)
+                <span class="inline-flex items-center gap-[4px] bg-amber-50 text-amber-700
+                             text-[10.5px] font-semibold px-2.5 py-[4px] rounded-full whitespace-nowrap">
+                    {{ $listing->primary_damage }}
+                </span>
                 @endif
             </div>
             @endif
 
-            {{-- Bid + Actions --}}
-            <div class="mt-auto px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                    <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">Current Bid</p>
-                    <p class="text-primary font-bold" style="font-size:22px;line-height:1.2">${{ number_format($listing->current_bid ?? 0) }}</p>
-                </div>
-                <div class="flex items-center gap-2">
-                    <a href="{{ route('auction.show', $listing->getSlugOrGenerate()) }}"
-                        class="flex items-center gap-1.5 bg-secondary-fixed-dim text-primary font-bold uppercase tracking-widest px-5 py-3 text-[11px] hover:bg-[#b8943b] transition-colors whitespace-nowrap"
-                        style="border-radius:0">
-                        <span class="material-symbols-outlined text-[15px]">gavel</span>
-                        Bid Now
-                    </a>
-                    <a href="{{ route('auction.show', $listing->getSlugOrGenerate()) }}"
-                        class="flex items-center justify-center w-10 h-10 border border-gray-200 text-gray-500 hover:border-primary hover:text-primary transition-colors"
-                        style="border-radius:0"
-                        title="View details">
-                        <span class="material-symbols-outlined text-[18px]">open_in_new</span>
-                    </a>
-                </div>
+        </div>{{-- /center column --}}
+
+        {{-- RIGHT COLUMN · Pricing & Action --}}
+        <div class="flex-none w-48 border-l border-gray-200/60 flex flex-col
+                    items-center justify-center px-5 py-5 gap-3.5">
+
+            <div class="text-center">
+                <p class="text-[26px] font-extrabold text-slate-900 leading-none tracking-tight">
+                    ${{ number_format($listing->current_bid ?? 0) }}
+                </p>
+                <span class="spec-label mt-1.5">Current Bid</span>
             </div>
-        </div>
-    </div>
+
+            <a href="{{ route('auction.show', $listing->getSlugOrGenerate()) }}"
+               class="btn-bid w-full inline-flex items-center justify-center
+                      py-2.5 rounded-lg text-sm
+                      focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-yellow-500">
+                Bid Now
+            </a>
+
+            <a href="{{ route('auction.show', $listing->getSlugOrGenerate()) }}"
+               class="inline-flex items-center gap-1 text-[11px] font-semibold
+                      text-slate-400 hover:text-slate-600 transition-colors duration-150">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/>
+                    <line x1="16" y1="17" x2="8" y2="17"/>
+                </svg>
+                Details
+            </a>
+
+        </div>{{-- /right column --}}
+
+    </article>
 
 @empty
-    <div class="py-20 text-center border border-gray-200" style="border-radius:0">
+    <div class="py-20 text-center bg-white rounded-xl border border-gray-100 shadow-sm">
         <span class="material-symbols-outlined text-gray-300 text-[60px] mb-3 block">search_off</span>
         <h3 class="text-xl font-bold text-primary uppercase tracking-tight mb-2">No listings found</h3>
         <p class="text-gray-500 text-sm">Try adjusting your filters to find more results.</p>
