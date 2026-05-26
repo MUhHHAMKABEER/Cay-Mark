@@ -896,18 +896,10 @@ public function invoices()
             'odometer_estimated' => !empty($payload['odometer_estimated']),
         ]);
 
-        if ($request->hasFile('engine_video')) {
-            $video = $request->file('engine_video');
-            $videoName = 'ENGINE_' . microtime(true) . '_' . uniqid() . '.' . $video->getClientOriginalExtension();
-            if ($video->move(public_path('uploads/listings'), $videoName)) {
-                $this->video_path = $videoName;
-                $this->save();
-            }
-        }
-
-        if ($request->hasFile('cover_photo') || $request->hasFile('photos')) {
-            $this->replaceImages($request);
-        }
+        // Media (cover photo, additional photos, engine video) is now handled
+        // by App\Jobs\ProcessListingEditMedia dispatched from ListingController::update().
+        // Do not process uploaded files here — PHP temp files are pre-moved by the
+        // controller before dispatch, so they are no longer available at this point.
     }
 
     /**

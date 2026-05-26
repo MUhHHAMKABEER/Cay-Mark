@@ -71,7 +71,7 @@
                  @click.outside="close()"
                  @keydown.escape.window="close()">
 
-                <form method="GET" :action="auctionUrl" class="relative w-full flex" @submit.prevent="submit()">
+                <form method="GET" action="{{ route('Auction.index') }}" :action="auctionUrl" class="relative w-full flex" @submit.prevent="submit()">
                     <input
                         type="text"
                         name="search"
@@ -436,7 +436,7 @@
              x-data="cmSearch('{{ Route::has('auction.suggest') ? route('auction.suggest') : url('/auction-suggest') }}', '{{ route('Auction.index') }}')"
              @click.outside="close()"
              @keydown.escape.window="close()">
-            <form method="GET" :action="auctionUrl" @submit.prevent="submit()" class="relative flex">
+            <form method="GET" action="{{ route('Auction.index') }}" :action="auctionUrl" @submit.prevent="submit()" class="relative flex">
                 <input type="text" name="search" x-model="query"
                     @focus="open()"
                     @input.debounce.250ms="fetch()"

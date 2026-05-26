@@ -84,8 +84,8 @@
     <div class="flex gap-5 px-4 sm:px-6 lg:px-8 py-5" style="min-height:calc(100vh - 5rem); align-items:flex-start">
 
         {{-- ══ LEFT: Vehicle Finder sidebar ════════════════════════════ --}}
-        <aside class="hidden lg:flex flex-col flex-shrink-0 bg-white border border-outline-variant rounded-xl overflow-hidden shadow-sm sticky top-4"
-               style="width:260px; max-height:calc(100vh - 6rem)">
+        <aside class="hidden lg:flex flex-col flex-shrink-0 bg-white border border-outline-variant rounded-xl overflow-hidden shadow-sm sticky top-[9.5rem]"
+               style="width:260px; max-height:calc(100vh - 10.5rem)">
 
             {{-- Sidebar header --}}
             <div class="bg-primary px-5 py-4 flex items-center justify-between flex-shrink-0">
@@ -379,13 +379,13 @@
     <img id="modalImage" src="" alt="Vehicle photo" class="max-w-full max-h-[90vh] object-contain rounded-xl shadow-2xl"/>
 </div>
 
-<script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 <script>
 function filterData() {
     return {
         isLoading: false,
         viewMode: 'detail',
         activeFilters: false,
+        searchQuery: @json(request('search', '')),
         selectedFilters: { vehicle_type: '{{ request('vehicle_type', '') }}' },
         titleCondition: '{{ request('title_condition') ? (is_array(request('title_condition')) ? request('title_condition')[0] : request('title_condition')) : '' }}',
         condition: '{{ request('condition', '') }}',
@@ -430,6 +430,7 @@ function filterData() {
         },
 
         clearAllFilters() {
+            this.searchQuery = '';
             this.selectedFilters.vehicle_type = '';
             this.titleCondition = '';
             this.condition = '';
@@ -452,6 +453,7 @@ function filterData() {
             this.isLoading = true;
             const params = new URLSearchParams();
             const self = this;
+            if (this.searchQuery && this.searchQuery.trim()) params.append('search', this.searchQuery.trim());
             if (this.titleCondition) params.append('title_condition[]', this.titleCondition);
             if (this.condition) params.append('condition', this.condition);
             if (this.selectedFilters.vehicle_type) params.append('vehicle_type', this.selectedFilters.vehicle_type);

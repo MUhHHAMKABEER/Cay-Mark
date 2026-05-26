@@ -162,10 +162,35 @@
     }
     .lrd-vin-warn .material-icons-round { font-size:16px; }
 
-    /* ── No photos empty ── */
+    /* ── No photos / no video empty ── */
     .lrd-no-photos { text-align:center; padding:2.5rem 1rem; color:#94a3b8; }
     .lrd-no-photos .material-icons-round { font-size:40px; display:block; margin-bottom:8px; opacity:0.35; }
     .lrd-no-photos p { margin:0; font-size:0.875rem; }
+
+    /* ── Video player ── */
+    .lrd-video-wrap {
+        background:#000; border-radius:10px; overflow:hidden;
+        position:relative; aspect-ratio:16/9; max-height:400px;
+    }
+    .lrd-video-wrap video {
+        width:100%; height:100%; object-fit:contain; display:block;
+    }
+    .lrd-video-meta {
+        display:flex; align-items:center; justify-content:space-between;
+        flex-wrap:wrap; gap:0.5rem;
+        margin-top:0.75rem; padding-top:0.75rem;
+        border-top:1px solid #f1f5f9;
+    }
+    .lrd-video-meta span { font-size:0.8125rem; color:#64748b; word-break:break-all; }
+    .lrd-video-dl {
+        display:inline-flex; align-items:center; gap:5px;
+        padding:0.4rem 0.875rem; background:var(--navy); color:#fff;
+        border-radius:8px; font-size:0.8rem; font-weight:600;
+        text-decoration:none; transition:background 0.2s; white-space:nowrap;
+        flex-shrink:0;
+    }
+    .lrd-video-dl:hover { background:var(--navy-mid); color:#fff; }
+    .lrd-video-dl .material-icons-round { font-size:15px; }
 
     /* ── Confirmation modals ── */
     .lrd-modal {
@@ -347,6 +372,48 @@
                     <span class="material-icons-round">image_not_supported</span>
                     <p>No photos uploaded yet</p>
                 </div>
+                @endif
+            </div>
+        </div>
+
+        {{-- Engine / Vehicle Video --}}
+        <div class="lrd-card">
+            <div class="lrd-card-header">
+                <h2>
+                    <span class="material-icons-round">videocam</span>
+                    Engine / Vehicle Video
+                    @if($listing->video_path)
+                    <span class="lrd-pill">1</span>
+                    @endif
+                </h2>
+            </div>
+            <div class="lrd-card-body">
+                @if($listing->video_path)
+                    @php
+                        $videoUrl = asset('uploads/listings/' . $listing->video_path);
+                        $videoExt = strtolower(pathinfo($listing->video_path, PATHINFO_EXTENSION));
+                        $mimeMap = ['mp4' => 'video/mp4', 'mov' => 'video/quicktime', 'avi' => 'video/x-msvideo', 'webm' => 'video/webm', 'mkv' => 'video/x-matroska'];
+                        $mimeType = $mimeMap[$videoExt] ?? 'video/mp4';
+                    @endphp
+                    <div class="lrd-video-wrap">
+                        <video controls preload="metadata" playsinline>
+                            <source src="{{ $videoUrl }}" type="{{ $mimeType }}">
+                            Your browser does not support the video tag.
+                        </video>
+                    </div>
+                    <div class="lrd-video-meta">
+                        <span class="material-icons-round" style="font-size:15px;color:#94a3b8;flex-shrink:0">attach_file</span>
+                        <span style="flex:1">{{ $listing->video_path }}</span>
+                        <a href="{{ $videoUrl }}" download class="lrd-video-dl">
+                            <span class="material-icons-round">download</span>
+                            Download
+                        </a>
+                    </div>
+                @else
+                    <div class="lrd-no-photos">
+                        <span class="material-icons-round">videocam_off</span>
+                        <p>No video uploaded for this listing</p>
+                    </div>
                 @endif
             </div>
         </div>

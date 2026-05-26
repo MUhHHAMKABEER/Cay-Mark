@@ -4,6 +4,45 @@
     const MIN_ADDITIONAL_PHOTOS = 5;
     const MAX_YEAR = {{ $maxYear ?? ((int) date('Y') + 1) }};
 
+    /* ── Per-field validation helpers ──────────────────────────────────── */
+    var CM_FIELD_LABELS = {
+        make:'Make', model:'Model', year:'Year', vehicle_type:'Vehicle Type',
+        island:'Island Location', color:'Exterior Color', interior_color:'Interior Color',
+        title_status:'Title Status', is_salvaged:'Condition',
+        run_and_drive:'Runs & Drives', engine_starts:'Engine Starts',
+        keys_available:'Keys Available', primary_damage:'Primary Damage',
+        secondary_damage:'Secondary Damage', cover_photo:'Cover Photo',
+        photos:'Additional Photos', engine_video:'Engine Video',
+        auction_duration:'Auction Duration', starting_price:'Starting Bid',
+        reserve_price:'Reserve Price', buy_now_price:'Buy Now Price',
+        terms_accepted:'Terms & Conditions', cardholder_name:'Cardholder Name',
+        card_number:'Card Number', card_expiry:'Card Expiry', card_cvc:'Card Security Code',
+    };
+    var CM_SECTION_MAP = {
+        make:1, model:1, year:1, vehicle_type:1, island:1, color:1, interior_color:1, vin:1,
+        title_status:2, is_salvaged:2, run_and_drive:2, engine_starts:2, keys_available:2,
+        primary_damage:2, secondary_damage:2, cover_photo:2, photos:2, engine_video:2, additional_notes:2,
+        auction_duration:3, starting_price:3, reserve_price:3, buy_now_price:3,
+        terms_accepted:3, cardholder_name:3, card_number:3, card_expiry:3, card_cvc:3,
+    };
+
+    function cmFieldToast(label, msg) {
+        if (window.CaymarkUI && typeof CaymarkUI.showError === 'function') {
+            CaymarkUI.showError(label, msg);
+        }
+    }
+    function cmMarkFieldError(name) {
+        var el = document.querySelector('[name="' + name + '"]');
+        if (el) el.classList.add('field-error');
+        return el;
+    }
+    function cmClearFieldErrors(names) {
+        (names || []).forEach(function(n) {
+            var el = document.querySelector('[name="' + n + '"]');
+            if (el) el.classList.remove('field-error');
+        });
+    }
+
     function showSection(sectionNum) {
         ['section1', 'section2', 'section3'].forEach(function(id) {
             var el = document.getElementById(id);
@@ -32,74 +71,155 @@
         }
     }
 
+    // Fallback for non-field errors (network issues etc.)
     function cmError(msg) {
-        if (window.CaymarkUI && typeof CaymarkUI.showError === 'function') {
-            CaymarkUI.showError('Please check your form', msg);
-        } else {
-            alert(msg);
-        }
+        cmFieldToast('Check your form', msg);
     }
 
     function validateStep1() {
-        var required = ['make', 'model', 'year', 'vehicle_type', 'island', 'color', 'interior_color'];
-        for (var i = 0; i < required.length; i++) {
-            var el = document.querySelector('[name="' + required[i] + '"]');
+        var checks = [
+            { name:'make',           msg:'Make is required' },
+            { name:'model',          msg:'Model is required' },
+            { name:'year',           msg:'Year is required' },
+            { name:'vehicle_type',   msg:'Vehicle type is required' },
+            { name:'island',         msg:'Island location is required' },
+            { name:'color',          msg:'Exterior color is required' },
+            { name:'interior_color', msg:'Interior color is required' },
+        ];
+        cmClearFieldErrors(checks.map(function(c){ return c.name; }));
+
+        var errs = [], firstEl = null;
+        checks.forEach(function(c) {
+            var el = document.querySelector('[name="' + c.name + '"]');
             if (!el || !String(el.value || '').trim()) {
-                cmError('Please complete all required fields marked with * in Vehicle Information.');
-                if (el) el.focus();
-                return false;
+                errs.push({ el:el, label:CM_FIELD_LABELS[c.name], msg:c.msg });
+                if (el) el.classList.add('field-error');
+                if (!firstEl && el) firstEl = el;
+            }
+        });
+
+        // Year range check (if value exists but out of bounds)
+        var yearEl = document.querySelector('[name="year"]');
+        if (yearEl && String(yearEl.value || '').trim()) {
+            var y = parseInt(yearEl.value, 10);
+            if (isNaN(y) || y < 1995 || y > MAX_YEAR) {
+                var alreadyAdded = errs.some(function(e){ return e.el === yearEl; });
+                if (!alreadyAdded) {
+                    errs.push({ el:yearEl, label:'Year', msg:'Year must be between 1995 and ' + MAX_YEAR });
+                    yearEl.classList.add('field-error');
+                    if (!firstEl) firstEl = yearEl;
+                }
             }
         }
-        var y = parseInt(document.querySelector('[name="year"]')?.value, 10);
-        if (y < 1995 || y > MAX_YEAR) {
-            cmError('Year must be between 1995 and ' + MAX_YEAR + '.');
+
+        if (errs.length) {
+            errs.forEach(function(err, i) {
+                setTimeout(function(){ cmFieldToast(err.label, err.msg); }, i * 180);
+            });
+            if (firstEl) setTimeout(function(){ firstEl.focus(); }, 60);
             return false;
         }
         return true;
     }
 
     function validateStep2() {
-        var fields = ['title_status', 'is_salvaged', 'run_and_drive', 'engine_starts', 'keys_available', 'primary_damage', 'secondary_damage'];
-        for (var i = 0; i < fields.length; i++) {
-            var el = document.querySelector('[name="' + fields[i] + '"]');
+        var required = [
+            { name:'title_status',      msg:'Title status is required' },
+            { name:'is_salvaged',       msg:'Condition (salvaged/used) is required' },
+            { name:'run_and_drive',     msg:'Runs & Drives answer is required' },
+            { name:'engine_starts',     msg:'Engine Starts answer is required' },
+            { name:'keys_available',    msg:'Keys Available answer is required' },
+            { name:'primary_damage',    msg:'Primary damage type is required' },
+            { name:'secondary_damage',  msg:'Secondary damage type is required' },
+        ];
+        cmClearFieldErrors(required.map(function(c){ return c.name; }));
+
+        var errs = [], firstEl = null;
+        required.forEach(function(c) {
+            var el = document.querySelector('[name="' + c.name + '"]');
             if (!el || !String(el.value || '').trim()) {
-                cmError('Please complete all condition fields.');
-                return false;
+                errs.push({ el:el, label:CM_FIELD_LABELS[c.name], msg:c.msg });
+                if (el) el.classList.add('field-error');
+                if (!firstEl && el) firstEl = el;
             }
-        }
-        var cover = document.getElementById('cover_photo_input');
-        var photos = document.getElementById('photos_input');
+        });
+
         @if(!$isEdit)
-        if (!cover?.files?.length) { cmError('Cover photo is required.'); return false; }
-        var addCount = typeof additionalPhotosFiles !== 'undefined' ? additionalPhotosFiles.length : (photos?.files?.length || 0);
-        if (addCount < MIN_ADDITIONAL_PHOTOS) {
-            cmError('Upload at least ' + (MIN_ADDITIONAL_PHOTOS + 1) + ' photos total (1 cover + ' + MIN_ADDITIONAL_PHOTOS + ' additional).');
-            return false;
+        var cover = document.getElementById('cover_photo_input');
+        if (!cover || !cover.files || !cover.files.length) {
+            errs.push({ el:null, label:'Cover Photo', msg:'A cover photo is required' });
         }
-        if (addCount > MAX_ADDITIONAL_PHOTOS) {
-            cmError('Maximum ' + (MAX_ADDITIONAL_PHOTOS + 1) + ' photos allowed.');
-            return false;
+        var addCount = typeof additionalPhotosFiles !== 'undefined' ? additionalPhotosFiles.length : 0;
+        if (addCount < MIN_ADDITIONAL_PHOTOS) {
+            errs.push({ el:null, label:'Additional Photos',
+                msg:'At least ' + MIN_ADDITIONAL_PHOTOS + ' additional photos required (you have ' + addCount + ')' });
+        } else if (addCount > MAX_ADDITIONAL_PHOTOS) {
+            errs.push({ el:null, label:'Additional Photos',
+                msg:'Maximum ' + MAX_ADDITIONAL_PHOTOS + ' additional photos allowed' });
         }
         @endif
-        if (document.getElementById('engine_starts_select')?.value === 'yes') {
+
+        var startsEl = document.getElementById('engine_starts_select');
+        if (startsEl && startsEl.value === 'yes') {
             var vid = document.getElementById('engine_video_input');
-            if (!vid?.files?.length) {
-                cmError('Engine video is required when engine starts is Yes.');
-                return false;
-            }
-            // Best-effort duration check (30s–60s). If browser cannot determine
-            // the duration we proceed; server should also validate.
-            if (typeof vid._duration === 'number' && isFinite(vid._duration)) {
+            if (!vid || !vid.files || !vid.files.length) {
+                errs.push({ el:null, label:'Engine Video', msg:'Engine video is required when engine starts is Yes' });
+            } else if (typeof vid._duration === 'number' && isFinite(vid._duration)) {
                 if (vid._duration < 30 || vid._duration > 60) {
-                    cmError('Engine video must be between 30 seconds and under 1 minute.');
-                    return false;
+                    errs.push({ el:vid, label:'Engine Video', msg:'Video must be between 30 and 60 seconds' });
+                    vid.classList.add('field-error');
                 }
             }
+        }
+
+        if (errs.length) {
+            errs.forEach(function(err, i) {
+                setTimeout(function(){ cmFieldToast(err.label, err.msg); }, i * 180);
+            });
+            if (firstEl) setTimeout(function(){ firstEl.focus(); }, 60);
+            return false;
         }
         return true;
     }
 
     document.addEventListener('DOMContentLoaded', function() {
+
+        /* ── Server-side validation errors → per-field toasts ──────────── */
+        if (window.__cmValidationErrors || window.__cmSessionError) {
+            var seen = {}, toFire = [], targetSection = 4;
+
+            if (window.__cmSessionError) {
+                toFire.push({ base:null, label:'Error', msg:window.__cmSessionError, sect:null });
+            }
+            if (window.__cmValidationErrors) {
+                Object.keys(window.__cmValidationErrors).forEach(function(key) {
+                    var base = key.split('.')[0];
+                    if (seen[base]) return;
+                    seen[base] = true;
+                    var msgs  = window.__cmValidationErrors[key];
+                    var msg   = Array.isArray(msgs) ? msgs[0] : String(msgs);
+                    var label = CM_FIELD_LABELS[base] || base;
+                    var sect  = CM_SECTION_MAP[base] || 1;
+                    if (sect < targetSection) targetSection = sect;
+                    toFire.push({ base:base, label:label, msg:msg, sect:sect });
+                });
+            }
+
+            if (toFire.length) {
+                // Navigate to the section that contains the first error
+                var goTo = (window.__cmErrorSection > 0)
+                    ? window.__cmErrorSection
+                    : (targetSection < 4 ? targetSection : 1);
+                showSection(goTo);
+
+                toFire.forEach(function(item, i) {
+                    if (item.base) cmMarkFieldError(item.base);
+                    setTimeout(function(){ cmFieldToast(item.label, item.msg); }, i * 200);
+                });
+            }
+        }
+        /* ─────────────────────────────────────────────────────────────── */
+
         // Re-apply lock on page load if VIN was already decoded (edit mode / validation re-render)
         var vinFlag = document.getElementById('vin_decode_success');
         if (vinFlag && vinFlag.value === '1') {
@@ -484,12 +604,7 @@
         this.submit();
     });
 
-    @if(session('error_section'))
-    document.addEventListener('DOMContentLoaded', function() {
-        var n = parseInt('{{ str_replace("section", "", session("error_section")) }}', 10);
-        if (n) showSection(n);
-    });
-    @endif
+    {{-- error_section navigation is now handled by the per-field toast handler above --}}
 
     function deleteListingPhoto(imageId, listingId) {
         if (!confirm('Remove this photo from the listing?')) return;

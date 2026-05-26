@@ -788,30 +788,17 @@
             </div>
         @endif
 
-        <!-- Error Messages Display -->
+        {{-- Validation errors → individual per-field toasts via JS (see scripts.blade.php cmShowValidationToasts) --}}
         @if($errors->any() || session('error'))
-            <div class="mb-4 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg animate-fade-in">
-                <div class="flex items-start">
-                    <span class="material-icons-round text-red-500 mr-3 mt-0.5">error</span>
-                    <div class="flex-1">
-                        <h3 class="text-red-800 font-semibold mb-2">Please fix the following errors:</h3>
-                        <ul class="list-disc list-inside text-red-700 space-y-1">
-                            @if(session('error'))
-                                <li>{{ session('error') }}</li>
-                            @endif
-                            @foreach($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                        @if(session('error_section'))
-                            <p class="text-sm text-red-600 mt-3 font-medium">
-                                <span class="material-icons-round text-sm align-middle">arrow_downward</span>
-                                Please scroll to <strong>Section {{ str_replace('section', '', session('error_section')) }}</strong> to fix the errors.
-                            </p>
-                        @endif
-                    </div>
-                </div>
-            </div>
+        <script>
+        window.__cmValidationErrors = @json($errors->messages());
+        @if(session('error'))
+        window.__cmSessionError = @json(session('error'));
+        @endif
+        @if(session('error_section'))
+        window.__cmErrorSection = {{ (int) filter_var(session('error_section'), FILTER_SANITIZE_NUMBER_INT) ?: 1 }};
+        @endif
+        </script>
         @endif
 
         <form id="listingForm" data-cm-validate="off" action="{{ $isEdit ? route('seller.listings.update', $listing) : route('seller.listings.store') }}" method="POST" enctype="multipart/form-data">

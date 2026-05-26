@@ -274,7 +274,8 @@ Route::post('/upgrade-membership', [RegisteredUserController::class, 'processUpg
 Route::get('/finish-registration', [RegisteredUserController::class, 'finishRegistration'])->middleware('auth')->name('finish.registration');
 Route::post('/finish-registration/membership', [RegisteredUserController::class, 'storeMembership'])->middleware('auth')->name('finish.registration.membership');
 Route::get('/finish-registration/complete', [RegisteredUserController::class, 'showCompleteRegistration'])->middleware('auth')->name('finish.registration.complete.show');
-Route::post('/finish-registration/complete', [RegisteredUserController::class, 'completeRegistration'])->middleware('auth')->name('finish.registration.complete');
+// POST uses a distinct path so nginx/LiteSpeed never confuses it with the cached GET at /finish-registration/complete
+Route::post('/finish-registration/submit', [RegisteredUserController::class, 'completeRegistration'])->middleware('auth')->name('finish.registration.complete');
 
 Route::post('/registration/phone/send-code', [RegisteredUserController::class, 'sendPhoneVerificationCode'])->middleware('auth')->name('registration.phone.send-code');
 Route::post('/registration/phone/verify', [RegisteredUserController::class, 'verifyPhoneCode'])->middleware('auth')->name('registration.phone.verify');

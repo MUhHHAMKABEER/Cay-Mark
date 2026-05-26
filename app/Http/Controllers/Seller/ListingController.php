@@ -373,7 +373,7 @@ class ListingController extends Controller
     public function update(SellerListingUpdateRequest $request, $id)
     {
         $user = Auth::user();
-        $listing = Listing::where('seller_id', $user->id)->findOrFail($id);
+        $listing = Listing::where('seller_id', $user->id)->with('images')->findOrFail($id);
 
         if (! $this->sellerCanEditListing($listing)) {
             return redirect()
@@ -391,8 +391,63 @@ class ListingController extends Controller
         if (!$request->boolean('vin_decode_success')) {
             $validated['vin'] = null;
         }
+
+        // ── Step 1: Save all scalar fields immediately ─────────────────────
         $listing->updateFromSellerInput($request, $validated);
-        return redirect()->route('seller.listings.show', $listing->id)->with('success', 'Listing updated successfully.');
+
+        // ── Step 2: If media files were uploaded, stage + dispatch job ──────
+        $hasNewImages = $request->hasFile('cover_photo') || $request->hasFile('photos');
+        $hasNewVideo  = $request->hasFile('engine_video');
+
+        if ($hasNewImages || $hasNewVideo) {
+            $queueKey = (string) \Illuminate\Support\Str::uuid();
+            $tempDir  = storage_path("app/listing-queue/{$queueKey}");
+            mkdir($tempDir, 0755, true);
+
+            $staged       = ['cover' => null, 'photos' => [], 'video' => null];
+            $oldImageIds  = [];
+            $oldVideoPath = null;
+
+            if ($hasNewImages) {
+                // Capture current image IDs before writing new ones so the job can
+                // delete them after the new files are safely on disk.
+                $oldImageIds = $listing->images->pluck('id')->toArray();
+
+                if ($request->hasFile('cover_photo')) {
+                    $f    = $request->file('cover_photo');
+                    $name = 'cover.' . $f->getClientOriginalExtension();
+                    $f->move($tempDir, $name);
+                    $staged['cover'] = $name;
+                }
+
+                if ($request->hasFile('photos')) {
+                    foreach ($request->file('photos') as $i => $photo) {
+                        $name = "photo_{$i}." . $photo->getClientOriginalExtension();
+                        $photo->move($tempDir, $name);
+                        $staged['photos'][] = $name;
+                    }
+                }
+            }
+
+            if ($hasNewVideo) {
+                $oldVideoPath = $listing->video_path; // existing filename, may be null
+                $v    = $request->file('engine_video');
+                $name = 'video.' . $v->getClientOriginalExtension();
+                $v->move($tempDir, $name);
+                $staged['video'] = $name;
+            }
+
+            \App\Jobs\ProcessListingEditMedia::dispatch(
+                $listing->id,
+                $tempDir,
+                $staged,
+                $oldImageIds,
+                $oldVideoPath
+            );
+        }
+
+        return redirect()->route('seller.listings.show', $listing->id)
+            ->with('success', 'Listing updated successfully.');
     }
 
     /**
