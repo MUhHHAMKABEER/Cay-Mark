@@ -1101,7 +1101,7 @@
                 </div>
 
                 {{-- Stats --}}
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
                     <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 flex items-center gap-4">
                         <div class="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
                             <span class="material-icons-round text-blue-600 text-2xl">bolt</span>
@@ -1109,6 +1109,15 @@
                         <div>
                             <p class="text-3xl font-bold text-gray-900">{{ $auctionSummary['current_count'] }}</p>
                             <p class="text-sm text-gray-500 mt-0.5">Live Auctions</p>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-2xl border border-amber-100 shadow-sm p-5 flex items-center gap-4 cursor-pointer hover:border-amber-300 transition-colors" onclick="showAuctionSection('pending')">
+                        <div class="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center flex-shrink-0">
+                            <span class="material-icons-round text-amber-500 text-2xl">hourglass_top</span>
+                        </div>
+                        <div>
+                            <p class="text-3xl font-bold text-amber-600">{{ $pendingListingsCount }}</p>
+                            <p class="text-sm text-gray-500 mt-0.5">Pending Approval</p>
                         </div>
                     </div>
                     <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 flex items-center gap-4">
@@ -1135,11 +1144,19 @@
                 <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
                     {{-- Card header: tabs + view toggle --}}
                     <div class="px-5 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center gap-3">
-                        <nav class="flex gap-2 bg-gray-100 p-1 rounded-xl border border-gray-200 flex-1">
+                        <nav class="flex gap-2 bg-gray-100 p-1 rounded-xl border border-gray-200 flex-1 flex-wrap">
                             <button type="button" onclick="showAuctionSection('current')" id="auction-current"
                                     class="auction-tab-button flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg shadow-sm transition-all duration-200">
                                 <span class="material-icons-round text-sm mr-1 align-middle">bolt</span>
                                 Current
+                            </button>
+                            <button type="button" onclick="showAuctionSection('pending')" id="auction-pending"
+                                    class="auction-tab-button flex-1 px-4 py-2.5 text-sm font-semibold text-gray-600 hover:text-gray-900 rounded-lg transition-all duration-200 relative">
+                                <span class="material-icons-round text-sm mr-1 align-middle">hourglass_top</span>
+                                Pending
+                                @if($pendingListingsCount > 0)
+                                    <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-amber-500 text-white text-[10px] font-bold ml-1">{{ $pendingListingsCount }}</span>
+                                @endif
                             </button>
                             <button type="button" onclick="showAuctionSection('past')" id="auction-past"
                                     class="auction-tab-button flex-1 px-4 py-2.5 text-sm font-semibold text-gray-600 hover:text-gray-900 rounded-lg transition-all duration-200">
@@ -1230,6 +1247,116 @@
                         </div>
                     @endif
                 </div>
+
+                <!-- PENDING LISTINGS — Awaiting admin approval -->
+                <div id="auction-section-pending" class="auction-section hidden">
+                    @if(($pendingListings ?? collect())->count() > 0)
+                        <div class="mb-4 flex items-center gap-3 px-1">
+                            <span class="material-icons-round text-amber-500" style="font-size:18px">info</span>
+                            <p class="text-sm text-amber-700 font-medium">
+                                These listings are currently under review by our team. You will be notified once a decision is made.
+                            </p>
+                        </div>
+                        <div class="seller-auction-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            @foreach($pendingListings as $listing)
+                                @php
+                                    $imgPnd   = $listing->images->first();
+                                    $imgUrlPnd = $imgPnd
+                                        ? (str_contains($imgPnd->image_path ?? '', '/')
+                                            ? asset($imgPnd->image_path)
+                                            : asset('uploads/listings/' . $imgPnd->image_path))
+                                        : null;
+                                    $submittedAt = $listing->created_at;
+                                @endphp
+                                <div class="s-card flex flex-col bg-white rounded-2xl border border-amber-200 shadow-sm overflow-hidden hover:shadow-md transition-all">
+                                    <div class="s-card-img relative h-48 bg-amber-50/30 overflow-hidden flex-shrink-0">
+                                        @if($imgUrlPnd)
+                                            <img src="{{ $imgUrlPnd }}"
+                                                 alt="{{ $listing->year }} {{ $listing->make }} {{ $listing->model }}"
+                                                 class="w-full h-full object-cover">
+                                        @else
+                                            <div class="w-full h-full flex items-center justify-center text-amber-200">
+                                                <span class="material-icons-round text-5xl">directions_car</span>
+                                            </div>
+                                        @endif
+                                        {{-- Pending badge --}}
+                                        <div class="absolute top-3 left-3 inline-flex items-center gap-1.5 bg-amber-500 text-white text-[11px] font-bold px-2 py-1 rounded-lg">
+                                            <span class="material-icons-round" style="font-size:12px">hourglass_top</span>
+                                            Pending Review
+                                        </div>
+                                        {{-- Submitted date --}}
+                                        <div class="absolute bottom-3 left-3 inline-flex items-center gap-1.5 bg-black/60 backdrop-blur-sm text-white text-[11px] font-bold px-2 py-1 rounded-lg">
+                                            <span class="material-icons-round" style="font-size:12px">event</span>
+                                            Submitted {{ $submittedAt->format('M d, Y') }}
+                                        </div>
+                                    </div>
+                                    <div class="p-4 flex flex-col flex-1">
+                                        <h3 class="font-bold text-gray-900 text-sm leading-tight mb-0.5">
+                                            {{ $listing->year }} {{ $listing->make }} {{ $listing->model }}
+                                        </h3>
+                                        <p class="text-xs text-gray-400 font-mono mb-3">
+                                            {{ $listing->item_number ?? 'CM' . str_pad($listing->id, 6, '0', STR_PAD_LEFT) }}
+                                        </p>
+
+                                        {{-- Status message --}}
+                                        <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-3 flex items-start gap-2">
+                                            <span class="material-icons-round text-amber-500 flex-shrink-0" style="font-size:16px">schedule</span>
+                                            <div>
+                                                <p class="text-xs font-semibold text-amber-800">Under Admin Review</p>
+                                                <p class="text-xs text-amber-700 mt-0.5">Our team is reviewing your submission. This usually takes 1–2 business days.</p>
+                                            </div>
+                                        </div>
+
+                                        {{-- Spec snippets --}}
+                                        <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-gray-500 mb-4">
+                                            @if($listing->starting_price)
+                                                <span class="flex items-center gap-1">
+                                                    <span class="material-icons-round" style="font-size:12px">price_check</span>
+                                                    Start: ${{ number_format($listing->starting_price, 0) }}
+                                                </span>
+                                            @endif
+                                            @if($listing->auction_duration)
+                                                <span class="flex items-center gap-1">
+                                                    <span class="material-icons-round" style="font-size:12px">timer</span>
+                                                    {{ $listing->auction_duration }}d auction
+                                                </span>
+                                            @endif
+                                            @if($listing->odometer)
+                                                <span class="flex items-center gap-1">
+                                                    <span class="material-icons-round" style="font-size:12px">speed</span>
+                                                    {{ number_format($listing->odometer) }} mi
+                                                </span>
+                                            @endif
+                                            @if($listing->condition)
+                                                <span class="flex items-center gap-1">
+                                                    <span class="material-icons-round" style="font-size:12px">star_outline</span>
+                                                    {{ ucfirst($listing->condition) }}
+                                                </span>
+                                            @endif
+                                        </div>
+
+                                        <a href="{{ route('seller.listings.show', $listing->id) }}"
+                                           class="mt-auto inline-flex items-center justify-center gap-1.5 w-full px-3 py-2 rounded-xl border border-gray-200 bg-white hover:border-amber-300 hover:text-amber-700 text-gray-700 text-xs font-semibold transition">
+                                            <span class="material-icons-round" style="font-size:14px">visibility</span>
+                                            View Submission
+                                        </a>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="rounded-xl border border-dashed border-amber-200 bg-amber-50/30 py-14 text-center">
+                            <span class="material-icons-round text-amber-300 text-5xl block mb-3">hourglass_empty</span>
+                            <p class="text-gray-700 text-base font-semibold">No pending listings</p>
+                            <p class="text-gray-400 text-sm mt-1.5 max-w-sm mx-auto">Listings you submit for admin review will appear here until they are approved or rejected.</p>
+                            <a href="{{ route('seller.listings.create') }}"
+                               class="inline-flex items-center gap-2 mt-5 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition shadow-lg shadow-blue-600/25">
+                                <span class="material-icons-round text-lg">add</span> Create a Listing
+                            </a>
+                        </div>
+                    @endif
+                </div>
+                {{-- end auction-section-pending --}}
 
                 <!-- COMPLETED / PAST AUCTIONS — Sold + Ended Not Sold -->
                 <div id="auction-section-past" class="auction-section hidden">
@@ -2212,7 +2339,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (tab === 'auctions') {
         const params = new URLSearchParams(window.location.search);
         const sec = params.get('section');
-        if (sec && ['current', 'past', 'rejected', 'won'].indexOf(sec) !== -1) {
+        if (sec && ['current', 'pending', 'past', 'rejected', 'won'].indexOf(sec) !== -1) {
             showAuctionSection(sec);
         }
     }

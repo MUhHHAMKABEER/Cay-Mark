@@ -28,7 +28,7 @@
     :root { --mfd-navy:#063466; --mfd-navy-lt:#e8eef6; --mfd-navy-mid:#0d4d8c; }
 
     /* ── Shell ─────────────────────────────────────────────────── */
-    .mfd-shell { padding:1.5rem; max-width:1240px; margin:0 auto; }
+    .mfd-shell { padding:1.5rem; width:100%; box-sizing:border-box; }
 
     /* ── Back link ─────────────────────────────────────────────── */
     .mfd-back {

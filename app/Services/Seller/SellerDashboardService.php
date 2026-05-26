@@ -300,6 +300,18 @@ class SellerDashboardService
     }
 
     /**
+     * Get listings awaiting admin approval.
+     */
+    public function getPendingListings(User $user): Collection
+    {
+        return $user->listings()
+            ->where('status', 'pending')
+            ->with(['images', 'bids'])
+            ->latest('created_at')
+            ->get();
+    }
+
+    /**
      * Count listings awaiting admin approval.
      */
     public function getPendingListingsCount(User $user): int
@@ -489,6 +501,7 @@ class SellerDashboardService
             'messagingThreads' => $this->getMessagingThreads($user),
             'payoutMethod' => $this->getPayoutMethod($user),
             'documents' => $this->getDocuments($user),
+            'pendingListings'  => $this->getPendingListings($user),
             'pendingPayouts' => $this->getPendingPayouts($user),
             'completedPayouts' => $this->getCompletedPayouts($user),
             'revenueChartData' => $this->getRevenueChartData($user),
