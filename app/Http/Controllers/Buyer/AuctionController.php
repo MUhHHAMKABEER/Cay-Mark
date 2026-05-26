@@ -268,6 +268,51 @@ class AuctionController extends Controller
 
 
 
+public function suggest(Request $request)
+{
+    $q = trim($request->input('q', ''));
+
+    $base = Listing::where('listing_method', 'auction')
+        ->visibleAuctions()
+        ->where('listing_state', 'active');
+    if (Schema::hasColumn('listings', 'status')) {
+        $base->where('status', 'approved');
+    }
+
+    $suggested = [];
+    if ($q !== '') {
+        $rows = (clone $base)
+            ->selectRaw('make, model, COUNT(*) as cnt')
+            ->where(function ($qu) use ($q) {
+                $qu->where('make', 'like', '%'.$q.'%')
+                   ->orWhere('model', 'like', '%'.$q.'%')
+                   ->orWhereRaw("CONCAT(COALESCE(make,''), ' ', COALESCE(model,'')) LIKE ?", ['%'.$q.'%']);
+            })
+            ->groupBy('make', 'model')
+            ->orderByDesc('cnt')
+            ->limit(6)
+            ->get();
+
+        foreach ($rows as $r) {
+            $label = trim(($r->make ?? '').' '.($r->model ?? ''));
+            if ($label) {
+                $suggested[] = ['label' => $label, 'make' => $r->make, 'model' => $r->model];
+            }
+        }
+    }
+
+    $popular = (clone $base)
+        ->selectRaw('make, COUNT(*) as cnt')
+        ->groupBy('make')
+        ->orderByDesc('cnt')
+        ->limit(10)
+        ->pluck('make')
+        ->filter()
+        ->values();
+
+    return response()->json(compact('suggested', 'popular'));
+}
+
 public function show(Listing $listing)
 {
     // Check if listing is an auction

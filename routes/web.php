@@ -238,6 +238,7 @@ Route::get('/buyer/dashboard', [ListingController::class, 'showBuyerDashboard'])
 Route::get('/subscription/simulate', [SubscriptionController::class, 'simulate'])->name('subscription.simulate');
 
     Route::get('/AuctionPage',[AuctionController::class, 'index'])->name("Auction.index");
+    Route::get('/auction-suggest', [AuctionController::class, 'suggest'])->name('auction.suggest');
 
 Route::middleware(['auth'])->group(function () {
     Route::post('/listing/{listing}/watchlist', [WatchlistController::class, 'toggle'])->name('listing.watchlist');

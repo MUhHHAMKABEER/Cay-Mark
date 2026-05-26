@@ -490,4 +490,37 @@
         if (n) showSection(n);
     });
     @endif
+
+    function deleteListingPhoto(imageId, listingId) {
+        if (!confirm('Remove this photo from the listing?')) return;
+        fetch('/seller/listings/' + listingId + '/images/' + imageId, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}',
+                'Accept': 'application/json',
+            }
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.success) {
+                var el = document.getElementById('existing-photo-' + imageId);
+                if (el) {
+                    el.style.transition = 'opacity 0.2s';
+                    el.style.opacity = '0';
+                    setTimeout(function() {
+                        el.remove();
+                        var countEl = document.getElementById('existingPhotoCount');
+                        if (countEl) {
+                            var grid = document.getElementById('existingPhotosGrid');
+                            var remaining = grid ? grid.querySelectorAll('[id^="existing-photo-"]').length : 0;
+                            countEl.textContent = remaining + ' saved';
+                        }
+                    }, 220);
+                }
+            } else {
+                alert(data.error || 'Could not delete photo. Please try again.');
+            }
+        })
+        .catch(function() { alert('Network error. Please try again.'); });
+    }
 </script>

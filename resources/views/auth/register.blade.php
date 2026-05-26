@@ -1,622 +1,397 @@
 @extends('layouts.welcome')
+@section('title', 'Create Account — CayMark Island Exchange')
 @section('content')
 
-<div class="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 py-12 px-4 relative">
-    <!-- Professional Background Pattern -->
-    <div class="absolute inset-0 opacity-5">
-        <div class="absolute inset-0" style="background-image: radial-gradient(circle at 2px 2px, #063466 1px, transparent 0); background-size: 40px 40px;"></div>
-    </div>
+<div class="flex items-stretch" id="reg-layout" style="min-height:calc(100vh - 160px)">
 
-    <div class="container mx-auto max-w-6xl relative z-10">
-        <!-- Professional Header Section -->
-        <div class="text-center mb-12 animate-fade-in">
-            <div class="inline-block mb-6">
-                <div class="bg-white rounded-2xl px-10 py-6 shadow-xl border border-gray-100">
-                    <div class="flex items-center justify-center mb-4">
-                        <div class="w-16 h-16 bg-gradient-to-br from-[#063466] to-[#1e3a8a] rounded-xl flex items-center justify-center shadow-lg transform rotate-3 hover:rotate-0 transition-transform duration-300">
-                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                            </svg>
-                        </div>
-                    </div>
-                    <h1 class="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#063466] via-[#1e3a8a] to-[#2563eb] mb-3">
-                        Create Your Account
-                    </h1>
-                    <p class="text-gray-600 text-lg font-medium">Join CayMark - The Bahamas' Premier Digital Trading Platform</p>
-                    <p class="text-gray-500 text-sm mt-2">Step 1 of 3: Create your account. In Step 2 you will choose your role: <strong>Buyer</strong> or <strong>Seller</strong>, then your membership package.</p>
-                </div>
-            </div>
-        </div>
+    {{-- ══ Form panel ══════════════════════════════════════════════════ --}}
+    <div class="flex-1 bg-white overflow-y-auto">
+        <div class="w-full max-w-2xl mx-auto px-6 sm:px-10 py-8">
 
-        <!-- Main Registration Card -->
-        <div class="bg-white rounded-3xl shadow-2xl border border-gray-200 overflow-hidden animate-slide-up">
-            <!-- Professional Top Bar -->
-            <div class="bg-gradient-to-r from-[#063466] to-[#1e3a8a] px-8 py-4">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
-                        <span class="text-white font-semibold text-sm">Secure Registration</span>
-                    </div>
-                    <div class="text-white/80 text-xs font-medium">
-                        Step 1 of 3
-                    </div>
-                </div>
-            </div>
-
-            <div class="p-8 md:p-12">
-                <!-- Flash Messages -->
-                <div class="mb-8" role="status" aria-live="polite">
-                    @if (session('error'))
-                        <div class="rounded-xl bg-red-50 border-l-4 border-red-500 p-6 mb-4 shadow-sm animate-fade-in">
-                            <div class="flex items-start">
-                                <div class="flex-shrink-0">
-                                    <svg class="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                </div>
-                                <div class="ml-4">
-                                    <h3 class="text-sm font-semibold text-red-800">{{ session('error') }}</h3>
-                                </div>
-                            </div>
-                        </div>
-                    @endif
-
-                    @if (session('success'))
-                        <div class="rounded-xl bg-green-50 border-l-4 border-green-500 p-6 mb-4 shadow-sm animate-fade-in">
-                            <div class="flex items-start">
-                                <div class="flex-shrink-0">
-                                    <svg class="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </div>
-                                <div class="ml-4">
-                                    <h3 class="text-sm font-semibold text-green-800">{{ session('success') }}</h3>
-                                </div>
-                            </div>
-                        </div>
-                    @endif
-
-                    @if ($errors->any())
-                        <div class="rounded-xl bg-yellow-50 border-l-4 border-yellow-400 p-6 mb-4 shadow-sm animate-fade-in">
-                            <div class="flex items-start">
-                                <div class="flex-shrink-0">
-                                    <svg class="h-6 w-6 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                                    </svg>
-                                </div>
-                                <div class="ml-4">
-                                    <h3 class="text-sm font-semibold text-yellow-800 mb-2">Please fix the following errors:</h3>
-                                    <ul class="text-sm text-yellow-700 space-y-1">
-                                        @foreach ($errors->all() as $err)
-                                            <li class="flex items-center">
-                                                <span class="w-1.5 h-1.5 bg-yellow-500 rounded-full mr-2"></span>
-                                                {{ $err }}
-                                            </li>
-                                        @endforeach
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    @endif
-                </div>
-
-                <!-- Form Section -->
-                <form method="POST" action="{{ route('register.step1') }}" id="step1-form" novalidate class="space-y-6">
-                    @csrf
-                    
-                    <!-- Name Fields -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="group">
-                            <label for="first_name" class="block text-sm font-bold text-gray-700 mb-2 group-focus-within:text-[#063466] transition-colors">
-                                First Name <span class="text-red-500">*</span>
-                            </label>
-                            <div class="relative">
-                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                    <svg class="h-5 w-5 text-gray-400 group-focus-within:text-[#063466] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                    </svg>
-                                </div>
-                                <input type="text" id="first_name" name="first_name" required value="{{ old('first_name', request()->query('first_name', '')) }}"
-                                    class="w-full pl-12 pr-4 py-4 rounded-xl border-2 border-gray-200 focus:border-[#063466] focus:ring-4 focus:ring-[#063466]/10 transition-all duration-300 text-gray-900 placeholder-gray-400 font-medium"
-                                    placeholder="Enter your first name">
-                                @error('first_name')
-                                    <p class="text-sm text-red-600 mt-2 flex items-center">
-                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                        </svg>
-                                        {{ $message }}
-                                    </p>
-                                @enderror
-                            </div>
-                        </div>
-
-                        <div class="group">
-                            <label for="last_name" class="block text-sm font-bold text-gray-700 mb-2 group-focus-within:text-[#063466] transition-colors">
-                                Last Name <span class="text-red-500">*</span>
-                            </label>
-                            <div class="relative">
-                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                    <svg class="h-5 w-5 text-gray-400 group-focus-within:text-[#063466] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                    </svg>
-                                </div>
-                                <input type="text" id="last_name" name="last_name" required value="{{ old('last_name', request()->query('last_name', '')) }}"
-                                    class="w-full pl-12 pr-4 py-4 rounded-xl border-2 border-gray-200 focus:border-[#063466] focus:ring-4 focus:ring-[#063466]/10 transition-all duration-300 text-gray-900 placeholder-gray-400 font-medium"
-                                    placeholder="Enter your last name">
-                                @error('last_name')
-                                    <p class="text-sm text-red-600 mt-2 flex items-center">
-                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                        </svg>
-                                        {{ $message }}
-                                    </p>
-                                @enderror
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Email Field (Full Width) -->
-                    <div class="group">
-                        <label for="email" class="block text-sm font-bold text-gray-700 mb-2 group-focus-within:text-[#063466] transition-colors">
-                            Email Address <span class="text-red-500">*</span>
-                        </label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                <svg class="h-5 w-5 text-gray-400 group-focus-within:text-[#063466] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                </svg>
-                            </div>
-                            <input type="email" id="email" name="email" required value="{{ old('email', request()->query('email', '')) }}"
-                                class="w-full pl-12 pr-4 py-4 rounded-xl border-2 border-gray-200 focus:border-[#063466] focus:ring-4 focus:ring-[#063466]/10 transition-all duration-300 text-gray-900 placeholder-gray-400 font-medium"
-                                placeholder="your.email@example.com">
-                            @error('email')
-                                <p class="text-sm text-red-600 mt-2 flex items-center">
-                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                    </svg>
-                                    {{ $message }}
-                                </p>
-                            @enderror
-                        </div>
-                    </div>
-
+            {{-- Step indicator --}}
+            <div class="mb-8">
+                <div class="flex items-center gap-0 max-w-lg">
                     @php
-                        $registrationDialRows = config('phone_country_codes', []);
-                        $regPhoneVerified = session('registration_phone_verified') && session('registration_verified_phone');
-                        $regVerifiedDigits = (string) session('registration_verified_phone', '');
-                        $regDisplayCountry = '1242';
-                        $regDisplayNational = '';
-                        if ($regPhoneVerified && $regVerifiedDigits !== '') {
-                            $sortedDial = collect($registrationDialRows)->sortByDesc(function ($r) {
-                                return strlen((string) ($r['code'] ?? ''));
-                            });
-                            foreach ($sortedDial as $row) {
-                                $c = (string) ($row['code'] ?? '');
-                                if ($c !== '' && str_starts_with($regVerifiedDigits, $c)) {
-                                    $regDisplayCountry = $c;
-                                    $regDisplayNational = substr($regVerifiedDigits, strlen($c)) ?: '';
-                                    break;
-                                }
-                            }
-                            if ($regDisplayNational === '' && $regVerifiedDigits !== '') {
-                                $regDisplayNational = $regVerifiedDigits;
+                    $steps1 = [
+                        ['n'=>'1','label'=>'Account','done'=>false,'active'=>true],
+                        ['n'=>'2','label'=>'Role & Plan','done'=>false,'active'=>false],
+                        ['n'=>'3','label'=>'Verify & Complete','done'=>false,'active'=>false],
+                    ];
+                    @endphp
+                    @foreach($steps1 as $i => $st)
+                    <div class="flex items-center {{ $i < count($steps1)-1 ? 'flex-1' : '' }}">
+                        <div class="flex items-center gap-2 flex-shrink-0">
+                            <div class="w-8 h-8 flex items-center justify-center text-xs font-bold
+                                        {{ $st['done'] ? 'bg-secondary-fixed-dim text-primary' : ($st['active'] ? 'bg-primary text-white' : 'bg-gray-200 text-gray-400') }}"
+                                 style="border-radius:0">
+                                @if($st['done'])
+                                    <span class="material-symbols-outlined text-[14px]">check</span>
+                                @else
+                                    {{ $st['n'] }}
+                                @endif
+                            </div>
+                            <span class="text-xs font-bold uppercase tracking-widest hidden sm:block
+                                         {{ $st['active'] ? 'text-primary' : ($st['done'] ? 'text-secondary-fixed-dim' : 'text-gray-400') }}">
+                                {{ $st['label'] }}
+                            </span>
+                        </div>
+                        @if($i < count($steps1)-1)
+                            <div class="flex-1 h-px mx-3 {{ $st['done'] ? 'bg-secondary-fixed-dim' : 'bg-gray-200' }}"></div>
+                        @endif
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+
+            {{-- Heading --}}
+            <div class="mb-8">
+                <h1 class="font-headline-lg text-headline-lg text-primary mb-2">CREATE ACCOUNT</h1>
+                <p class="text-on-surface-variant font-body-md text-body-md">In Step 2 you'll choose your role: <span class="font-bold">Buyer</span> or <span class="font-bold">Seller</span>.</p>
+            </div>
+
+            {{-- Alerts --}}
+            @if (session('error') || session('success') || $errors->any())
+            <div class="space-y-2 mb-6">
+                @if (session('error'))
+                    <div class="flex items-start gap-3 p-4 rounded-lg bg-error-container text-on-surface text-body-sm">
+                        <span class="material-symbols-outlined text-error text-[18px] flex-shrink-0 mt-0.5">error</span>{{ session('error') }}
+                    </div>
+                @endif
+                @if (session('success'))
+                    <div class="flex items-start gap-3 p-4 rounded-lg bg-green-50 text-green-800 text-body-sm">
+                        <span class="material-symbols-outlined text-green-500 text-[18px] flex-shrink-0 mt-0.5">check_circle</span>{{ session('success') }}
+                    </div>
+                @endif
+                @if ($errors->any())
+                    <div class="p-4 rounded-lg bg-error-container/40 text-body-sm text-on-surface">
+                        <p class="font-bold mb-2 text-error">Please fix the following:</p>
+                        <ul class="space-y-1 list-disc list-inside text-on-surface-variant">
+                            @foreach ($errors->all() as $err)<li>{{ $err }}</li>@endforeach
+                        </ul>
+                    </div>
+                @endif
+            </div>
+            @endif
+
+            <form method="POST" action="{{ route('register.step1') }}" id="step1-form" novalidate class="space-y-6">
+                @csrf
+
+                {{-- First Name + Last Name --}}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+                    <div class="space-y-2">
+                        <label for="first_name" class="text-label-md font-label-md text-on-surface-variant flex items-center gap-1">FIRST NAME <span class="text-error">*</span></label>
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">person</span>
+                            <input type="text" id="first_name" name="first_name" required
+                                   value="{{ old('first_name', request()->query('first_name','')) }}"
+                                   placeholder="First name"
+                                   class="w-full pl-12 pr-4 py-3 rounded-lg border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-outline/50 bg-white"/>
+                        </div>
+                        @error('first_name')<p class="text-label-sm font-label-sm text-error mt-1 flex items-center gap-1"><span class="material-symbols-outlined text-[13px]">error</span>{{ $message }}</p>@enderror
+                    </div>
+                    <div class="space-y-2">
+                        <label for="last_name" class="text-label-md font-label-md text-on-surface-variant flex items-center gap-1">LAST NAME <span class="text-error">*</span></label>
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">person</span>
+                            <input type="text" id="last_name" name="last_name" required
+                                   value="{{ old('last_name', request()->query('last_name','')) }}"
+                                   placeholder="Last name"
+                                   class="w-full pl-12 pr-4 py-3 rounded-lg border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-outline/50 bg-white"/>
+                        </div>
+                        @error('last_name')<p class="text-label-sm font-label-sm text-error mt-1 flex items-center gap-1"><span class="material-symbols-outlined text-[13px]">error</span>{{ $message }}</p>@enderror
+                    </div>
+                </div>
+
+                {{-- Email --}}
+                <div class="space-y-2">
+                    <label for="email" class="text-label-md font-label-md text-on-surface-variant flex items-center gap-1">EMAIL ADDRESS <span class="text-error">*</span></label>
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">mail</span>
+                        <input type="email" id="email" name="email" required
+                               value="{{ old('email', request()->query('email','')) }}"
+                               placeholder="your.email@example.com"
+                               class="w-full pl-12 pr-4 py-3 rounded-lg border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder:text-outline/50 bg-white"/>
+                    </div>
+                    @error('email')<p class="text-label-sm font-label-sm text-error mt-1 flex items-center gap-1"><span class="material-symbols-outlined text-[13px]">error</span>{{ $message }}</p>@enderror
+                </div>
+
+                {{-- Mobile Number --}}
+                @php
+                    $registrationDialRows = config('phone_country_codes', []);
+                    $regPhoneVerified     = session('registration_phone_verified') && session('registration_verified_phone');
+                    $regVerifiedDigits    = (string) session('registration_verified_phone', '');
+                    $regDisplayCountry    = '1242';
+                    $regDisplayNational   = '';
+                    if ($regPhoneVerified && $regVerifiedDigits !== '') {
+                        $sortedDial = collect($registrationDialRows)->sortByDesc(fn($r) => strlen((string)($r['code']??'')));
+                        foreach ($sortedDial as $row) {
+                            $c = (string)($row['code']??'');
+                            if ($c !== '' && str_starts_with($regVerifiedDigits, $c)) {
+                                $regDisplayCountry  = $c;
+                                $regDisplayNational = substr($regVerifiedDigits, strlen($c)) ?: '';
+                                break;
                             }
                         }
-                    @endphp
+                        if ($regDisplayNational === '' && $regVerifiedDigits !== '') $regDisplayNational = $regVerifiedDigits;
+                    }
+                @endphp
 
-                    <!-- Mobile phone: SMS verification (same guest flow as dashboard) -->
-                    <div class="group">
-                        <div class="flex items-center gap-2 text-sm font-bold text-gray-700 mb-2">
-                            <svg class="h-5 w-5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                            </svg>
-                            <span>Mobile number <span class="text-gray-400 font-normal text-xs">(optional — required before bidding or listing)</span></span>
+                <div class="space-y-4 p-4 rounded-xl border border-outline-variant/30 bg-ui-soft-gray/30">
+                    <label class="text-label-md font-label-md text-on-surface-variant block">
+                        MOBILE NUMBER <span class="text-outline font-normal">(optional)</span>
+                    </label>
+                    <div class="flex flex-col md:flex-row gap-3">
+                        <div class="relative w-full md:w-1/3">
+                            <select id="reg_phone_country" name="phone_country"
+                                class="w-full pl-4 pr-10 py-3 rounded-lg border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary outline-none bg-white appearance-none"
+                                @if($regPhoneVerified) disabled @endif>
+                                @foreach($registrationDialRows as $row)
+                                    <option value="{{ $row['code'] }}" @selected((string)($row['code']??'') === $regDisplayCountry)>{{ $row['label'] }}</option>
+                                @endforeach
+                            </select>
+                            <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-outline">expand_more</span>
                         </div>
-                        <div class="rounded-2xl border-2 border-gray-200 bg-gradient-to-br from-gray-50/80 to-blue-50/30 p-5 space-y-4">
-                            <p class="text-xs text-gray-600">Optionally verify your phone now. You will need a verified phone number before placing bids or submitting listings.</p>
-                            <div class="grid grid-cols-1 md:grid-cols-[minmax(10rem,14rem),minmax(0,1fr),auto] gap-4 items-end">
-                                <div>
-                                    <label for="reg_phone_country" class="block text-xs font-bold text-gray-600 mb-1.5">Country / area code</label>
-                                    <select id="reg_phone_country" name="phone_country"
-                                        class="w-full pl-3 pr-3 py-3.5 rounded-xl border-2 border-gray-200 focus:border-[#063466] focus:ring-4 focus:ring-[#063466]/10 transition-all text-gray-900 font-medium @if ($regPhoneVerified) bg-gray-100 cursor-not-allowed @endif"
-                                        @if ($regPhoneVerified) disabled @endif>
-                                        @foreach ($registrationDialRows as $row)
-                                            <option value="{{ $row['code'] }}" @selected((string) ($row['code'] ?? '') === $regDisplayCountry)>{{ $row['label'] }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="min-w-0">
-                                    <label for="reg_phone_input" class="block text-xs font-bold text-gray-600 mb-1.5">Phone number</label>
-                                    <input type="text" id="reg_phone_input" name="phone_local"
-                                        value="{{ old('phone_local', $regDisplayNational) }}"
-                                        placeholder="e.g. (242) 555-1234"
-                                        class="js-digits-only js-phone-format w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 focus:border-[#063466] focus:ring-4 focus:ring-[#063466]/10 transition-all text-gray-900 font-medium @if ($regPhoneVerified) bg-gray-100 cursor-not-allowed @endif"
-                                        data-phone-country-select="#reg_phone_country"
-                                        inputmode="numeric" autocomplete="tel-national"
-                                        data-cm-validate="phone"
-                                        @if ($regPhoneVerified) readonly @endif>
-                                </div>
-                                <div class="flex md:block">
-                                    <button type="button" id="reg-send-code-btn"
-                                        class="w-full md:w-auto px-5 py-3.5 rounded-xl bg-gray-200 text-gray-900 text-sm font-bold hover:bg-gray-300 transition whitespace-nowrap @if ($regPhoneVerified) hidden @endif">
-                                        Send code
-                                    </button>
-                                </div>
+                        <div class="relative flex-grow flex gap-2">
+                            <div class="relative flex-grow">
+                                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">phone</span>
+                                <input type="text" id="reg_phone_input" name="phone_local"
+                                    value="{{ old('phone_local', $regDisplayNational) }}"
+                                    placeholder="(242) 555-1234"
+                                    class="js-digits-only js-phone-format w-full pl-12 pr-4 py-3 rounded-lg border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary outline-none bg-white"
+                                    data-phone-country-select="#reg_phone_country"
+                                    inputmode="numeric" autocomplete="tel-national"
+                                    data-cm-validate="phone"
+                                    @if($regPhoneVerified) readonly @endif/>
                             </div>
-                            <input type="hidden" name="phone_full" id="reg_phone_full" value="{{ $regPhoneVerified ? '+'.$regVerifiedDigits : old('phone_full', '') }}">
-                            <input type="hidden" name="phone_verified" id="reg_phone_verified" value="{{ $regPhoneVerified ? '1' : '0' }}">
-
-                            <div id="reg-phone-verify-row" class="grid grid-cols-1 md:grid-cols-[minmax(0,1fr),auto] gap-4 items-end @if ($regPhoneVerified) hidden @endif">
-                                <div>
-                                    <label for="reg_phone_code_input" class="block text-xs font-bold text-gray-600 mb-1.5">Verification code</label>
-                                    <input type="text" id="reg_phone_code_input" placeholder="6-digit code" maxlength="6" inputmode="numeric" pattern="[0-9]*"
-                                        class="w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 focus:border-[#063466] focus:ring-4 focus:ring-[#063466]/10 transition-all text-gray-900 font-medium"
-                                        autocomplete="one-time-code">
-                                    <p class="text-[11px] text-gray-500 mt-1.5">Code expires in 5 minutes.</p>
-                                </div>
-                                <div class="flex md:block">
-                                    <button type="button" id="reg-verify-phone-btn"
-                                        class="w-full md:w-auto px-5 py-3.5 rounded-xl bg-[#063466] text-white text-sm font-bold hover:bg-[#1e3a8a] transition whitespace-nowrap">
-                                        Verify
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div id="reg-phone-verified-badge" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold bg-green-50 text-green-800 border border-green-200 @if (! $regPhoneVerified) hidden @endif">
-                                <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                </svg>
-                                Phone verified
-                            </div>
-                            @error('phone')
-                                <p class="text-sm text-red-600 mt-1 flex items-center">
-                                    <svg class="w-4 h-4 mr-1 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                    </svg>
-                                    {{ $message }}
-                                </p>
-                            @enderror
+                            <button type="button" id="reg-send-code-btn"
+                                class="px-6 py-3 bg-primary text-on-primary rounded-lg font-label-md text-label-md hover:bg-primary-container transition-colors whitespace-nowrap {{ $regPhoneVerified ? 'hidden' : '' }}">
+                                SEND CODE
+                            </button>
                         </div>
                     </div>
 
-                    <!-- Password Fields -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="group">
-                            <label for="password" class="block text-sm font-bold text-gray-700 mb-2 group-focus-within:text-[#063466] transition-colors">
-                                Password <span class="text-red-500">*</span>
-                            </label>
-                            <div class="relative">
-                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
-                                    <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                    </svg>
-                                </div>
-                                <input type="password" id="password" name="password" required minlength="8" maxlength="15" autocomplete="new-password"
-                                    data-password-strength
-                                    data-cm-validate="password-register"
-                                    data-cm-label="Password"
-                                    class="w-full pl-12 pr-12 py-4 rounded-xl border-2 border-gray-200 focus:border-[#063466] focus:ring-4 focus:ring-[#063466]/10 transition-all duration-300 text-gray-900 placeholder-gray-400 font-medium"
-                                    placeholder="8–15 characters">
-                                <button type="button" class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 transition-colors" aria-label="Show/hide password" title="Show/hide password" onclick="togglePassword('password', 'password-eye')">
-                                    <svg id="password-eye" class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                                    <svg id="password-eye-slash" class="h-5 w-5 shrink-0 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
-                                </button>
-                            </div>
-                            <p class="text-xs text-gray-500 mt-1.5">8–15 characters · One uppercase · One number · One special character (e.g. !@#$%)</p>
-                            @error('password')
-                                <p class="text-sm text-red-600 mt-2 flex items-center">
-                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                    </svg>
-                                    {{ $message }}
-                                </p>
-                            @enderror
+                    <input type="hidden" name="phone_full"    id="reg_phone_full"    value="{{ $regPhoneVerified ? '+'.$regVerifiedDigits : old('phone_full','') }}">
+                    <input type="hidden" name="phone_verified" id="reg_phone_verified" value="{{ $regPhoneVerified ? '1' : '0' }}">
+
+                    <div id="reg-phone-verify-row" class="flex gap-2 {{ $regPhoneVerified ? 'hidden' : '' }}">
+                        <div class="relative flex-grow">
+                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">pin</span>
+                            <input type="text" id="reg_phone_code_input" placeholder="6-digit code" maxlength="6" inputmode="numeric" pattern="[0-9]*"
+                                class="w-full pl-12 pr-4 py-3 rounded-lg border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary outline-none bg-white font-mono tracking-widest"
+                                autocomplete="one-time-code"/>
                         </div>
-
-                        <div class="group">
-                            <label for="password_confirmation" class="block text-sm font-bold text-gray-700 mb-2 group-focus-within:text-[#063466] transition-colors">
-                                Confirm Password <span class="text-red-500">*</span>
-                            </label>
-                            <div class="relative">
-                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
-                                    <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                                    </svg>
-                                </div>
-                                <input type="password" id="password_confirmation" name="password_confirmation" required minlength="8" maxlength="15" autocomplete="new-password"
-                                    data-cm-match="#password"
-                                    data-cm-label="Confirm password"
-                                    class="w-full pl-12 pr-12 py-4 rounded-xl border-2 border-gray-200 focus:border-[#063466] focus:ring-4 focus:ring-[#063466]/10 transition-all duration-300 text-gray-900 placeholder-gray-400 font-medium"
-                                    placeholder="Re-enter your password">
-                                <button type="button" class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 transition-colors" aria-label="Show/hide password" title="Show/hide password" onclick="togglePassword('password_confirmation', 'password-confirm-eye')">
-                                    <svg id="password-confirm-eye" class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                                    <svg id="password-confirm-eye-slash" class="h-5 w-5 shrink-0 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
-                                </button>
-                            </div>
-                            @error('password_confirmation')
-                                <p class="text-sm text-red-600 mt-2 flex items-center">
-                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                    </svg>
-                                    {{ $message }}
-                                </p>
-                            @enderror
-                        </div>
-                    </div>
-
-                    <!-- Terms Checkbox -->
-                    <div class="bg-gradient-to-r from-gray-50 to-blue-50 rounded-2xl p-6 border-2 border-gray-200 hover:border-[#063466]/30 transition-all duration-300">
-                        <label class="flex items-start space-x-4 cursor-pointer group">
-                            <div class="flex-shrink-0 mt-1">
-                                @php
-                                    $agreeTermsChecked = old('agree_terms') || request()->query('agree_terms');
-                                @endphp
-                                <input type="checkbox" name="agree_terms" value="1" required
-                                    class="w-6 h-6 text-[#063466] rounded-lg focus:ring-4 focus:ring-[#063466]/20 border-2 border-gray-300 cursor-pointer transition-all duration-200"
-                                    @if($agreeTermsChecked) checked @endif>
-                            </div>
-                            <div class="flex-1">
-                                <span class="text-gray-800 font-bold text-base block mb-1 group-hover:text-[#063466] transition-colors">
-                                    I agree to CayMark's Terms of Service and Privacy Policy
-                                </span>
-                                <span class="text-gray-600 text-sm">
-                                    By creating an account, you agree to our 
-                                    <a href="{{ route('terms.of.service') }}" target="_blank" rel="noopener noreferrer" class="text-[#063466] hover:text-[#1e3a8a] font-semibold underline decoration-2 underline-offset-2 transition-colors">Terms of Service</a> 
-                                    and 
-                                    <a href="{{ route('privacy.policy') }}" target="_blank" rel="noopener noreferrer" class="text-[#063466] hover:text-[#1e3a8a] font-semibold underline decoration-2 underline-offset-2 transition-colors">Privacy Policy</a>.
-                                </span>
-                            </div>
-                        </label>
-                        @error('agree_terms')
-                            <p class="text-sm text-red-600 mt-3 flex items-center">
-                                <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                </svg>
-                                {{ $message }}
-                            </p>
-                        @enderror
-                    </div>
-
-                    <!-- Submit -->
-                    <div class="pt-4 relative" id="reg-submit-wrap">
-                        <button type="submit" id="reg-submit-btn"
-                            class="w-full bg-gradient-to-r from-[#063466] to-[#1e3a8a] text-white px-8 py-5 rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
-                            <span class="relative z-10 flex items-center justify-center">
-                                <span>Create My Account</span>
-                                <svg class="w-6 h-6 ml-3 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                                </svg>
-                            </span>
-                            <div class="absolute inset-0 bg-gradient-to-r from-[#1e3a8a] to-[#2563eb] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <button type="button" id="reg-verify-phone-btn"
+                            class="px-8 py-3 bg-primary text-on-primary rounded-lg font-label-md text-label-md hover:bg-primary-container transition-colors">
+                            VERIFY
                         </button>
-                        <p class="text-center text-gray-500 text-sm mt-4">
-                            Already have an account? 
-                            <a href="{{ route('login') }}" class="text-[#063466] hover:text-[#1e3a8a] font-semibold underline decoration-2 underline-offset-2 transition-colors">Sign in here</a>
-                        </p>
                     </div>
-                </form>
-            </div>
-        </div>
 
-        <!-- Trust Indicators -->
-        <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="bg-white rounded-xl p-6 shadow-lg border border-gray-200 text-center">
-                <div class="w-12 h-12 bg-[#063466]/10 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <svg class="w-6 h-6 text-[#063466]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                    </svg>
+                    <div id="reg-phone-verified-badge"
+                         class="inline-flex items-center gap-2 px-3 py-1.5 text-label-sm font-label-sm text-green-800 bg-green-50 border border-green-200 rounded-lg {{ !$regPhoneVerified ? 'hidden' : '' }}">
+                        <span class="material-symbols-outlined text-green-500 text-[15px]">check_circle</span>
+                        Phone verified
+                    </div>
+                    @error('phone')<p class="text-label-sm font-label-sm text-error mt-1 flex items-center gap-1"><span class="material-symbols-outlined text-[13px]">error</span>{{ $message }}</p>@enderror
                 </div>
-                <h3 class="font-bold text-gray-900 mb-1">Secure & Protected</h3>
-                <p class="text-sm text-gray-600">Your data is encrypted and secure</p>
-            </div>
-            <div class="bg-white rounded-xl p-6 shadow-lg border border-gray-200 text-center">
-                <div class="w-12 h-12 bg-[#063466]/10 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <svg class="w-6 h-6 text-[#063466]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+
+                {{-- Password + Confirm --}}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+                    <div class="space-y-2">
+                        <label for="password" class="text-label-md font-label-md text-on-surface-variant flex items-center gap-1">PASSWORD <span class="text-error">*</span></label>
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">lock</span>
+                            <input type="password" id="password" name="password" required minlength="8" maxlength="15"
+                                   autocomplete="new-password"
+                                   data-password-strength data-cm-validate="password-register" data-cm-label="Password"
+                                   placeholder="8–15 characters"
+                                   class="w-full pl-12 pr-12 py-3 rounded-lg border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary outline-none bg-white"/>
+                            <button type="button" class="absolute right-4 top-1/2 -translate-y-1/2 text-outline focus:outline-none"
+                                    onclick="togglePassword('password','password-eye')">
+                                <span class="material-symbols-outlined text-[20px]" id="password-eye">visibility</span>
+                            </button>
+                        </div>
+                        <p class="text-label-sm font-label-sm text-outline px-1">8–15 chars · Uppercase · Number · Special char</p>
+                        @error('password')<p class="text-label-sm font-label-sm text-error mt-1 flex items-center gap-1"><span class="material-symbols-outlined text-[13px]">error</span>{{ $message }}</p>@enderror
+                    </div>
+                    <div class="space-y-2">
+                        <label for="password_confirmation" class="text-label-md font-label-md text-on-surface-variant flex items-center gap-1">CONFIRM PASSWORD <span class="text-error">*</span></label>
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">lock_reset</span>
+                            <input type="password" id="password_confirmation" name="password_confirmation" required minlength="8" maxlength="15"
+                                   autocomplete="new-password"
+                                   data-cm-match="#password" data-cm-label="Confirm password"
+                                   placeholder="Re-enter password"
+                                   class="w-full pl-12 pr-12 py-3 rounded-lg border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary outline-none bg-white"/>
+                            <button type="button" class="absolute right-4 top-1/2 -translate-y-1/2 text-outline focus:outline-none"
+                                    onclick="togglePassword('password_confirmation','password-confirm-eye')">
+                                <span class="material-symbols-outlined text-[20px]" id="password-confirm-eye">visibility</span>
+                            </button>
+                        </div>
+                        @error('password_confirmation')<p class="text-label-sm font-label-sm text-error mt-1 flex items-center gap-1"><span class="material-symbols-outlined text-[13px]">error</span>{{ $message }}</p>@enderror
+                    </div>
                 </div>
-                <h3 class="font-bold text-gray-900 mb-1">Quick Setup</h3>
-                <p class="text-sm text-gray-600">Get started in under 2 minutes</p>
-            </div>
-            <div class="bg-white rounded-xl p-6 shadow-lg border border-gray-200 text-center">
-                <div class="w-12 h-12 bg-[#063466]/10 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <svg class="w-6 h-6 text-[#063466]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
+
+                {{-- Terms + Submit --}}
+                <div class="flex flex-col md:flex-row items-center justify-between gap-6 pt-6 border-t border-outline-variant/30">
+                    @php $agreeTermsChecked = old('agree_terms') || request()->query('agree_terms'); @endphp
+                    <div>
+                        <label class="flex items-start gap-3 cursor-pointer max-w-sm">
+                            <input type="checkbox" name="agree_terms" value="1" required
+                                   class="mt-1 w-5 h-5 rounded border-outline-variant text-secondary focus:ring-secondary cursor-pointer flex-shrink-0"
+                                   @if($agreeTermsChecked) checked @endif/>
+                            <span class="text-body-sm text-on-surface-variant">
+                                I agree to CayMark's
+                                <a href="{{ route('terms.of.service') }}" target="_blank" rel="noopener noreferrer"
+                                   class="text-primary font-bold hover:underline">Terms</a>
+                                and
+                                <a href="{{ route('privacy.policy') }}" target="_blank" rel="noopener noreferrer"
+                                   class="text-primary font-bold hover:underline">Privacy Policy</a>.
+                            </span>
+                        </label>
+                        @error('agree_terms')<p class="text-label-sm font-label-sm text-error mt-1 flex items-center gap-1"><span class="material-symbols-outlined text-[13px]">error</span>{{ $message }}</p>@enderror
+                    </div>
+                    <div id="reg-submit-wrap">
+                        <button type="submit" id="reg-submit-btn"
+                                class="w-full md:w-auto px-10 py-4 bg-secondary-container text-on-secondary-container rounded-lg font-headline-sm text-headline-sm flex items-center justify-center gap-3 hover:bg-secondary transition-all active:scale-95 shadow-lg shadow-secondary/20">
+                            <span class="material-symbols-outlined">person_add</span>
+                            CREATE ACCOUNT
+                        </button>
+                    </div>
                 </div>
-                <h3 class="font-bold text-gray-900 mb-1">24/7 Support</h3>
-                <p class="text-sm text-gray-600">We're here to help anytime</p>
-            </div>
+
+                <p class="text-center text-body-sm text-on-surface-variant pt-1">
+                    Already have an account?
+                    <a href="{{ route('login') }}" class="font-bold text-primary hover:underline">Sign in</a>
+                </p>
+
+            </form>
         </div>
     </div>
+
 </div>
 
-<style>
-    [x-cloak] {
-        display: none !important;
-    }
-
-    @keyframes fade-in {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    @keyframes slide-up {
-        from {
-            opacity: 0;
-            transform: translateY(40px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .animate-fade-in {
-        animation: fade-in 0.8s ease-out;
-    }
-
-    .animate-slide-up {
-        animation: slide-up 1s ease-out;
-    }
-
-    input:focus, select:focus, textarea:focus {
-        outline: none;
-    }
-</style>
-
 <script>
-    function togglePassword(inputId, eyeIconId) {
-        var input = document.getElementById(inputId);
-        var eye = document.getElementById(eyeIconId);
-        var slash = document.getElementById(eyeIconId + '-slash');
-        if (!input || !eye || !slash) return;
-        if (input.type === 'password') {
-            input.type = 'text';
-            eye.classList.add('hidden');
-            slash.classList.remove('hidden');
-        } else {
-            input.type = 'password';
-            eye.classList.remove('hidden');
-            slash.classList.add('hidden');
-        }
+/* ── Fit layout to remaining viewport height ── */
+(function () {
+    function fitLayout() {
+        var siteHeader = document.querySelector('body > header');
+        if (!siteHeader) return;
+        var h = siteHeader.offsetHeight;
+        var secNav = siteHeader.nextElementSibling;
+        if (secNav && window.getComputedStyle(secNav).display !== 'none') h += secNav.offsetHeight;
+        var layout = document.getElementById('reg-layout');
+        if (layout) layout.style.minHeight = (window.innerHeight - h) + 'px';
+    }
+    fitLayout();
+    window.addEventListener('resize', fitLayout);
+})();
+
+/* ── Password show/hide ── */
+function togglePassword(inputId, eyeId) {
+    var input = document.getElementById(inputId);
+    var icon  = document.getElementById(eyeId);
+    if (!input || !icon) return;
+    if (input.type === 'password') { input.type = 'text'; icon.textContent = 'visibility_off'; }
+    else { input.type = 'password'; icon.textContent = 'visibility'; }
+}
+
+/* ── Phone verification AJAX ── */
+(function () {
+    var sendBtn       = document.getElementById('reg-send-code-btn');
+    var verifyBtn     = document.getElementById('reg-verify-phone-btn');
+    var phoneInput    = document.getElementById('reg_phone_input');
+    var countrySelect = document.getElementById('reg_phone_country');
+    var phoneFull     = document.getElementById('reg_phone_full');
+    var codeInput     = document.getElementById('reg_phone_code_input');
+    var verifyRow     = document.getElementById('reg-phone-verify-row');
+    var verifiedBadge = document.getElementById('reg-phone-verified-badge');
+    var hiddenVerified= document.getElementById('reg_phone_verified');
+    var submitBtn     = document.getElementById('reg-submit-btn');
+    var submitWrap    = document.getElementById('reg-submit-wrap');
+    var sendUrl       = '{{ route("register.phone.send-code") }}';
+    var verifyUrl     = '{{ route("register.phone.verify") }}';
+    var csrf          = document.querySelector('input[name="_token"]');
+    if (!csrf) return;
+
+    function getFullPhone() {
+        var code = (countrySelect && !countrySelect.disabled && countrySelect.value) ? countrySelect.value.trim() : '';
+        var num  = (phoneInput && !phoneInput.readOnly && phoneInput.value) ? phoneInput.value.trim().replace(/^0+/, '') : '';
+        if (!code || !num) return '';
+        return '+' + code + num;
+    }
+    function setFullPhoneInput() { if (phoneFull) phoneFull.value = getFullPhone(); }
+
+    function applyVerifiedUi() {
+        if (verifiedBadge)  verifiedBadge.classList.remove('hidden');
+        if (hiddenVerified) hiddenVerified.value = '1';
+        if (verifyRow)      verifyRow.classList.add('hidden');
+        if (phoneInput)     phoneInput.readOnly = true;
+        if (countrySelect)  countrySelect.disabled = true;
+        if (sendBtn)        sendBtn.classList.add('hidden');
+        if (submitBtn)      submitBtn.disabled = false;
+        if (submitWrap)     submitWrap.classList.remove('reg-pending-verify');
     }
 
-    (function() {
-        var sendBtn = document.getElementById('reg-send-code-btn');
-        var verifyBtn = document.getElementById('reg-verify-phone-btn');
-        var phoneInput = document.getElementById('reg_phone_input');
-        var countrySelect = document.getElementById('reg_phone_country');
-        var phoneFull = document.getElementById('reg_phone_full');
-        var codeInput = document.getElementById('reg_phone_code_input');
-        var verifyRow = document.getElementById('reg-phone-verify-row');
-        var verifiedBadge = document.getElementById('reg-phone-verified-badge');
-        var hiddenVerified = document.getElementById('reg_phone_verified');
-        var submitBtn = document.getElementById('reg-submit-btn');
-        var submitWrap = document.getElementById('reg-submit-wrap');
-        var sendUrl = '{{ route("register.phone.send-code") }}';
-        var verifyUrl = '{{ route("register.phone.verify") }}';
-        var csrf = document.querySelector('input[name="_token"]');
-        if (!csrf) return;
+    if (hiddenVerified && hiddenVerified.value === '1') applyVerifiedUi();
 
-        function getFullPhone() {
-            var code = (countrySelect && !countrySelect.disabled && countrySelect.value) ? countrySelect.value.trim() : '';
-            var num = (phoneInput && !phoneInput.readOnly && phoneInput.value) ? phoneInput.value.trim().replace(/^0+/, '') : '';
-            if (!code || !num) return '';
-            return '+' + code + num;
-        }
-        function setFullPhoneInput() {
-            if (phoneFull) phoneFull.value = getFullPhone();
-        }
-
-        function applyVerifiedUi() {
-            if (verifiedBadge) verifiedBadge.classList.remove('hidden');
-            if (hiddenVerified) hiddenVerified.value = '1';
-            if (verifyRow) verifyRow.classList.add('hidden');
-            if (phoneInput) phoneInput.readOnly = true;
-            if (countrySelect) countrySelect.disabled = true;
-            if (sendBtn) sendBtn.classList.add('hidden');
-            if (submitBtn) submitBtn.disabled = false;
-            if (submitWrap) submitWrap.classList.remove('reg-pending-verify');
-        }
-
-        if (hiddenVerified && hiddenVerified.value === '1') {
-            applyVerifiedUi();
-        }
-
-        var step1Form = document.getElementById('step1-form');
-        if (step1Form) {
-            step1Form.addEventListener('submit', function() {
-                var phoneFullEl = document.getElementById('reg_phone_full');
-                if (phoneFullEl && countrySelect && phoneInput && phoneInput.value.trim() && !phoneInput.readOnly) {
-                    var code = countrySelect.disabled ? '' : countrySelect.value.trim();
-                    var num = phoneInput.value.trim().replace(/^0+/, '');
-                    if (code && num) phoneFullEl.value = '+' + code + num;
-                } else if (phoneFullEl && hiddenVerified && hiddenVerified.value === '1' && !phoneFullEl.value.trim()) {
-                    setFullPhoneInput();
-                }
-            });
-        }
-
-        if (!sendBtn || !verifyBtn || !phoneInput) return;
-
-        function cmToast(type, title, sub) {
-            if (window.CaymarkUI) {
-                type === 'success' ? CaymarkUI.showSuccess(title, sub || '') : CaymarkUI.showError(title, sub || '');
-            } else {
-                // Fallback if UI kit hasn't loaded yet (shouldn't happen on button click)
-                alert(title + (sub ? '\n' + sub : ''));
+    var step1Form = document.getElementById('step1-form');
+    if (step1Form) {
+        step1Form.addEventListener('submit', function () {
+            var phoneFullEl = document.getElementById('reg_phone_full');
+            if (phoneFullEl && countrySelect && phoneInput && phoneInput.value.trim() && !phoneInput.readOnly) {
+                var code = countrySelect.disabled ? '' : countrySelect.value.trim();
+                var num  = phoneInput.value.trim().replace(/^0+/, '');
+                if (code && num) phoneFullEl.value = '+' + code + num;
+            } else if (phoneFullEl && hiddenVerified && hiddenVerified.value === '1' && !phoneFullEl.value.trim()) {
+                setFullPhoneInput();
             }
-        }
-
-        sendBtn.addEventListener('click', function() {
-            var phone = getFullPhone();
-            if (!phone) {
-                cmToast('error', 'Phone number required', 'Please select a country code and enter your number.');
-                return;
-            }
-            setFullPhoneInput();
-            sendBtn.disabled = true;
-            sendBtn.textContent = 'Sending…';
-            fetch(sendUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf.value, 'Accept': 'application/json' },
-                body: JSON.stringify({ phone: phone })
-            }).then(function(r) { return r.json(); }).then(function(data) {
-                sendBtn.disabled = false;
-                sendBtn.textContent = 'Send code';
-                if (data.success) {
-                    if (verifyRow) verifyRow.classList.remove('hidden');
-                    if (codeInput) { codeInput.value = ''; codeInput.focus(); }
-                    cmToast('success', 'Code sent!', data.message || 'Enter the 6-digit code sent to your phone.');
-                } else {
-                    cmToast('error', 'Could not send code', data.message || 'Please check your number and try again.');
-                }
-            }).catch(function() {
-                sendBtn.disabled = false;
-                sendBtn.textContent = 'Send code';
-                cmToast('error', 'Request failed', 'Check your connection and try again.');
-            });
         });
+    }
 
-        verifyBtn.addEventListener('click', function() {
-            var phone = getFullPhone();
-            var code = (codeInput && codeInput.value) ? codeInput.value.trim() : '';
-            if (!phone || !code) {
-                cmToast('error', 'Missing information', 'Enter your phone number and the 6-digit code.');
-                return;
-            }
-            setFullPhoneInput();
-            verifyBtn.disabled = true;
-            verifyBtn.textContent = 'Verifying…';
-            fetch(verifyUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf.value, 'Accept': 'application/json' },
-                body: JSON.stringify({ phone: phone, code: code })
-            }).then(function(r) { return r.json(); }).then(function(data) {
-                verifyBtn.disabled = false;
-                verifyBtn.textContent = 'Verify';
-                if (data.success) {
-                    setFullPhoneInput();
-                    applyVerifiedUi();
-                    cmToast('success', 'Phone verified!', 'Your number has been confirmed successfully.');
-                } else {
-                    cmToast('error', 'Verification failed', data.message || 'Invalid or expired code. Request a new one.');
-                }
-            }).catch(function() {
-                verifyBtn.disabled = false;
-                verifyBtn.textContent = 'Verify';
-                cmToast('error', 'Request failed', 'Check your connection and try again.');
-            });
-        });
+    if (!sendBtn || !verifyBtn || !phoneInput) return;
 
-    })();
+    function cmToast(type, title, sub) {
+        if (window.CaymarkUI) {
+            type === 'success' ? CaymarkUI.showSuccess(title, sub || '') : CaymarkUI.showError(title, sub || '');
+        } else { alert(title + (sub ? '\n' + sub : '')); }
+    }
+
+    sendBtn.addEventListener('click', function () {
+        var phone = getFullPhone();
+        if (!phone) { cmToast('error', 'Phone number required', 'Please select a country code and enter your number.'); return; }
+        setFullPhoneInput();
+        sendBtn.disabled = true; sendBtn.textContent = 'Sending…';
+        fetch(sendUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf.value, 'Accept': 'application/json' },
+            body: JSON.stringify({ phone: phone })
+        }).then(function (r) { return r.json(); }).then(function (data) {
+            sendBtn.disabled = false; sendBtn.textContent = 'Send Code';
+            if (data.success) {
+                if (verifyRow) verifyRow.classList.remove('hidden');
+                if (codeInput) { codeInput.value = ''; codeInput.focus(); }
+                cmToast('success', 'Code sent!', data.message || 'Enter the 6-digit code sent to your phone.');
+            } else { cmToast('error', 'Could not send code', data.message || 'Please check your number and try again.'); }
+        }).catch(function () { sendBtn.disabled = false; sendBtn.textContent = 'Send Code'; cmToast('error', 'Request failed', 'Check your connection and try again.'); });
+    });
+
+    verifyBtn.addEventListener('click', function () {
+        var phone = getFullPhone();
+        var code  = (codeInput && codeInput.value) ? codeInput.value.trim() : '';
+        if (!phone || !code) { cmToast('error', 'Missing information', 'Enter your phone number and the 6-digit code.'); return; }
+        setFullPhoneInput();
+        verifyBtn.disabled = true; verifyBtn.textContent = 'Verifying…';
+        fetch(verifyUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf.value, 'Accept': 'application/json' },
+            body: JSON.stringify({ phone: phone, code: code })
+        }).then(function (r) { return r.json(); }).then(function (data) {
+            verifyBtn.disabled = false; verifyBtn.textContent = 'Verify';
+            if (data.success) { setFullPhoneInput(); applyVerifiedUi(); cmToast('success', 'Phone verified!', 'Your number has been confirmed.'); }
+            else { cmToast('error', 'Verification failed', data.message || 'Invalid or expired code.'); }
+        }).catch(function () { verifyBtn.disabled = false; verifyBtn.textContent = 'Verify'; cmToast('error', 'Request failed', 'Check your connection and try again.'); });
+    });
+})();
 </script>
 
 @endsection

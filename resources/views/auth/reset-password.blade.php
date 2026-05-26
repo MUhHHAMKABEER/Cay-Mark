@@ -1,26 +1,32 @@
 @extends('layouts.welcome')
-@section('title', 'Reset password - CayMark')
+@section('title', 'Set New Password — CayMark Island Exchange')
 @section('content')
 
-<div class="min-h-screen flex flex-col items-center justify-center py-12 px-4 bg-gradient-to-br from-slate-50 via-white to-blue-50/40">
-    <div class="fixed inset-0 opacity-[0.02] pointer-events-none" style="background-image: linear-gradient(#063466 1px, transparent 1px), linear-gradient(90deg, #063466 1px, transparent 1px); background-size: 48px 48px;"></div>
+<div class="min-h-[calc(100vh-160px)] flex items-center justify-center py-16 px-4 bg-[#f8fafd]">
 
-    <div class="w-full max-w-md relative z-10">
-        <div class="bg-white rounded-2xl shadow-xl shadow-gray-200/60 border border-gray-100/80 overflow-hidden">
-            <div class="h-1 bg-gradient-to-r from-[#063466] via-[#1e3a8a] to-[#2563eb]"></div>
+    <div class="w-full max-w-md">
 
-            <div class="p-8 md:p-10">
-                <div class="text-center mb-6">
-                    <h1 class="text-2xl font-bold text-gray-900 font-heading tracking-tight">Reset password</h1>
-                    <p class="text-gray-500 text-sm mt-2">Choose a new password for your account.</p>
+        <a href="{{ route('login') }}"
+           class="inline-flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-widest hover:text-primary transition-colors mb-8">
+            <span class="material-symbols-outlined text-[16px]">arrow_back</span>
+            Back to Sign In
+        </a>
+
+        <div class="bg-white border-t-4 border-primary shadow-lg overflow-hidden" style="border-radius:0">
+            <div class="px-8 py-8">
+                <div class="mb-8">
+                    <div class="w-12 h-12 bg-primary flex items-center justify-center mb-5" style="border-radius:0">
+                        <span class="material-symbols-outlined text-white text-[22px]">lock_reset</span>
+                    </div>
+                    <p class="text-[11px] font-bold text-secondary-fixed-dim uppercase tracking-[0.3em] mb-2">Account Recovery</p>
+                    <h1 class="text-2xl font-bold text-primary uppercase tracking-tight font-headline-md">Set New Password</h1>
+                    <p class="text-gray-400 text-sm mt-2">Choose a strong password for your CayMark account.</p>
                 </div>
 
                 @if ($errors->any())
-                    <div class="mb-4 rounded-lg bg-amber-50 border border-amber-200/80 px-4 py-3 text-sm text-amber-800">
+                    <div class="border-l-4 border-amber-400 bg-amber-50 px-4 py-3 text-sm text-amber-800 mb-6" style="border-radius:0">
                         <ul class="list-disc list-inside space-y-0.5">
-                            @foreach ($errors->all() as $err)
-                                <li>{{ $err }}</li>
-                            @endforeach
+                            @foreach ($errors->all() as $err) <li>{{ $err }}</li> @endforeach
                         </ul>
                     </div>
                 @endif
@@ -29,38 +35,55 @@
                     @csrf
                     <input type="hidden" name="token" value="{{ $request->route('token') }}">
 
+                    {{-- Email --}}
                     <div>
-                        <label for="email" class="block text-sm font-semibold text-gray-700 mb-1.5">Email</label>
-                        <input type="email" id="email" name="email" required autofocus autocomplete="username"
-                            value="{{ old('email', $request->email) }}"
-                            class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:border-[#063466] focus:ring-2 focus:ring-[#063466]/10 transition-all text-gray-900 text-[15px]">
+                        <label for="email" class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Email Address</label>
+                        <div class="flex items-center border-2 border-gray-200 focus-within:border-primary transition-colors" style="border-radius:0">
+                            <span class="material-symbols-outlined text-gray-300 text-[20px] flex-shrink-0 ml-4">mail</span>
+                            <input type="email" id="email" name="email" required autofocus autocomplete="username"
+                                   value="{{ old('email', $request->email) }}"
+                                   class="flex-1 px-4 py-3.5 bg-transparent text-gray-900 placeholder-gray-300 focus:outline-none text-sm font-medium"
+                                   style="border-radius:0"/>
+                        </div>
                     </div>
 
+                    {{-- New password --}}
                     <div>
-                        <label for="password" class="block text-sm font-semibold text-gray-700 mb-1.5">New password</label>
-                        <input type="password" id="password" name="password" required minlength="8" autocomplete="new-password"
-                            data-password-strength data-cm-label="New password"
-                            class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:border-[#063466] focus:ring-2 focus:ring-[#063466]/10 transition-all text-gray-900 text-[15px]">
+                        <label for="password" class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">New Password</label>
+                        <div class="flex items-center border-2 border-gray-200 focus-within:border-primary transition-colors" style="border-radius:0">
+                            <span class="material-symbols-outlined text-gray-300 text-[20px] flex-shrink-0 ml-4">lock</span>
+                            <input type="password" id="password" name="password" required minlength="8" autocomplete="new-password"
+                                   data-password-strength data-cm-label="New password"
+                                   placeholder="8–15 characters"
+                                   class="flex-1 px-4 py-3.5 bg-transparent text-gray-900 placeholder-gray-300 focus:outline-none text-sm font-medium"
+                                   style="border-radius:0"/>
+                        </div>
+                        <p class="text-[10px] text-gray-400 mt-1.5">8–15 chars · Uppercase · Number · Special char</p>
                     </div>
 
+                    {{-- Confirm password --}}
                     <div>
-                        <label for="password_confirmation" class="block text-sm font-semibold text-gray-700 mb-1.5">Confirm password</label>
-                        <input type="password" id="password_confirmation" name="password_confirmation" required minlength="8" autocomplete="new-password"
-                            data-cm-match="#password" data-cm-label="Confirm password"
-                            class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:border-[#063466] focus:ring-2 focus:ring-[#063466]/10 transition-all text-gray-900 text-[15px]">
+                        <label for="password_confirmation" class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Confirm New Password</label>
+                        <div class="flex items-center border-2 border-gray-200 focus-within:border-primary transition-colors" style="border-radius:0">
+                            <span class="material-symbols-outlined text-gray-300 text-[20px] flex-shrink-0 ml-4">lock_reset</span>
+                            <input type="password" id="password_confirmation" name="password_confirmation" required minlength="8" autocomplete="new-password"
+                                   data-cm-match="#password" data-cm-label="Confirm password"
+                                   placeholder="Re-enter new password"
+                                   class="flex-1 px-4 py-3.5 bg-transparent text-gray-900 placeholder-gray-300 focus:outline-none text-sm font-medium"
+                                   style="border-radius:0"/>
+                        </div>
                     </div>
 
                     <button type="submit"
-                        class="w-full py-3.5 px-4 rounded-xl bg-[#063466] hover:bg-[#052a52] text-white font-semibold text-[15px] shadow-lg shadow-[#063466]/20 transition-all">
-                        Reset password
+                            class="w-full py-4 bg-primary text-white font-bold uppercase tracking-widest text-sm hover:bg-[#003377] transition-colors flex items-center justify-center gap-2"
+                            style="border-radius:0">
+                        <span class="material-symbols-outlined text-[18px]">check_circle</span>
+                        Set New Password
                     </button>
-
-                    <p class="text-center text-sm text-gray-500">
-                        <a href="{{ route('login') }}" class="font-semibold text-[#063466] hover:text-[#1e3a8a]">Back to sign in</a>
-                    </p>
                 </form>
             </div>
         </div>
+
     </div>
 </div>
 

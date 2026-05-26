@@ -396,6 +396,34 @@ class ListingController extends Controller
     }
 
     /**
+     * Delete a single listing image via AJAX. Cover photo cannot be deleted directly.
+     */
+    public function destroyImage($listingId, $imageId)
+    {
+        $user = Auth::user();
+        $listing = Listing::where('seller_id', $user->id)->with('images')->findOrFail($listingId);
+
+        if (!$this->sellerCanEditListing($listing)) {
+            return response()->json(['error' => 'This listing cannot be edited.'], 403);
+        }
+
+        $image = ListingImage::where('listing_id', $listing->id)->findOrFail($imageId);
+
+        if ((int) $listing->cover_photo_id === (int) $image->id) {
+            return response()->json(['error' => 'Cannot delete the cover photo. Upload a new cover to replace it.'], 422);
+        }
+
+        $filePath = public_path('uploads/listings/' . $image->image_path);
+        if (file_exists($filePath)) {
+            @unlink($filePath);
+        }
+
+        $image->delete();
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
      * Delete a listing (only allowed for own listing and when not sold).
      */
     public function destroy($id)

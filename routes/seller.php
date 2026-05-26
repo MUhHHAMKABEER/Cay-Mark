@@ -58,6 +58,7 @@ Route::prefix('seller')->name('seller.')->middleware(['auth', 'seller'])->group(
     Route::get('listings/{id}/edit', [ListingController::class, 'edit'])->name('listings.edit');
     Route::put('listings/{id}', [ListingController::class, 'update'])->name('listings.update');
     Route::delete('listings/{id}', [ListingController::class, 'destroy'])->name('listings.destroy');
+    Route::delete('listings/{listing}/images/{image}', [ListingController::class, 'destroyImage'])->name('listings.images.destroy');
     Route::get('listings/{id}', [ListingController::class, 'show'])->name('listings.show');
     Route::get('Auction', [ListingController::class, 'showAuctionLisitng'])->name('Auction.index');
     

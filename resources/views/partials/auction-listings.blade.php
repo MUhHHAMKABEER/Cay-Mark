@@ -2,160 +2,148 @@
     @php
         $likesCount = $listing->likes_count ?? $listing->watchlisted_by_count ?? 0;
         $liked = isset($likedListingIds) && $likedListingIds->contains($listing->id);
+        $img = $listing->images->first();
+        if (!$img) {
+            $imgUrl = asset('images/placeholder-car.png');
+        } else {
+            $p = $img->image_path ?? '';
+            $imgUrl = str_starts_with($p,'http') ? $p
+                : (str_contains($p,'/') ? asset(ltrim($p,'/'))
+                : (str_starts_with($p,'listings/') ? asset('storage/'.$p)
+                : asset('uploads/listings/'.$p)));
+        }
+        $endDate = $listing->getAuctionEndDate();
     @endphp
-    <div class="vehicle-card bg-white rounded-xl shadow-sm overflow-hidden flex flex-col md:flex-row animate-slide-down gap-0 min-w-0">
-        <!-- Image -->
-        <div class="md:w-2/5 relative image-container min-h-[250px] bg-gray-100">
-            @php
-                $img = $listing->images->first();
-                if (!$img) {
-                    $imgUrl = asset('images/placeholder-car.png');
-                } else {
-                    $p = $img->image_path ?? '';
-                    if (str_starts_with($p, 'http')) {
-                        $imgUrl = $p;
-                    } elseif (str_contains($p, '/')) {
-                        $imgUrl = asset(ltrim($p, '/'));
-                    } elseif (str_starts_with($p, 'listings/')) {
-                        $imgUrl = asset('storage/' . $p);
-                    } else {
-                        $imgUrl = asset('uploads/listings/' . $p);
-                    }
-                }
-                $endDate = $listing->getAuctionEndDate();
-            @endphp
-            <img alt="{{ $listing->title ?? $listing->make . ' ' . $listing->model }}"
-                style="height:250px" src="{{ $imgUrl }}"
-                class="w-full h-full object-cover rounded-lg cursor-pointer transition-transform duration-300 hover:scale-105"
+
+    <div class="vehicle-card bg-white border border-outline-variant rounded-xl overflow-hidden flex flex-col md:flex-row">
+
+        {{-- Image --}}
+        <div class="md:w-2/5 xl:w-1/3 flex-shrink-0 img-wrap bg-surface-container-high min-h-[220px] md:min-h-0">
+            <img src="{{ $imgUrl }}"
+                alt="{{ $listing->year }} {{ $listing->make }} {{ $listing->model }}"
+                class="w-full h-full object-cover cursor-pointer transition-transform duration-300 hover:scale-105"
+                style="min-height:220px; max-height:280px"
                 loading="lazy"
-                onerror="this.onerror=null; this.src='{{ asset('images/placeholder-car.png') }}';"
-                onclick="openImageModal('{{ $imgUrl }}')" />
-            <div class="image-overlay">
-                <button
-                    class="view-details-btn bg-white text-primary-600 font-medium py-2 px-4 rounded-lg text-sm hover:bg-primary-50 transition-colors"
-                    onclick="openImageModal('{{ $imgUrl }}')">
-                    View Image
+                onerror="this.onerror=null;this.src='{{ asset('images/placeholder-car.png') }}';"
+                onclick="openImageModal('{{ $imgUrl }}')"/>
+
+            <div class="img-overlay">
+                <button onclick="openImageModal('{{ $imgUrl }}')"
+                    class="bg-white text-primary font-label-md text-label-md px-4 py-2 rounded-lg hover:bg-surface-container transition-colors">
+                    View Photo
                 </button>
             </div>
-            <div class="absolute top-3 right-3 z-10">
-                <x-ui.watchlist-heart
-                    :listing="$listing"
-                    :in-watchlist="$liked"
-                    :likes-count="$likesCount"
-                />
-            </div>
+
             <div class="absolute top-3 left-3 flex flex-col gap-1 z-10">
+                @if($listing->featured)
+                    <span class="bg-secondary-fixed-dim text-primary text-[10px] font-bold px-2 py-0.5 rounded-sm uppercase tracking-widest">Featured</span>
+                @endif
                 <x-ui.ending-soon-badge :end="$endDate" />
             </div>
             <div class="absolute bottom-3 left-3 z-10">
                 <x-ui.countdown :end="$endDate" :listing-id="$listing->id" variant="grid" />
             </div>
+            <div class="absolute top-3 right-3 z-10">
+                <x-ui.watchlist-heart :listing="$listing" :in-watchlist="$liked" :likes-count="$likesCount"/>
+            </div>
         </div>
 
-        <!-- Info -->
-        <div class="p-5 flex-1 flex flex-col min-w-0">
-            <div class="flex justify-between items-start gap-2 mb-2">
-                <h3 class="text-lg font-semibold text-secondary-800 break-words line-clamp-2 min-w-0">
+        {{-- Info --}}
+        <div class="flex-1 p-5 flex flex-col min-w-0">
+            <div class="flex items-start justify-between gap-3 mb-3">
+                <h3 class="font-headline-sm text-headline-sm text-primary line-clamp-2 min-w-0">
                     {{ $listing->year }} {{ $listing->make }} {{ $listing->model }}
                 </h3>
-                <div class="flex space-x-2 items-center">
-                    <span
-                        class="material-icons text-gray-400 hover:text-primary-500 cursor-pointer transition-colors">share</span>
-                </div>
+                <button type="button" title="Share" class="flex-shrink-0 text-on-surface-variant hover:text-primary transition-colors mt-0.5">
+                    <span class="material-symbols-outlined text-[20px]">share</span>
+                </button>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2 min-w-0">
-                <div class="flex items-center">
-                    <span class="material-icons text-gray-400 text-sm mr-2">speed</span>
-                    <div>
-                        <p class="text-xs text-gray-500">Odometer</p>
-                        <p class="text-sm font-medium">
+            {{-- Key specs grid --}}
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                <div class="flex items-start gap-2">
+                    <span class="material-symbols-outlined text-outline text-[16px] flex-shrink-0 mt-0.5">speed</span>
+                    <div class="min-w-0">
+                        <p class="text-label-sm font-label-sm text-on-surface-variant">Odometer</p>
+                        <p class="text-body-sm font-body-sm text-on-surface truncate">
                             @if($listing->odometer)
-                                {{ number_format($listing->odometer) }} miles
-                                @if($listing->odometer_estimated)
-                                    <span class="text-amber-600 font-medium">(Est.)</span>
-                                    <span class="material-icons text-gray-400 cursor-help align-middle ml-0.5" title="This is an estimated odometer reading and may be subject to change." style="font-size: 14px;">info</span>
-                                @endif
-                            @else
-                                N/A
-                            @endif
+                                {{ number_format($listing->odometer) }} mi
+                                @if($listing->odometer_estimated)<span class="text-amber-600 text-[11px]"> (Est.)</span>@endif
+                            @else N/A @endif
                         </p>
                     </div>
                 </div>
-                <div class="flex items-center min-w-0">
-                    <span class="material-icons text-gray-400 text-sm mr-2 shrink-0">receipt</span>
+                <div class="flex items-start gap-2">
+                    <span class="material-symbols-outlined text-outline text-[16px] flex-shrink-0 mt-0.5">receipt</span>
                     <div class="min-w-0">
-                        <p class="text-xs text-gray-500">Title</p>
-                        <p class="text-sm font-medium truncate">{{ $listing->title_status_display }}</p>
+                        <p class="text-label-sm font-label-sm text-on-surface-variant">Title</p>
+                        <p class="text-body-sm font-body-sm text-on-surface truncate">{{ $listing->title_status_display }}</p>
                     </div>
                 </div>
-                <div class="flex items-center min-w-0">
-                    <span class="material-icons text-gray-400 text-sm mr-2 shrink-0">location_on</span>
+                <div class="flex items-start gap-2">
+                    <span class="material-symbols-outlined text-outline text-[16px] flex-shrink-0 mt-0.5">location_on</span>
                     <div class="min-w-0">
-                        <p class="text-xs text-gray-500">Location</p>
-                        <p class="text-sm font-medium truncate">{{ $listing->island ?? 'N/A' }}</p>
+                        <p class="text-label-sm font-label-sm text-on-surface-variant">Location</p>
+                        <p class="text-body-sm font-body-sm text-on-surface truncate">{{ $listing->island ?? 'N/A' }}</p>
                     </div>
                 </div>
-                <div class="flex items-center min-w-0">
-                    <span class="material-icons text-gray-400 text-sm mr-2 shrink-0">event</span>
+                <div class="flex items-start gap-2">
+                    <span class="material-symbols-outlined text-outline text-[16px] flex-shrink-0 mt-0.5">event</span>
                     <div class="min-w-0">
-                        <p class="text-xs text-gray-500">Sale Date</p>
-                        <p class="text-sm font-medium truncate" title="{{ $listing->sale_date ? '' : 'Sale date not set for this listing.' }}">
+                        <p class="text-label-sm font-label-sm text-on-surface-variant">Sale Date</p>
+                        <p class="text-body-sm font-body-sm text-on-surface truncate">
                             {{ $listing->sale_date ? \Carbon\Carbon::parse($listing->sale_date)->format('M d, Y') : 'N/A' }}
                         </p>
                     </div>
                 </div>
             </div>
 
-            <!-- Additional details -->
-            <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-600">
-                @if ($listing->primary_damage)
-                    <div class="flex"><span class="font-medium mr-1">Primary Damage:</span>
-                        <span>{{ $listing->primary_damage }}</span>
-                    </div>
+            {{-- Extra details --}}
+            @if($listing->primary_damage || $listing->transmission || $listing->fuel_type)
+            <div class="flex flex-wrap gap-2 mb-4">
+                @if($listing->primary_damage)
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-surface-container text-on-surface-variant text-label-sm font-label-sm rounded-lg">
+                        <span class="material-symbols-outlined text-[12px]">warning</span>{{ $listing->primary_damage }}
+                    </span>
                 @endif
-                @if ($listing->secondary_damage)
-                    <div class="flex"><span class="font-medium mr-1">Secondary Damage:</span>
-                        <span>{{ $listing->secondary_damage }}</span>
-                    </div>
+                @if($listing->transmission)
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-surface-container text-on-surface-variant text-label-sm font-label-sm rounded-lg">
+                        <span class="material-symbols-outlined text-[12px]">settings</span>{{ ucfirst(strtolower($listing->transmission)) }}
+                    </span>
                 @endif
-                @if ($listing->transmission)
-                    <div class="flex min-w-0"><span class="font-medium mr-1 shrink-0">Transmission:</span>
-                        <span class="truncate">{{ ucfirst(strtolower($listing->transmission ?? '')) }}</span>
-                    </div>
-                @endif
-                @if ($listing->fuel_type)
-                    <div class="flex min-w-0"><span class="font-medium mr-1 shrink-0">Fuel Type:</span>
-                        <span class="truncate">{{ is_string($listing->fuel_type) ? ucfirst(strtolower($listing->fuel_type)) : $listing->fuel_type }}</span>
-                    </div>
+                @if($listing->fuel_type)
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-surface-container text-on-surface-variant text-label-sm font-label-sm rounded-lg">
+                        <span class="material-symbols-outlined text-[12px]">local_gas_station</span>{{ is_string($listing->fuel_type) ? ucfirst(strtolower($listing->fuel_type)) : $listing->fuel_type }}
+                    </span>
                 @endif
             </div>
+            @endif
 
-            <div
-                class="mt-4 pt-4 border-t border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between">
+            {{-- Bid + Actions --}}
+            <div class="mt-auto pt-4 border-t border-outline-variant flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                    <p class="text-xs text-gray-500">Current Bid</p>
-                    <p class="text-2xl font-bold text-green-600 price-tag">
-                        ${{ number_format($listing->current_bid ?? 0) }}
-                    </p>
+                    <p class="text-label-sm font-label-sm text-on-surface-variant">Current Bid</p>
+                    <p class="font-headline-md text-headline-md text-primary">${{ number_format($listing->current_bid ?? 0) }}</p>
                 </div>
-                <div class="mt-3 sm:mt-0 flex space-x-2">
+                <div class="flex items-center gap-2">
                     <a href="{{ route('auction.show', $listing->getSlugOrGenerate()) }}"
-                        class="bg-primary-600 hover:bg-primary-700 text-white font-medium py-2.5 px-6 rounded-lg transition-all duration-300 text-sm transform hover:-translate-y-0.5 hover:shadow-md flex-1 sm:flex-none text-center">
+                        class="flex-1 sm:flex-none text-center bg-secondary-container text-on-secondary-container font-label-md text-label-md px-6 py-2.5 rounded-lg hover:bg-secondary transition-colors">
                         Bid Now
                     </a>
                     <a href="{{ route('auction.show', $listing->getSlugOrGenerate()) }}"
-                        class="border border-gray-300 text-secondary-700 font-medium py-2.5 px-3 rounded-lg hover:bg-gray-50 transition-all duration-300 text-sm transform hover:-translate-y-0.5 hover:shadow-sm">
-                        <span class="material-icons text-lg">visibility</span>
+                        class="border border-outline-variant text-on-surface-variant px-3 py-2.5 rounded-lg hover:bg-surface-container hover:text-primary transition-colors"
+                        title="View details">
+                        <span class="material-symbols-outlined text-[20px]">open_in_new</span>
                     </a>
                 </div>
             </div>
         </div>
     </div>
+
 @empty
-    <div class="col-span-full text-center py-10">
-        <span class="material-icons text-gray-400 text-6xl mb-4">search_off</span>
-        <h3 class="text-xl font-semibold text-gray-600 mb-2">No listings found</h3>
-        <p class="text-gray-500">Try adjusting your filters to find more results.</p>
+    <div class="text-center py-20">
+        <span class="material-symbols-outlined text-outline text-[64px] mb-3 block">search_off</span>
+        <h3 class="font-headline-sm text-headline-sm text-primary mb-2">No listings found</h3>
+        <p class="text-body-md font-body-md text-on-surface-variant">Try adjusting your filters to find more results.</p>
     </div>
 @endforelse

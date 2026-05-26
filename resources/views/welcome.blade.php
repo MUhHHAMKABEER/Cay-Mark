@@ -1,864 +1,665 @@
-@extends('layouts.welcome')
+@extends('layouts.public')
+
+@section('title', 'CayMark Island Exchange | Premium Vehicle Auctions')
 
 @section('content')
 @php
-    // Popular auctions: active only, do not show ended auctions on front page. End time must be in the future.
-    $now = now()->format('Y-m-d H:i:s');
-    $activeAuctionQuery = \App\Models\Listing::with('images')
-        ->where('listing_method', 'auction')
-        ->where('listing_state', 'active')
-        ->where('status', 'approved')
-        ->whereRaw("COALESCE(auction_end_time, DATE_ADD(COALESCE(auction_start_time, created_at), INTERVAL COALESCE(auction_duration, 7) DAY)) > ?", [$now]);
+    /* ── Image URL helper ──────────────────────────────────────── */
+    $homeImgUrl = function ($path) {
+        $path = trim((string) ($path ?? ''));
+        if ($path === '' || str_starts_with($path, 'http')) return $path ?: asset('images/placeholder-product.png');
+        $p = ltrim(str_replace('\\', '/', $path), '/');
+        return str_starts_with($p, 'uploads/') ? asset($p) : asset('uploads/listings/' . $p);
+    };
 
-    // Use most-viewed logic directly for Popular Car Auctions (top 8 most-clicked auctions)
-    $popularAuctions = (clone $activeAuctionQuery)
+    /* ── Dynamic auction data ──────────────────────────────────── */
+    $now = now()->format('Y-m-d H:i:s');
+    $activeAuctionBase = \App\Models\Listing::with(['images', 'bids'])
+        ->where('listing_method', 'auction')
+        ->where('status', 'approved')
+        ->whereRaw(
+            "COALESCE(auction_end_time, DATE_ADD(COALESCE(auction_start_time, created_at), INTERVAL COALESCE(auction_duration, 7) DAY)) > ?",
+            [$now]
+        );
+
+    // 4 featured auctions (most viewed / most recent) — bids eager-loaded to avoid N+1
+    $featuredAuctions = (clone $activeAuctionBase)
         ->orderByDesc('view_count')
         ->orderByDesc('created_at')
-        ->take(8)
+        ->take(4)
         ->get();
+
+    /* ── Auction Finder dropdowns ──────────────────────────────── */
+    $finderMakes = \App\Models\Listing::where('status', 'approved')
+        ->whereNotNull('make')
+        ->distinct()
+        ->orderBy('make')
+        ->pluck('make');
+
+    $finderYears = range(date('Y'), 2000);   // newest first
+
+    $finderCategories = [
+        'car'       => 'Passenger Vehicles',
+        'marine'    => 'Marine / Boats',
+        'truck'     => 'Trucks & SUVs',
+        'equipment' => 'Heavy Equipment',
+    ];
+
+    /* ── Corporate stats (dynamic) ─────────────────────────────── */
+    $statActiveAuctions = (clone $activeAuctionBase)->count();
+    $statTotalListings  = \App\Models\Listing::where('status', 'approved')->count();
+    $statVerifiedUsers  = \App\Models\User::whereNotNull('role')->where('role', '!=', 'admin')->count();
+
+    /* ── Auth context for CTA section ──────────────────────────── */
+    $homeUser     = Auth::user();
+    $homeIsGuest  = !$homeUser;
+    $homeIsBuyer  = $homeUser && $homeUser->role === 'buyer';
+    $homeIsSeller = $homeUser && $homeUser->role === 'seller';
 @endphp
 
-<style>
-    /* Modern Homepage Styles with Character */
-    .hero-gradient-overlay {
-        background: linear-gradient(135deg, rgba(0, 0, 0, 0.75) 0%, rgba(30, 58, 138, 0.65) 50%, rgba(0, 0, 0, 0.5) 100%);
-    }
+{{-- ══════════════════════════════════════════════════════════════════
+     HERO CAROUSEL SECTION
+══════════════════════════════════════════════════════════════════ --}}
+<section class="relative bg-primary overflow-hidden" style="height:clamp(600px,80vh,800px)">
 
-    .glass-card {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    }
+    {{-- Sliding background images --}}
+    <div class="absolute inset-0 z-0">
+        <div class="hero-carousel-track h-full" id="hero-track">
 
-    .auction-card {
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        border: 1px solid rgba(229, 231, 235, 0.8);
-        position: relative;
-    }
+            {{-- Slide 1: Premium Vehicles --}}
+            <div class="hero-slide relative h-full">
+                <div class="absolute inset-0 bg-cover bg-center"
+                    style="background-image:url('https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1600&q=80')"></div>
+                <div class="absolute inset-0" style="background:linear-gradient(to right,#002452 0%,rgba(0,36,82,0.75) 45%,rgba(0,36,82,0.15) 100%)"></div>
+            </div>
 
-    .auction-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, transparent 50%);
-        opacity: 0;
-        transition: opacity 0.4s;
-        z-index: 0;
-        border-radius: 1rem;
-    }
+            {{-- Slide 2: Marine & Yacht --}}
+            <div class="hero-slide relative h-full">
+                <div class="absolute inset-0 bg-cover bg-center"
+                    style="background-image:url('https://images.unsplash.com/photo-1569263979104-865ab7cd8d13?w=1600&q=80')"></div>
+                <div class="absolute inset-0" style="background:linear-gradient(to right,#002452 0%,rgba(0,36,82,0.75) 45%,rgba(0,36,82,0.15) 100%)"></div>
+            </div>
 
-    .auction-card:hover::before {
-        opacity: 1;
-    }
+            {{-- Slide 3: Heavy Fleet --}}
+            <div class="hero-slide relative h-full">
+                <div class="absolute inset-0 bg-cover bg-center"
+                    style="background-image:url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1600&q=80')"></div>
+                <div class="absolute inset-0" style="background:linear-gradient(to right,#002452 0%,rgba(0,36,82,0.75) 45%,rgba(0,36,82,0.15) 100%)"></div>
+            </div>
 
-    .auction-card:hover {
-        transform: translateY(-12px) scale(1.03);
-        box-shadow: 0 25px 50px rgba(59, 130, 246, 0.25);
-        border-color: rgba(59, 130, 246, 0.5);
-    }
-
-    .countdown-badge {
-        background: linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(30, 58, 138, 0.9) 100%);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-
-    .section-title {
-        position: relative;
-        display: inline-block;
-    }
-
-    .section-title::after {
-        content: '';
-        position: absolute;
-        bottom: -12px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 80px;
-        height: 5px;
-        background: linear-gradient(90deg, #3b82f6, #2563eb, #1e40af);
-        border-radius: 3px;
-        animation: title-underline 3s ease-in-out infinite;
-    }
-
-    @keyframes title-underline {
-        0%, 100% { width: 80px; }
-        50% { width: 120px; }
-    }
-
-    .highlight-card {
-        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-        position: relative;
-        overflow: hidden;
-        border: 2px solid transparent;
-    }
-
-    .highlight-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-        transition: left 0.6s;
-        z-index: 1;
-    }
-
-    .highlight-card:hover::before {
-        left: 100%;
-    }
-
-    .highlight-card::after {
-        content: '';
-        position: absolute;
-        inset: -2px;
-        background: linear-gradient(135deg, #3b82f6, #2563eb, #1e40af);
-        border-radius: 1rem;
-        opacity: 0;
-        transition: opacity 0.5s;
-        z-index: -1;
-    }
-
-    .highlight-card:hover::after {
-        opacity: 1;
-    }
-
-    .highlight-card:hover {
-        transform: translateY(-16px) scale(1.02);
-        box-shadow: 0 30px 60px rgba(59, 130, 246, 0.3);
-        border-color: transparent;
-    }
-
-    .btn-modern {
-        position: relative;
-        overflow: hidden;
-        transition: all 0.3s ease;
-    }
-
-    .btn-modern::before {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 0;
-        height: 0;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.3);
-        transform: translate(-50%, -50%);
-        transition: width 0.6s, height 0.6s;
-    }
-
-    .btn-modern:hover::before {
-        width: 300px;
-        height: 300px;
-    }
-
-    .btn-modern:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
-    }
-
-    .search-box-modern {
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(249, 250, 251, 0.98) 100%);
-        box-shadow: 0 15px 50px rgba(0, 0, 0, 0.1);
-        border: 2px solid rgba(229, 231, 235, 0.5);
-        position: relative;
-        overflow: hidden;
-    }
-
-    .search-box-modern::before {
-        content: '';
-        position: absolute;
-        top: -50%;
-        left: -50%;
-        width: 200%;
-        height: 200%;
-        background: linear-gradient(45deg, transparent, rgba(59, 130, 246, 0.05), transparent);
-        animation: search-shimmer 3s infinite;
-    }
-
-    @keyframes search-shimmer {
-        0% { transform: translate(-50%, -50%) rotate(0deg); }
-        100% { transform: translate(-50%, -50%) rotate(360deg); }
-    }
-
-    .vehicle-card {
-        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-        position: relative;
-        overflow: hidden;
-    }
-
-    .vehicle-card::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: linear-gradient(180deg, transparent 0%, rgba(59, 130, 246, 0.1) 100%);
-        opacity: 0;
-        transition: opacity 0.4s;
-        z-index: 1;
-    }
-
-    .vehicle-card:hover::after {
-        opacity: 1;
-    }
-
-    .vehicle-card:hover {
-        transform: translateY(-10px) scale(1.02);
-        box-shadow: 0 25px 50px rgba(59, 130, 246, 0.2);
-    }
-
-    .register-form-modern {
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(249, 250, 251, 0.98) 100%);
-        box-shadow: 0 25px 70px rgba(0, 0, 0, 0.2);
-        border: 2px solid rgba(229, 231, 235, 0.5);
-        position: relative;
-        overflow: hidden;
-    }
-
-    .register-form-modern::before {
-        content: '';
-        position: absolute;
-        top: -2px;
-        left: -2px;
-        right: -2px;
-        bottom: -2px;
-        background: linear-gradient(135deg, #3b82f6, #2563eb, #1e40af, #3b82f6);
-        background-size: 300% 300%;
-        border-radius: 1.5rem;
-        opacity: 0;
-        transition: opacity 0.5s;
-        z-index: -1;
-        animation: border-glow 3s ease infinite;
-    }
-
-    @keyframes border-glow {
-        0%, 100% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-    }
-
-    .register-form-modern:hover::before {
-        opacity: 0.3;
-    }
-
-    .newsletter-modern {
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(249, 250, 251, 0.98) 100%);
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-        border: 2px solid rgba(255, 255, 255, 0.3);
-    }
-
-    .info-card-modern {
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(249, 250, 251, 0.98) 100%);
-        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
-        border: 2px solid rgba(229, 231, 235, 0.5);
-        position: relative;
-    }
-
-    .pulse-dot {
-        animation: pulse-dot 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-    }
-
-    @keyframes pulse-dot {
-        0%, 100% {
-            opacity: 1;
-            transform: scale(1);
-        }
-        50% {
-            opacity: 0.7;
-            transform: scale(1.2);
-        }
-    }
-
-    .gradient-text {
-        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #1e40af 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        animation: gradient-shift 3s ease infinite;
-        background-size: 200% 200%;
-    }
-
-    @keyframes gradient-shift {
-        0%, 100% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-    }
-
-    .section-bg-pattern {
-        background-image:
-            radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.05) 0%, transparent 50%),
-            radial-gradient(circle at 80% 80%, rgba(37, 99, 235, 0.05) 0%, transparent 50%),
-            radial-gradient(circle at 50% 20%, rgba(30, 64, 175, 0.03) 0%, transparent 50%);
-        position: relative;
-    }
-
-    /* Floating Elements */
-    .floating-shape {
-        position: absolute;
-        border-radius: 50%;
-        opacity: 0.1;
-        animation: float 20s infinite ease-in-out;
-    }
-
-    @keyframes float {
-        0%, 100% {
-            transform: translate(0, 0) rotate(0deg);
-        }
-        25% {
-            transform: translate(30px, -30px) rotate(90deg);
-        }
-        50% {
-            transform: translate(-20px, 20px) rotate(180deg);
-        }
-        75% {
-            transform: translate(20px, 30px) rotate(270deg);
-        }
-    }
-
-    .floating-shape-1 {
-        width: 200px;
-        height: 200px;
-        background: linear-gradient(135deg, #3b82f6, #2563eb);
-        top: 10%;
-        left: 5%;
-        animation-delay: 0s;
-    }
-
-    .floating-shape-2 {
-        width: 150px;
-        height: 150px;
-        background: linear-gradient(135deg, #2563eb, #1e40af);
-        top: 60%;
-        right: 10%;
-        animation-delay: 2s;
-    }
-
-    .floating-shape-3 {
-        width: 100px;
-        height: 100px;
-        background: linear-gradient(135deg, #1e40af, #3b82f6);
-        bottom: 20%;
-        left: 15%;
-        animation-delay: 4s;
-    }
-
-    /* Animated Background Particles */
-    .particle {
-        position: absolute;
-        width: 4px;
-        height: 4px;
-        background: rgba(59, 130, 246, 0.3);
-        border-radius: 50%;
-        animation: particle-float 15s infinite ease-in-out;
-    }
-
-    @keyframes particle-float {
-        0%, 100% {
-            transform: translateY(0) translateX(0);
-            opacity: 0;
-        }
-        10% {
-            opacity: 1;
-        }
-        90% {
-            opacity: 1;
-        }
-        100% {
-            transform: translateY(-100vh) translateX(50px);
-            opacity: 0;
-        }
-    }
-
-    /* Text Animations */
-    .fade-in-up {
-        animation: fadeInUp 0.8s ease-out;
-    }
-
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .fade-in-delay-1 {
-        animation: fadeInUp 0.8s ease-out 0.2s both;
-    }
-
-    .fade-in-delay-2 {
-        animation: fadeInUp 0.8s ease-out 0.4s both;
-    }
-
-    .fade-in-delay-3 {
-        animation: fadeInUp 0.8s ease-out 0.6s both;
-    }
-
-    /* Glow Effects */
-    .glow-blue {
-        box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
-    }
-
-    .glow-blue:hover {
-        box-shadow: 0 0 30px rgba(59, 130, 246, 0.8);
-    }
-
-    /* Section Dividers */
-    .section-divider {
-        height: 1px;
-        background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.3), transparent);
-        margin: 60px 0;
-    }
-
-    /* Enhanced Card Hover */
-    .card-lift {
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .card-lift:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-    }
-</style>
-
-<!-- Enhanced Hero Banner Section (same feel as newsletter: viewport-relative height + py-20 padding) -->
-<section class="relative min-h-[55vh] py-20 overflow-hidden flex items-center" x-data="{ currentSlide: 0, slides: 3 }">
-    <!-- Floating Shapes -->
-    <div class="floating-shape floating-shape-1"></div>
-    <div class="floating-shape floating-shape-2"></div>
-    <div class="floating-shape floating-shape-3"></div>
-
-    <!-- Animated Particles -->
-    <div class="particle" style="left: 10%; animation-delay: 0s;"></div>
-    <div class="particle" style="left: 30%; animation-delay: 2s;"></div>
-    <div class="particle" style="left: 50%; animation-delay: 4s;"></div>
-    <div class="particle" style="left: 70%; animation-delay: 6s;"></div>
-    <div class="particle" style="left: 90%; animation-delay: 8s;"></div>
-
-    <div class="absolute inset-0">
-        <!-- Slide 1 -->
-        <div x-show="currentSlide === 0" x-transition:enter="transition ease-out duration-700" x-transition:enter-start="opacity-0 scale-110" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-700" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-110" class="absolute inset-0 bg-cover bg-center" style="background-image: url('{{ asset('images/banner-1.jpg') }}');">
-            <div class="absolute inset-0 hero-gradient-overlay"></div>
-        </div>
-        <!-- Slide 2 -->
-        <div x-show="currentSlide === 1" x-transition:enter="transition ease-out duration-700" x-transition:enter-start="opacity-0 scale-110" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-700" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-110" class="absolute inset-0 bg-cover bg-center" style="background-image: url('{{ asset('images/banner-2.jpg') }}');">
-            <div class="absolute inset-0 hero-gradient-overlay"></div>
-        </div>
-        <!-- Slide 3 -->
-        <div x-show="currentSlide === 2" x-transition:enter="transition ease-out duration-700" x-transition:enter-start="opacity-0 scale-110" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-700" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-110" class="absolute inset-0 bg-cover bg-center" style="background-image: url('{{ asset('images/banner-3.jpg') }}');">
-            <div class="absolute inset-0 hero-gradient-overlay"></div>
         </div>
     </div>
 
-    <!-- Enhanced Banner Content -->
-    <div class="relative z-10 h-full flex items-center">
-        <div class="container mx-auto px-4">
-            <div class="max-w-3xl text-white fade-in-up">
-                <div class="inline-flex items-center glass-card rounded-full px-5 py-2.5 mb-6 border border-white/20 fade-in-delay-1 glow-blue">
-                    <span class="w-2.5 h-2.5 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full mr-3 pulse-dot"></span>
-                    <span class="text-sm font-semibold text-gray-900">LIVE AUCTIONS HAPPENING NOW</span>
-                </div>
-                <h1 class="text-5xl md:text-7xl font-extrabold mb-6 leading-tight font-heading drop-shadow-2xl fade-in-delay-1">
-                    INTRODUCING<br>
-                    <span class="text-blue-300 relative inline-block">
-                        <span class="relative z-10">WHOLESALE AUCTIONS</span>
-                        <span class="absolute bottom-0 left-0 right-0 h-3 bg-gradient-to-r from-blue-400/50 to-transparent blur-sm"></span>
-                    </span>
+    {{-- Content layer --}}
+    <div class="relative z-10 h-full px-4 md:px-16 w-full max-w-[1280px] mx-auto flex flex-col lg:flex-row items-center justify-between gap-12 py-16">
+
+        {{-- Left: Headlines + Controls --}}
+        <div class="text-left w-full lg:w-1/2 max-w-2xl">
+
+            {{-- Live badge --}}
+            <div class="inline-flex items-center gap-2 px-4 py-2 border border-white/30 text-white text-[11px] font-bold tracking-[0.2em] mb-8 bg-white/10" style="border-radius:0">
+                <div class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
+                @if($statActiveAuctions > 0)
+                    {{ $statActiveAuctions }} AUCTION{{ $statActiveAuctions !== 1 ? 'S' : '' }} ACTIVE NOW
+                @else
+                    REAL-TIME AUCTIONS ACTIVE
+                @endif
+            </div>
+
+            {{-- Dynamic headline (changed by JS carousel) --}}
+            <div id="hero-content">
+                <h1 class="text-4xl md:text-[60px] leading-[1.05] font-bold text-white mb-6 font-display-lg uppercase tracking-tight" id="hero-title">
+                    PREMIUM<br/>
+                    <span class="text-secondary-fixed-dim">ISLAND ASSET</span><br/>
+                    EXCHANGE
                 </h1>
-                <p class="text-xl md:text-2xl mb-10 text-blue-100 drop-shadow-lg leading-relaxed font-medium fade-in-delay-2">
-                    (Including Bank-Repo Vehicles)<br>
-                    FLEET, FINANCE & COPART SELECT VEHICLES.
+                <p class="text-white/90 text-lg mb-10 font-body-lg max-w-lg" id="hero-description">
+                    The Bahamas' most trusted digital auction house for wholesale vehicles, fleet assets, and private listings.
                 </p>
-                <div class="fade-in-delay-3">
-                    <a href="{{ route('Auction.index') }}" class="inline-flex items-center bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-4 px-10 rounded-xl transition-all transform hover:scale-105 shadow-2xl btn-modern relative z-10 glow-blue">
-                        <span class="relative z-10">View Inventory</span>
-                        <svg class="w-5 h-5 ml-3 relative z-10 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
-                        </svg>
-                    </a>
-                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row items-start gap-4 mb-12">
+                <a href="{{ route('Auction.index') }}"
+                    class="px-10 py-4 bg-white text-primary font-bold hover:bg-gray-100 transition-all text-label-md flex items-center gap-3 shadow-2xl uppercase tracking-wider"
+                    style="border-radius:0">
+                    Browse Catalog
+                    <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+                </a>
+                @guest
+                <a href="{{ route('register') }}"
+                    class="px-10 py-4 border-2 border-white text-white font-bold hover:bg-white/10 transition-all text-label-md uppercase tracking-wider"
+                    style="border-radius:0">
+                    Create Account
+                </a>
+                @endguest
+            </div>
+
+        </div>
+
+        {{-- Right: Auction Finder card --}}
+        <div class="w-full lg:w-5/12">
+            <div class="bg-white p-8 md:p-10 shadow-2xl border-t-4 border-secondary-fixed-dim" style="border-radius:0">
+                <h2 class="text-2xl font-bold text-primary mb-1 font-headline-md uppercase tracking-wide">Auction Finder</h2>
+                <p class="text-gray-400 mb-7 text-sm font-medium">Find your perfect island asset</p>
+                <form method="GET" action="{{ route('Auction.index') }}" class="space-y-5 text-left">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-widest">Asset Category</label>
+                            <select name="category"
+                                class="w-full border-gray-300 text-gray-900 focus:ring-primary focus:border-primary text-sm py-3"
+                                style="border-radius:0">
+                                <option value="">All Categories</option>
+                                @foreach($finderCategories as $val => $label)
+                                <option value="{{ $val }}" {{ request('category') === $val ? 'selected' : '' }}>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-widest">Make / Brand</label>
+                            <select name="make"
+                                class="w-full border-gray-300 text-gray-900 focus:ring-primary focus:border-primary text-sm py-3"
+                                style="border-radius:0">
+                                <option value="">All Brands</option>
+                                @foreach($finderMakes as $make)
+                                <option value="{{ $make }}" {{ request('make') === $make ? 'selected' : '' }}>{{ $make }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-widest">Year From</label>
+                            <select name="year_from"
+                                class="w-full border-gray-300 text-gray-900 focus:ring-primary focus:border-primary text-sm py-3"
+                                style="border-radius:0">
+                                <option value="">Any Year</option>
+                                @foreach(array_reverse($finderYears) as $yr)
+                                <option value="{{ $yr }}" {{ request('year_from') == $yr ? 'selected' : '' }}>{{ $yr }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-widest">Year To</label>
+                            <select name="year_to"
+                                class="w-full border-gray-300 text-gray-900 focus:ring-primary focus:border-primary text-sm py-3"
+                                style="border-radius:0">
+                                <option value="">Any Year</option>
+                                @foreach($finderYears as $yr)
+                                <option value="{{ $yr }}" {{ request('year_to') == $yr ? 'selected' : '' }}>{{ $yr }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit"
+                        class="w-full py-4 bg-primary text-white font-bold hover:bg-[#003377] transition-all flex items-center justify-center gap-3 uppercase tracking-widest text-sm shadow-lg"
+                        style="border-radius:0">
+                        <span class="material-symbols-outlined text-[20px]">search</span>
+                        Execute Search
+                    </button>
+                </form>
             </div>
         </div>
+
     </div>
 
-    <!-- Enhanced Carousel Controls -->
-    <button @click="currentSlide = (currentSlide - 1 + slides) % slides" class="absolute left-6 top-1/2 -translate-y-1/2 z-20 bg-white/90 backdrop-blur-md text-gray-800 hover:text-blue-600 p-4 rounded-full transition-all hover:scale-110 shadow-2xl border-2 border-white/50 hover:border-blue-500">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/>
-        </svg>
-    </button>
-    <button @click="currentSlide = (currentSlide + 1) % slides" class="absolute right-6 top-1/2 -translate-y-1/2 z-20 bg-white/90 backdrop-blur-md text-gray-800 hover:text-blue-600 p-4 rounded-full transition-all hover:scale-110 shadow-2xl border-2 border-white/50 hover:border-blue-500">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
-        </svg>
-    </button>
-
-    <!-- Carousel Indicators -->
-    <div class="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex space-x-2">
-        <button @click="currentSlide = 0" :class="currentSlide === 0 ? 'bg-white w-8' : 'bg-white/40 w-2'" class="h-2 rounded-full transition-all duration-300"></button>
-        <button @click="currentSlide = 1" :class="currentSlide === 1 ? 'bg-white w-8' : 'bg-white/40 w-2'" class="h-2 rounded-full transition-all duration-300"></button>
-        <button @click="currentSlide = 2" :class="currentSlide === 2 ? 'bg-white w-8' : 'bg-white/40 w-2'" class="h-2 rounded-full transition-all duration-300"></button>
+    {{-- ── Slide indicator dots — bottom-center of banner ── --}}
+    <div class="absolute bottom-6 left-0 right-0 flex justify-center items-center gap-2 z-20" id="hero-dots">
+        <div class="h-[3px] w-8 bg-white transition-all duration-300 slide-dot"></div>
+        <div class="h-[3px] w-3 bg-white/30 transition-all duration-300 slide-dot"></div>
+        <div class="h-[3px] w-3 bg-white/30 transition-all duration-300 slide-dot"></div>
     </div>
 
-    <!-- Auto-rotate script -->
-    <script>
-        setInterval(() => {
-            if (document.querySelector('[x-data*="currentSlide"]')) {
-                const component = Alpine.$data(document.querySelector('[x-data*="currentSlide"]'));
-                if (component) component.currentSlide = (component.currentSlide + 1) % component.slides;
-            }
-        }, 6000);
-
-        function runCountdown(element, prefix) {
-            const listingId = element.id.replace(prefix, '');
-            const endTime = new Date(element.getAttribute('data-end-time'));
-            const now = new Date();
-            const diff = Math.max(0, Math.floor((endTime - now) / 1000));
-
-            const liveBadge = document.getElementById('live-badge-' + listingId);
-            if (liveBadge) {
-                liveBadge.style.display = diff <= 0 ? 'none' : 'flex';
-            }
-
-            if (diff <= 0) {
-                element.innerHTML = '<div class="bg-gray-500/90 backdrop-blur-md text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-xl border border-gray-400/30">Auction Ended</div>';
-                return;
-            }
-
-            const days = Math.floor(diff / 86400);
-            const hours = Math.floor((diff % 86400) / 3600);
-            const minutes = Math.floor((diff % 3600) / 60);
-            const seconds = diff % 60;
-
-            const idPrefix = prefix === 'countdown-home-' ? '' : 'mv-';
-            const daysEl = document.getElementById(idPrefix + 'days-' + listingId);
-            const hoursEl = document.getElementById(idPrefix + 'hours-' + listingId);
-            const minutesEl = document.getElementById(idPrefix + 'minutes-' + listingId);
-            const secondsEl = document.getElementById(idPrefix + 'seconds-' + listingId);
-
-            if (daysEl) daysEl.textContent = String(days).padStart(2, '0');
-            if (hoursEl) hoursEl.textContent = String(hours).padStart(2, '0');
-            if (minutesEl) minutesEl.textContent = String(minutes).padStart(2, '0');
-            if (secondsEl) secondsEl.textContent = String(seconds).padStart(2, '0');
-        }
-
-        function updateHomepageCountdowns() {
-            document.querySelectorAll('[id^="countdown-home-"]').forEach(el => runCountdown(el, 'countdown-home-'));
-            document.querySelectorAll('[id^="countdown-mv-"]').forEach(el => runCountdown(el, 'countdown-mv-'));
-        }
-
-        setInterval(updateHomepageCountdowns, 1000);
-        updateHomepageCountdowns();
-    </script>
 </section>
 
-<!-- Enhanced Popular Car Auctions Section -->
-<section class="py-20 bg-gradient-to-b from-white to-gray-50 section-bg-pattern relative overflow-hidden">
-    <!-- Floating decorative elements -->
-    <div class="absolute top-20 right-10 w-32 h-32 bg-blue-100 rounded-full opacity-20 blur-3xl"></div>
-    <div class="absolute bottom-20 left-10 w-40 h-40 bg-indigo-100 rounded-full opacity-20 blur-3xl"></div>
+{{-- ══════════════════════════════════════════════════════════════════
+     ACTIVE AUCTIONS SECTION
+══════════════════════════════════════════════════════════════════ --}}
+<section class="py-20 bg-surface">
+    <div class="max-w-[1600px] mx-auto px-4 md:px-12">
 
-    <div class="container mx-auto px-4 relative z-10">
-        <div class="flex flex-col md:flex-row justify-between items-center mb-12 fade-in-up">
+        {{-- Section header --}}
+        <div class="mb-12 flex flex-col sm:flex-row justify-between items-start sm:items-end border-b-2 border-gray-200 pb-6 gap-4">
             <div>
-                <h2 class="text-4xl md:text-5xl font-extrabold text-gray-900 font-heading section-title mb-4">
-                    <span class="gradient-text">Popular Car Auctions</span>
+                <h2 class="text-4xl font-bold text-primary font-display-lg uppercase tracking-tight">
+                    Active <span class="text-secondary-fixed-dim">Auctions</span>
                 </h2>
+                @if($statActiveAuctions > 4)
+                <p class="text-sm text-gray-500 mt-2 font-medium">{{ $statActiveAuctions }} live auctions — showing top picks</p>
+                @endif
             </div>
-            <a href="{{ route('Auction.index') }}" class="mt-4 md:mt-0 inline-flex items-center bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-3 px-6 rounded-xl transition-all transform hover:scale-105 shadow-lg group glow-blue">
-                View All
-                <svg class="w-5 h-5 ml-2 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
-                </svg>
+            <a href="{{ route('Auction.index') }}"
+                class="group flex items-center gap-2 text-primary font-bold hover:text-[#003377] transition-colors text-sm uppercase tracking-widest">
+                View Full Catalog
+                <span class="material-symbols-outlined text-[20px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
             </a>
         </div>
 
-        <!-- Grid: 5 cards per row on xl, smaller cards, whole card clickable -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-            @foreach($popularAuctions as $auction)
-                @php
-                    $img = $auction->images->first();
-                    if ($img && !empty($img->image_path)) {
-                        $imgUrl = (str_contains($img->image_path, '/') || str_contains($img->image_path, '\\'))
-                            ? asset(ltrim(str_replace('\\', '/', $img->image_path), '/'))
-                            : asset('uploads/listings/' . $img->image_path);
-                    } else {
-                        $imgUrl = asset('images/placeholder-car.png');
-                    }
-                    $endDate = $auction->getAuctionEndDate();
-                    $isExpired = $endDate && \Carbon\Carbon::now()->greaterThanOrEqualTo($endDate);
-                    $highestBid = $auction->bids()->where('status', 'active')->orderByDesc('amount')->first();
-                    $currentBid = $highestBid ? (float)$highestBid->amount : (float)($auction->starting_price ?? 0);
-                @endphp
-                <a href="{{ route('auction.show', $auction->getSlugOrGenerate()) }}" class="auction-card block bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl border border-gray-100 transition-all duration-300 hover:scale-[1.02] group cursor-pointer">
-                    <div class="relative aspect-[4/3] overflow-hidden bg-gray-100">
-                        <img src="{{ $imgUrl }}" alt="{{ $auction->year }} {{ $auction->make }} {{ $auction->model }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" onerror="this.src='{{ asset('images/placeholder-car.png') }}'">
-                        @if($endDate && !$isExpired)
-                        <div class="absolute bottom-2 left-2 bg-gradient-to-br from-blue-600/95 to-indigo-700/95 backdrop-blur-md text-white px-2.5 py-1.5 rounded-lg text-xs font-bold shadow-lg border border-white/20"
-                             id="countdown-home-{{ $auction->id }}"
-                             data-end-time="{{ $endDate->toIso8601String() }}">
-                            <div class="flex items-center space-x-1">
-                                <span class="bg-white/20 px-1.5 py-0.5 rounded font-mono" id="days-{{ $auction->id }}">00</span><span class="text-white/70">:</span>
-                                <span class="bg-white/20 px-1.5 py-0.5 rounded font-mono" id="hours-{{ $auction->id }}">00</span><span class="text-white/70">:</span>
-                                <span class="bg-white/20 px-1.5 py-0.5 rounded font-mono" id="minutes-{{ $auction->id }}">00</span><span class="text-white/70">:</span>
-                                <span class="bg-white/20 px-1.5 py-0.5 rounded font-mono" id="seconds-{{ $auction->id }}">00</span>
-                            </div>
-                        </div>
-                        @endif
+        @if($featuredAuctions->isEmpty())
+        {{-- Empty state --}}
+        <div class="text-center py-20 border border-gray-200 bg-white">
+            <span class="material-symbols-outlined text-[64px] text-gray-300 block mb-4">gavel</span>
+            <h3 class="text-xl font-bold text-gray-500 uppercase tracking-wide mb-2">No Active Auctions</h3>
+            <p class="text-gray-400 text-sm">New auctions are added regularly — check back soon.</p>
+        </div>
+        @else
+        {{-- Auction cards grid / scrollable row --}}
+        <div class="carousel-container pb-4">
+            @foreach($featuredAuctions as $auction)
+            @php
+                $aImg    = $auction->images->first();
+                $imgUrl  = $aImg ? $homeImgUrl($aImg->image_path) : null;
+                $vehicle = trim(($auction->year ?? '') . ' ' . ($auction->make ?? '') . ' ' . ($auction->model ?? ''));
+
+                // Compute end time
+                $endTime = null;
+                if ($auction->auction_end_time) {
+                    $endTime = \Carbon\Carbon::parse($auction->auction_end_time);
+                } elseif ($auction->auction_start_time && $auction->auction_duration) {
+                    $endTime = \Carbon\Carbon::parse($auction->auction_start_time)->addDays((int)$auction->auction_duration);
+                }
+                $endTimeIso = $endTime ? $endTime->toIso8601String() : null;
+
+                // Use eager-loaded bids collection (no extra query)
+                $highestBid = $auction->bids->where('status', '!=', 'removed')->max('amount')
+                              ?? $auction->starting_price
+                              ?? 0;
+
+                // Build auction detail URL
+                $auctionUrl = $auction->slug
+                    ? route('auction.show', ['listing' => $auction->slug])
+                    : route('auction.dashboard', ['id' => $auction->id, 'slug' => $auction->id]);
+            @endphp
+            <div class="carousel-item w-full md:w-[calc(50%-12px)] lg:w-[calc(25%-18px)] bg-white border border-gray-200 hover:border-primary transition-all flex flex-col group" style="border-radius:0">
+
+                {{-- Image --}}
+                <div class="relative h-56 bg-gray-100 overflow-hidden flex-shrink-0">
+                    @if($imgUrl)
+                    <img src="{{ $imgUrl }}"
+                         alt="{{ $vehicle }}"
+                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-in-out"/>
+                    @else
+                    <div class="w-full h-full flex items-center justify-center bg-gray-50">
+                        <span class="material-symbols-outlined text-[64px] text-gray-300">directions_car</span>
                     </div>
-                    <div class="p-3">
-                        <h3 class="font-bold text-sm text-gray-900 line-clamp-1 mb-1">{{ $auction->year }} {{ $auction->make }} {{ $auction->model }}</h3>
-                        <p class="text-xs text-gray-500 flex items-center gap-1 mb-2">
-                            <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/></svg>
-                            {{ strtoupper($auction->island ?? 'N/A') }}
-                        </p>
-                        <div class="space-y-1">
-                            <p class="text-xs text-gray-500">Current bid</p>
-                            <p class="text-lg font-bold text-green-600">{{ $currentBid > 0 ? '$' . number_format($currentBid, 0) : 'Start Bidding' }}</p>
-                            @if(!empty($auction->buy_now_price) && (float)$auction->buy_now_price > 0)
-                                <p class="text-xs text-gray-500">Buy Now</p>
-                                <p class="text-sm font-semibold text-blue-600">${{ number_format((float)$auction->buy_now_price, 0) }}</p>
-                            @endif
-                        </div>
+                    @endif
+
+                    {{-- Status badge --}}
+                    <div class="absolute top-0 left-0 bg-primary text-white px-4 py-2 text-[10px] font-bold uppercase tracking-widest" style="border-radius:0">
+                        Live Auction
                     </div>
-                </a>
+
+                    {{-- Countdown timer --}}
+                    @if($endTimeIso)
+                    <div class="absolute bottom-3 left-3 bg-white/90 backdrop-blur text-primary px-3 py-2 font-mono text-sm font-bold shadow-sm flex items-center gap-2" style="border-radius:0">
+                        <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse flex-shrink-0"></span>
+                        <span class="js-countdown" data-end="{{ $endTimeIso }}">--:--:--</span>
+                    </div>
+                    @endif
+                </div>
+
+                {{-- Card body --}}
+                <div class="p-5 flex flex-col flex-grow">
+                    <h3 class="text-sm font-bold text-gray-900 mb-1.5 font-headline-sm uppercase leading-snug line-clamp-1">
+                        {{ $vehicle ?: 'Vehicle #'.$auction->item_number }}
+                    </h3>
+                    <p class="text-xs text-gray-400 mb-5 flex items-center gap-1 uppercase tracking-wider font-semibold">
+                        <span class="material-symbols-outlined text-[13px]">location_on</span>
+                        Nassau, Bahamas
+                    </p>
+                    <div class="mt-auto flex justify-between items-end border-t border-gray-100 pt-4">
+                        <div>
+                            <p class="text-[10px] text-gray-400 mb-1 uppercase font-bold tracking-widest">Current Bid</p>
+                            <p class="text-xl font-bold text-primary">${{ number_format($highestBid, 2) }}</p>
+                        </div>
+                        <a href="{{ $auctionUrl }}"
+                            class="bg-primary text-white p-2.5 hover:bg-[#003377] transition-colors" style="border-radius:0"
+                            title="Place bid on {{ $vehicle }}">
+                            <span class="material-symbols-outlined text-[20px]">gavel</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
             @endforeach
         </div>
+        @endif
+
     </div>
 </section>
 
-<!-- Enhanced Vehicle Finder Section -->
-<section class="py-20 bg-gradient-to-b from-gray-50 to-white section-bg-pattern relative overflow-hidden">
-    <!-- Decorative elements -->
-    <div class="absolute top-10 left-20 w-24 h-24 bg-blue-200 rounded-full opacity-10 blur-2xl"></div>
-    <div class="absolute bottom-10 right-20 w-32 h-32 bg-indigo-200 rounded-full opacity-10 blur-2xl"></div>
+{{-- ══════════════════════════════════════════════════════════════════
+     CTA / REGISTER SECTION (auth-aware)
+══════════════════════════════════════════════════════════════════ --}}
+<section class="py-24 bg-primary text-white">
+    <div class="max-w-[1280px] mx-auto px-4 md:px-16">
+        <div class="flex flex-col md:flex-row items-center gap-16">
 
-    <div class="container mx-auto px-4 relative z-10">
-        <div class="text-center mb-12 fade-in-up">
-            <h2 class="text-4xl md:text-5xl font-extrabold text-gray-900 font-heading section-title mb-4 inline-block">
-                <span class="gradient-text">Auction Car Finder</span>
-            </h2>
-            <p class="text-gray-600 text-lg mt-6">Find your perfect vehicle with our advanced search</p>
-        </div>
+            {{-- Left: Benefits --}}
+            <div class="flex-1 space-y-8">
+                <div class="w-20 h-20 bg-secondary-fixed-dim/20 border border-secondary-fixed-dim flex items-center justify-center" style="border-radius:0">
+                    <span class="material-symbols-outlined text-secondary-fixed-dim text-4xl">account_balance</span>
+                </div>
+                <div>
+                    <h2 class="text-4xl md:text-5xl font-bold font-display-lg uppercase tracking-tight leading-tight mb-6">
+                        Register a new<br/>account for free
+                    </h2>
+                    <p class="text-white/80 text-lg leading-relaxed max-w-lg font-body-lg">
+                        Create your account in seconds and start bidding today. Join buyers and sellers across The Bahamas on CayMark.
+                    </p>
+                </div>
+                <ul class="space-y-4">
+                    <li class="flex items-center gap-3 text-white/90 font-bold uppercase tracking-widest text-xs">
+                        <span class="material-symbols-outlined text-secondary-fixed-dim text-[20px]">check_circle</span>
+                        Verified Auction Participation
+                    </li>
+                    <li class="flex items-center gap-3 text-white/90 font-bold uppercase tracking-widest text-xs">
+                        <span class="material-symbols-outlined text-secondary-fixed-dim text-[20px]">check_circle</span>
+                        Real-time Outbid Notifications
+                    </li>
+                    <li class="flex items-center gap-3 text-white/90 font-bold uppercase tracking-widest text-xs">
+                        <span class="material-symbols-outlined text-secondary-fixed-dim text-[20px]">check_circle</span>
+                        Multi-island Logistics Coordination
+                    </li>
+                    <li class="flex items-center gap-3 text-white/90 font-bold uppercase tracking-widest text-xs">
+                        <span class="material-symbols-outlined text-secondary-fixed-dim text-[20px]">check_circle</span>
+                        Secure Escrow Payment Gateway
+                    </li>
+                </ul>
+            </div>
 
-        <!-- Enhanced Search Filters -->
-        <div class="search-box-modern rounded-2xl p-8 mb-12">
-            <form action="{{ route('Auction.index') }}" method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div class="relative">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Vehicle Type</label>
-                    <select name="vehicle_type" class="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white">
-                        <option value="">All Types</option>
-                        <option value="car">Cars</option>
-                        <option value="truck">Trucks</option>
-                        <option value="suv">SUVs</option>
-                        <option value="motorcycle">Motorcycles</option>
-                    </select>
+            {{-- Right: Auth-aware CTA panel --}}
+            <div class="flex-1 w-full max-w-xl bg-white p-10 shadow-2xl" style="border-radius:0">
+                @if($homeIsGuest)
+                {{-- GUEST: Registration CTA --}}
+                <h3 class="text-2xl font-bold text-primary mb-2 font-headline-md uppercase tracking-wide">Create Auction Account</h3>
+                <p class="text-gray-400 text-sm mb-8">Select your role and get trading in minutes</p>
+                <div class="space-y-4">
+                    <a href="{{ route('register') }}?role=buyer"
+                        class="w-full flex items-center justify-between p-5 border-2 border-gray-200 hover:border-primary hover:bg-gray-50 transition-all group" style="border-radius:0">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 flex items-center justify-center bg-primary/10" style="border-radius:0">
+                                <span class="material-symbols-outlined text-primary text-[24px]">gavel</span>
+                            </div>
+                            <div>
+                                <p class="font-bold text-gray-900 uppercase tracking-wide text-sm">Buyer Account</p>
+                                <p class="text-xs text-gray-500 mt-0.5">Bid on vehicles & fleet assets</p>
+                            </div>
+                        </div>
+                        <span class="material-symbols-outlined text-gray-400 group-hover:text-primary text-[20px]">arrow_forward</span>
+                    </a>
+                    <a href="{{ route('register') }}?role=seller"
+                        class="w-full flex items-center justify-between p-5 border-2 border-gray-200 hover:border-secondary-fixed-dim hover:bg-gray-50 transition-all group" style="border-radius:0">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 flex items-center justify-center bg-secondary-fixed-dim/10" style="border-radius:0">
+                                <span class="material-symbols-outlined text-secondary-fixed-dim text-[24px]">sell</span>
+                            </div>
+                            <div>
+                                <p class="font-bold text-gray-900 uppercase tracking-wide text-sm">Seller Account</p>
+                                <p class="text-xs text-gray-500 mt-0.5">List vehicles & reach island buyers</p>
+                            </div>
+                        </div>
+                        <span class="material-symbols-outlined text-gray-400 group-hover:text-secondary-fixed-dim text-[20px]">arrow_forward</span>
+                    </a>
+                    <p class="text-center text-xs text-gray-500 pt-2">
+                        Already have an account?
+                        <a href="{{ route('login') }}" class="text-primary font-bold hover:underline">Sign in here</a>
+                    </p>
                 </div>
-                <div class="relative">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Make</label>
-                    <select name="makes[]" class="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white">
-                        <option value="">All Makes</option>
-                    </select>
+
+                @elseif($homeIsBuyer)
+                {{-- BUYER: Dashboard welcome --}}
+                <div class="flex items-center gap-4 mb-6 pb-6 border-b border-gray-100">
+                    <div class="w-14 h-14 rounded-full bg-primary text-white flex items-center justify-center text-2xl font-bold flex-shrink-0">
+                        {{ strtoupper(substr($homeUser->name ?? 'U', 0, 1)) }}
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-0.5">Welcome back</p>
+                        <p class="text-xl font-bold text-primary">{{ $homeUser->name }}</p>
+                    </div>
                 </div>
-                <div class="relative">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Year From</label>
-                    <select name="year_from" class="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white">
-                        <option value="1900">1900</option>
-                        @for($year = date('Y'); $year >= 1900; $year--)
-                            <option value="{{ $year }}">{{ $year }}</option>
-                        @endfor
-                    </select>
-                </div>
-                <div class="relative">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Year To</label>
-                    <select name="year_to" class="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white">
-                        <option value="{{ date('Y') + 1 }}">{{ date('Y') + 1 }}</option>
-                        @for($year = date('Y'); $year >= 1900; $year--)
-                            <option value="{{ $year }}">{{ $year }}</option>
-                        @endfor
-                    </select>
-                </div>
-                <div class="md:col-span-4 flex flex-col sm:flex-row justify-center items-center gap-4 mt-4">
-                    <button type="submit" class="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-4 px-12 rounded-xl transition-all transform hover:scale-105 shadow-xl btn-modern relative">
-                        <span class="relative z-10 flex items-center">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                            </svg>
-                            Search Vehicles
-                        </span>
-                    </button>
-                    <a href="{{ route('Auction.index') }}" class="text-blue-600 hover:text-blue-800 font-semibold flex items-center group">
-                        Advanced Search
-                        <svg class="w-5 h-5 ml-2 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
-                        </svg>
+                <div class="space-y-3 mb-8">
+                    <a href="{{ route('buyer.auctions') }}" class="flex items-center gap-4 p-4 border border-gray-100 hover:border-primary hover:bg-gray-50 transition-all" style="border-radius:0">
+                        <span class="material-symbols-outlined text-primary text-[22px]">gavel</span>
+                        <div>
+                            <p class="text-sm font-bold text-gray-900">My Active Bids</p>
+                            <p class="text-xs text-gray-500">Track your current bids</p>
+                        </div>
+                        <span class="material-symbols-outlined text-gray-300 ml-auto text-[18px]">chevron_right</span>
+                    </a>
+                    <a href="{{ route('buyer.watchlist') }}" class="flex items-center gap-4 p-4 border border-gray-100 hover:border-primary hover:bg-gray-50 transition-all" style="border-radius:0">
+                        <span class="material-symbols-outlined text-primary text-[22px]">favorite</span>
+                        <div>
+                            <p class="text-sm font-bold text-gray-900">Watchlist</p>
+                            <p class="text-xs text-gray-500">Saved auctions you're watching</p>
+                        </div>
+                        <span class="material-symbols-outlined text-gray-300 ml-auto text-[18px]">chevron_right</span>
+                    </a>
+                    <a href="{{ route('buyer.deposit-withdrawal') }}" class="flex items-center gap-4 p-4 border border-gray-100 hover:border-primary hover:bg-gray-50 transition-all" style="border-radius:0">
+                        <span class="material-symbols-outlined text-primary text-[22px]">account_balance_wallet</span>
+                        <div>
+                            <p class="text-sm font-bold text-gray-900">Wallet & Deposits</p>
+                            <p class="text-xs text-gray-500">Manage your buying power</p>
+                        </div>
+                        <span class="material-symbols-outlined text-gray-300 ml-auto text-[18px]">chevron_right</span>
                     </a>
                 </div>
-            </form>
-        </div>
-        <p class="text-center text-gray-500 text-sm">Results will appear on the Auctions page when you search.</p>
-    </div>
-</section>
+                <a href="{{ route('Auction.index') }}"
+                    class="w-full py-4 bg-primary text-white font-bold hover:bg-[#003377] transition-all flex items-center justify-center gap-3 uppercase tracking-widest text-sm shadow-lg" style="border-radius:0">
+                    <span class="material-symbols-outlined text-[20px]">gavel</span>
+                    Browse Live Auctions
+                </a>
 
-<!-- Enhanced Mini Register Form Section (guests) / Welcome Back (logged in) - Registration left, content right -->
-<section class="py-20 bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 relative overflow-hidden">
-    <div class="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.05"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
-    <div class="absolute top-20 left-10 w-40 h-40 bg-white/5 rounded-full blur-3xl"></div>
-    <div class="absolute bottom-20 right-10 w-48 h-48 bg-white/5 rounded-full blur-3xl"></div>
-
-    <div class="container mx-auto px-4 relative z-10">
-
-        <div class="max-w-5xl mx-auto register-form-modern rounded-3xl p-10 fade-in-up">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
-                <!-- Left: Registration form -->
-                <div class="order-2 lg:order-1">
-            <form action="{{ route('register') }}" method="GET" class="space-y-5">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">First Name</label>
-                        <input type="text" name="first_name" placeholder="Enter your first name" required class="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-900">
+                @elseif($homeIsSeller)
+                {{-- SELLER: Dashboard shortcuts --}}
+                <div class="flex items-center gap-4 mb-6 pb-6 border-b border-gray-100">
+                    <div class="w-14 h-14 rounded-full bg-primary text-white flex items-center justify-center text-2xl font-bold flex-shrink-0">
+                        {{ strtoupper(substr($homeUser->name ?? 'S', 0, 1)) }}
                     </div>
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Last Name</label>
-                        <input type="text" name="last_name" placeholder="Enter your last name" required class="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-900">
+                        <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-0.5">Seller Account</p>
+                        <p class="text-xl font-bold text-primary">{{ $homeUser->name }}</p>
                     </div>
                 </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Phone Number</label>
-                    <input type="tel" name="phone" placeholder="Enter your phone number" required class="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-900">
+                <div class="space-y-3 mb-8">
+                    <a href="{{ route('seller.listings.create') }}" class="flex items-center gap-4 p-4 border-2 border-secondary-fixed-dim hover:bg-secondary-fixed-dim/5 transition-all" style="border-radius:0">
+                        <span class="material-symbols-outlined text-secondary-fixed-dim text-[22px]">add_circle</span>
+                        <div>
+                            <p class="text-sm font-bold text-gray-900">List a Vehicle</p>
+                            <p class="text-xs text-gray-500">Submit a new auction listing</p>
+                        </div>
+                        <span class="material-symbols-outlined text-gray-300 ml-auto text-[18px]">chevron_right</span>
+                    </a>
+                    <a href="{{ route('seller.auctions') }}" class="flex items-center gap-4 p-4 border border-gray-100 hover:border-primary hover:bg-gray-50 transition-all" style="border-radius:0">
+                        <span class="material-symbols-outlined text-primary text-[22px]">inventory_2</span>
+                        <div>
+                            <p class="text-sm font-bold text-gray-900">My Listings</p>
+                            <p class="text-xs text-gray-500">Manage your auctions</p>
+                        </div>
+                        <span class="material-symbols-outlined text-gray-300 ml-auto text-[18px]">chevron_right</span>
+                    </a>
                 </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
-                    <input type="email" name="email" placeholder="Enter your email" required class="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-900">
-                </div>
-                <div class="flex items-start">
-                    <input type="checkbox" id="terms" required class="mt-1 mr-3 w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                    <label for="terms" class="text-sm text-gray-700">I agree to the <a href="#" class="text-blue-600 hover:underline font-semibold">Terms and Conditions</a></label>
-                </div>
-                <button type="submit" class="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold py-4 px-6 rounded-xl transition-all transform hover:scale-105 shadow-2xl btn-modern relative">
-                    <span class="relative z-10 flex items-center justify-center">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                        </svg>
-                        Register now
-                    </span>
-                </button>
-            </form>
-                </div>
-                <!-- Right: Text/content -->
-                <div class="order-1 lg:order-2 text-center lg:text-left">
-                    <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl mb-4 shadow-lg glow-blue transform hover:scale-110 transition-transform">
-                        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
-                        </svg>
-                    </div>
-                    <h2 class="text-4xl font-extrabold text-gray-900 font-heading mb-3">
-                        <span class="gradient-text">Register a new account for free</span>
-                    </h2>
-                    <p class="text-gray-600 text-lg">Create your account in seconds and start bidding today. Join buyers and sellers across The Bahamas on CayMark.</p>
-                </div>
+                <a href="{{ route('seller.dashboard') }}"
+                    class="w-full py-4 bg-primary text-white font-bold hover:bg-[#003377] transition-all flex items-center justify-center gap-3 uppercase tracking-widest text-sm shadow-lg" style="border-radius:0">
+                    <span class="material-symbols-outlined text-[20px]">dashboard</span>
+                    Seller Dashboard
+                </a>
+
+                @else
+                {{-- INCOMPLETE REGISTRATION --}}
+                <h3 class="text-xl font-bold text-primary mb-4 font-headline-md uppercase">Complete Your Account</h3>
+                <p class="text-gray-500 text-sm mb-6">Your registration isn't quite finished yet. Complete it to start bidding.</p>
+                <a href="{{ route('finish.registration') }}"
+                    class="w-full py-4 bg-primary text-white font-bold hover:bg-[#003377] transition-all flex items-center justify-center gap-3 uppercase tracking-widest text-sm" style="border-radius:0">
+                    Finish Registration
+                </a>
+                @endif
             </div>
-        </div>
 
+        </div>
     </div>
 </section>
 
-<!-- Enhanced What is CayMark Section -->
-<section class="py-20 bg-gradient-to-b from-gray-50 to-white section-bg-pattern relative overflow-hidden">
-    <!-- Decorative elements -->
-    <div class="absolute top-10 right-20 w-40 h-40 bg-blue-100 rounded-full opacity-20 blur-3xl"></div>
-    <div class="absolute bottom-10 left-20 w-36 h-36 bg-indigo-100 rounded-full opacity-20 blur-3xl"></div>
+{{-- ══════════════════════════════════════════════════════════════════
+     CORPORATE OVERVIEW SECTION
+══════════════════════════════════════════════════════════════════ --}}
+<section class="py-24 bg-white border-b border-gray-200">
+    <div class="max-w-[1280px] mx-auto px-4 md:px-16">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
 
-    <div class="container mx-auto px-4 relative z-10">
-        <div class="max-w-5xl mx-auto">
-            <div class="text-center mb-12 fade-in-up">
-                <h2 class="text-4xl md:text-5xl font-extrabold text-gray-900 font-heading section-title mb-4 inline-block">
-                    <span class="gradient-text">What is CayMark?</span>
+            {{-- Text --}}
+            <div>
+                <h2 class="text-4xl font-bold text-primary font-display-lg uppercase tracking-tight mb-8">
+                    What is <span class="text-secondary-fixed-dim">CayMark?</span>
                 </h2>
-            </div>
-            <div class="info-card-modern rounded-3xl p-10 fade-in-delay-1 card-lift">
-                <div class="prose prose-lg max-w-none">
-                    <p class="text-xl text-gray-700 leading-relaxed mb-6">
-                        <strong class="text-2xl gradient-text">CayMark Island Exchange & Auction House</strong> is The Bahamas' premier digital vehicle auction platform, dedicated to connecting buyers and sellers across every island. More than just an auction house, CayMark is redefining how The Bahamas buys, sells, and trades vehicles through a secure, transparent, and fully online marketplace.
+                <div class="space-y-6 text-gray-700 leading-loose font-body-lg">
+                    <p>
+                        <strong>CayMark Island Exchange &amp; Auction House</strong> is The Bahamas' premier digital vehicle auction platform, dedicated to connecting buyers and sellers across every island. More than just an auction house, CayMark is redefining how The Bahamas buys, sells, and trades vehicles through a secure, transparent, and fully online marketplace.
                     </p>
-                    <p class="text-xl text-gray-700 leading-relaxed mb-6">
+                    <p>
                         Browse an extensive selection of cars, trucks, boats, and heavy equipment from sellers throughout the islands. Participate in real-time auctions or purchase instantly using our Buy Now option — all from one powerful digital platform.
                     </p>
-                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border-l-4 border-blue-600">
-                        <p class="text-xl text-gray-800 leading-relaxed font-semibold">
-                            <span class="text-blue-600">Sign up today</span> and experience the future of island trade.
-                        </p>
-                    </div>
+                    <p class="font-semibold text-primary">
+                        Sign up today and experience the future of island trade.
+                    </p>
+                    <a href="{{ route('register') }}" class="inline-flex items-center gap-3 text-primary font-bold uppercase tracking-widest text-sm hover:underline">
+                        Get Started
+                        <span class="material-symbols-outlined">arrow_forward</span>
+                    </a>
                 </div>
             </div>
+
+            {{-- Dynamic stat tiles --}}
+            <div class="grid grid-cols-2 gap-6">
+                <div class="bg-surface p-8 border border-gray-200 text-center" style="border-radius:0">
+                    <p class="text-4xl font-bold text-primary mb-2">24/7</p>
+                    <p class="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Trading Access</p>
+                </div>
+                <div class="bg-surface p-8 border border-gray-200 text-center" style="border-radius:0">
+                    <p class="text-4xl font-bold text-primary mb-2">
+                        {{ $statActiveAuctions > 0 ? $statActiveAuctions.'+' : '100%' }}
+                    </p>
+                    <p class="text-[10px] text-gray-500 uppercase tracking-widest font-bold">
+                        {{ $statActiveAuctions > 0 ? 'Live Now' : 'Verified Listings' }}
+                    </p>
+                </div>
+                <div class="bg-surface p-8 border border-gray-200 text-center" style="border-radius:0">
+                    <p class="text-4xl font-bold text-primary mb-2">ALL</p>
+                    <p class="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Island Coverage</p>
+                </div>
+                <div class="bg-surface p-8 border border-gray-200 text-center" style="border-radius:0">
+                    <p class="text-4xl font-bold text-primary mb-2">SECURE</p>
+                    <p class="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Payment Gateway</p>
+                </div>
+            </div>
+
         </div>
     </div>
 </section>
 
-<!-- Enhanced Newsletter Signup Section -->
-<section class="py-20 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 relative overflow-hidden">
-    <div class="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.05"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
-    <!-- Floating decorative shapes -->
-    <div class="absolute top-10 left-10 w-48 h-48 bg-white/5 rounded-full blur-3xl"></div>
-    <div class="absolute bottom-10 right-10 w-56 h-56 bg-white/5 rounded-full blur-3xl"></div>
-
-    <div class="container mx-auto px-4 relative z-10">
-        <div class="max-w-5xl mx-auto">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
-                <div class="fade-in-up">
-                    <div class="inline-flex items-center justify-center w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl mb-6 glow-blue transform hover:scale-110 transition-transform">
-                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                        </svg>
-                    </div>
-                    <h2 class="text-4xl md:text-5xl font-extrabold mb-6 font-heading text-white drop-shadow-lg">Sign up for our newsletter</h2>
-                    <p class="text-blue-100 text-xl mb-6 leading-relaxed drop-shadow-md">Get fresh updates on the newest listings and auctions straight to your inbox. Never miss a great deal!</p>
-                    <div class="flex items-center space-x-4 text-white/80">
-                        <div class="flex items-center">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                            </svg>
-                            <span>Weekly updates</span>
-                        </div>
-                        <div class="flex items-center">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                            </svg>
-                            <span>Exclusive deals</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="newsletter-modern rounded-2xl p-8 fade-in-delay-1 card-lift">
-                    <form action="#" method="POST" class="space-y-5">
-                        @csrf
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
-                            <input type="email" name="email" placeholder="Enter your email address" required class="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-900 hover:border-blue-300">
-                        </div>
-                        <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-4 px-6 rounded-xl transition-all transform hover:scale-105 shadow-xl btn-modern relative glow-blue">
-                            <span class="relative z-10 flex items-center justify-center">
-                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                                </svg>
-                                Subscribe Now
-                            </span>
-                        </button>
-                        <p class="text-xs text-gray-500 text-center">We respect your privacy. Unsubscribe at any time.</p>
-                    </form>
-                </div>
+{{-- ══════════════════════════════════════════════════════════════════
+     NEWSLETTER SECTION
+══════════════════════════════════════════════════════════════════ --}}
+<section class="py-20 bg-primary text-white border-t border-white/10">
+    <div class="max-w-[1280px] mx-auto px-4 md:px-16">
+        <div class="flex flex-col lg:flex-row items-center justify-between gap-12">
+            <div class="text-left">
+                <h2 class="text-2xl font-bold font-headline-md uppercase tracking-widest mb-3">Market Intelligence Reports</h2>
+                <p class="text-white/70 max-w-md font-body-md">Subscribe to receive weekly auction alerts and island market trend reports.</p>
             </div>
+            <form class="w-full max-w-xl flex" action="#" method="POST">
+                @csrf
+                <input type="email" name="email" required placeholder="Business Email Address"
+                    class="flex-grow bg-white/10 border border-white/20 text-white px-6 py-4 focus:ring-1 focus:ring-secondary-fixed-dim focus:border-secondary-fixed-dim placeholder:text-white/40 focus:outline-none"
+                    style="border-radius:0"/>
+                <button type="submit"
+                    class="px-10 py-4 bg-secondary-fixed-dim text-primary font-bold hover:bg-secondary transition-colors uppercase tracking-[0.2em] text-xs flex-shrink-0"
+                    style="border-radius:0">
+                    Subscribe
+                </button>
+            </form>
         </div>
     </div>
 </section>
+
+{{-- ══════════════════════════════════════════════════════════════════
+     PAGE SCRIPTS
+══════════════════════════════════════════════════════════════════ --}}
+@push('scripts')
+<script>
+(function () {
+    /* ── Hero Carousel ─────────────────────────────────────────── */
+    var currentSlide = 0;
+    var slides = [
+        {
+            title : "PREMIUM<br/><span style='color:#C8A84B'>ISLAND ASSET</span><br/>EXCHANGE",
+            desc  : "The Bahamas' most trusted digital auction house for wholesale vehicles, fleet assets, and private listings."
+        },
+        {
+            title : "ELITE<br/><span style='color:#C8A84B'>MARINE & YACHT</span><br/>TRADING",
+            desc  : "Access exclusive marine vessel listings across the archipelago — from transport hulls to luxury day cruisers."
+        },
+        {
+            title : "MAJOR<br/><span style='color:#C8A84B'>FLEET & HEAVY</span><br/>EQUIPMENT",
+            desc  : "Industrial-grade liquidation for construction fleets, hospitality assets, and high-value institutional machinery."
+        }
+    ];
+    var autoTimer = null;
+
+    function heroUpdateUI() {
+        var track = document.getElementById('hero-track');
+        if (track) track.style.transform = 'translateX(-' + (currentSlide * 100) + '%)';
+
+        var titleEl = document.getElementById('hero-title');
+        var descEl  = document.getElementById('hero-description');
+        if (titleEl) titleEl.innerHTML = slides[currentSlide].title;
+        if (descEl)  descEl.textContent = slides[currentSlide].desc;
+
+        var dots = document.querySelectorAll('.slide-dot');
+        dots.forEach(function (d, i) {
+            d.classList.toggle('bg-white',     i === currentSlide);
+            d.classList.toggle('bg-white/30',  i !== currentSlide);
+            d.classList.toggle('w-8',          i === currentSlide);
+            d.classList.toggle('w-3',          i !== currentSlide);
+        });
+    }
+
+    window.heroMoveSlide = function (dir) {
+        currentSlide = (currentSlide + dir + slides.length) % slides.length;
+        heroUpdateUI();
+        clearInterval(autoTimer);
+        autoTimer = setInterval(function () { heroMoveSlide(1); }, 8000);
+    };
+
+    autoTimer = setInterval(function () { heroMoveSlide(1); }, 8000);
+
+    /* ── Countdown timers ──────────────────────────────────────── */
+    function formatCountdown(ms) {
+        if (ms <= 0) return 'Ended';
+        var totalSecs = Math.floor(ms / 1000);
+        var h = Math.floor(totalSecs / 3600);
+        var m = Math.floor((totalSecs % 3600) / 60);
+        var s = totalSecs % 60;
+        var pad = function (n) { return n < 10 ? '0' + n : '' + n; };
+        if (h >= 24) {
+            var d = Math.floor(h / 24);
+            return d + 'd ' + pad(h % 24) + 'h ' + pad(m) + 'm';
+        }
+        return pad(h) + ' : ' + pad(m) + ' : ' + pad(s);
+    }
+
+    var countdowns = document.querySelectorAll('.js-countdown');
+    if (countdowns.length) {
+        function tickCountdowns() {
+            var now = Date.now();
+            countdowns.forEach(function (el) {
+                var end = new Date(el.dataset.end).getTime();
+                el.textContent = formatCountdown(end - now);
+            });
+        }
+        tickCountdowns();
+        setInterval(tickCountdowns, 1000);
+    }
+})();
+</script>
+@endpush
 
 @endsection
