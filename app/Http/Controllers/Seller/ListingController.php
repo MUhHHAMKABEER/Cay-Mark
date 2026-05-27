@@ -393,7 +393,20 @@ class ListingController extends Controller
         }
 
         // ── Step 1: Save all scalar fields immediately ─────────────────────
+        // If the listing was rejected, resubmitting it resets the status to
+        // pending so the admin team picks it up for review again.
+        $wasRejected = $listing->status === 'rejected';
         $listing->updateFromSellerInput($request, $validated);
+
+        if ($wasRejected) {
+            $listing->update([
+                'status'           => 'pending',
+                'rejected_at'      => null,
+                'rejected_by'      => null,
+                'rejection_reason' => null,
+                'rejection_notes'  => null,
+            ]);
+        }
 
         // ── Step 2: If media files were uploaded, stage + dispatch job ──────
         $hasNewImages = $request->hasFile('cover_photo') || $request->hasFile('photos');

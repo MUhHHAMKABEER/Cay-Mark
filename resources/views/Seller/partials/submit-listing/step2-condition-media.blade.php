@@ -20,8 +20,8 @@
             </div>
             <select name="title_status" required class="form-input" id="title_status_select">
                 <option value="">Select</option>
-                <option value="yes" {{ old('title_status', isset($listing) && $listing->title_status === 'CLEAN' ? 'yes' : '') == 'yes' ? 'selected' : '' }}>Yes</option>
-                <option value="no" {{ old('title_status', isset($listing) && $listing->title_status === 'SALVAGE' ? 'no' : '') == 'no' ? 'selected' : '' }}>No</option>
+                <option value="yes" {{ old('title_status', isset($listing) && $listing->title_status === 'CLEAN' ? 'yes' : '') == 'yes' ? 'selected' : '' }}>Title</option>
+                <option value="no" {{ old('title_status', isset($listing) && $listing->title_status === 'SALVAGE' ? 'no' : '') == 'no' ? 'selected' : '' }}>No Title</option>
             </select>
         </div>
 

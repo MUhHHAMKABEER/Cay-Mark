@@ -235,7 +235,9 @@ class AdminActionHub
             if ($listing->seller) {
                 $ns = new \App\Services\NotificationService();
                 $ns->listingRejected($listing->seller, $listing);
-                $ns->editingUnavailableListingRejected($listing->seller, $listing);
+                // editingUnavailableListingRejected is intentionally NOT sent here.
+                // A scheduled command (caymark:send-rejected-editing-unavailable-notifications)
+                // fires it after 72 hours only if the seller has not resubmitted the listing.
             }
         } catch (\Exception $e) {
             \Log::error('Failed to send listing rejection in-app notifications: '.$e->getMessage());

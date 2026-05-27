@@ -28,3 +28,7 @@ Schedule::command('caymark:send-payment-reminders')->everyFiveMinutes();
 Schedule::command('caymark:send-auction-ending-reminders')->everyFiveMinutes();
 
 Schedule::command('caymark:send-subscription-notifications')->dailyAt('08:00');
+
+// Send "editing unavailable" in-app notification to sellers whose listing has been
+// rejected for 72+ hours with no resubmission. Runs hourly; deduplicated internally.
+Schedule::command('caymark:send-rejected-editing-unavailable-notifications')->hourly();

@@ -54,26 +54,24 @@
 }
 .cm-sel__trigger.is-open .cm-sel__chevron { transform: rotate(180deg); color: #063466; }
 
-/* Dropdown panel */
+/* Dropdown panel — fixed so it escapes any overflow:hidden/auto ancestor */
 .cm-sel__panel {
-    position: absolute;
-    top: calc(100% + 5px);
-    left: 0;
-    right: 0;
+    position: fixed;
+    /* top / left / width are set dynamically by positionPanel() */
     background: #fff;
     border: 1.5px solid #e2e8f0;
     border-radius: 10px;
     box-shadow: 0 10px 32px rgba(6,52,102,0.13);
     z-index: 8000;
-    overflow: hidden;
     max-height: 230px;
     overflow-y: auto;
+    overflow-x: hidden;
     scrollbar-width: thin;
     scrollbar-color: #cbd5e1 transparent;
 }
+/* opens-up: JS flips top↔bottom via inline styles; class keeps animation correct */
 .cm-sel__panel.opens-up {
-    top: auto;
-    bottom: calc(100% + 5px);
+    /* intentionally empty — positioning handled by JS */
 }
 .cm-sel__panel::-webkit-scrollbar       { width: 4px; }
 .cm-sel__panel::-webkit-scrollbar-track { background: transparent; }
@@ -187,10 +185,21 @@
     function positionPanel(panel, wrapper) {
         var rect = wrapper.getBoundingClientRect();
         var spaceBelow = window.innerHeight - rect.bottom;
+
+        // Pin width to the trigger
+        panel.style.width = rect.width + 'px';
+        panel.style.left  = rect.left + 'px';
+        panel.style.right = 'auto';
+
         if (spaceBelow < 250 && rect.top > 250) {
+            // Not enough room below — open upward
             panel.classList.add('opens-up');
+            panel.style.top    = 'auto';
+            panel.style.bottom = (window.innerHeight - rect.top + 5) + 'px';
         } else {
             panel.classList.remove('opens-up');
+            panel.style.top    = (rect.bottom + 5) + 'px';
+            panel.style.bottom = 'auto';
         }
     }
 
@@ -351,5 +360,9 @@
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') closeAll(null);
     });
+
+    /* ── Close on scroll or resize (panel is fixed; trigger moves, panel won't) ── */
+    window.addEventListener('scroll', function () { closeAll(null); }, true);
+    window.addEventListener('resize', function () { closeAll(null); });
 })();
 </script>
