@@ -55,7 +55,7 @@ Route::prefix('seller')->name('seller.')->middleware(['auth', 'seller'])->group(
     
     // Listings
     Route::get('listings/create', [ListingController::class, 'create'])->name('listings.create');
-    Route::post('submit-listings', [ListingController::class, 'store'])->name('listings.store');
+    Route::post('listings', [ListingController::class, 'store'])->name('listings.store');
     Route::get('listings/success/{id}', [ListingController::class, 'success'])->name('listings.success');
     Route::get('listings', function () {
         return redirect()->route('seller.auctions');
