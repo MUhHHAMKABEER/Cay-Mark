@@ -1,4 +1,4 @@
-@extends('layouts.dashboard')
+@extends('layouts.welcome')
 @section('title', 'Dashboard — CayMark')
 
 @section('content')

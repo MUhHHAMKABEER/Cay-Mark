@@ -65,21 +65,15 @@
                 </a>
             </div>
 
-            {{-- ── Desktop search bar — pill style ── --}}
-            <div class="flex-grow max-w-2xl hidden md:flex mx-auto"
+            {{-- ── Desktop search bar — centered, borderless ── --}}
+            <div class="flex-1 hidden md:flex justify-center"
                  x-data="cmSearch('{{ Route::has('auction.suggest') ? route('auction.suggest') : url('/auction-suggest') }}', '{{ route('Auction.index') }}')"
                  @click.outside="close()"
                  @keydown.escape.window="close()">
 
-                <form method="GET" action="{{ route('Auction.index') }}" :action="auctionUrl" class="relative w-full" @submit.prevent="submit()">
-                    {{-- Pill wrapper --}}
-                    <div class="flex items-center rounded-full bg-slate-50 border border-slate-200/80 hover:border-slate-300 focus-within:border-primary focus-within:bg-white focus-within:ring-2 focus-within:ring-primary/10 transition-all duration-150">
-                        {{-- Search icon --}}
-                        <svg class="flex-shrink-0 ml-4 text-slate-400" width="16" height="16" viewBox="0 0 24 24"
-                             fill="none" stroke="currentColor" stroke-width="2.2"
-                             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-                        </svg>
+                <form method="GET" action="{{ route('Auction.index') }}" :action="auctionUrl" class="relative w-full max-w-xl" @submit.prevent="submit()">
+                    {{-- Pill wrapper — no border, soft background only --}}
+                    <div class="flex items-center rounded-full bg-slate-100 focus-within:bg-white focus-within:shadow-[0_0_0_2px_theme('colors.primary')] transition-all duration-150">
                         <input
                             type="text"
                             name="search"
@@ -91,19 +85,19 @@
                             @keydown.enter.prevent="selectActive()"
                             placeholder="Search vehicle auctions by make, model…"
                             autocomplete="off"
-                            class="flex-1 bg-transparent py-2.5 px-3 text-[13.5px] text-slate-800 placeholder:text-slate-400 focus:outline-none min-w-0"
+                            class="flex-1 bg-transparent py-2.5 pl-4 pr-2 text-[13.5px] text-slate-800 placeholder:text-slate-400 focus:outline-none min-w-0"
                         />
                         {{-- Clear button --}}
                         <button type="button" x-show="query" x-cloak
                             @click="query=''; $el.closest('form').querySelector('input').focus(); fetch()"
-                            class="flex-shrink-0 flex items-center justify-center w-5 h-5 rounded-full bg-slate-200 hover:bg-slate-300 transition-colors mr-1">
-                            <svg width="8" height="8" viewBox="0 0 12 12" fill="currentColor" class="text-slate-500">
+                            class="flex-shrink-0 flex items-center justify-center w-5 h-5 rounded-full bg-slate-300 hover:bg-slate-400 transition-colors mr-1">
+                            <svg width="8" height="8" viewBox="0 0 12 12" fill="currentColor" class="text-slate-600">
                                 <path d="M10.5 1.5 6 6m0 0L1.5 10.5M6 6 10.5 10.5M6 6 1.5 1.5"/>
                             </svg>
                         </button>
-                        {{-- Submit icon button --}}
+                        {{-- Single search submit button --}}
                         <button type="submit"
-                            class="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-primary text-white hover:bg-[#003377] transition-colors mr-1.5 my-1">
+                            class="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-primary text-white hover:bg-[#003377] transition-colors mr-1 my-1">
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                  stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                 <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
