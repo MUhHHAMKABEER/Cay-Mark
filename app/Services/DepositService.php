@@ -233,13 +233,31 @@ class DepositService
     }
 
     /**
-     * Process withdrawal request.
-     * 
-     * @param User $user
-     * @param float $amount
-     * @param string|null $notes
-     * @return Deposit
+     * Check whether the user is currently the highest bidder on any active auction.
      */
+    public function isHighestBidderOnActiveAuction(User $user): bool
+    {
+        return \App\Models\Listing::where('status', 'approved')
+            ->where(function ($q) {
+                $q->where('auction_end_time', '>', now())
+                  ->orWhere(function ($q2) {
+                      $q2->whereNull('auction_end_time')
+                         ->whereRaw('DATE_ADD(auction_start_time, INTERVAL auction_duration DAY) > NOW()');
+                  });
+            })
+            ->whereHas('bids', function ($q) use ($user) {
+                $q->where('user_id', $user->id)
+                  ->where('status', 'active')
+                  ->whereIn('id', function ($sub) {
+                      $sub->selectRaw('MAX(id)')
+                          ->from('bids')
+                          ->where('status', 'active')
+                          ->groupBy('listing_id');
+                  });
+            })
+            ->exists();
+    }
+
     public function requestWithdrawal(User $user, float $amount, ?string $notes = null): Deposit
     {
         return DB::transaction(function () use ($user, $amount, $notes) {
@@ -247,6 +265,10 @@ class DepositService
 
             if ($wallet->available_balance < $amount) {
                 throw new \Exception('Insufficient available balance for withdrawal.');
+            }
+
+            if ($this->isHighestBidderOnActiveAuction($user)) {
+                throw new \Exception('You cannot withdraw your deposit while you are the highest bidder on an active auction.');
             }
 
             // Create withdrawal request (pending until admin approves)

@@ -40,7 +40,16 @@ class PaymentController extends Controller
             ->with(['listing.images', 'seller'])
             ->firstOrFail();
 
-        return view('Buyer.payment-checkout-single', compact('invoice'));
+        // Look up deposit applied to the winning bid for this invoice
+        $depositApplied = \App\Models\Deposit::where('user_id', $user->id)
+            ->where('bid_id', $invoice->bid_id)
+            ->where('type', 'applied_to_invoice')
+            ->where('status', 'completed')
+            ->value('amount') ?? 0;
+
+        $totalAfterDeposit = max(0, $invoice->total_amount_due - $depositApplied);
+
+        return view('Buyer.payment-checkout-single', compact('invoice', 'depositApplied', 'totalAfterDeposit'));
     }
 
     /**

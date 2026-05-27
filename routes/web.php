@@ -190,6 +190,7 @@ Route::middleware(['auth', 'buyer'])->prefix('buyer')->group(function () {
     Route::post('/payment/process', [App\Http\Controllers\Buyer\PaymentController::class, 'processPayment'])->name('buyer.payment.process');
 
     Route::get('/deposit-withdrawal', [App\Http\Controllers\Buyer\DepositWithdrawalController::class, 'index'])->name('buyer.deposit-withdrawal');
+    Route::post('/deposit-withdrawal/add', [App\Http\Controllers\Buyer\DepositWithdrawalController::class, 'addDeposit'])->name('buyer.deposit.add');
     Route::post('/deposit-withdrawal/request', [App\Http\Controllers\Buyer\DepositWithdrawalController::class, 'requestWithdrawal'])->name('buyer.deposit-withdrawal.request');
     Route::get('/profile', [App\Http\Controllers\Buyer\ProfileController::class, 'index'])->name('buyer.profile');
     Route::get('/support', [App\Http\Controllers\Buyer\SupportController::class, 'index'])->name('buyer.support');
@@ -328,8 +329,12 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::post('/listings/{listing}/reject', [AdminController::class, 'rejectListing'])->name('admin.listings.reject');
     Route::post('/payments/{payment}/release', [AdminController::class, 'releasePayment'])->name('admin.payments.release');
     Route::post('/payments/{payment}/hold', [AdminController::class, 'holdPayment'])->name('admin.payments.hold');
+    Route::get('/security-deposits', [AdminController::class, 'securityDeposits'])->name('admin.security-deposits');
+    Route::post('/deposit-requests/{depositRequest}/confirm', [AdminController::class, 'confirmDepositWire'])->name('admin.deposit-requests.confirm');
+    Route::post('/deposit-requests/{depositRequest}/reject', [AdminController::class, 'rejectDepositRequest'])->name('admin.deposit-requests.reject');
     Route::post('/withdrawals/{withdrawal}/approve', [AdminController::class, 'approveWithdrawal'])->name('admin.withdrawals.approve');
     Route::post('/withdrawals/{withdrawal}/reject', [AdminController::class, 'rejectWithdrawal'])->name('admin.withdrawals.reject');
+    Route::post('/deposits/{user}/add', [AdminController::class, 'adminAddDeposit'])->name('admin.deposits.add');
 
     // Finance/Admin Payout Management
     Route::get('/payouts', [AdminController::class, 'payoutManagement'])->name('admin.payouts');

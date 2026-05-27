@@ -1278,6 +1278,161 @@ class AdminController extends Controller
     }
 
     /**
+     * Admin: Security Deposits overview — pending wire requests, pending withdrawals, all wallets.
+     */
+    public function securityDeposits(Request $request)
+    {
+        // Pending wire deposit requests (buyer submitted, not yet confirmed)
+        $pendingWireRequests = \App\Models\DepositRequest::where('status', 'pending_wire')
+            ->with('buyer')
+            ->orderByDesc('requested_at')
+            ->get();
+
+        // Pending withdrawal requests
+        $pendingWithdrawals = \App\Models\Deposit::where('type', 'withdrawal')
+            ->where('status', 'pending')
+            ->with('user')
+            ->orderByDesc('created_at')
+            ->get();
+
+        // All buyer wallets
+        $wallets = \App\Models\UserWallet::with('user')
+            ->orderByDesc('total_balance')
+            ->paginate(30, ['*'], 'wallets_page');
+
+        $stats = [
+            'total_deposited'             => \App\Models\UserWallet::sum('total_balance'),
+            'total_available'             => \App\Models\UserWallet::sum('available_balance'),
+            'total_locked'                => \App\Models\UserWallet::sum('locked_balance'),
+            'pending_wire_count'          => $pendingWireRequests->count(),
+            'pending_wire_amount'         => $pendingWireRequests->sum('amount'),
+            'pending_withdrawals_count'   => $pendingWithdrawals->count(),
+            'pending_withdrawals_amount'  => $pendingWithdrawals->sum('amount'),
+        ];
+
+        return view('admin.security-deposits', compact(
+            'pendingWireRequests', 'pendingWithdrawals', 'wallets', 'stats'
+        ));
+    }
+
+    /**
+     * Admin: Confirm a buyer's wire deposit — credit their wallet and mark request completed.
+     */
+    public function confirmDepositWire(Request $request, \App\Models\DepositRequest $depositRequest)
+    {
+        if ($depositRequest->status !== 'pending_wire') {
+            return back()->with('error', 'This deposit request has already been processed.');
+        }
+
+        $buyer          = $depositRequest->buyer;
+        $amount         = (float) $depositRequest->amount;
+        $admin          = auth()->user();
+        $depositService = new \App\Services\DepositService();
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($depositRequest, $buyer, $amount, $admin, $depositService, $request) {
+            // Credit the wallet
+            $depositService->addDeposit(
+                $buyer,
+                $amount,
+                'Wire confirmed by admin: ' . $admin->name . ($request->notes ? ' — ' . $request->notes : '')
+            );
+
+            // Mark request completed + record who confirmed it and when
+            $depositRequest->update([
+                'status'       => 'completed',
+                'confirmed_at' => now(),
+                'confirmed_by' => $admin->id,
+                'notes'        => $depositRequest->notes
+                    ? $depositRequest->notes . ' | Confirmed by: ' . $admin->name
+                    : 'Confirmed by: ' . $admin->name . ' on ' . now()->format('Y-m-d H:i'),
+            ]);
+        });
+
+        // Notify buyer
+        try {
+            (new \App\Services\NotificationService())->depositWireConfirmed($buyer, $amount);
+        } catch (\Throwable $e) {
+            \Log::error('depositWireConfirmed notification failed: ' . $e->getMessage());
+        }
+
+        \Log::info('[Admin] Wire deposit confirmed', [
+            'admin_id'           => $admin->id,
+            'admin_name'         => $admin->name,
+            'buyer_id'           => $buyer->id,
+            'deposit_request_id' => $depositRequest->id,
+            'amount'             => $amount,
+            'confirmed_at'       => now()->toDateTimeString(),
+        ]);
+
+        return back()->with('success',
+            '$' . number_format($amount, 2) . ' wire deposit confirmed for ' . $buyer->name . '. Their wallet has been credited.'
+        );
+    }
+
+    /**
+     * Admin: Reject a buyer's wire deposit request (no wire received / incorrect).
+     */
+    public function rejectDepositRequest(Request $request, \App\Models\DepositRequest $depositRequest)
+    {
+        if ($depositRequest->status !== 'pending_wire') {
+            return back()->with('error', 'This deposit request has already been processed.');
+        }
+
+        $buyer = $depositRequest->buyer;
+        $admin = auth()->user();
+
+        $depositRequest->update([
+            'status' => 'rejected',
+            'notes'  => $depositRequest->notes
+                ? $depositRequest->notes . ' | Rejected by: ' . $admin->name
+                : 'Rejected by: ' . $admin->name . ' on ' . now()->format('Y-m-d H:i')
+                  . ($request->notes ? ' — ' . $request->notes : ''),
+        ]);
+
+        try {
+            (new \App\Services\NotificationService())->depositWireRejected($buyer, (float) $depositRequest->amount);
+        } catch (\Throwable $e) {
+            \Log::error('depositWireRejected notification failed: ' . $e->getMessage());
+        }
+
+        \Log::info('[Admin] Wire deposit rejected', [
+            'admin_id'           => $admin->id,
+            'admin_name'         => $admin->name,
+            'buyer_id'           => $buyer->id,
+            'deposit_request_id' => $depositRequest->id,
+            'amount'             => $depositRequest->amount,
+        ]);
+
+        return back()->with('success', 'Deposit request rejected. Buyer has been notified.');
+    }
+
+    /**
+     * Admin: Manually add a deposit to a buyer's wallet (outside of wire-request flow).
+     */
+    public function adminAddDeposit(Request $request, \App\Models\User $user)
+    {
+        $request->validate([
+            'amount' => ['required', 'numeric', 'min:1'],
+            'notes'  => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $admin          = auth()->user();
+        $depositService = new \App\Services\DepositService();
+        $notes          = $request->notes ?? 'Deposit added manually by admin: ' . $admin->name;
+        $depositService->addDeposit($user, (float) $request->amount, $notes);
+
+        \Log::info('[Admin] Deposit added manually', [
+            'admin_id'   => $admin->id,
+            'admin_name' => $admin->name,
+            'buyer_id'   => $user->id,
+            'amount'     => $request->amount,
+            'timestamp'  => now()->toDateTimeString(),
+        ]);
+
+        return back()->with('success', 'Deposit of $' . number_format($request->amount, 2) . ' added to ' . $user->name . "'s wallet.");
+    }
+
+    /**
      * Finance/Admin: View payout management page.
      */
     public function payoutManagement(Request $request)

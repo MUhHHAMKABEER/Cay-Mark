@@ -896,6 +896,49 @@ header { position: relative !important; box-shadow: none !important; }
 </div>
 
 {{-- ─────────────────────────────────────
+     DEPOSIT REQUIRED MODAL
+───────────────────────────────────────── --}}
+<div id="depositRequiredModal" class="bid-modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="bid-modal-card" style="max-width:460px;text-align:left;padding:1.75rem;">
+        <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem;">
+            <div style="width:44px;height:44px;border-radius:50%;background:#fef3c7;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg style="width:24px;height:24px;color:#d97706;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            </div>
+            <div>
+                <p style="font-weight:800;font-size:1.1rem;color:#0f172a;margin:0;">Security Deposit Required</p>
+                <p style="font-size:.8rem;color:#64748b;margin:0;">A deposit is needed to place this bid</p>
+            </div>
+        </div>
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:1rem;margin-bottom:1.25rem;display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem;text-align:center;">
+            <div>
+                <p style="font-size:.7rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin:0 0 .25rem;">Required</p>
+                <p id="drRequired" style="font-size:1.1rem;font-weight:800;color:#0f172a;margin:0;">—</p>
+            </div>
+            <div>
+                <p style="font-size:.7rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin:0 0 .25rem;">You Have</p>
+                <p id="drAvailable" style="font-size:1.1rem;font-weight:800;color:#0f172a;margin:0;">—</p>
+            </div>
+            <div>
+                <p style="font-size:.7rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin:0 0 .25rem;">Shortfall</p>
+                <p id="drShortfall" style="font-size:1.1rem;font-weight:800;color:#dc2626;margin:0;">—</p>
+            </div>
+        </div>
+        <p id="drMsg" style="font-size:.875rem;color:#475569;margin:0 0 1.25rem;line-height:1.6;"></p>
+        <div style="display:flex;gap:.75rem;">
+            <button id="drClose" onclick="closeDepositRequiredModal()"
+                style="flex:1;padding:.65rem 1rem;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;color:#374151;font-weight:600;font-size:.875rem;cursor:pointer;">
+                Cancel
+            </button>
+            <a id="drAddBtn" href="{{ route('buyer.deposit-withdrawal', ['action' => 'deposit']) }}"
+                style="flex:2;padding:.65rem 1rem;border:none;border-radius:10px;background:#1d4ed8;color:#fff;font-weight:700;font-size:.875rem;cursor:pointer;text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:.4rem;">
+                <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Add Deposit
+            </a>
+        </div>
+    </div>
+</div>
+
+{{-- ─────────────────────────────────────
      SCRIPTS
 ───────────────────────────────────────── --}}
 @push('scripts')
@@ -1000,10 +1043,18 @@ document.addEventListener('DOMContentLoaded', function(){
                 headers:{'X-CSRF-TOKEN':'{{ csrf_token() }}','Content-Type':'application/json','Accept':'application/json'},
                 body:JSON.stringify({amount:amount})
             })
-            .then(r=>r.json())
-            .then(function(data){
-                if(data.success){ showBidModal(data.message||'Bid placed!',true,function(){ location.reload(); }); }
-                else { showBidModal(data.message||'Failed to place bid',false); submitBtn.disabled=false; submitBtn.textContent='Bid now'; }
+            .then(function(r){ return r.json().then(function(data){ return {status:r.status,data:data}; }); })
+            .then(function(res){
+                var data = res.data;
+                submitBtn.disabled=false; submitBtn.textContent='Bid now';
+                if(data.success){
+                    showBidModal(data.message||'Bid placed!',true,function(){ location.reload(); });
+                } else if(data.deposit_required){
+                    // Structured deposit-required response — show the dedicated popup
+                    showDepositRequiredModal(data);
+                } else {
+                    showBidModal(data.message||data.errors&&data.errors.amount&&data.errors.amount[0]||'Failed to place bid',false);
+                }
             })
             .catch(function(){ showBidModal('An error occurred. Please try again.',false); submitBtn.disabled=false; submitBtn.textContent='Bid now'; });
         }
@@ -1013,6 +1064,23 @@ document.addEventListener('DOMContentLoaded', function(){
         confirmFn.then(function(ok){ if(ok) placeBid(); });
     });
 });
+
+/* ── Deposit required modal ── */
+function showDepositRequiredModal(data) {
+    var fmt = function(n){ return '$'+parseFloat(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); };
+    document.getElementById('drRequired').textContent  = fmt(data.required  || 0);
+    document.getElementById('drAvailable').textContent = fmt(data.available || 0);
+    document.getElementById('drShortfall').textContent = fmt(data.shortfall || 0);
+    document.getElementById('drMsg').textContent       = 'A deposit of '+fmt(data.required)+' is required to place this bid. Your current available deposit is '+fmt(data.available)+'. Please add '+fmt(data.shortfall)+' to continue.';
+    if(data.deposit_url) document.getElementById('drAddBtn').href = data.deposit_url+'?action=deposit';
+    var modal = document.getElementById('depositRequiredModal');
+    modal.classList.remove('hidden');
+    document.body.style.overflow='hidden';
+}
+function closeDepositRequiredModal(){
+    document.getElementById('depositRequiredModal').classList.add('hidden');
+    document.body.style.overflow='';
+}
 
 /* ── Watchlist ── */
 function submitWatchlist(e){

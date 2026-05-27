@@ -3,11 +3,43 @@
 @section('title', 'User - Buyer Dashboard')
 
 @section('content')
+@php
+    $wallet      = auth()->user()->wallet ?? null;
+    $available   = $wallet ? (float) $wallet->available_balance : 0;
+    $locked      = $wallet ? (float) $wallet->locked_balance    : 0;
+    $buyingPower = $available * 10;
+@endphp
 <div class="bg-gray-50 min-h-screen">
     <!-- Header -->
     <div class="bg-white shadow-sm mb-6 rounded-lg p-6">
         <h1 class="text-3xl font-bold text-gray-900">Account Information</h1>
         <p class="text-gray-600 mt-2">Manage your account details and password</p>
+    </div>
+
+    {{-- ── Security Deposit card ───────────────────────────────────────── --}}
+    <div class="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl shadow-lg p-5 mb-6 text-white">
+        <div class="flex items-center justify-between flex-wrap gap-4">
+            <div>
+                <p class="text-blue-200 text-xs font-semibold uppercase tracking-widest mb-1">Security Deposit</p>
+                <p class="text-3xl font-extrabold">${{ number_format($buyingPower, 0) }}
+                    <span class="text-base font-medium text-blue-200 ml-1">buying power</span>
+                </p>
+                <div class="flex gap-5 mt-2 text-sm">
+                    <span class="text-blue-200">Available: <strong class="text-white">${{ number_format($available, 2) }}</strong></span>
+                    <span class="text-blue-200">Used: <strong class="text-white">${{ number_format($locked, 2) }}</strong></span>
+                </div>
+            </div>
+            <div class="flex gap-2 flex-wrap">
+                <a href="{{ route('buyer.deposit-withdrawal', ['action' => 'deposit']) }}"
+                    class="flex items-center gap-1.5 bg-white text-blue-700 font-bold px-4 py-2 rounded-lg hover:bg-blue-50 transition text-sm shadow">
+                    <span class="material-icons text-base">add_circle</span> Add Deposit
+                </a>
+                <a href="{{ route('buyer.deposit-withdrawal') }}"
+                    class="flex items-center gap-1.5 bg-white/15 border border-white/30 text-white font-semibold px-4 py-2 rounded-lg hover:bg-white/25 transition text-sm">
+                    <span class="material-icons text-base">account_balance_wallet</span> Manage
+                </a>
+            </div>
+        </div>
     </div>
 
     @if(session('success'))

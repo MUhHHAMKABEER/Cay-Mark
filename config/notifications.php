@@ -91,6 +91,18 @@ return [
             'body' => 'A vehicle on your watchlist — {vehicle_name} (listing #{listing_number}) — ends within about {end_window}. Review the listing before it closes.',
         ],
 
+        'deposit_wire_request_received' => [
+            'audience' => 'buyer',
+            'body' => "We've received your deposit request of \${amount}. Your balance will be updated once your wire transfer clears our team — this usually takes 1–3 business days.",
+        ],
+        'deposit_wire_confirmed' => [
+            'audience' => 'buyer',
+            'body' => 'Great news! Your wire transfer of ${amount} has been confirmed. Your buying power has been updated and you can now use it to bid.',
+        ],
+        'deposit_wire_rejected' => [
+            'audience' => 'buyer',
+            'body' => 'Your deposit request of ${amount} could not be confirmed. Please contact support@caymark.co if you believe this is an error.',
+        ],
         'deposit_received' => [
             'audience' => 'buyer',
             'body' => 'CayMark received your deposit of ${amount}. Funds are available in your deposit wallet according to your account balance.',

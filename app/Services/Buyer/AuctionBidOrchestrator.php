@@ -103,9 +103,17 @@ class AuctionBidOrchestrator
             if ($requiresDeposit) {
                 $depositCheck = $depositService->checkDepositForBid($user, $amount);
                 if (!$depositCheck['has_deposit']) {
-                    throw \Illuminate\Validation\ValidationException::withMessages([
-                        'amount' => 'Insufficient deposit. Required: $' . number_format($depositCheck['required'], 2) . '. Available: $' . number_format($depositCheck['available'], 2) . '. Please add funds to your deposit wallet.',
-                    ]);
+                    // Return a structured JSON error so the frontend can show the
+                    // styled deposit-required popup (not a generic validation banner).
+                    return response()->json([
+                        'success'           => false,
+                        'deposit_required'  => true,
+                        'required'          => $depositCheck['required'],
+                        'available'         => $depositCheck['available'],
+                        'shortfall'         => $depositCheck['shortfall'],
+                        'deposit_url'       => route('buyer.deposit-withdrawal'),
+                        'message'           => 'A deposit of $' . number_format($depositCheck['required'], 2) . ' is required to place this bid.',
+                    ], 422);
                 }
             }
 
@@ -140,6 +148,16 @@ class AuctionBidOrchestrator
                 && (float) $highestBid->amount < $amount) {
                 $outbidUser = \App\Models\User::find($previousHighestBidderId);
                 if ($outbidUser) {
+                    // Release the outbid user's locked deposit back to available
+                    try {
+                        $depositService->unlockDepositForBid($outbidUser, $highestBid);
+                    } catch (\Throwable $e) {
+                        \Illuminate\Support\Facades\Log::error('[AuctionBidOrchestrator] Failed to unlock deposit for outbid user', [
+                            'outbid_user_id' => $outbidUser->id,
+                            'bid_id'         => $highestBid->id,
+                            'error'          => $e->getMessage(),
+                        ]);
+                    }
                     $notificationService->outbid($outbidUser, $listing);
                 }
             }

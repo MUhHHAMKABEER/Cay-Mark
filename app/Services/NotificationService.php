@@ -282,6 +282,39 @@ class NotificationService
         ]));
     }
 
+    /** Sent to buyer when they submit a wire deposit request (wallet NOT credited yet). */
+    public function depositWireRequestReceived(User $buyer, float $amount): void
+    {
+        $this->sendNotification($buyer, 'deposit_wire_request_received', $this->message('deposit_wire_request_received', [
+            'amount' => number_format($amount, 2),
+        ]), [
+            'amount' => $amount,
+            'link'   => route('buyer.deposit-withdrawal'),
+        ]);
+    }
+
+    /** Sent to buyer when admin confirms the wire and credits the wallet. */
+    public function depositWireConfirmed(User $buyer, float $amount): void
+    {
+        $this->sendNotification($buyer, 'deposit_wire_confirmed', $this->message('deposit_wire_confirmed', [
+            'amount' => number_format($amount, 2),
+        ]), [
+            'amount' => $amount,
+            'link'   => route('buyer.deposit-withdrawal'),
+        ]);
+    }
+
+    /** Sent to buyer when admin rejects their wire deposit request. */
+    public function depositWireRejected(User $buyer, float $amount): void
+    {
+        $this->sendNotification($buyer, 'deposit_wire_rejected', $this->message('deposit_wire_rejected', [
+            'amount' => number_format($amount, 2),
+        ]), [
+            'amount' => $amount,
+            'link'   => route('buyer.deposit-withdrawal'),
+        ]);
+    }
+
     public function depositReceived(User $buyer, float $amount): void
     {
         $this->sendNotification($buyer, 'deposit_received', $this->message('deposit_received', [

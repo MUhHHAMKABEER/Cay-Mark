@@ -53,9 +53,18 @@
                             <span class="text-gray-600">Buyer fees</span>
                             <span class="font-semibold text-blue-600">${{ number_format($invoice->buyer_commission, 2) }}</span>
                         </div>
+                        @if(($depositApplied ?? 0) > 0)
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600 flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                Deposit Applied
+                            </span>
+                            <span class="font-semibold text-green-600">−${{ number_format($depositApplied, 2) }}</span>
+                        </div>
+                        @endif
                         <div class="flex justify-between items-baseline pt-3 border-t border-gray-200">
                             <span class="text-sm font-medium text-gray-700">Total due</span>
-                            <span class="text-2xl font-bold text-gray-900">${{ number_format($invoice->total_amount_due, 2) }}</span>
+                            <span class="text-2xl font-bold text-gray-900">${{ number_format($totalAfterDeposit ?? $invoice->total_amount_due, 2) }}</span>
                         </div>
                         @if($invoice->pdf_path)
                             <div class="mt-3 pt-3 border-t border-gray-100">
