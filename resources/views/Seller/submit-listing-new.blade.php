@@ -801,7 +801,7 @@
         </script>
         @endif
 
-        <form id="listingForm" data-cm-validate="off" action="{{ $isEdit ? route('seller.listings.update', $listing) : route('seller.listings.store') }}" method="POST" enctype="multipart/form-data">
+        <form id="listingForm" data-cm-validate="off" action="{{ $isEdit ? route('seller.listings.update', $listing->id) : route('seller.listings.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
             @if($isEdit) @method('PUT') @endif
 
