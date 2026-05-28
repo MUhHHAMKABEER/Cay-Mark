@@ -27,23 +27,23 @@
                 loading="lazy"
                 onerror="this.onerror=null;this.src='{{ asset('images/placeholder-car.png') }}';">
 
-            {{-- Badges top-left --}}
-            <div class="absolute top-0 left-0 flex flex-col z-10">
-                @if($listing->featured)
-                    <span class="bg-secondary-fixed-dim text-primary text-[9px] font-bold px-2.5 py-1 uppercase tracking-widest">Featured</span>
-                @endif
-                <x-ui.ending-soon-badge :end="$endDate" />
+            {{-- Featured badge --}}
+            @if($listing->featured)
+            <div class="absolute top-0 left-0 z-10">
+                <span class="bg-secondary-fixed-dim text-primary text-[9px] font-bold px-2.5 py-1 uppercase tracking-widest">Featured</span>
             </div>
+            @endif
 
-            {{-- Watchlist top-right --}}
-            <div class="absolute top-3 right-3 z-10">
-                <x-ui.watchlist-heart :listing="$listing" :in-watchlist="$liked" :likes-count="$likesCount"/>
+            {{-- Countdown timer (homepage style) --}}
+            @php $endIso = $endDate ? $endDate->toIso8601String() : null; @endphp
+            @if($endIso && !$endDate->isPast())
+            <div class="absolute bottom-3 left-3 z-10 bg-white/90 backdrop-blur text-primary px-3 py-1.5 font-mono text-[12px] font-bold shadow-sm flex items-center gap-2" style="border-radius:0">
+                <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse flex-shrink-0"></span>
+                <span class="js-countdown" data-end="{{ $endIso }}">--:--:--</span>
             </div>
-
-            {{-- Countdown bottom --}}
-            <div class="absolute bottom-0 left-0 right-0 z-10">
-                <x-ui.countdown :end="$endDate" :listing-id="$listing->id" variant="grid" />
-            </div>
+            @else
+            <div class="absolute bottom-3 left-3 z-10 bg-black/50 text-white/80 px-2.5 py-1 text-[11px] font-bold tracking-wider" style="border-radius:0">Ended</div>
+            @endif
         </div>{{-- /left column --}}
 
         {{-- CENTER COLUMN · Details --}}

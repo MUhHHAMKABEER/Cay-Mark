@@ -304,26 +304,23 @@
                                     loading="lazy"
                                     onerror="this.onerror=null;this.src='{{ asset('images/placeholder-car.png') }}';">
 
-                                {{-- Badges top-left --}}
-                                <div class="absolute top-0 left-0 flex flex-col z-10">
-                                    @if($listing->featured)
-                                        <span class="bg-secondary-fixed-dim text-primary text-[9px] font-bold px-2.5 py-1 uppercase tracking-widest">Featured</span>
-                                    @endif
-                                    <x-ui.ending-soon-badge :end="$endDate" />
+                                {{-- Featured badge --}}
+                                @if($listing->featured)
+                                <div class="absolute top-0 left-0 z-10">
+                                    <span class="bg-secondary-fixed-dim text-primary text-[9px] font-bold px-2.5 py-1 uppercase tracking-widest">Featured</span>
                                 </div>
+                                @endif
 
-                                {{-- Watchlist top-right --}}
-                                <div class="absolute top-2.5 right-2.5 z-10">
-                                    <x-ui.watchlist-heart
-                                        :listing="$listing"
-                                        :in-watchlist="$likedListingIds->contains($listing->id)"
-                                        :likes-count="$listing->likes_count ?? 0"/>
+                                {{-- Countdown timer (homepage style) --}}
+                                @php $endIso = $endDate ? $endDate->toIso8601String() : null; @endphp
+                                @if($endIso && !$endDate->isPast())
+                                <div class="absolute bottom-3 left-3 z-10 bg-white/90 backdrop-blur text-primary px-3 py-1.5 font-mono text-[12px] font-bold shadow-sm flex items-center gap-2" style="border-radius:0">
+                                    <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse flex-shrink-0"></span>
+                                    <span class="js-countdown" data-end="{{ $endIso }}">--:--:--</span>
                                 </div>
-
-                                {{-- Countdown bottom --}}
-                                <div class="absolute bottom-0 left-0 right-0 z-10">
-                                    <x-ui.countdown :end="$endDate" :listing-id="$listing->id" variant="grid" />
-                                </div>
+                                @else
+                                <div class="absolute bottom-3 left-3 z-10 bg-black/50 text-white/80 px-2.5 py-1 text-[11px] font-bold tracking-wider" style="border-radius:0">Ended</div>
+                                @endif
                             </div>{{-- /image --}}
 
                             {{-- Card body --}}
@@ -557,10 +554,7 @@ function filterData() {
                         document.getElementById('auctionPagination').innerHTML = data.pagination;
                         const el = document.querySelector('.results-count');
                         if (el) { el.setAttribute('data-full-text', `Showing 1–${data.count} of ${data.count}`); typeResultsCount(); }
-                        if (window.CaymarkUI && CaymarkUI.auction) {
-                            CaymarkUI.auction.initCountdowns(document.getElementById('auctionListings'));
-                            CaymarkUI.auction.initWatchlistHearts(document.getElementById('auctionListings'));
-                        }
+                        initJsCountdowns(document.getElementById('auctionListings'));
                     }
                     self.isLoading = false;
                     self.checkActiveFilters();
@@ -595,9 +589,45 @@ function typeResultsCount() {
     }
     tick();
 }
+/* ── js-countdown driver (matches homepage style) ──────────────────── */
+var _jsCountdownInterval = null;
+function initJsCountdowns(container) {
+    var els = (container || document).querySelectorAll('.js-countdown');
+    if (!els.length) return;
+    function formatMs(ms) {
+        if (ms <= 0) return 'Ended';
+        var totalSecs = Math.floor(ms / 1000);
+        var h = Math.floor(totalSecs / 3600);
+        var m = Math.floor((totalSecs % 3600) / 60);
+        var s = totalSecs % 60;
+        var pad = function(n) { return n < 10 ? '0' + n : '' + n; };
+        if (h >= 24) {
+            var d = Math.floor(h / 24);
+            return d + 'd ' + pad(h % 24) + 'h ' + pad(m) + 'm';
+        }
+        return pad(h) + ' : ' + pad(m) + ' : ' + pad(s);
+    }
+    // Merge newly found elements into the global ticker
+    if (!window._jsCountdownEls) window._jsCountdownEls = [];
+    els.forEach(function(el) { if (!window._jsCountdownEls.includes(el)) window._jsCountdownEls.push(el); });
+    if (!_jsCountdownInterval) {
+        _jsCountdownInterval = setInterval(function() {
+            var now = Date.now();
+            window._jsCountdownEls = window._jsCountdownEls.filter(function(el) { return document.contains(el); });
+            window._jsCountdownEls.forEach(function(el) {
+                var end = new Date(el.dataset.end).getTime();
+                el.textContent = formatMs(end - now);
+            });
+        }, 1000);
+        // Tick immediately
+        var now = Date.now();
+        els.forEach(function(el) { el.textContent = formatMs(new Date(el.dataset.end).getTime() - now); });
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     typeResultsCount();
-    if (window.CaymarkUI && CaymarkUI.auction) { CaymarkUI.auction.initCountdowns(); CaymarkUI.auction.initWatchlistHearts(); }
+    initJsCountdowns(document);
     if (window.CaymarkUI && CaymarkUI.mobile) {
         CaymarkUI.mobile.initPullToRefresh(
             document.getElementById('cm-auction-pull-root'),

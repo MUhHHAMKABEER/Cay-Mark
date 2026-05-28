@@ -414,9 +414,9 @@ class RegisteredUserController extends Controller
                 ],
             ]);
 
-            // Redirect to step 2: membership selection (finish registration)
-            return redirect()->route('finish.registration')
-                ->with('success', 'Account created! Choose your membership to continue.');
+            // Redirect to Default Dashboard — user completes membership from there (Step 4+)
+            return redirect()->route('dashboard.default')
+                ->with('success', 'Account created! Complete your registration to start bidding or selling.');
 
         } catch (\Illuminate\Database\QueryException $e) {
             DB::rollBack();
