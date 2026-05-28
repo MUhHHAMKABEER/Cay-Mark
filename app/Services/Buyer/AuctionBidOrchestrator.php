@@ -134,6 +134,50 @@ class AuctionBidOrchestrator
             }
             // ─────────────────────────────────────────────────────────────────────
 
+            // ── STEP 3: Unlock the outbid buyer's deposit BEFORE accepting the new bid ─
+            // Runs inside the same DB transaction as the bid save so it is atomic.
+            // If unlock throws a DB error we propagate it — the transaction rolls back,
+            // the new bid is NOT saved, and wallet integrity is guaranteed.
+            // If no lock record exists (bid was below the $2k threshold), unlockDepositForBid
+            // returns null and we continue normally.
+            $outbidUser = null;
+            if ($previousHighestBidderId !== null
+                && $previousHighestBidderId !== (int) $user->id
+                && $highestBid) {
+                $outbidUser = \App\Models\User::find($previousHighestBidderId);
+                if ($outbidUser) {
+                    try {
+                        $unlockRecord = $depositService->unlockDepositForBid($outbidUser, $highestBid);
+                        if ($unlockRecord !== null && (float) $unlockRecord->amount > 0) {
+                            \Illuminate\Support\Facades\Log::info('[BidUnlock] Deposit unlocked for outbid buyer', [
+                                'outbid_user_id'   => $outbidUser->id,
+                                'outbid_user_name' => $outbidUser->name,
+                                'listing_id'       => $listing->id,
+                                'bid_id'           => $highestBid->id,
+                                'amount_unlocked'  => $unlockRecord->amount,
+                            ]);
+                        }
+                    } catch (\Throwable $e) {
+                        // A DB-level failure here must abort the bid — it is safer to
+                        // reject the new bid than to accept it and leave the previous
+                        // buyer's deposit locked forever.
+                        \Illuminate\Support\Facades\Log::error('[BidUnlock] CRITICAL: Deposit unlock failed — new bid rejected to preserve wallet integrity', [
+                            'outbid_user_id' => $outbidUser->id,
+                            'listing_id'     => $listing->id,
+                            'bid_id'         => $highestBid->id,
+                            'new_bidder_id'  => $user->id,
+                            'bid_amount'     => $amount,
+                            'error'          => $e->getMessage(),
+                        ]);
+                        throw \Illuminate\Validation\ValidationException::withMessages([
+                            'amount' => 'Unable to process your bid due to a system error. Please try again in a moment.',
+                        ]);
+                    }
+                }
+            }
+            // ─────────────────────────────────────────────────────────────────────
+
+            // Timer extension (anti-sniping)
             $secondsRemaining = now()->diffInSeconds($auctionEndDate, false);
             $timerReset = false;
             if ($secondsRemaining > 0 && $secondsRemaining < 60) {
@@ -142,13 +186,15 @@ class AuctionBidOrchestrator
                 $timerReset = true;
             }
 
+            // ── STEP 4: Accept the new bid ────────────────────────────────────────
             $bid = \App\Models\Bid::create([
                 'listing_id' => $listing->id,
-                'user_id' => $user->id,
-                'amount' => $amount,
-                'status' => 'active',
+                'user_id'    => $user->id,
+                'amount'     => $amount,
+                'status'     => 'active',
             ]);
 
+            // ── STEP 5: Lock the new bidder's required deposit ────────────────────
             if ($requiredDeposit > 0) {
                 $depositService->lockDepositForBid($user, $bid, $requiredDeposit);
             }
@@ -159,24 +205,9 @@ class AuctionBidOrchestrator
             $notificationService = new \App\Services\NotificationService();
             $notificationService->bidPlaced($user, $listing);
 
-            if ($previousHighestBidderId !== null
-                && $previousHighestBidderId !== (int) $user->id
-                && $highestBid
-                && (float) $highestBid->amount < $amount) {
-                $outbidUser = \App\Models\User::find($previousHighestBidderId);
-                if ($outbidUser) {
-                    // Release the outbid user's locked deposit back to available
-                    try {
-                        $depositService->unlockDepositForBid($outbidUser, $highestBid);
-                    } catch (\Throwable $e) {
-                        \Illuminate\Support\Facades\Log::error('[AuctionBidOrchestrator] Failed to unlock deposit for outbid user', [
-                            'outbid_user_id' => $outbidUser->id,
-                            'bid_id'         => $highestBid->id,
-                            'error'          => $e->getMessage(),
-                        ]);
-                    }
-                    $notificationService->outbid($outbidUser, $listing);
-                }
+            // Outbid notification — sent after bid commits, $outbidUser set in Step 3
+            if ($outbidUser !== null) {
+                $notificationService->outbid($outbidUser, $listing);
             }
 
             $listing->loadMissing('seller');

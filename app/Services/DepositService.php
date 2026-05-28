@@ -97,92 +97,129 @@ class DepositService
 
     /**
      * Lock deposit when user places a bid.
-     * Once ANY bid is placed, deposit becomes locked.
-     * 
-     * @param User $user
-     * @param Bid $bid
-     * @param float $requiredDeposit
+     *
+     * Only runs for bids at or above DEPOSIT_THRESHOLD ($2,000).
+     * Uses SELECT … FOR UPDATE on the wallet row to prevent concurrent
+     * double-spend between simultaneous bid submissions.
+     *
+     * @param User  $user
+     * @param Bid   $bid
+     * @param float $requiredDeposit  Must be > 0 (caller is responsible for the threshold check)
      * @return Deposit
      */
     public function lockDepositForBid(User $user, Bid $bid, float $requiredDeposit): Deposit
     {
         if ($requiredDeposit <= 0) {
-            // No deposit required for bids < $2,000
+            // Bid is below the $2,000 threshold — record the fact but touch nothing.
             return Deposit::create([
-                'user_id' => $user->id,
-                'amount' => 0,
-                'type' => 'lock',
-                'status' => 'completed',
-                'bid_id' => $bid->id,
+                'user_id'    => $user->id,
+                'amount'     => 0,
+                'type'       => 'lock',
+                'status'     => 'completed',
+                'bid_id'     => $bid->id,
                 'listing_id' => $bid->listing_id,
-                'notes' => 'No deposit required (bid below $2,000 threshold)',
+                'notes'      => 'No deposit required (bid below $' . number_format(self::DEPOSIT_THRESHOLD, 0) . ' threshold)',
             ]);
         }
 
         return DB::transaction(function () use ($user, $bid, $requiredDeposit) {
-            $wallet = UserWallet::getOrCreateForUser($user->id);
+            // Ensure wallet exists, then lock the row for this transaction.
+            UserWallet::getOrCreateForUser($user->id);
+            $wallet = UserWallet::where('user_id', $user->id)->lockForUpdate()->firstOrFail();
 
-            // Check if user has available balance
-            if ($wallet->available_balance < $requiredDeposit) {
+            if ((float) $wallet->available_balance < $requiredDeposit) {
                 throw new \Exception('Insufficient deposit balance. Required: $' . number_format($requiredDeposit, 2));
             }
 
-            // Lock the deposit
-            $wallet->available_balance -= $requiredDeposit;
-            $wallet->locked_balance += $requiredDeposit;
-            $wallet->updateTotalBalance();
+            // Move from Available → Locked
+            $wallet->available_balance = (float) $wallet->available_balance - $requiredDeposit;
+            $wallet->locked_balance    = (float) $wallet->locked_balance    + $requiredDeposit;
+            $wallet->total_balance     = $wallet->available_balance + $wallet->locked_balance;
             $wallet->save();
 
-            // Create lock record
             return Deposit::create([
-                'user_id' => $user->id,
-                'amount' => $requiredDeposit,
-                'type' => 'lock',
-                'status' => 'completed',
-                'bid_id' => $bid->id,
+                'user_id'    => $user->id,
+                'amount'     => $requiredDeposit,
+                'type'       => 'lock',
+                'status'     => 'completed',
+                'bid_id'     => $bid->id,
                 'listing_id' => $bid->listing_id,
-                'notes' => 'Deposit locked for bid #' . $bid->id,
+                'notes'      => 'Deposit locked for bid #' . $bid->id . ' on listing #' . $bid->listing_id,
             ]);
         });
     }
 
     /**
-     * Unlock deposit (if bid is retracted or user loses auction).
-     * 
-     * @param User $user
-     * @param Bid $bid
-     * @return Deposit|null
+     * Unlock deposit when a buyer is outbid or their bid is retracted.
+     *
+     * Looks up the specific lock record for this bid (by bid_id + user_id).
+     * Returns null — without touching the wallet — when:
+     *   • No lock record exists for the bid (bid was below the $2k threshold), OR
+     *   • The lock record has amount = 0 (recorded for sub-threshold bids)
+     *
+     * Uses SELECT … FOR UPDATE on the wallet row so concurrent bid submissions
+     * cannot read a stale balance during the unlock.
+     *
+     * @param  User $user  The buyer who was outbid.
+     * @param  Bid  $bid   The bid that is no longer the highest (the outbid bid).
+     * @return Deposit|null  The unlock record, or null if no deposit was locked.
+     * @throws \Exception   On any DB failure — caller must let this propagate so
+     *                      the enclosing transaction rolls back.
      */
     public function unlockDepositForBid(User $user, Bid $bid): ?Deposit
     {
+        // Find the lock record that was created when this specific bid was placed.
         $lockDeposit = Deposit::where('user_id', $user->id)
             ->where('bid_id', $bid->id)
             ->where('type', 'lock')
             ->where('status', 'completed')
             ->first();
 
-        if (!$lockDeposit || $lockDeposit->amount <= 0) {
-            return null; // No deposit was locked
+        if (!$lockDeposit) {
+            // Log a warning only when the bid was above the threshold and we expected a lock.
+            $expectedRequired = $this->calculateRequiredDeposit((float) $bid->amount);
+            if ($expectedRequired > 0) {
+                Log::warning('[DepositService] No lock record found for outbid buyer — wallet NOT modified', [
+                    'user_id'           => $user->id,
+                    'bid_id'            => $bid->id,
+                    'bid_amount'        => $bid->amount,
+                    'expected_required' => $expectedRequired,
+                    'note'              => 'This may indicate a lock was never created (e.g. sandbox bypass was active when the bid was placed).',
+                ]);
+            }
+            return null;
+        }
+
+        if ((float) $lockDeposit->amount <= 0) {
+            // Lock record exists but amount is 0 — bid was below threshold when placed.
+            return null;
         }
 
         return DB::transaction(function () use ($user, $bid, $lockDeposit) {
-            $wallet = UserWallet::getOrCreateForUser($user->id);
+            // Lock the wallet row to prevent concurrent modifications.
+            $wallet = UserWallet::where('user_id', $user->id)->lockForUpdate()->first();
+            if (!$wallet) {
+                throw new \Exception('Wallet not found for user #' . $user->id . ' during deposit unlock.');
+            }
 
-            // Unlock the deposit
-            $wallet->locked_balance -= $lockDeposit->amount;
-            $wallet->available_balance += $lockDeposit->amount;
-            $wallet->updateTotalBalance();
+            // Move from Locked → Available.
+            // Use max(0, …) as a safety guard against going negative due to any
+            // prior data inconsistency.
+            $unlockAmount              = (float) $lockDeposit->amount;
+            $wallet->locked_balance    = max(0, (float) $wallet->locked_balance - $unlockAmount);
+            $wallet->available_balance = (float) $wallet->available_balance + $unlockAmount;
+            $wallet->total_balance     = $wallet->available_balance + $wallet->locked_balance;
             $wallet->save();
 
-            // Create unlock record
+            // Record the unlock event
             return Deposit::create([
-                'user_id' => $user->id,
-                'amount' => $lockDeposit->amount,
-                'type' => 'unlock',
-                'status' => 'completed',
-                'bid_id' => $bid->id,
+                'user_id'    => $user->id,
+                'amount'     => $unlockAmount,
+                'type'       => 'unlock',
+                'status'     => 'completed',
+                'bid_id'     => $bid->id,
                 'listing_id' => $bid->listing_id,
-                'notes' => 'Deposit unlocked for bid #' . $bid->id,
+                'notes'      => 'Deposit unlocked — buyer outbid on listing #' . $bid->listing_id . ' (bid #' . $bid->id . ')',
             ]);
         });
     }
