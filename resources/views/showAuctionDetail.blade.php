@@ -488,7 +488,7 @@
                                 <dd class="col-sm-7">{{ $vehicle->body_style ?? $vehicle->subcategory ?? 'Sedan' }}</dd>
 
                                 <dt class="col-sm-5 text-muted">Color</dt>
-                                <dd class="col-sm-7">{{ $vehicle->color ?? 'White' }}</dd>
+                                <dd class="col-sm-7">{{ strtoupper($vehicle->color ?? 'N/A') }}</dd>
 
                                 <dt class="col-sm-5 text-muted">Engine Size</dt>
                                 <dd class="col-sm-7">{{ $vehicle->engine_type ?? '—' }}</dd>
@@ -501,9 +501,9 @@
                                 <dt class="col-sm-5 text-muted">Transmission</dt>
                                 <dd class="col-sm-7">
                                     @if($vehicle->transmission)
-                                        {{ ucfirst($vehicle->transmission) }}
+                                        {{ strtoupper($vehicle->transmission) }}
                                     @else
-                                        Automatic
+                                        AUTOMATIC
                                     @endif
                                 </dd>
 
@@ -513,7 +513,7 @@
                                 @endif
 
                                 <dt class="col-sm-5 text-muted">Fuel Type</dt>
-                                <dd class="col-sm-7">{{ $vehicle->fuel_type ?? 'Gasoline' }}</dd>
+                                <dd class="col-sm-7">{{ strtoupper($vehicle->fuel_type ?? 'N/A') }}</dd>
                             </dl>
                         </div>
                     </div>
@@ -536,9 +536,6 @@
 
                                 <dt class="col-sm-5 text-muted">Auction Ends</dt>
                                 <dd class="col-sm-7">{{ $vehicle->auction_time ?? 'N/A' }}</dd>
-
-                                <dt class="col-sm-5 text-muted">Sale Name</dt>
-                                <dd class="col-sm-7">{{ $vehicle->sale_name ?? 'CayMark Online Auction' }}</dd>
 
                                 <dt class="col-sm-5 text-muted">Last Updated</dt>
                                 <dd class="col-sm-7">{{ $vehicle->updated_at ? $vehicle->updated_at->format('F j, Y g:i A') : 'N/A' }}</dd>

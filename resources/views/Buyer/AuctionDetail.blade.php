@@ -298,12 +298,6 @@ header { position: relative !important; box-shadow: none !important; }
                     </button>
                 </form>
 
-                {{-- Sale name --}}
-                <div class="text-right">
-                    <span class="text-gray-400 text-xs">Sale Name:&nbsp;</span>
-                    <span class="text-blue-600 font-semibold text-sm">{{ strtoupper($listing->seller->name ?? 'CAYMARK AUCTION') }}</span>
-                </div>
-
                 {{-- Location --}}
                 <div class="text-right">
                     <span class="text-gray-400 text-xs">Location:&nbsp;</span>
@@ -476,7 +470,7 @@ header { position: relative !important; box-shadow: none !important; }
                     <tr>
                         <td class="spec-key">Engine type</td>
                         <td class="spec-val">
-                            {{ $listing->engine_type ?: 'N/A' }}
+                            {{ $listing->engine_type ? strtoupper($listing->engine_type) : 'N/A' }}
                             @if($listing->video_path)
                             <br>
                             <a href="{{ asset('uploads/listings/'.$listing->video_path) }}" target="_blank">
@@ -488,19 +482,19 @@ header { position: relative !important; box-shadow: none !important; }
                     </tr>
                     <tr>
                         <td class="spec-key">Transmission</td>
-                        <td class="spec-val">{{ $listing->transmission ? ucfirst($listing->transmission) : 'N/A' }}</td>
+                        <td class="spec-val">{{ $listing->transmission ? strtoupper($listing->transmission) : 'N/A' }}</td>
                     </tr>
                     <tr>
                         <td class="spec-key">Drivetrain</td>
-                        <td class="spec-val">{{ $listing->drive_type ?: ($listing->drive_train ?: 'N/A') }}</td>
+                        <td class="spec-val">{{ strtoupper($listing->drive_type ?: ($listing->drive_train ?: 'N/A')) }}</td>
                     </tr>
                     <tr>
                         <td class="spec-key">Fuel</td>
-                        <td class="spec-val">{{ $listing->fuel_type ?? 'N/A' }}</td>
+                        <td class="spec-val">{{ strtoupper($listing->fuel_type ?? 'N/A') }}</td>
                     </tr>
                     <tr>
                         <td class="spec-key">Color</td>
-                        <td class="spec-val">{{ $listing->color ? ucwords(strtolower($listing->color)) : 'N/A' }}</td>
+                        <td class="spec-val">{{ $listing->color ? strtoupper($listing->color) : 'N/A' }}</td>
                     </tr>
                     <tr>
                         <td class="spec-key">Sale date</td>

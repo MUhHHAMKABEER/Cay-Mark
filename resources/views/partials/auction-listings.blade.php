@@ -119,19 +119,19 @@
                         <path d="M3 14h14"/><path d="M9 22v-4a3 3 0 0 1 6 0v4"/>
                     </svg>
                     @endif
-                    {{ ucfirst(strtolower($listing->fuel_type)) }}
+                    {{ strtoupper($listing->fuel_type) }}
                 </span>
                 @endif
                 @if($listing->transmission)
                 <span class="inline-flex items-center gap-[4px] bg-gray-100 text-slate-600
                              text-[10.5px] font-semibold px-2.5 py-[4px] rounded-full whitespace-nowrap">
-                    {{ ucfirst(strtolower($listing->transmission)) }}
+                    {{ strtoupper($listing->transmission) }}
                 </span>
                 @endif
                 @if($listing->primary_damage)
                 <span class="inline-flex items-center gap-[4px] bg-amber-50 text-amber-700
                              text-[10.5px] font-semibold px-2.5 py-[4px] rounded-full whitespace-nowrap">
-                    {{ $listing->primary_damage }}
+                    {{ strtoupper($listing->primary_damage) }}
                 </span>
                 @endif
             </div>

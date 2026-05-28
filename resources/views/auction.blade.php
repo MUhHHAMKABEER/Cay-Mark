@@ -367,13 +367,13 @@
                                             <path d="M3 14h14"/><path d="M9 22v-4a3 3 0 0 1 6 0v4"/>
                                         </svg>
                                         @endif
-                                        {{ ucfirst(strtolower($listing->fuel_type)) }}
+                                        {{ strtoupper($listing->fuel_type) }}
                                     </span>
                                     @endif
                                     @if($listing->transmission)
                                     <span class="inline-flex items-center gap-[4px] bg-gray-100 text-slate-600
                                                  text-[10.5px] font-semibold px-2.5 py-[4px] rounded-full whitespace-nowrap">
-                                        {{ ucfirst(strtolower($listing->transmission)) }}
+                                        {{ strtoupper($listing->transmission) }}
                                     </span>
                                     @endif
                                 </div>
@@ -387,7 +387,7 @@
                                     </div>
                                     <div>
                                         <span class="spec-label mb-[3px]">Condition</span>
-                                        <p class="text-[13px] font-bold text-slate-800">{{ ucfirst($listing->condition ?? 'N/A') }}</p>
+                                        <p class="text-[13px] font-bold text-slate-800">{{ strtoupper($listing->condition ?? 'N/A') }}</p>
                                     </div>
                                     <div>
                                         <span class="spec-label mb-[3px]">Title</span>
