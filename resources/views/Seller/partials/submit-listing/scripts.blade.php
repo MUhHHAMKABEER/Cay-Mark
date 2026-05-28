@@ -569,7 +569,7 @@
         if (typeof imageCompression === 'undefined') return; // lib failed to load — submit as-is
         var files = Array.from(input.files);
         var out = [];
-        var opts = { maxSizeMB: 1.5, maxWidthOrHeight: 1920, useWebWorker: true, fileType: 'image/jpeg', initialQuality: 0.82 };
+        var opts = { maxSizeMB: 1.5, maxWidthOrHeight: 1920, useWebWorker: false, fileType: 'image/jpeg', initialQuality: 0.82 };
         for (var i = 0; i < files.length; i++) {
             var f = files[i];
             // Skip non-images and already-small files
@@ -592,16 +592,41 @@
     document.getElementById('listingForm')?.addEventListener('submit', async function(e) {
         if (this._cmReady) return; // already compressed — let it submit
         e.preventDefault();
-        var submitBtn = this.querySelector('[type="submit"]');
+        var form = this;
+        var submitBtn = form.querySelector('[type="submit"]');
         if (submitBtn) submitBtn.disabled = true;
         cmShowCompressOverlay();
+
+        // Safety net: if compression hangs for any reason (worker crash, env issue),
+        // submit the form after 30 s with the original files rather than hanging forever.
+        var compressionDone = false;
+        var safetyTimer = setTimeout(function() {
+            if (!compressionDone) {
+                compressionDone = true;
+                cmSetCompressProgress('Uploading…');
+                form._cmReady = true;
+                form.submit();
+            }
+        }, 30000);
+
         try {
-            await cmCompressInputFiles(document.getElementById('cover_photo_input'), 'cover photo');
-            await cmCompressInputFiles(document.getElementById('photos_input'), 'photo');
+            // Race the two compression tasks against a 28-second internal deadline
+            // (2 s shorter than the safety timer so the normal path always wins the race).
+            var compressionWork = (async function() {
+                await cmCompressInputFiles(document.getElementById('cover_photo_input'), 'cover photo');
+                await cmCompressInputFiles(document.getElementById('photos_input'), 'photo');
+            })();
+            var compressionTimeout = new Promise(function(resolve) { setTimeout(resolve, 28000); });
+            await Promise.race([compressionWork, compressionTimeout]);
             cmSetCompressProgress('Uploading…');
-        } catch (err) { /* swallow — submit anyway */ }
-        this._cmReady = true;
-        this.submit();
+        } catch (err) { /* swallow — submit anyway with whatever files we have */ }
+
+        if (!compressionDone) {
+            compressionDone = true;
+            clearTimeout(safetyTimer);
+            form._cmReady = true;
+            form.submit();
+        }
     });
 
     {{-- error_section navigation is now handled by the per-field toast handler above --}}

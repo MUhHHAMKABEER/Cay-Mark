@@ -15,6 +15,7 @@
             ['route' => 'admin.active-listings', 'icon' => 'directions_car', 'label' => 'Active Auctions'],
             ['route' => 'admin.boosts-addons', 'icon' => 'rocket_launch', 'label' => 'Boosts & Add-ons'],
             ['route' => 'admin.payments', 'icon' => 'account_balance_wallet', 'label' => 'Sales / Payouts', 'match_routes' => ['admin.pending-payments', 'admin.payouts', 'admin.payment-payout-logs', 'admin.invoice-log', 'admin.unpaid-auctions', 'admin.buyer-defaults', 'admin.second-chance-purchases'], 'prefix_match' => false],
+            ['route' => 'admin.security-deposits', 'icon' => 'security', 'label' => 'Security Deposits', 'prefix_match' => false],
             ['route' => 'admin.pending-payments', 'icon' => 'schedule', 'label' => 'Pending Payments'],
             ['route' => 'admin.disputes', 'icon' => 'gavel', 'label' => 'Disputes Center', 'match_routes' => ['admin.disputes.view', 'admin.disputes.update-status'], 'prefix_match' => false],
             ['route' => 'admin.messaging.flags.index', 'icon' => 'flag', 'label' => 'Messaging Flags', 'match_routes' => ['admin.messaging.flags.show', 'admin.messaging.flags.unflag'], 'prefix_match' => false],
