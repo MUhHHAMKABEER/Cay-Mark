@@ -20,6 +20,8 @@ class Invoice extends Model
         'winning_bid_amount',
         'buyer_commission',
         'total_amount_due',
+        'original_amount',
+        'deposit_applied',
         'sale_date',
         'invoice_generated_at',
         'payment_deadline',
@@ -34,16 +36,26 @@ class Invoice extends Model
 
     protected $casts = [
         'winning_bid_amount' => 'decimal:2',
-        'buyer_commission' => 'decimal:2',
-        'total_amount_due' => 'decimal:2',
-        'sale_date' => 'date',
+        'buyer_commission'   => 'decimal:2',
+        'total_amount_due'   => 'decimal:2',
+        'original_amount'    => 'decimal:2',
+        'deposit_applied'    => 'decimal:2',
+        'sale_date'          => 'date',
         'invoice_generated_at' => 'datetime',
-        'payment_deadline' => 'datetime',
-        'is_overdue' => 'boolean',
-        'overdue_at' => 'datetime',
-        'paid_at' => 'datetime',
-        'metadata' => 'array',
+        'payment_deadline'   => 'datetime',
+        'is_overdue'         => 'boolean',
+        'overdue_at'         => 'datetime',
+        'paid_at'            => 'datetime',
+        'metadata'           => 'array',
     ];
+
+    /**
+     * Whether a security deposit was credited against this invoice.
+     */
+    public function hasDepositApplied(): bool
+    {
+        return (float) $this->deposit_applied > 0;
+    }
 
     /**
      * Invoice belongs to a listing

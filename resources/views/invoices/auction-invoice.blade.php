@@ -137,6 +137,12 @@
                 <td class="label">Buyer Fees:</td>
                 <td class="amount">${{ number_format($invoice->buyer_commission, 2) }}</td>
             </tr>
+            @if((float)($invoice->deposit_applied ?? 0) > 0)
+            <tr>
+                <td class="label" style="color:#16a34a;">Security Deposit Applied:</td>
+                <td class="amount" style="color:#16a34a;">−${{ number_format($invoice->deposit_applied, 2) }}</td>
+            </tr>
+            @endif
             <tr class="total-due">
                 <td class="label">Total Amount Due:</td>
                 <td class="amount">${{ number_format($invoice->total_amount_due, 2) }}</td>

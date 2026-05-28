@@ -78,25 +78,34 @@ class BuyerPaymentOps
             $paymentStatus = 'completed';
 
             foreach ($invoices as $invoice) {
+                // Seller payout is always based on the raw winning bid amount.
+                // The buyer's security deposit credit is irrelevant to the seller.
                 $sellerPayout = $commissionService->calculateSellerPayout($invoice->winning_bid_amount);
 
+                // total_amount_due already reflects the deposit deduction (set at invoice
+                // creation). This is the actual amount charged to the buyer's card.
+                $amountCharged    = (float) $invoice->total_amount_due;
+                $depositCredited  = (float) ($invoice->deposit_applied ?? 0);
+
                 $payment = \App\Models\Payment::create([
-                    'user_id' => $user->id,
-                    'invoice_id' => $invoice->id,
-                    'listing_id' => $invoice->listing_id,
-                    'seller_id' => $invoice->seller_id,
-                    'amount' => $invoice->total_amount_due,
-                    'method' => 'credit_card',
-                    'status' => $paymentStatus,
+                    'user_id'                => $user->id,
+                    'invoice_id'             => $invoice->id,
+                    'listing_id'             => $invoice->listing_id,
+                    'seller_id'              => $invoice->seller_id,
+                    'amount'                 => $amountCharged,
+                    'method'                 => 'credit_card',
+                    'status'                 => $paymentStatus,
                     'gateway_transaction_id' => $gatewayTransactionId,
-                    'payment_reference' => $gatewayTransactionId,
-                    'item_title' => $invoice->item_name,
-                    'item_id' => $invoice->item_id,
-                    'platform_fee_retained' => $invoice->buyer_commission + $sellerPayout['seller_commission'],
-                    'seller_payout_amount' => $sellerPayout['net_payout'],
+                    'payment_reference'      => $gatewayTransactionId,
+                    'item_title'             => $invoice->item_name,
+                    'item_id'                => $invoice->item_id,
+                    'platform_fee_retained'  => $invoice->buyer_commission + $sellerPayout['seller_commission'],
+                    'seller_payout_amount'   => $sellerPayout['net_payout'],
                     'metadata' => [
-                        'card_last4' => substr($request->card_number, -4),
-                        'cardholder_name' => $request->cardholder_name,
+                        'card_last4'       => substr($request->card_number, -4),
+                        'cardholder_name'  => $request->cardholder_name,
+                        'original_amount'  => (float) ($invoice->original_amount ?? ($amountCharged + $depositCredited)),
+                        'deposit_credited' => $depositCredited,
                     ],
                 ]);
 

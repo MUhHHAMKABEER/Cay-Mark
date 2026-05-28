@@ -21,8 +21,10 @@ use App\Http\Requests\AdminUpdatePayoutStatusRequest;
 use App\Http\Requests\AdminResolveDefaultRequest;
 use App\Http\Requests\AdminCloseUnpaidAuctionRequest;
 use App\Models\AdminActivityLog;
+use App\Models\DepositAuditLog;
 use App\Models\Invoice;
 use App\Services\Admin\AdminActionHub;
+use App\Services\Admin\DepositAuditLogger;
 use App\Services\CommissionService;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -1238,6 +1240,14 @@ class AdminController extends Controller
             \Log::error('Withdrawal approval notification failed: '.$e->getMessage());
         }
 
+        DepositAuditLogger::record(
+            'withdrawal_approved',
+            auth()->user(),
+            $user,
+            (float) $withdrawal->amount,
+            'Approved by ' . auth()->user()->name . ' on ' . now()->format('Y-m-d H:i')
+        );
+
         // TODO: Process actual payment transfer (bank transfer, etc.)
 
         return back()->with('success', 'Withdrawal approved and processed.');
@@ -1274,44 +1284,91 @@ class AdminController extends Controller
             \Log::error('Withdrawal rejection notification failed: '.$e->getMessage());
         }
 
+        if ($withdrawal->user) {
+            DepositAuditLogger::record(
+                'withdrawal_rejected',
+                auth()->user(),
+                $withdrawal->user,
+                (float) $withdrawal->amount,
+                'Rejected by ' . auth()->user()->name . ' on ' . now()->format('Y-m-d H:i')
+                    . '. Funds returned to available balance.'
+            );
+        }
+
         return back()->with('success', 'Withdrawal request rejected. Funds returned to available balance.');
     }
 
     /**
-     * Admin: Security Deposits overview — pending wire requests, pending withdrawals, all wallets.
+     * Admin: Security Deposits overview — pending wire requests, pending withdrawals,
+     * all wallets, and the structured deposit audit log.
+     *
+     * Query params:
+     *   tab          = deposits (default) | audit-log
+     *   log_action   = deposit_confirmed | deposit_rejected | withdrawal_approved |
+     *                  withdrawal_rejected | manual_deposit
+     *   log_from     = Y-m-d
+     *   log_to       = Y-m-d
+     *   log_buyer    = partial name / email search
      */
     public function securityDeposits(Request $request)
     {
-        // Pending wire deposit requests (buyer submitted, not yet confirmed)
+        // ── Pending wire deposit requests ────────────────────────────────────
         $pendingWireRequests = \App\Models\DepositRequest::where('status', 'pending_wire')
             ->with('buyer')
             ->orderByDesc('requested_at')
             ->get();
 
-        // Pending withdrawal requests
+        // ── Pending withdrawal requests ──────────────────────────────────────
         $pendingWithdrawals = \App\Models\Deposit::where('type', 'withdrawal')
             ->where('status', 'pending')
             ->with('user')
             ->orderByDesc('created_at')
             ->get();
 
-        // All buyer wallets
+        // ── All buyer wallets ────────────────────────────────────────────────
         $wallets = \App\Models\UserWallet::with('user')
             ->orderByDesc('total_balance')
             ->paginate(30, ['*'], 'wallets_page');
 
+        // ── Audit log (filterable) ───────────────────────────────────────────
+        $auditQuery = DepositAuditLog::with(['admin', 'buyer'])
+            ->orderByDesc('performed_at');
+
+        if ($request->filled('log_action')) {
+            $auditQuery->where('action', $request->log_action);
+        }
+        if ($request->filled('log_from')) {
+            $auditQuery->where('performed_at', '>=', $request->log_from . ' 00:00:00');
+        }
+        if ($request->filled('log_to')) {
+            $auditQuery->where('performed_at', '<=', $request->log_to . ' 23:59:59');
+        }
+        if ($request->filled('log_buyer')) {
+            $search = '%' . $request->log_buyer . '%';
+            $auditQuery->where(function ($q) use ($search) {
+                $q->where('buyer_name', 'like', $search)
+                  ->orWhereHas('buyer', fn ($q2) => $q2->where('email', 'like', $search));
+            });
+        }
+
+        $auditLogs  = $auditQuery->paginate(50, ['*'], 'audit_page');
+        $activeTab  = $request->get('tab', 'deposits');
+
+        // ── Summary stats ────────────────────────────────────────────────────
         $stats = [
-            'total_deposited'             => \App\Models\UserWallet::sum('total_balance'),
-            'total_available'             => \App\Models\UserWallet::sum('available_balance'),
-            'total_locked'                => \App\Models\UserWallet::sum('locked_balance'),
-            'pending_wire_count'          => $pendingWireRequests->count(),
-            'pending_wire_amount'         => $pendingWireRequests->sum('amount'),
-            'pending_withdrawals_count'   => $pendingWithdrawals->count(),
-            'pending_withdrawals_amount'  => $pendingWithdrawals->sum('amount'),
+            'total_deposited'            => \App\Models\UserWallet::sum('total_balance'),
+            'total_available'            => \App\Models\UserWallet::sum('available_balance'),
+            'total_locked'               => \App\Models\UserWallet::sum('locked_balance'),
+            'pending_wire_count'         => $pendingWireRequests->count(),
+            'pending_wire_amount'        => $pendingWireRequests->sum('amount'),
+            'pending_withdrawals_count'  => $pendingWithdrawals->count(),
+            'pending_withdrawals_amount' => $pendingWithdrawals->sum('amount'),
+            'audit_log_total'            => DepositAuditLog::count(),
         ];
 
         return view('admin.security-deposits', compact(
-            'pendingWireRequests', 'pendingWithdrawals', 'wallets', 'stats'
+            'pendingWireRequests', 'pendingWithdrawals', 'wallets',
+            'stats', 'auditLogs', 'activeTab'
         ));
     }
 
@@ -1355,14 +1412,14 @@ class AdminController extends Controller
             \Log::error('depositWireConfirmed notification failed: ' . $e->getMessage());
         }
 
-        \Log::info('[Admin] Wire deposit confirmed', [
-            'admin_id'           => $admin->id,
-            'admin_name'         => $admin->name,
-            'buyer_id'           => $buyer->id,
-            'deposit_request_id' => $depositRequest->id,
-            'amount'             => $amount,
-            'confirmed_at'       => now()->toDateTimeString(),
-        ]);
+        DepositAuditLogger::record(
+            'deposit_confirmed',
+            $admin,
+            $buyer,
+            $amount,
+            'Wire confirmed by ' . $admin->name . ' on ' . now()->format('Y-m-d H:i')
+                . ($request->notes ? ' — ' . $request->notes : '')
+        );
 
         return back()->with('success',
             '$' . number_format($amount, 2) . ' wire deposit confirmed for ' . $buyer->name . '. Their wallet has been credited.'
@@ -1395,13 +1452,14 @@ class AdminController extends Controller
             \Log::error('depositWireRejected notification failed: ' . $e->getMessage());
         }
 
-        \Log::info('[Admin] Wire deposit rejected', [
-            'admin_id'           => $admin->id,
-            'admin_name'         => $admin->name,
-            'buyer_id'           => $buyer->id,
-            'deposit_request_id' => $depositRequest->id,
-            'amount'             => $depositRequest->amount,
-        ]);
+        DepositAuditLogger::record(
+            'deposit_rejected',
+            $admin,
+            $buyer,
+            (float) $depositRequest->amount,
+            'Rejected by ' . $admin->name . ' on ' . now()->format('Y-m-d H:i')
+                . ($request->notes ? ' — ' . $request->notes : '')
+        );
 
         return back()->with('success', 'Deposit request rejected. Buyer has been notified.');
     }
@@ -1421,13 +1479,13 @@ class AdminController extends Controller
         $notes          = $request->notes ?? 'Deposit added manually by admin: ' . $admin->name;
         $depositService->addDeposit($user, (float) $request->amount, $notes);
 
-        \Log::info('[Admin] Deposit added manually', [
-            'admin_id'   => $admin->id,
-            'admin_name' => $admin->name,
-            'buyer_id'   => $user->id,
-            'amount'     => $request->amount,
-            'timestamp'  => now()->toDateTimeString(),
-        ]);
+        DepositAuditLogger::record(
+            'manual_deposit',
+            $admin,
+            $user,
+            (float) $request->amount,
+            $notes
+        );
 
         return back()->with('success', 'Deposit of $' . number_format($request->amount, 2) . ' added to ' . $user->name . "'s wallet.");
     }

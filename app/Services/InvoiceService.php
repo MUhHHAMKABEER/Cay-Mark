@@ -56,26 +56,47 @@ class InvoiceService
             // Generate invoice number
             $invoiceNumber = Invoice::generateInvoiceNumber();
 
-            // Create invoice with 48-hour payment deadline (per PDF requirements)
+            $originalTotal = (float) $buyerInvoice['total_due'];
+
+            // Create invoice with 48-hour payment deadline (per PDF requirements).
+            // original_amount is set once here and never changes; it is the audit trail
+            // of what the full invoice was before any deposit credit.
+            // deposit_applied defaults to 0 and is updated below if a deposit exists.
             $invoice = Invoice::create([
-                'invoice_number' => $invoiceNumber,
-                'listing_id' => $listing->id,
-                'bid_id' => $winningBid->id,
-                'buyer_id' => $buyer->id,
-                'seller_id' => $seller->id,
-                'item_name' => ($listing->year ?? '') . ' ' . ($listing->make ?? '') . ' ' . ($listing->model ?? ''),
-                'item_id' => $listing->item_number ?? (string) $listing->id, // Use Item Number (CM000245) if available, NOT "Lot ID"
+                'invoice_number'     => $invoiceNumber,
+                'listing_id'         => $listing->id,
+                'bid_id'             => $winningBid->id,
+                'buyer_id'           => $buyer->id,
+                'seller_id'          => $seller->id,
+                'item_name'          => ($listing->year ?? '') . ' ' . ($listing->make ?? '') . ' ' . ($listing->model ?? ''),
+                'item_id'            => $listing->item_number ?? (string) $listing->id,
                 'winning_bid_amount' => $winningAmount,
-                'buyer_commission' => $buyerInvoice['buyer_commission'],
-                'total_amount_due' => $buyerInvoice['total_due'],
-                'sale_date' => now()->toDateString(),
+                'buyer_commission'   => $buyerInvoice['buyer_commission'],
+                'original_amount'    => $originalTotal,
+                'deposit_applied'    => 0,
+                'total_amount_due'   => $originalTotal,
+                'sale_date'          => now()->toDateString(),
                 'invoice_generated_at' => now(),
-                'payment_deadline' => now()->addHours(48), // 48-hour payment window
-                'payment_status' => 'pending',
+                'payment_deadline'   => now()->addHours(48),
+                'payment_status'     => 'pending',
             ]);
 
-            // Apply deposit to invoice if available
-            $depositApplied = $this->depositService->applyDepositToInvoice($buyer, $winningBid, $buyerInvoice['total_due']);
+            // Apply locked deposit to this invoice if the buyer has one.
+            // This moves the buyer's locked balance out of their wallet and creates
+            // an `applied_to_invoice` Deposit record.
+            $depositRecord = $this->depositService->applyDepositToInvoice($buyer, $winningBid, $originalTotal);
+
+            // If a non-zero deposit was credited, update the invoice in the DB so that
+            // total_amount_due = original_amount - deposit_applied.
+            // ALL downstream reads (payment processing, PDF, seller payout) use these
+            // columns. The seller's payout is always calculated from winning_bid_amount,
+            // so the deposit credit never affects what the seller receives.
+            if ((float) $depositRecord->amount > 0) {
+                $depositCredit = (float) $depositRecord->amount;
+                $invoice->deposit_applied  = $depositCredit;
+                $invoice->total_amount_due = max(0, $originalTotal - $depositCredit);
+                $invoice->save();
+            }
 
             // Generate PDF invoice
             $pdfPath = $this->generateInvoicePDF($invoice);

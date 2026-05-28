@@ -48,9 +48,38 @@
     </div>
 
     {{-- ══════════════════════════════════════════════════════════════════
-         SECTION 1: PENDING WIRE DEPOSIT REQUESTS
-         These are submitted by buyers — admin must confirm wire received.
+         TAB NAVIGATION
     ══════════════════════════════════════════════════════════════════ --}}
+    @php
+        $tabBase = route('admin.security-deposits');
+    @endphp
+    <div class="flex gap-1 border-b border-gray-200 mb-6">
+        <a href="{{ $tabBase }}"
+           class="inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold rounded-t-lg border-b-2 transition
+                  {{ $activeTab === 'deposits' ? 'border-blue-600 text-blue-700 bg-blue-50' : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50' }}">
+            <span class="material-icons text-base">account_balance_wallet</span>
+            Deposits &amp; Withdrawals
+            @if($stats['pending_wire_count'] + $stats['pending_withdrawals_count'] > 0)
+                <span class="ml-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-orange-500 text-white text-xs font-bold">
+                    {{ $stats['pending_wire_count'] + $stats['pending_withdrawals_count'] }}
+                </span>
+            @endif
+        </a>
+        <a href="{{ $tabBase }}?tab=audit-log"
+           class="inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold rounded-t-lg border-b-2 transition
+                  {{ $activeTab === 'audit-log' ? 'border-blue-600 text-blue-700 bg-blue-50' : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50' }}">
+            <span class="material-icons text-base">manage_search</span>
+            Audit Log
+            <span class="ml-1 text-xs text-gray-400 font-normal">({{ number_format($stats['audit_log_total']) }})</span>
+        </a>
+    </div>
+
+    {{-- ══════════════════════════════════════════════════════════════════
+         TAB A: DEPOSITS & WITHDRAWALS
+    ══════════════════════════════════════════════════════════════════ --}}
+    @if($activeTab === 'deposits')
+
+    {{-- ── SECTION 1: PENDING WIRE DEPOSIT REQUESTS ── --}}
     <div class="bg-white rounded-2xl border {{ $pendingWireRequests->isNotEmpty() ? 'border-orange-200' : 'border-gray-100' }} shadow-sm mb-8 overflow-hidden">
         <div class="px-6 py-4 border-b {{ $pendingWireRequests->isNotEmpty() ? 'border-orange-100 bg-orange-50' : 'border-gray-100' }} flex items-center justify-between">
             <h2 class="font-bold text-gray-900 text-base flex items-center gap-2">
@@ -129,9 +158,7 @@
         @endif
     </div>
 
-    {{-- ══════════════════════════════════════════════════════════════════
-         SECTION 2: PENDING WITHDRAWAL REQUESTS
-    ══════════════════════════════════════════════════════════════════ --}}
+    {{-- ── SECTION 2: PENDING WITHDRAWAL REQUESTS ── --}}
     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm mb-8 overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
             <h2 class="font-bold text-gray-900 text-base flex items-center gap-2">
@@ -216,9 +243,7 @@
         @endif
     </div>
 
-    {{-- ══════════════════════════════════════════════════════════════════
-         SECTION 3: ALL BUYER WALLETS
-    ══════════════════════════════════════════════════════════════════ --}}
+    {{-- ── SECTION 3: ALL BUYER WALLETS ── --}}
     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-100">
             <h2 class="font-bold text-gray-900 text-base flex items-center gap-2">
@@ -277,9 +302,178 @@
         </div>
         @endif
     </div>
+
+    @endif {{-- end deposits tab --}}
+
+    {{-- ══════════════════════════════════════════════════════════════════
+         TAB B: AUDIT LOG
+    ══════════════════════════════════════════════════════════════════ --}}
+    @if($activeTab === 'audit-log')
+
+    {{-- Filter bar --}}
+    <form method="GET" action="{{ route('admin.security-deposits') }}" class="bg-white rounded-2xl border border-gray-100 shadow-sm mb-6 overflow-hidden">
+        <input type="hidden" name="tab" value="audit-log">
+        <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
+            <span class="material-icons text-blue-600 text-lg">filter_list</span>
+            <h2 class="font-bold text-gray-900 text-base">Filter Audit Log</h2>
+        </div>
+        <div class="px-5 py-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
+            {{-- Action type --}}
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Action</label>
+                <select name="log_action"
+                    class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-white">
+                    <option value="">All actions</option>
+                    <option value="deposit_confirmed"   {{ request('log_action') === 'deposit_confirmed'   ? 'selected' : '' }}>Deposit Confirmed</option>
+                    <option value="deposit_rejected"    {{ request('log_action') === 'deposit_rejected'    ? 'selected' : '' }}>Deposit Rejected</option>
+                    <option value="withdrawal_approved" {{ request('log_action') === 'withdrawal_approved' ? 'selected' : '' }}>Withdrawal Approved</option>
+                    <option value="withdrawal_rejected" {{ request('log_action') === 'withdrawal_rejected' ? 'selected' : '' }}>Withdrawal Rejected</option>
+                    <option value="manual_deposit"      {{ request('log_action') === 'manual_deposit'      ? 'selected' : '' }}>Manual Deposit</option>
+                </select>
+            </div>
+
+            {{-- Date from --}}
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">From date</label>
+                <input type="date" name="log_from" value="{{ request('log_from') }}"
+                    class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+            </div>
+
+            {{-- Date to --}}
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">To date</label>
+                <input type="date" name="log_to" value="{{ request('log_to') }}"
+                    class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+            </div>
+
+            {{-- Buyer name / email --}}
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Buyer name / email</label>
+                <input type="text" name="log_buyer" value="{{ request('log_buyer') }}"
+                    placeholder="Search buyer…"
+                    class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+            </div>
+        </div>
+        <div class="px-5 pb-4 flex items-center gap-3">
+            <button type="submit"
+                class="px-5 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition shadow-sm flex items-center gap-1.5">
+                <span class="material-icons text-sm">search</span> Apply Filters
+            </button>
+            <a href="{{ route('admin.security-deposits') }}?tab=audit-log"
+               class="px-5 py-2 border border-gray-200 text-gray-600 text-sm font-semibold rounded-lg hover:bg-gray-50 transition">
+               Reset
+            </a>
+            @if(request()->hasAny(['log_action','log_from','log_to','log_buyer']))
+                <span class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5 flex items-center gap-1">
+                    <span class="material-icons text-xs">filter_alt</span> Filters active — showing {{ $auditLogs->total() }} of {{ number_format($stats['audit_log_total']) }} entries
+                </span>
+            @endif
+        </div>
+    </form>
+
+    {{-- Audit log table --}}
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+            <h2 class="font-bold text-gray-900 text-base flex items-center gap-2">
+                <span class="material-icons text-indigo-500 text-lg">history</span>
+                Deposit Audit Log
+                <span class="text-xs text-gray-400 font-normal ml-1">({{ number_format($stats['audit_log_total']) }} total entries)</span>
+            </h2>
+            <p class="text-xs text-gray-500">Newest first · 50 per page</p>
+        </div>
+
+        @if($auditLogs->isEmpty())
+            <div class="px-6 py-12 text-center">
+                <span class="material-icons text-gray-300 text-5xl">manage_search</span>
+                <p class="text-gray-500 text-sm mt-2">No audit log entries found for the selected filters.</p>
+                @if(request()->hasAny(['log_action','log_from','log_to','log_buyer']))
+                    <a href="{{ route('admin.security-deposits') }}?tab=audit-log"
+                       class="mt-3 inline-block text-sm text-blue-600 hover:underline">Clear filters</a>
+                @endif
+            </div>
+        @else
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                        <th class="px-4 py-3 text-left">Date &amp; Time</th>
+                        <th class="px-4 py-3 text-left">Admin</th>
+                        <th class="px-4 py-3 text-left">Buyer</th>
+                        <th class="px-4 py-3 text-left">Action</th>
+                        <th class="px-4 py-3 text-right">Amount</th>
+                        <th class="px-4 py-3 text-left">Notes</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    @foreach($auditLogs as $log)
+                    <tr class="hover:bg-gray-50/60 transition">
+
+                        {{-- Date & Time --}}
+                        <td class="px-4 py-3 text-gray-500 text-xs whitespace-nowrap">
+                            <div class="font-medium text-gray-700">{{ $log->performed_at->format('M j, Y') }}</div>
+                            <div class="text-gray-400">{{ $log->performed_at->format('g:i A') }}</div>
+                        </td>
+
+                        {{-- Admin --}}
+                        <td class="px-4 py-3">
+                            <div class="font-semibold text-gray-800 text-xs">{{ $log->admin_name }}</div>
+                            @if($log->admin)
+                                <div class="text-gray-400 text-xs">{{ $log->admin->email }}</div>
+                            @endif
+                        </td>
+
+                        {{-- Buyer --}}
+                        <td class="px-4 py-3">
+                            <div class="font-semibold text-gray-800 text-xs">{{ $log->buyer_name }}</div>
+                            @if($log->buyer)
+                                <div class="text-gray-400 text-xs">{{ $log->buyer->email }}</div>
+                                <a href="{{ route('admin.users.view', $log->buyer_id) }}"
+                                   class="text-xs text-blue-500 hover:underline">#{{ $log->buyer_id }}</a>
+                            @endif
+                        </td>
+
+                        {{-- Action badge --}}
+                        <td class="px-4 py-3">
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold {{ $log->actionBadgeClass() }}">
+                                <span class="material-icons text-xs">{{ $log->actionIcon() }}</span>
+                                {{ $log->actionLabel() }}
+                            </span>
+                        </td>
+
+                        {{-- Amount --}}
+                        <td class="px-4 py-3 text-right font-bold
+                            @if(in_array($log->action, ['deposit_confirmed','withdrawal_approved','manual_deposit'])) text-green-700
+                            @else text-red-700
+                            @endif">
+                            ${{ number_format($log->amount, 2) }}
+                        </td>
+
+                        {{-- Notes --}}
+                        <td class="px-4 py-3 text-gray-500 text-xs max-w-[240px]">
+                            <span title="{{ $log->notes }}" class="line-clamp-2">{{ $log->notes ?: '—' }}</span>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+
+        @if($auditLogs->hasPages())
+        <div class="px-4 py-4 border-t border-gray-100">
+            {{ $auditLogs->appends(request()->query())->links() }}
+        </div>
+        @endif
+
+        @endif {{-- auditLogs empty --}}
+    </div>
+
+    @endif {{-- end audit-log tab --}}
+
 </div>
 
-{{-- ── Manual Add Deposit Modal (admin override — bypasses wire flow) ──────── --}}
+{{-- ── Manual Add Deposit Modal (admin override — bypasses wire flow) ──── --}}
 <div id="adminDepositModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md" onclick="event.stopPropagation()">
         <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">

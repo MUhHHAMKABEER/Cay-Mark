@@ -40,14 +40,13 @@ class PaymentController extends Controller
             ->with(['listing.images', 'seller'])
             ->firstOrFail();
 
-        // Look up deposit applied to the winning bid for this invoice
-        $depositApplied = \App\Models\Deposit::where('user_id', $user->id)
-            ->where('bid_id', $invoice->bid_id)
-            ->where('type', 'applied_to_invoice')
-            ->where('status', 'completed')
-            ->value('amount') ?? 0;
-
-        $totalAfterDeposit = max(0, $invoice->total_amount_due - $depositApplied);
+        // deposit_applied and total_amount_due are set correctly in the DB at invoice
+        // creation time (InvoiceService). No re-computation needed here.
+        // - deposit_applied : amount credited from the buyer's security deposit wallet
+        // - total_amount_due: original_amount − deposit_applied (what the buyer owes)
+        // - original_amount : full bid + commission, unaffected by deposit
+        $depositApplied    = (float) ($invoice->deposit_applied ?? 0);
+        $totalAfterDeposit = (float) $invoice->total_amount_due;
 
         return view('Buyer.payment-checkout-single', compact('invoice', 'depositApplied', 'totalAfterDeposit'));
     }
