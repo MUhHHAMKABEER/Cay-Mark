@@ -666,15 +666,35 @@ header { position: relative !important; box-shadow: none !important; }
             </div>
             @endif
 
-            {{-- Secondary: Buy it now — hidden for incomplete users --}}
-            @if($listing->buy_it_now_price && Auth::check() && Auth::user()->role === 'buyer')
-            <button type="button" class="btn-bid-secondary">
-                Buy it now (${{ number_format($listing->buy_it_now_price) }})
-            </button>
-            @elseif($listing->buy_it_now_price && !Auth::check())
-            <button type="button" class="btn-bid-secondary" onclick="window.location='{{ route('login') }}'">
-                Buy it now (${{ number_format($listing->buy_it_now_price) }})
-            </button>
+            {{-- ── Buy it now ────────────────────────────────────────────── --}}
+            @php
+                $buyNowPrice   = (float) ($listing->buy_now_price ?? 0);
+                $buyNowFee     = $buyNowPrice > 0 ? max($buyNowPrice * \App\Services\CommissionService::BUYER_COMMISSION_RATE, \App\Services\CommissionService::BUYER_COMMISSION_MIN) : 0;
+                $buyNowTotal   = $buyNowPrice + $buyNowFee;
+                $buyNowRole    = Auth::check() ? (Auth::user()->role ?? '') : 'guest';
+            @endphp
+            @if($buyNowPrice > 0)
+                @if($buyNowRole === 'buyer')
+                {{-- Registered buyer → show confirmation modal --}}
+                <button type="button" class="btn-bid-secondary" onclick="openBuyNowConfirm()">
+                    Buy it now (${{ number_format($buyNowPrice) }})
+                </button>
+                @elseif($buyNowRole === 'seller')
+                {{-- Seller → show block modal --}}
+                <button type="button" class="btn-bid-secondary" onclick="document.getElementById('buyNowSellerModal').classList.remove('hidden')">
+                    Buy it now (${{ number_format($buyNowPrice) }})
+                </button>
+                @elseif($buyNowRole === 'guest')
+                {{-- Guest → redirect to login --}}
+                <button type="button" class="btn-bid-secondary" onclick="window.location='{{ route('login') }}'">
+                    Buy it now (${{ number_format($buyNowPrice) }})
+                </button>
+                @else
+                {{-- Incomplete registration → show registration modal --}}
+                <button type="button" class="btn-bid-secondary" onclick="document.getElementById('buyNowIncompleteModal').classList.remove('hidden')">
+                    Buy it now (${{ number_format($buyNowPrice) }})
+                </button>
+                @endif
             @endif
 
             {{-- Tertiary: Make an offer — hidden for incomplete users --}}
@@ -1145,7 +1165,195 @@ function addToCalendar(e){
     var gcUrl = 'https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent(title)+'&dates='+end+'/'+end+'&details='+encodeURIComponent(url);
     window.open(gcUrl,'_blank');
 }
+
+/* ── Buy Now ── */
+function openBuyNowConfirm(){
+    document.getElementById('buyNowConfirmModal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+function closeBuyNowConfirm(){
+    document.getElementById('buyNowConfirmModal').classList.add('hidden');
+    document.body.style.overflow = '';
+}
+function closeBuyNowModal(id){
+    document.getElementById(id).classList.add('hidden');
+    document.body.style.overflow = '';
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+    var confirmBtn = document.getElementById('buyNowConfirmBtn');
+    if (!confirmBtn) return;
+    confirmBtn.addEventListener('click', function(){
+        confirmBtn.disabled = true;
+        confirmBtn.textContent = 'Processing…';
+        fetch('{{ route('auction.buy-now', $listing->getSlugOrGenerate()) }}', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(function(r){ return r.json(); })
+        .then(function(data){
+            if (data.success && data.redirect) {
+                window.location.href = data.redirect;
+            } else {
+                closeBuyNowConfirm();
+                showBidModal(data.error || 'Unable to complete purchase. Please try again.', false);
+            }
+        })
+        .catch(function(){
+            closeBuyNowConfirm();
+            showBidModal('A network error occurred. Please try again.', false);
+        });
+    });
+});
 </script>
 @endpush
+
+{{-- ══ BUY NOW MODALS ══════════════════════════════════════════════════ --}}
+
+{{-- Modal 1: Registered buyer confirmation --}}
+@if(Auth::check() && Auth::user()->role === 'buyer' && isset($buyNowPrice) && $buyNowPrice > 0)
+<div id="buyNowConfirmModal" class="hidden fixed inset-0 z-[9999] flex items-center justify-center p-4"
+     style="background:rgba(0,0,0,0.65);backdrop-filter:blur(3px)"
+     onclick="if(event.target===this) closeBuyNowConfirm()">
+    <div style="background:#fff;border-radius:14px;width:100%;max-width:460px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+
+        {{-- Header --}}
+        <div style="background:#0f2752;padding:20px 24px;display:flex;align-items:center;justify-content:space-between">
+            <div style="display:flex;align-items:center;gap:10px">
+                <div style="width:36px;height:36px;background:rgba(255,255,255,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                </div>
+                <div>
+                    <p style="font-size:11px;color:rgba(255,255,255,0.6);font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin:0">Buy Now</p>
+                    <p style="font-size:17px;font-weight:800;color:#fff;margin:0;line-height:1.2">Confirm Purchase</p>
+                </div>
+            </div>
+            <button onclick="closeBuyNowConfirm()" style="background:none;border:none;color:rgba(255,255,255,0.6);cursor:pointer;padding:4px;display:flex;align-items:center" aria-label="Close">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+
+        {{-- Body --}}
+        <div style="padding:24px">
+            <p style="font-size:13.5px;color:#475569;margin:0 0 18px;line-height:1.5">
+                You are about to purchase this vehicle at the Buy Now price. Please review the details below.
+            </p>
+
+            {{-- Breakdown table --}}
+            <div style="background:#f8fafc;border-radius:10px;overflow:hidden;border:1px solid #e2e8f0;margin-bottom:18px">
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:11px 16px;border-bottom:1px solid #e2e8f0">
+                    <span style="font-size:12px;color:#64748b;font-weight:500">Vehicle</span>
+                    <span style="font-size:13px;font-weight:700;color:#0f2752">{{ strtoupper(trim(($listing->year??'').' '.($listing->make??'').' '.($listing->model??''))) }}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:11px 16px;border-bottom:1px solid #e2e8f0">
+                    <span style="font-size:12px;color:#64748b;font-weight:500">Item ID</span>
+                    <span style="font-size:13px;font-weight:700;color:#0f2752">{{ $listing->item_number ?? ('CM'.\str_pad($listing->id, 6, '0', STR_PAD_LEFT)) }}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:11px 16px;border-bottom:1px solid #e2e8f0">
+                    <span style="font-size:12px;color:#64748b;font-weight:500">Buy Now Price</span>
+                    <span style="font-size:13px;font-weight:700;color:#0f2752">${{ number_format($buyNowPrice, 2) }}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:11px 16px;border-bottom:1px solid #e2e8f0">
+                    <span style="font-size:12px;color:#64748b;font-weight:500">Buyer Fee <span style="font-size:10px;color:#94a3b8">(6% — min $100)</span></span>
+                    <span style="font-size:13px;font-weight:700;color:#0f2752">${{ number_format($buyNowFee, 2) }}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:13px 16px;background:#0f2752">
+                    <span style="font-size:13px;color:rgba(255,255,255,0.75);font-weight:600">Total Due</span>
+                    <span style="font-size:17px;font-weight:800;color:#fff">${{ number_format($buyNowTotal, 2) }}</span>
+                </div>
+            </div>
+
+            <p style="font-size:11.5px;color:#94a3b8;margin:0 0 20px;line-height:1.5;text-align:center">
+                By confirming, you agree this purchase is final and non-refundable.<br>All sales are "AS IS, WHERE IS."
+            </p>
+
+            {{-- Actions --}}
+            <div style="display:flex;gap:10px">
+                <button onclick="closeBuyNowConfirm()"
+                    style="flex:1;padding:12px;border:1.5px solid #e2e8f0;border-radius:8px;background:#fff;font-size:14px;font-weight:600;color:#475569;cursor:pointer;transition:background .15s"
+                    onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">
+                    Cancel
+                </button>
+                <button id="buyNowConfirmBtn"
+                    style="flex:2;padding:12px;border:none;border-radius:8px;background:#1d4ed8;color:#fff;font-size:14px;font-weight:700;cursor:pointer;transition:background .15s"
+                    onmouseover="this.style.background='#1e40af'" onmouseout="this.style.background='#1d4ed8'">
+                    Confirm Purchase
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
+
+{{-- Modal 2: Incomplete registration --}}
+@if(Auth::check() && Auth::user()->role !== 'buyer' && Auth::user()->role !== 'seller')
+<div id="buyNowIncompleteModal" class="hidden fixed inset-0 z-[9999] flex items-center justify-center p-4"
+     style="background:rgba(0,0,0,0.65);backdrop-filter:blur(3px)"
+     onclick="if(event.target===this) closeBuyNowModal('buyNowIncompleteModal')">
+    <div style="background:#fff;border-radius:14px;width:100%;max-width:400px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+        <div style="background:#ea580c;padding:18px 22px;display:flex;align-items:center;justify-content:space-between">
+            <div style="display:flex;align-items:center;gap:9px">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                <span style="font-size:16px;font-weight:800;color:#fff">Registration Required</span>
+            </div>
+            <button onclick="closeBuyNowModal('buyNowIncompleteModal')" style="background:none;border:none;color:rgba(255,255,255,0.7);cursor:pointer;padding:4px;display:flex;align-items:center">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+        <div style="padding:22px">
+            <p style="font-size:13px;color:#475569;margin:0 0 12px;line-height:1.5">
+                Please complete the following in your User tab before using Buy Now:
+            </p>
+            <ul style="margin:0 0 18px;padding:0;list-style:none">
+                <li style="font-size:12.5px;color:#78350f;display:flex;align-items:center;gap:6px;margin-bottom:6px">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                    Upload two government-issued IDs
+                </li>
+                <li style="font-size:12.5px;color:#78350f;display:flex;align-items:center;gap:6px">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                    Add your phone number
+                </li>
+            </ul>
+            <a href="{{ route('finish.registration') }}"
+               style="display:flex;align-items:center;justify-content:center;gap:7px;width:100%;padding:12px;background:#ea580c;color:#fff;border-radius:8px;font-size:13.5px;font-weight:700;text-decoration:none"
+               onmouseover="this.style.background='#c2410c'" onmouseout="this.style.background='#ea580c'">
+                Complete Registration
+            </a>
+        </div>
+    </div>
+</div>
+@endif
+
+{{-- Modal 3: Seller block --}}
+@if(Auth::check() && Auth::user()->role === 'seller')
+<div id="buyNowSellerModal" class="hidden fixed inset-0 z-[9999] flex items-center justify-center p-4"
+     style="background:rgba(0,0,0,0.65);backdrop-filter:blur(3px)"
+     onclick="if(event.target===this) closeBuyNowModal('buyNowSellerModal')">
+    <div style="background:#fff;border-radius:14px;width:100%;max-width:380px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+        <div style="background:#64748b;padding:18px 22px;display:flex;align-items:center;justify-content:space-between">
+            <div style="display:flex;align-items:center;gap:9px">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                <span style="font-size:16px;font-weight:800;color:#fff">Not Available</span>
+            </div>
+            <button onclick="closeBuyNowModal('buyNowSellerModal')" style="background:none;border:none;color:rgba(255,255,255,0.7);cursor:pointer;padding:4px;display:flex;align-items:center">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+        <div style="padding:22px;text-align:center">
+            <p style="font-size:14px;color:#374151;font-weight:600;margin:0 0 8px">Sellers cannot purchase listings on CayMark.</p>
+            <p style="font-size:13px;color:#94a3b8;margin:0 0 20px;line-height:1.5">All communication and transactions must go through the platform.</p>
+            <button onclick="closeBuyNowModal('buyNowSellerModal')"
+                style="width:100%;padding:11px;border:1.5px solid #e2e8f0;border-radius:8px;background:#fff;font-size:14px;font-weight:600;color:#475569;cursor:pointer"
+                onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#fff'">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+@endif
 
 @endsection

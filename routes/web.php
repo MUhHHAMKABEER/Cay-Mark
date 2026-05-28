@@ -255,6 +255,11 @@ Route::post('/auction/{listing:slug}/bid', [AuctionController::class, 'storeBid'
     ->middleware('auth')
     ->name('auction.bid.store');
 
+// Buy Now (auth required; role checks handled inside controller)
+Route::post('/auction/{listing:slug}/buy-now', [App\Http\Controllers\Buyer\BuyNowController::class, 'process'])
+    ->middleware('auth')
+    ->name('auction.buy-now');
+
 
 Route::get('/auction/{id}/{slug}', [AuctionController::class, 'auctionDetailBuyer'])->name('auction.dashboard');
 Route::get('/listing/{id}/{slug?}', [ListingController::class, 'listingDetailBuyer'])->name('listing.show');

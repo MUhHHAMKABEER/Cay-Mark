@@ -2241,29 +2241,42 @@ document.getElementById('deleteListingModal') && document.getElementById('delete
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Account Number {{ $payoutMethod ? '' : '*' }}</label>
                         @if($payoutMethod && $payoutMethod->account_number)
-                            <p class="text-[11px] text-gray-400 mb-1">Current: ****{{ strlen($payoutMethod->account_number) >= 4 ? substr($payoutMethod->account_number, -4) : str_repeat('*', strlen($payoutMethod->account_number)) }}</p>
+                            <p class="text-[11px] text-gray-400 mb-1.5">Current: ****{{ strlen($payoutMethod->account_number) >= 4 ? substr($payoutMethod->account_number, -4) : str_repeat('*', strlen($payoutMethod->account_number)) }}</p>
                         @endif
-                        <input type="text"
-                               name="account_number"
-                               value=""
-                               inputmode="numeric"
-                               autocomplete="off"
-                               placeholder="{{ $payoutMethod ? 'Leave blank to keep current' : 'Your bank account number' }}"
-                               {{ !$payoutMethod ? 'required' : '' }}
-                               class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                        <div class="flex items-center border-2 border-gray-200 rounded-xl focus-within:border-blue-500 transition-colors overflow-hidden">
+                            <span class="material-icons-round text-gray-300 flex-shrink-0 ml-3 select-none" style="font-size:20px">tag</span>
+                            <input type="text"
+                                   id="payoutAccountNumber"
+                                   name="account_number"
+                                   value=""
+                                   inputmode="numeric"
+                                   autocomplete="off"
+                                   maxlength="27"
+                                   placeholder="{{ $payoutMethod ? 'Leave blank to keep current' : '0000 0000 0000 0000' }}"
+                                   {{ !$payoutMethod ? 'required' : '' }}
+                                   class="flex-1 px-3 py-3 bg-transparent text-sm text-gray-900 placeholder-gray-300 focus:outline-none font-mono tracking-wider">
+                        </div>
+                        <p class="text-[11px] text-gray-400 mt-1">Enter digits only — spaces are added automatically.</p>
                     </div>
 
                     <!-- Routing / Branch Number -->
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Routing / Branch Number <span class="normal-case font-normal text-gray-400">(if applicable)</span></label>
                         @if($payoutMethod && $payoutMethod->routing_number)
-                            <p class="text-[11px] text-gray-400 mb-1">Current: ****{{ substr($payoutMethod->routing_number, -4) }}</p>
+                            <p class="text-[11px] text-gray-400 mb-1.5">Current: ****{{ substr($payoutMethod->routing_number, -4) }}</p>
                         @endif
-                        <input type="text"
-                               name="routing_number"
-                               value=""
-                               placeholder="{{ $payoutMethod ? 'Leave blank to keep current' : 'Optional' }}"
-                               class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                        <div class="flex items-center border-2 border-gray-200 rounded-xl focus-within:border-blue-500 transition-colors overflow-hidden">
+                            <span class="material-icons-round text-gray-300 flex-shrink-0 ml-3 select-none" style="font-size:20px">account_tree</span>
+                            <input type="text"
+                                   id="payoutRoutingNumber"
+                                   name="routing_number"
+                                   value=""
+                                   inputmode="numeric"
+                                   autocomplete="off"
+                                   maxlength="15"
+                                   placeholder="{{ $payoutMethod ? 'Leave blank to keep current' : 'Optional' }}"
+                                   class="flex-1 px-3 py-3 bg-transparent text-sm text-gray-900 placeholder-gray-300 focus:outline-none font-mono tracking-wider">
+                        </div>
                     </div>
 
                     <!-- Truth Declaration -->
@@ -2614,6 +2627,32 @@ function togglePasswordModal(inputId, btn) {
 // Payout Modal
 function showPayoutModal() { _modalShow('payoutModal'); }
 function hidePayoutModal()  { _modalHide('payoutModal'); }
+
+// Account number auto-formatter (groups digits into sets of 4, e.g. 1234 5678 9012 3456)
+(function () {
+    function formatBankNumber(input, groupSize, maxGroups) {
+        input.addEventListener('input', function () {
+            var digits = this.value.replace(/\D/g, '').slice(0, groupSize * maxGroups);
+            var groups = [];
+            for (var i = 0; i < digits.length; i += groupSize) {
+                groups.push(digits.slice(i, i + groupSize));
+            }
+            this.value = groups.join(' ');
+        });
+        // Strip spaces before form submit so only raw digits reach the server
+        var form = input.closest('form');
+        if (form) {
+            form.addEventListener('submit', function () {
+                input.value = input.value.replace(/\s/g, '');
+            }, { once: false });
+        }
+    }
+
+    var acct    = document.getElementById('payoutAccountNumber');
+    var routing = document.getElementById('payoutRoutingNumber');
+    if (acct)    formatBankNumber(acct, 4, 5);   // up to 20 digits → 5 groups of 4
+    if (routing) formatBankNumber(routing, 3, 4); // up to 12 digits → 4 groups of 3 (routing style)
+})();
 
 // Email Change Modal
 function openEmailChangeModal(step) {
