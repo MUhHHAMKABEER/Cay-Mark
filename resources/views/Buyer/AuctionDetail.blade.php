@@ -266,11 +266,8 @@ header { position: relative !important; box-shadow: none !important; }
                     <span class="adh-sep">•</span>
                     @endif
 
-                    {{-- VIN --}}
-                    <span>VIN:&nbsp;<span class="font-mono font-semibold text-slate-700" id="vinDisplay">{{ $maskedVin }}</span></span>
-                    <button class="adh-copy" title="Copy VIN" onclick="copyText('{{ addslashes($listing->vin ?? $maskedVin) }}','VIN copied!')">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                    </button>
+                    {{-- VIN (masked — copy button intentionally omitted on public page) --}}
+                    <span>VIN:&nbsp;<span class="font-mono font-semibold text-slate-700">{{ $maskedVin }}</span></span>
                     <span class="adh-sep">|</span>
 
                     {{-- Lot --}}

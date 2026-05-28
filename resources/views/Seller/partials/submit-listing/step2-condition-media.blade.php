@@ -213,6 +213,17 @@
             <input type="file" id="photos_add_more_input" multiple accept="image/*" tabindex="-1" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;">
             <div id="photoPreview" class="photo-preview-grid mt-2"></div>
             <p id="photoWarning" class="text-xs text-amber-600 mt-1" style="display:none;">Minimum 6 photos total required.</p>
+            <div id="photoRecommendation" style="display:none;"
+                 class="flex items-start gap-2 px-3 py-2.5 bg-amber-50 border border-amber-200 rounded-lg mt-2">
+                <svg class="flex-shrink-0 mt-px" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                     stroke="#b45309" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+                <span class="text-[11.5px] font-semibold text-amber-800 tracking-wide leading-snug">
+                    WE RECOMMEND AT LEAST 7 PHOTOS FOR BEST RESULTS.
+                </span>
+            </div>
         </div>
 
     @else
@@ -243,6 +254,17 @@
                 <input type="file" id="photos_add_more_input" multiple accept="image/*" tabindex="-1" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;">
                 <div id="photoPreview" class="photo-preview-grid mt-2"></div>
                 <p id="photoWarning" class="text-xs text-amber-600 mt-1" style="display:none;">Minimum 6 photos total required.</p>
+                <div id="photoRecommendation" style="display:none;"
+                     class="flex items-start gap-2 px-3 py-2.5 bg-amber-50 border border-amber-200 rounded-lg mt-2">
+                    <svg class="flex-shrink-0 mt-px" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                         stroke="#b45309" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                        <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                    <span class="text-[11.5px] font-semibold text-amber-800 tracking-wide leading-snug">
+                        WE RECOMMEND AT LEAST 7 PHOTOS FOR BEST RESULTS.
+                    </span>
+                </div>
             </div>
         </div>
     @endif

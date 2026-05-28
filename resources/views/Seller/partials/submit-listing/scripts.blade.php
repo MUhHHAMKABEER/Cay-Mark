@@ -469,10 +469,12 @@
     });
 
     var additionalPhotosFiles = [];
-    var photosInputEl = document.getElementById('photos_input');
-    var photoCountEl = document.getElementById('photoCount');
-    var photoPreviewEl = document.getElementById('photoPreview');
-    var photoWarningEl = document.getElementById('photoWarning');
+    var photosInputEl    = document.getElementById('photos_input');
+    var photoCountEl     = document.getElementById('photoCount');
+    var photoPreviewEl   = document.getElementById('photoPreview');
+    var photoWarningEl   = document.getElementById('photoWarning');
+    var photoRecommEl    = document.getElementById('photoRecommendation');
+    var PHOTO_RECOMMEND  = 7; // show tip when below this count but above minimum
 
     function setAdditionalPhotosInput(files) {
         if (!photosInputEl) return;
@@ -484,6 +486,14 @@
         var count = additionalPhotosFiles.length;
         if (photoCountEl) photoCountEl.textContent = count + ' photo(s) selected';
         if (photoWarningEl) photoWarningEl.style.display = 'none'; // handled by tile now
+
+        // Recommendation: show amber tip when minimum is met but below 7 photos
+        // (count >= MIN means minimum requirement satisfied; below PHOTO_RECOMMEND = not yet ideal)
+        if (photoRecommEl) {
+            var showRecommend = count >= MIN_ADDITIONAL_PHOTOS && count < PHOTO_RECOMMEND;
+            photoRecommEl.style.display = showRecommend ? 'flex' : 'none';
+        }
+
         if (!photoPreviewEl) return;
         photoPreviewEl.innerHTML = '';
 
