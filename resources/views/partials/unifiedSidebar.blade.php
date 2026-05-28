@@ -16,7 +16,6 @@
             // ── LISTINGS & AUCTIONS ───────────────────────────────────────────
             ['section' => 'LISTINGS & AUCTIONS', 'route' => 'admin.listing-review', 'icon' => 'fact_check', 'label' => 'Listing Review', 'match_routes' => ['admin.listings.approval-detail'], 'prefix_match' => false],
             ['route' => 'admin.active-listings', 'icon' => 'directions_car', 'label' => 'Active Auctions'],
-            ['route' => 'admin.boosts-addons', 'icon' => 'rocket_launch', 'label' => 'Boosts & Add-ons'],
             // ── FINANCE ───────────────────────────────────────────────────────
             ['section' => 'FINANCE', 'route' => 'admin.payments', 'icon' => 'account_balance_wallet', 'label' => 'Sales / Payouts', 'match_routes' => ['admin.pending-payments', 'admin.payouts', 'admin.payment-payout-logs', 'admin.invoice-log', 'admin.unpaid-auctions', 'admin.buyer-defaults', 'admin.second-chance-purchases'], 'prefix_match' => false],
             ['route' => 'admin.security-deposits', 'icon' => 'security', 'label' => 'Security Deposits', 'prefix_match' => false],
