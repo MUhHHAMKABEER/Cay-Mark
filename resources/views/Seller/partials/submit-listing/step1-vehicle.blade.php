@@ -146,7 +146,7 @@
                 <option value="">Select Color</option>
                 @php $selColor = old('color', $listing->color ?? ''); @endphp
                 @foreach(config('listing_colors.allowed', []) as $c)
-                    <option value="{{ $c }}" {{ $selColor === $c ? 'selected' : '' }}>{{ ucfirst(strtolower($c)) }}</option>
+                    <option value="{{ $c }}" {{ strtoupper($selColor) === $c ? 'selected' : '' }}>{{ $c }}</option>
                 @endforeach
             </select>
         </div>
@@ -156,7 +156,7 @@
                 <option value="">Select Color</option>
                 @php $selInt = old('interior_color', $listing->interior_color ?? ''); @endphp
                 @foreach(config('listing_colors.allowed', []) as $c)
-                    <option value="{{ $c }}" {{ $selInt === $c ? 'selected' : '' }}>{{ ucfirst(strtolower($c)) }}</option>
+                    <option value="{{ $c }}" {{ strtoupper($selInt) === $c ? 'selected' : '' }}>{{ $c }}</option>
                 @endforeach
             </select>
         </div>

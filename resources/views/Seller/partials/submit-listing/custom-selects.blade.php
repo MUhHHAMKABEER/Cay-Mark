@@ -54,7 +54,9 @@
 }
 .cm-sel__trigger.is-open .cm-sel__chevron { transform: rotate(180deg); color: #063466; }
 
-/* Dropdown panel — fixed so it escapes any overflow:hidden/auto ancestor */
+/* Dropdown panel — appended to <body> so it is never clipped by any
+   overflow:hidden/auto ancestor or trapped by a CSS stacking context
+   (transform, filter, will-change, etc.). Position is set dynamically. */
 .cm-sel__panel {
     position: fixed;
     /* top / left / width are set dynamically by positionPanel() */
@@ -62,7 +64,7 @@
     border: 1.5px solid #e2e8f0;
     border-radius: 10px;
     box-shadow: 0 10px 32px rgba(6,52,102,0.13);
-    z-index: 8000;
+    z-index: 9999;
     max-height: 230px;
     overflow-y: auto;
     overflow-x: hidden;
@@ -203,11 +205,15 @@
         }
     }
 
+    /* Unique ID counter so each wrapper/panel pair can reference each other */
+    var _cmSelIdCounter = 0;
+
     function initSelect(nativeSel) {
         if (nativeSel.dataset.cmInit) return;
         nativeSel.dataset.cmInit = '1';
 
         var isColor = isColorField(nativeSel);
+        var uid = 'cmsel-' + (++_cmSelIdCounter);
 
         /* ── Hide native select (keep for form submission) ── */
         nativeSel.style.cssText = 'position:absolute;opacity:0;pointer-events:none;width:1px;height:1px;overflow:hidden;';
@@ -216,6 +222,7 @@
         /* ── Build wrapper ── */
         var wrapper = document.createElement('div');
         wrapper.className = 'cm-sel';
+        wrapper.dataset.cmId = uid;  // link wrapper → panel
 
         /* ── Build trigger ── */
         var selOpt  = nativeSel.options[nativeSel.selectedIndex] || nativeSel.options[0];
@@ -239,6 +246,7 @@
         var panel = document.createElement('div');
         panel.className = 'cm-sel__panel';
         panel.setAttribute('role', 'listbox');
+        panel.dataset.cmFor = uid;  // link panel → wrapper
         panel.style.display = 'none';
 
         var list = document.createElement('ul');
@@ -338,10 +346,13 @@
         });
 
         /* ── Assemble ── */
+        // wrapper + trigger go where the native select was
         nativeSel.parentNode.insertBefore(wrapper, nativeSel);
         wrapper.appendChild(trigger);
-        wrapper.appendChild(panel);
         wrapper.appendChild(nativeSel);
+        // Panel goes to <body> so it is NEVER clipped by any
+        // overflow:hidden/scroll ancestor or CSS stacking context
+        document.body.appendChild(panel);
     }
 
     /* ── Init on DOM ready ── */

@@ -357,14 +357,94 @@
         }
     }
     function applyDecodedData(data) {
-        var map = {
-            make: 'field_make', model: 'field_model', year: 'field_year', trim: 'trim',
-            engine_size: 'engine_size', cylinders: 'cylinders', drive_type: 'drive_type',
-            fuel_type: 'fuel_type', transmission: 'transmission', vehicle_type: 'vehicle_type'
+        // Fields the VIN decoder must NEVER auto-populate (seller must choose manually)
+        var SKIP = { island: true };
+
+        // Color swatch map (matches custom-selects.blade.php)
+        var SWATCH_COLORS = {
+            BLACK:'#111111', WHITE:'#f8f8f8', SILVER:'#c0c0c0', GRAY:'#808080',
+            GREY:'#808080', RED:'#dc2626', BLUE:'#2563eb', GREEN:'#16a34a',
+            YELLOW:'#eab308', ORANGE:'#ea580c', BROWN:'#92400e', GOLD:'#b45309',
+            BEIGE:'#d4b483', PURPLE:'#9333ea', PINK:'#ec4899', MAROON:'#7f1d1d',
         };
+
+        // Case-insensitive: find the <option> whose value OR text matches decodedVal
+        function findOption(select, decodedVal) {
+            if (decodedVal == null) return null;
+            var norm = String(decodedVal).trim().toUpperCase();
+            for (var i = 0; i < select.options.length; i++) {
+                var opt = select.options[i];
+                if (!opt.value) continue;
+                if (opt.value.toUpperCase() === norm) return opt;
+                if (opt.text.toUpperCase()  === norm) return opt;
+            }
+            return null;
+        }
+
+        // After setting a native <select>, also refresh the custom cm-sel UI
+        function refreshCmSel(nativeSel, chosenOpt) {
+            // The wrapper is nativeSel.parentNode (set by custom-selects.blade.php)
+            var wrapper = nativeSel.parentNode;
+            if (!wrapper || !wrapper.classList.contains('cm-sel')) return;
+
+            var trigger = wrapper.querySelector('.cm-sel__trigger');
+            if (!trigger) return;
+            var labelEl = trigger.querySelector('.cm-sel__label');
+            var valEl   = trigger.querySelector('.cm-sel__val');
+            if (labelEl) labelEl.textContent = chosenOpt.text;
+            trigger.classList.remove('is-placeholder');
+
+            // Swatch update for color fields
+            var isColor = nativeSel.name === 'color' || nativeSel.name === 'interior_color';
+            if (isColor && valEl) {
+                var old = valEl.querySelector('.cm-sel__swatch');
+                if (old) old.remove();
+                var hex = SWATCH_COLORS[(chosenOpt.value || '').toUpperCase()];
+                if (hex) {
+                    var sp = document.createElement('span');
+                    sp.className = 'cm-sel__swatch';
+                    sp.style.cssText = 'background:' + hex + ';' +
+                        (hex === '#f8f8f8' ? 'border-color:#d1d5db;' : '');
+                    valEl.insertBefore(sp, valEl.firstChild);
+                }
+            }
+
+            // Highlight selected row in the panel list
+            // Panel is in document.body — find it by its data-cm-for attribute
+            var panelId = wrapper.dataset.cmPanelId;
+            var panel   = panelId ? document.getElementById(panelId) : null;
+            if (!panel) {
+                // Fallback: find all panels and locate ours by checking parent wrapper
+                document.querySelectorAll('.cm-sel__panel').forEach(function(p) {
+                    if (p.dataset.cmFor === (wrapper.dataset.cmId || '')) panel = p;
+                });
+            }
+            if (panel) {
+                panel.querySelectorAll('.cm-sel__item').forEach(function(li) {
+                    var sel = li.dataset.value === chosenOpt.value;
+                    li.classList.toggle('is-selected', sel);
+                    li.setAttribute('aria-selected', sel ? 'true' : 'false');
+                });
+            }
+        }
+
         Object.keys(data || {}).forEach(function(key) {
+            if (SKIP[key]) return; // Never auto-fill island or other protected fields
+
             var el = document.querySelector('[name="' + key + '"]');
-            if (el && data[key] != null) el.value = data[key];
+            if (!el || data[key] == null) return;
+
+            if (el.tagName === 'SELECT') {
+                var matched = findOption(el, data[key]);
+                if (matched) {
+                    el.value = matched.value;
+                    el.dispatchEvent(new Event('change', { bubbles: true }));
+                    refreshCmSel(el, matched);
+                }
+                // If no match found, leave the field as "Select" (do not force a value)
+            } else {
+                el.value = data[key];
+            }
         });
     }
     function showVinMessage(text, isError) {
