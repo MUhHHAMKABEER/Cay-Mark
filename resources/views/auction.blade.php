@@ -88,69 +88,6 @@
         -webkit-box-orient: vertical;
         overflow: hidden;
     }
-    /* ── Centered pill search bar ── */
-    .cm-search-bar-wrap {
-        display: flex;
-        justify-content: center;
-        width: 100%;
-    }
-    .cm-search-bar {
-        display: flex;
-        align-items: center;
-        width: 100%;
-        max-width: 600px;
-        height: 48px;
-        background: #FFFFFF;
-        border: 1px solid #E2E5E9;
-        border-radius: 50px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        padding: 0 8px 0 18px;
-        transition: border-color 0.15s, box-shadow 0.15s;
-    }
-    .cm-search-bar:focus-within {
-        border-color: #1B3A6B;
-        box-shadow: 0 2px 12px rgba(27, 58, 107, 0.15);
-    }
-    .cm-search-icon {
-        display: flex;
-        align-items: center;
-        flex-shrink: 0;
-        margin-right: 10px;
-        pointer-events: none;
-    }
-    .cm-search-input {
-        flex: 1;
-        border: none;
-        outline: none;
-        background: transparent;
-        font-size: 14px;
-        color: #1c1b1b;
-        min-width: 0;
-        line-height: 1;
-    }
-    .cm-search-input::placeholder {
-        color: #9AA0A8;
-    }
-    .cm-search-btn {
-        flex-shrink: 0;
-        width: 32px;
-        height: 32px;
-        background: #1B3A6B;
-        border: none;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: background 0.15s;
-        margin-left: 8px;
-    }
-    .cm-search-btn:hover { background: #142d55; }
-    .cm-search-btn:active { transform: scale(0.94); }
-    @media (max-width: 768px) {
-        .cm-search-bar-wrap { padding: 0 16px; }
-        .cm-search-bar { max-width: 100%; height: 44px; }
-    }
 </style>
 
 <div class="bg-surface" id="cm-auction-pull-root" x-data="filterData()" x-init="initFilters()" @cm-pull-refresh.window="applyFilters()">
@@ -193,37 +130,6 @@
 
         {{-- ══ RIGHT: Listings area ════════════════════════════════════ --}}
         <div class="flex-1 min-w-0 flex flex-col gap-4">
-
-            {{-- ── Pill search bar ──────────────────────────────────────── --}}
-            <div class="cm-search-bar-wrap">
-                <div class="cm-search-bar">
-                    <span class="cm-search-icon">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-                             stroke="#9AA0A8" stroke-width="2.2"
-                             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <circle cx="11" cy="11" r="8"/>
-                            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                        </svg>
-                    </span>
-                    <input
-                        type="text"
-                        class="cm-search-input"
-                        placeholder="Search make, model, or category..."
-                        x-model="searchQuery"
-                        @keydown.enter.prevent="applyFilters()"
-                        autocomplete="off"
-                        spellcheck="false"
-                    >
-                    <button type="button" class="cm-search-btn" @click="applyFilters()" aria-label="Search">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
-                             stroke="#fff" stroke-width="2.6"
-                             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <circle cx="11" cy="11" r="8"/>
-                            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                        </svg>
-                    </button>
-                </div>
-            </div>
 
             {{-- Controls bar --}}
             <div class="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border border-outline-variant bg-white rounded-xl shadow-sm">

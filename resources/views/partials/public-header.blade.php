@@ -48,6 +48,10 @@
     $phInitial = $phUser ? strtoupper(substr($phUser->name ?? 'U', 0, 1)) : '';
 @endphp
 
+<style>
+    .ph-search-input::placeholder { color: #9AA0A8; }
+</style>
+
 {{-- ══════════════════════════════════════════════════════════════
      MAIN HEADER STRIP: Logo · Search · Auth Actions
 ══════════════════════════════════════════════════════════════ --}}
@@ -71,9 +75,17 @@
                  @click.outside="close()"
                  @keydown.escape.window="close()">
 
-                <form method="GET" action="{{ route('Auction.index') }}" :action="auctionUrl" class="relative w-full max-w-xl" @submit.prevent="submit()">
-                    {{-- Pill wrapper — no border, soft background only --}}
-                    <div class="flex items-center rounded-full bg-slate-100 focus-within:bg-white focus-within:shadow-[0_0_0_2px_theme('colors.primary')] transition-all duration-150">
+                <form method="GET" action="{{ route('Auction.index') }}" :action="auctionUrl" class="relative w-full max-w-[600px]" @submit.prevent="submit()">
+                    {{-- Pill wrapper --}}
+                    <div class="flex items-center rounded-full bg-white border border-[#E2E5E9] shadow-[0_2px_8px_rgba(0,0,0,0.08)] focus-within:border-[#1B3A6B] focus-within:shadow-[0_2px_12px_rgba(27,58,107,0.15)] transition-all duration-150 min-h-[48px] px-2">
+                        {{-- Left search icon --}}
+                        <span class="flex-shrink-0 flex items-center justify-center pl-2 pr-1 pointer-events-none">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none"
+                                 stroke="#9AA0A8" stroke-width="2.2"
+                                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                            </svg>
+                        </span>
                         <input
                             type="text"
                             name="search"
@@ -83,21 +95,21 @@
                             @keydown.arrow-down.prevent="moveDown()"
                             @keydown.arrow-up.prevent="moveUp()"
                             @keydown.enter.prevent="selectActive()"
-                            placeholder="Search vehicle auctions by make, model…"
+                            placeholder="Search make, model, or category..."
                             autocomplete="off"
-                            class="flex-1 bg-transparent py-2.5 pl-4 pr-2 text-[13.5px] text-slate-800 placeholder:text-slate-400 focus:outline-none min-w-0"
+                            class="ph-search-input flex-1 bg-transparent py-2.5 pl-2 pr-2 text-[13.5px] text-slate-800 focus:outline-none min-w-0"
                         />
                         {{-- Clear button --}}
                         <button type="button" x-show="query" x-cloak
                             @click="query=''; $el.closest('form').querySelector('input').focus(); fetch()"
-                            class="flex-shrink-0 flex items-center justify-center w-5 h-5 rounded-full bg-slate-300 hover:bg-slate-400 transition-colors mr-1">
+                            class="flex-shrink-0 flex items-center justify-center w-5 h-5 rounded-full bg-slate-200 hover:bg-slate-300 transition-colors mr-1">
                             <svg width="8" height="8" viewBox="0 0 12 12" fill="currentColor" class="text-slate-600">
                                 <path d="M10.5 1.5 6 6m0 0L1.5 10.5M6 6 10.5 10.5M6 6 1.5 1.5"/>
                             </svg>
                         </button>
-                        {{-- Single search submit button --}}
+                        {{-- Navy circle submit button --}}
                         <button type="submit"
-                            class="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-primary text-white hover:bg-[#003377] transition-colors mr-1 my-1">
+                            class="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-[#1B3A6B] text-white hover:bg-[#142d55] active:scale-95 transition-all mr-0.5">
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                  stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                 <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
