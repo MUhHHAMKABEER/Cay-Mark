@@ -13,12 +13,12 @@
     {{-- Flash --}}
     @if(session('success'))
         <div class="mb-5 bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-green-800 text-sm font-medium flex items-center gap-2">
-            <span class="material-icons text-green-600 text-base">check_circle</span> {{ session('success') }}
+            <span class="material-icons-round text-green-600 text-base">check_circle</span> {{ session('success') }}
         </div>
     @endif
     @if(session('error'))
         <div class="mb-5 bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-red-800 text-sm font-medium flex items-center gap-2">
-            <span class="material-icons text-red-600 text-base">error</span> {{ session('error') }}
+            <span class="material-icons-round text-red-600 text-base">error</span> {{ session('error') }}
         </div>
     @endif
 
@@ -57,7 +57,7 @@
         <a href="{{ $tabBase }}"
            class="inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold rounded-t-lg border-b-2 transition
                   {{ $activeTab === 'deposits' ? 'border-blue-600 text-blue-700 bg-blue-50' : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50' }}">
-            <span class="material-icons text-base">account_balance_wallet</span>
+            <span class="material-icons-round text-base">account_balance_wallet</span>
             Deposits &amp; Withdrawals
             @if($stats['pending_wire_count'] + $stats['pending_withdrawals_count'] > 0)
                 <span class="ml-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-orange-500 text-white text-xs font-bold">
@@ -68,7 +68,7 @@
         <a href="{{ $tabBase }}?tab=audit-log"
            class="inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold rounded-t-lg border-b-2 transition
                   {{ $activeTab === 'audit-log' ? 'border-blue-600 text-blue-700 bg-blue-50' : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50' }}">
-            <span class="material-icons text-base">manage_search</span>
+            <span class="material-icons-round text-base">manage_search</span>
             Audit Log
             <span class="ml-1 text-xs text-gray-400 font-normal">({{ number_format($stats['audit_log_total']) }})</span>
         </a>
@@ -83,7 +83,7 @@
     <div class="bg-white rounded-2xl border {{ $pendingWireRequests->isNotEmpty() ? 'border-orange-200' : 'border-gray-100' }} shadow-sm mb-8 overflow-hidden">
         <div class="px-6 py-4 border-b {{ $pendingWireRequests->isNotEmpty() ? 'border-orange-100 bg-orange-50' : 'border-gray-100' }} flex items-center justify-between">
             <h2 class="font-bold text-gray-900 text-base flex items-center gap-2">
-                <span class="material-icons {{ $pendingWireRequests->isNotEmpty() ? 'text-orange-500' : 'text-gray-400' }} text-lg">account_balance</span>
+                <span class="material-icons-round {{ $pendingWireRequests->isNotEmpty() ? 'text-orange-500' : 'text-gray-400' }} text-lg">account_balance</span>
                 Pending Wire Deposits
                 @if($pendingWireRequests->isNotEmpty())
                     <span class="ml-1 inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-orange-500 text-white text-xs font-bold">{{ $pendingWireRequests->count() }}</span>
@@ -94,7 +94,7 @@
 
         @if($pendingWireRequests->isEmpty())
             <div class="px-6 py-10 text-center">
-                <span class="material-icons text-gray-300 text-5xl">check_circle</span>
+                <span class="material-icons-round text-gray-300 text-5xl">check_circle</span>
                 <p class="text-gray-500 text-sm mt-2">No pending wire deposit requests.</p>
             </div>
         @else
@@ -134,7 +134,7 @@
                                     @csrf
                                     <button type="submit"
                                         class="px-3 py-2 bg-green-600 text-white text-xs font-bold rounded-lg hover:bg-green-700 transition flex items-center gap-1.5 whitespace-nowrap">
-                                        <span class="material-icons text-sm">check_circle</span>
+                                        <span class="material-icons-round text-sm">check_circle</span>
                                         Confirm Wire Received
                                     </button>
                                 </form>
@@ -144,7 +144,7 @@
                                     @csrf
                                     <button type="submit"
                                         class="px-3 py-2 bg-red-50 text-red-700 border border-red-200 text-xs font-bold rounded-lg hover:bg-red-100 transition flex items-center gap-1 whitespace-nowrap">
-                                        <span class="material-icons text-sm">cancel</span>
+                                        <span class="material-icons-round text-sm">cancel</span>
                                         Reject
                                     </button>
                                 </form>
@@ -162,7 +162,7 @@
     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm mb-8 overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
             <h2 class="font-bold text-gray-900 text-base flex items-center gap-2">
-                <span class="material-icons text-amber-500 text-lg">hourglass_top</span>
+                <span class="material-icons-round text-amber-500 text-lg">hourglass_top</span>
                 Pending Withdrawal Requests
                 @if($stats['pending_withdrawals_count'] > 0)
                     <span class="ml-1 inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-amber-500 text-white text-xs font-bold">{{ $stats['pending_withdrawals_count'] }}</span>
@@ -175,7 +175,7 @@
 
         @if($pendingWithdrawals->isEmpty())
             <div class="px-6 py-10 text-center">
-                <span class="material-icons text-gray-300 text-5xl">check_circle</span>
+                <span class="material-icons-round text-gray-300 text-5xl">check_circle</span>
                 <p class="text-gray-500 text-sm mt-2">No pending withdrawal requests.</p>
             </div>
         @else
@@ -222,7 +222,7 @@
                                     @csrf
                                     <button type="submit"
                                         class="px-3 py-1.5 bg-green-600 text-white text-xs font-bold rounded-lg hover:bg-green-700 transition flex items-center gap-1">
-                                        <span class="material-icons text-xs">check</span> Approve
+                                        <span class="material-icons-round text-xs">check</span> Approve
                                     </button>
                                 </form>
                                 <form action="{{ route('admin.withdrawals.reject', $wr->id) }}" method="POST"
@@ -230,7 +230,7 @@
                                     @csrf
                                     <button type="submit"
                                         class="px-3 py-1.5 bg-red-50 border border-red-200 text-red-700 text-xs font-bold rounded-lg hover:bg-red-100 transition flex items-center gap-1">
-                                        <span class="material-icons text-xs">close</span> Reject
+                                        <span class="material-icons-round text-xs">close</span> Reject
                                     </button>
                                 </form>
                             </div>
@@ -247,7 +247,7 @@
     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-100">
             <h2 class="font-bold text-gray-900 text-base flex items-center gap-2">
-                <span class="material-icons text-blue-600 text-lg">account_balance_wallet</span>
+                <span class="material-icons-round text-blue-600 text-lg">account_balance_wallet</span>
                 All Buyer Wallets
             </h2>
         </div>
@@ -283,7 +283,7 @@
                         <td class="px-4 py-3 text-center">
                             <button onclick="openAddDepositModal({{ $wallet->user_id }}, '{{ addslashes($wallet->user?->name ?? 'User') }}')"
                                 class="px-3 py-1.5 bg-blue-50 text-blue-700 text-xs font-bold rounded-lg hover:bg-blue-100 transition flex items-center gap-1 mx-auto">
-                                <span class="material-icons text-xs">add</span> Manual Add
+                                <span class="material-icons-round text-xs">add</span> Manual Add
                             </button>
                         </td>
                     </tr>
@@ -314,7 +314,7 @@
     <form method="GET" action="{{ route('admin.security-deposits') }}" class="bg-white rounded-2xl border border-gray-100 shadow-sm mb-6 overflow-hidden">
         <input type="hidden" name="tab" value="audit-log">
         <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
-            <span class="material-icons text-blue-600 text-lg">filter_list</span>
+            <span class="material-icons-round text-blue-600 text-lg">filter_list</span>
             <h2 class="font-bold text-gray-900 text-base">Filter Audit Log</h2>
         </div>
         <div class="px-5 py-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -358,7 +358,7 @@
         <div class="px-5 pb-4 flex items-center gap-3">
             <button type="submit"
                 class="px-5 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition shadow-sm flex items-center gap-1.5">
-                <span class="material-icons text-sm">search</span> Apply Filters
+                <span class="material-icons-round text-sm">search</span> Apply Filters
             </button>
             <a href="{{ route('admin.security-deposits') }}?tab=audit-log"
                class="px-5 py-2 border border-gray-200 text-gray-600 text-sm font-semibold rounded-lg hover:bg-gray-50 transition">
@@ -366,7 +366,7 @@
             </a>
             @if(request()->hasAny(['log_action','log_from','log_to','log_buyer']))
                 <span class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5 flex items-center gap-1">
-                    <span class="material-icons text-xs">filter_alt</span> Filters active — showing {{ $auditLogs->total() }} of {{ number_format($stats['audit_log_total']) }} entries
+                    <span class="material-icons-round text-xs">filter_alt</span> Filters active — showing {{ $auditLogs->total() }} of {{ number_format($stats['audit_log_total']) }} entries
                 </span>
             @endif
         </div>
@@ -376,7 +376,7 @@
     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
             <h2 class="font-bold text-gray-900 text-base flex items-center gap-2">
-                <span class="material-icons text-indigo-500 text-lg">history</span>
+                <span class="material-icons-round text-indigo-500 text-lg">history</span>
                 Deposit Audit Log
                 <span class="text-xs text-gray-400 font-normal ml-1">({{ number_format($stats['audit_log_total']) }} total entries)</span>
             </h2>
@@ -385,7 +385,7 @@
 
         @if($auditLogs->isEmpty())
             <div class="px-6 py-12 text-center">
-                <span class="material-icons text-gray-300 text-5xl">manage_search</span>
+                <span class="material-icons-round text-gray-300 text-5xl">manage_search</span>
                 <p class="text-gray-500 text-sm mt-2">No audit log entries found for the selected filters.</p>
                 @if(request()->hasAny(['log_action','log_from','log_to','log_buyer']))
                     <a href="{{ route('admin.security-deposits') }}?tab=audit-log"
@@ -437,7 +437,7 @@
                         {{-- Action badge --}}
                         <td class="px-4 py-3">
                             <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold {{ $log->actionBadgeClass() }}">
-                                <span class="material-icons text-xs">{{ $log->actionIcon() }}</span>
+                                <span class="material-icons-round text-xs">{{ $log->actionIcon() }}</span>
                                 {{ $log->actionLabel() }}
                             </span>
                         </td>
@@ -482,7 +482,7 @@
                 <p id="adminDepositBuyerName" class="text-xs text-gray-500 mt-0.5"></p>
             </div>
             <button onclick="closeAddDepositModal()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition">
-                <span class="material-icons text-xl">close</span>
+                <span class="material-icons-round text-xl">close</span>
             </button>
         </div>
         <form id="adminDepositForm" method="POST" class="px-6 py-5 space-y-4">
@@ -503,7 +503,7 @@
                     placeholder="e.g. Bank wire ref #XYZ123 confirmed">
             </div>
             <p class="text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 flex items-start gap-2">
-                <span class="material-icons text-xs mt-0.5">warning</span>
+                <span class="material-icons-round text-xs mt-0.5">warning</span>
                 Use the "Confirm Wire Received" button above for buyer-submitted wire requests. This manual form is for corrections and exceptions only.
             </p>
             <div class="flex gap-3">

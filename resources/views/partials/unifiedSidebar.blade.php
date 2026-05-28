@@ -58,6 +58,7 @@
             ['route' => 'buyer.dashboard', 'icon' => 'dashboard', 'label' => 'Dashboard'],
             ['route' => 'buyer.user', 'icon' => 'person', 'label' => 'Account settings', 'match_routes' => ['buyer.profile']],
             ['route' => 'buyer.auctions', 'icon' => 'gavel', 'label' => 'Auctions'],
+            ['route' => 'buyer.deposit-withdrawal', 'icon' => 'account_balance_wallet', 'label' => 'Security Deposit', 'match_routes' => ['buyer.deposit.add', 'buyer.deposit-withdrawal.request'], 'prefix_match' => false],
             ['route' => 'buyer.saved-items', 'icon' => 'bookmark', 'label' => 'Saved Items', 'match_routes' => ['buyer.watchlist', 'watchlist.index']],
             ['route' => 'buyer.notifications', 'icon' => 'notifications', 'label' => 'Notifications'],
             ['route' => 'messaging.index', 'icon' => 'mail', 'label' => 'Messaging Center', 'match_routes' => ['messaging.thread.show', 'buyer.messaging-center', 'buyer.messages']],
