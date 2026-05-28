@@ -1,11 +1,14 @@
 <style>
-/* ─── Custom Select Wrapper ─────────────────────────────── */
+/* ─── Custom Select — trigger & wrapper only ────────────────── */
+/* The dropdown panel is NOT styled here — it is created
+   programmatically and injected into document.body as a portal. */
+
 .cm-sel {
     position: relative;
     width: 100%;
 }
 
-/* Trigger button — matches form-input style */
+/* Trigger button */
 .cm-sel__trigger {
     width: 100%;
     display: flex;
@@ -25,10 +28,11 @@
     line-height: 1.4;
     outline: none;
 }
-.cm-sel__trigger:hover              { border-color: #cbd5e1; }
+.cm-sel__trigger:hover            { border-color: #cbd5e1; }
 .cm-sel__trigger:focus,
-.cm-sel__trigger.is-open            { border-color: #063466; box-shadow: 0 0 0 3px rgba(6,52,102,0.1); }
-.cm-sel__trigger.is-placeholder span.cm-sel__label { color: #9ca3af; }
+.cm-sel__trigger.is-open          { border-color: #063466; box-shadow: 0 0 0 3px rgba(6,52,102,0.1); }
+.cm-sel__trigger.is-placeholder
+    span.cm-sel__label            { color: #9ca3af; }
 
 /* Value area */
 .cm-sel__val {
@@ -52,40 +56,53 @@
     color: #94a3b8;
     transition: transform 0.2s ease, color 0.15s;
 }
-.cm-sel__trigger.is-open .cm-sel__chevron { transform: rotate(180deg); color: #063466; }
+.cm-sel__trigger.is-open .cm-sel__chevron {
+    transform: rotate(180deg);
+    color: #063466;
+}
 
-/* Dropdown panel — appended to <body> so it is never clipped by any
-   overflow:hidden/auto ancestor or trapped by a CSS stacking context
-   (transform, filter, will-change, etc.). Position is set dynamically. */
-.cm-sel__panel {
+/* Color swatch (in trigger) */
+.cm-sel__swatch {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(0,0,0,0.12);
+    flex-shrink: 0;
+    display: inline-block;
+}
+
+/* ─── Portal panel (injected into <body>) ───────────────────── */
+/* These styles must be on the global sheet because the panel
+   lives outside any scoped container. */
+.cmsel-portal {
     position: fixed;
-    /* top / left / width are set dynamically by positionPanel() */
+    z-index: 99999;
     background: #fff;
     border: 1.5px solid #e2e8f0;
     border-radius: 10px;
-    box-shadow: 0 10px 32px rgba(6,52,102,0.13);
-    z-index: 9999;
-    max-height: 230px;
+    box-shadow: 0 10px 32px rgba(6,52,102,0.16);
+    max-height: 240px;
     overflow-y: auto;
     overflow-x: hidden;
     scrollbar-width: thin;
     scrollbar-color: #cbd5e1 transparent;
+    animation: cmselFadeIn 0.13s ease;
 }
-/* opens-up: JS flips top↔bottom via inline styles; class keeps animation correct */
-.cm-sel__panel.opens-up {
-    /* intentionally empty — positioning handled by JS */
-}
-.cm-sel__panel::-webkit-scrollbar       { width: 4px; }
-.cm-sel__panel::-webkit-scrollbar-track { background: transparent; }
-.cm-sel__panel::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+.cmsel-portal.opens-up { animation: cmselFadeUp 0.13s ease; }
+.cmsel-portal::-webkit-scrollbar       { width: 4px; }
+.cmsel-portal::-webkit-scrollbar-track { background: transparent; }
+.cmsel-portal::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
 
-/* Options list */
-.cm-sel__list {
+@keyframes cmselFadeIn  { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
+@keyframes cmselFadeUp  { from { opacity:0; transform:translateY(4px);  } to { opacity:1; transform:translateY(0); } }
+
+/* Options */
+.cmsel-portal ul {
     list-style: none;
     margin: 0;
     padding: 0.3rem;
 }
-.cm-sel__item {
+.cmsel-portal li {
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -96,71 +113,47 @@
     color: #374151;
     transition: background 0.1s;
     user-select: none;
+    font-family: inherit;
 }
-.cm-sel__item:hover                   { background: #f1f5f9; }
-.cm-sel__item.is-selected             { background: #eef4ff; color: #063466; font-weight: 600; }
-.cm-sel__item.is-placeholder          { color: #9ca3af; }
-.cm-sel__item.is-placeholder:hover    { background: transparent; cursor: default; }
-
-/* Item text */
-.cm-sel__item-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-/* Check icon (right side of selected item) */
-.cm-sel__check {
+.cmsel-portal li:hover               { background: #f1f5f9; }
+.cmsel-portal li.is-selected         { background: #eef4ff; color: #063466; font-weight: 600; }
+.cmsel-portal li.is-placeholder      { color: #9ca3af; cursor: default; }
+.cmsel-portal li.is-placeholder:hover{ background: transparent; }
+.cmsel-portal .cmsel-item-text       { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cmsel-portal .cmsel-check           {
     flex-shrink: 0;
     color: #063466;
     opacity: 0;
     transition: opacity 0.1s;
 }
-.cm-sel__item.is-selected .cm-sel__check { opacity: 1; }
-
-/* Color swatch */
-.cm-sel__swatch {
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    border: 1.5px solid rgba(0,0,0,0.12);
-    flex-shrink: 0;
-    display: inline-block;
-}
-
-/* Panel open animation */
-@keyframes cmSelOpen {
-    from { opacity: 0; transform: translateY(-5px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
-@keyframes cmSelOpenUp {
-    from { opacity: 0; transform: translateY(5px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
-.cm-sel__panel { animation: cmSelOpen 0.15s ease; }
-.cm-sel__panel.opens-up { animation: cmSelOpenUp 0.15s ease; }
+.cmsel-portal li.is-selected .cmsel-check { opacity: 1; }
+.cmsel-portal .cm-sel__swatch        { flex-shrink: 0; }
 </style>
 
 <script>
 (function () {
     'use strict';
 
-    /* ── Color swatch map (value → hex) ───────────────────── */
+    /* ── Color swatch map ─────────────────────────────────────── */
     var COLORS = {
         BLACK:'#111111', WHITE:'#f8f8f8', SILVER:'#c0c0c0', GRAY:'#808080',
-        GREY:'#808080', RED:'#dc2626', BLUE:'#2563eb', GREEN:'#16a34a',
-        YELLOW:'#eab308', ORANGE:'#ea580c', BROWN:'#92400e', GOLD:'#b45309',
-        BEIGE:'#d4b483', PURPLE:'#9333ea', PINK:'#ec4899', MAROON:'#7f1d1d',
-        NAVY:'#1e3a5f', TAN:'#d4b483', CREAM:'#fffdd0', BURGUNDY:'#800020',
+        GREY:'#808080',  RED:'#dc2626',   BLUE:'#2563eb',   GREEN:'#16a34a',
+        YELLOW:'#eab308',ORANGE:'#ea580c',BROWN:'#92400e',  GOLD:'#b45309',
+        BEIGE:'#d4b483', PURPLE:'#9333ea',PINK:'#ec4899',   MAROON:'#7f1d1d',
+        NAVY:'#1e3a5f',  TAN:'#d4b483',   CREAM:'#fffdd0',  BURGUNDY:'#800020',
         CHAMPAGNE:'#f7e7ce', BRONZE:'#cd7f32',
     };
 
     var SVG_CHEVRON =
-        '<svg class="cm-sel__chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" ' +
-        'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" ' +
-        'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+        '<svg class="cm-sel__chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16"' +
+        ' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"' +
+        ' stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
         '<polyline points="6 9 12 15 18 9"/></svg>';
 
     var SVG_CHECK =
-        '<svg class="cm-sel__check" xmlns="http://www.w3.org/2000/svg" width="14" height="14" ' +
-        'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" ' +
-        'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+        '<svg class="cmsel-check" xmlns="http://www.w3.org/2000/svg" width="14" height="14"' +
+        ' viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"' +
+        ' stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
         '<polyline points="20 6 9 17 4 12"/></svg>';
 
     function isColorField(sel) {
@@ -170,61 +163,138 @@
     function swatchHtml(value) {
         var hex = COLORS[(value || '').toUpperCase()];
         if (!hex) return '';
-        var extra = (hex === '#f8f8f8') ? 'border-color:#d1d5db;' : '';
-        return '<span class="cm-sel__swatch" style="background:' + hex + ';' + extra + '"></span>';
+        var border = (hex === '#f8f8f8') ? 'border-color:#d1d5db;' : '';
+        return '<span class="cm-sel__swatch" style="background:' + hex + ';' + border + '"></span>';
     }
 
-    function closeAll(except) {
-        document.querySelectorAll('.cm-sel__panel').forEach(function (p) {
-            if (p !== except) {
-                p.style.display = 'none';
-                var t = p.closest('.cm-sel')?.querySelector('.cm-sel__trigger');
-                if (t) t.classList.remove('is-open');
-            }
-        });
+    /* ── Single active portal ─────────────────────────────────── */
+    var _portal        = null;   // the currently-open panel DOM node
+    var _activeTrigger = null;   // the trigger button that owns the portal
+    var _activeNative  = null;   // the native <select> that owns the portal
+
+    function destroyPortal() {
+        if (_portal) {
+            _portal.remove();
+            _portal = null;
+        }
+        if (_activeTrigger) {
+            _activeTrigger.classList.remove('is-open');
+            _activeTrigger.setAttribute('aria-expanded', 'false');
+            _activeTrigger = null;
+        }
+        _activeNative = null;
     }
 
-    function positionPanel(panel, wrapper) {
-        var rect = wrapper.getBoundingClientRect();
+    function buildPortal(nativeSel, trigger, isColor) {
+        /* Position using viewport-fixed coords from getBoundingClientRect.
+           position:fixed means top/left are relative to the viewport —
+           no scrollY/scrollX needed. */
+        var rect       = trigger.getBoundingClientRect();
         var spaceBelow = window.innerHeight - rect.bottom;
+        var openUp     = spaceBelow < 260 && rect.top > 260;
 
-        // Pin width to the trigger
+        var panel = document.createElement('div');
+        panel.className = 'cmsel-portal' + (openUp ? ' opens-up' : '');
+
+        /* ── Exact fixed coordinates ── */
         panel.style.width = rect.width + 'px';
-        panel.style.left  = rect.left + 'px';
-        panel.style.right = 'auto';
-
-        if (spaceBelow < 250 && rect.top > 250) {
-            // Not enough room below — open upward
-            panel.classList.add('opens-up');
+        panel.style.left  = rect.left  + 'px';
+        if (openUp) {
+            panel.style.bottom = (window.innerHeight - rect.top + 4) + 'px';
             panel.style.top    = 'auto';
-            panel.style.bottom = (window.innerHeight - rect.top + 5) + 'px';
         } else {
-            panel.classList.remove('opens-up');
-            panel.style.top    = (rect.bottom + 5) + 'px';
+            panel.style.top    = (rect.bottom + 4) + 'px';
             panel.style.bottom = 'auto';
         }
+
+        /* ── Build option list ── */
+        var ul = document.createElement('ul');
+        ul.setAttribute('role', 'listbox');
+
+        Array.from(nativeSel.options).forEach(function (opt) {
+            var li = document.createElement('li');
+            li.setAttribute('role', 'option');
+            li.setAttribute('aria-selected', opt.selected ? 'true' : 'false');
+            li.dataset.value = opt.value;
+
+            if (!opt.value) {
+                li.className = 'is-placeholder';
+            } else if (opt.selected) {
+                li.className = 'is-selected';
+            }
+
+            li.innerHTML =
+                (isColor && opt.value ? swatchHtml(opt.value) : '') +
+                '<span class="cmsel-item-text">' + opt.text + '</span>' +
+                SVG_CHECK;
+
+            li.addEventListener('mousedown', function (e) {
+                /* mousedown fires before the trigger's blur, preventing
+                   a race where blur destroys the portal before click fires */
+                e.preventDefault();
+
+                if (!opt.value) {
+                    destroyPortal();
+                    return;
+                }
+
+                /* 1. Update native <select> */
+                nativeSel.value = opt.value;
+                nativeSel.dispatchEvent(new Event('change', { bubbles: true }));
+
+                /* 2. Update trigger display */
+                updateTriggerDisplay(trigger, isColor, opt.value, opt.text);
+
+                /* 3. Remove portal */
+                destroyPortal();
+            });
+
+            ul.appendChild(li);
+        });
+
+        panel.appendChild(ul);
+
+        /* ── Inject into body — completely outside all form containers ── */
+        document.body.appendChild(panel);
+
+        _portal        = panel;
+        _activeTrigger = trigger;
+        _activeNative  = nativeSel;
+
+        trigger.classList.add('is-open');
+        trigger.setAttribute('aria-expanded', 'true');
     }
 
-    /* Unique ID counter so each wrapper/panel pair can reference each other */
-    var _cmSelIdCounter = 0;
+    /* ── Trigger display helper (also called by VIN decoder) ─── */
+    function updateTriggerDisplay(trigger, isColor, value, text) {
+        var labelEl = trigger.querySelector('.cm-sel__label');
+        var valEl   = trigger.querySelector('.cm-sel__val');
+        if (labelEl) labelEl.textContent = text;
+        if (isColor && valEl) {
+            var old = valEl.querySelector('.cm-sel__swatch');
+            if (old) old.remove();
+            if (value) valEl.insertAdjacentHTML('afterbegin', swatchHtml(value));
+        }
+        if (value) trigger.classList.remove('is-placeholder');
+    }
 
+    /* ── Init a single <select> ─────────────────────────────── */
     function initSelect(nativeSel) {
         if (nativeSel.dataset.cmInit) return;
         nativeSel.dataset.cmInit = '1';
 
         var isColor = isColorField(nativeSel);
-        var uid = 'cmsel-' + (++_cmSelIdCounter);
 
-        /* ── Hide native select (keep for form submission) ── */
-        nativeSel.style.cssText = 'position:absolute;opacity:0;pointer-events:none;width:1px;height:1px;overflow:hidden;';
+        /* Hide native select — keep it for form submission */
+        nativeSel.style.cssText =
+            'position:absolute;opacity:0;pointer-events:none;width:1px;height:1px;overflow:hidden;';
         nativeSel.tabIndex = -1;
 
-        /* ── Build wrapper ── */
+        /* Build wrapper */
         var wrapper = document.createElement('div');
         wrapper.className = 'cm-sel';
-        wrapper.dataset.cmId = uid;  // link wrapper → panel
 
-        /* ── Build trigger ── */
+        /* Build trigger */
         var selOpt  = nativeSel.options[nativeSel.selectedIndex] || nativeSel.options[0];
         var selVal  = selOpt ? selOpt.value : '';
         var selTxt  = selOpt ? selOpt.text  : 'Select';
@@ -242,120 +312,60 @@
             '</span>' +
             SVG_CHEVRON;
 
-        /* ── Build panel ── */
-        var panel = document.createElement('div');
-        panel.className = 'cm-sel__panel';
-        panel.setAttribute('role', 'listbox');
-        panel.dataset.cmFor = uid;  // link panel → wrapper
-        panel.style.display = 'none';
-
-        var list = document.createElement('ul');
-        list.className = 'cm-sel__list';
-
-        Array.from(nativeSel.options).forEach(function (opt) {
-            var li = document.createElement('li');
-            li.className = 'cm-sel__item' +
-                (!opt.value ? ' is-placeholder' : '') +
-                (opt.selected ? ' is-selected' : '');
-            li.setAttribute('role', 'option');
-            li.setAttribute('aria-selected', opt.selected ? 'true' : 'false');
-            li.dataset.value = opt.value;
-
-            li.innerHTML =
-                (isColor && opt.value ? swatchHtml(opt.value) : '') +
-                '<span class="cm-sel__item-text">' + opt.text + '</span>' +
-                SVG_CHECK;
-
-            if (!opt.value) {
-                /* Placeholder: just close on click, don't re-select */
-                li.addEventListener('click', function () {
-                    closePanel();
-                });
-            } else {
-                li.addEventListener('click', function () {
-                    /* Update native select */
-                    nativeSel.value = opt.value;
-                    nativeSel.dispatchEvent(new Event('change', { bubbles: true }));
-
-                    /* Update trigger display */
-                    var labelEl = trigger.querySelector('.cm-sel__label');
-                    var valEl   = trigger.querySelector('.cm-sel__val');
-                    if (labelEl) labelEl.textContent = opt.text;
-
-                    if (isColor) {
-                        var oldSwatch = valEl.querySelector('.cm-sel__swatch');
-                        if (oldSwatch) oldSwatch.remove();
-                        if (opt.value) {
-                            valEl.insertAdjacentHTML('afterbegin', swatchHtml(opt.value));
-                        }
-                    }
-
-                    trigger.classList.remove('is-placeholder');
-
-                    /* Update list states */
-                    list.querySelectorAll('.cm-sel__item').forEach(function (it) {
-                        it.classList.remove('is-selected');
-                        it.setAttribute('aria-selected', 'false');
-                    });
-                    li.classList.add('is-selected');
-                    li.setAttribute('aria-selected', 'true');
-
-                    closePanel();
-                });
-            }
-
-            list.appendChild(li);
-        });
-
-        panel.appendChild(list);
-
-        /* ── Open / Close ── */
-        function openPanel() {
-            positionPanel(panel, wrapper);
-            panel.style.display = 'block';
-            trigger.classList.add('is-open');
-            trigger.setAttribute('aria-expanded', 'true');
-        }
-        function closePanel() {
-            panel.style.display = 'none';
-            trigger.classList.remove('is-open');
-            trigger.setAttribute('aria-expanded', 'false');
-        }
-
+        /* Toggle on trigger click */
         trigger.addEventListener('click', function (e) {
             e.stopPropagation();
-            if (panel.style.display === 'none') {
-                closeAll(panel);
-                openPanel();
+            if (_activeTrigger === trigger) {
+                destroyPortal();
             } else {
-                closePanel();
+                destroyPortal();            // close any other open panel first
+                buildPortal(nativeSel, trigger, isColor);
             }
         });
 
-        /* Keyboard navigation */
+        /* Keyboard: Enter/Space toggles, Escape closes, arrows open */
         trigger.addEventListener('keydown', function (e) {
             if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
-                if (panel.style.display === 'none') { closeAll(panel); openPanel(); }
-                else { closePanel(); }
+                if (_activeTrigger === trigger) destroyPortal();
+                else { destroyPortal(); buildPortal(nativeSel, trigger, isColor); }
             }
-            if (e.key === 'Escape') closePanel();
-            if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && panel.style.display === 'none') {
-                e.preventDefault(); closeAll(panel); openPanel();
+            if (e.key === 'Escape') destroyPortal();
+            if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && _activeTrigger !== trigger) {
+                e.preventDefault();
+                destroyPortal();
+                buildPortal(nativeSel, trigger, isColor);
             }
         });
 
-        /* ── Assemble ── */
-        // wrapper + trigger go where the native select was
+        /* Assemble: wrapper replaces native select in the DOM;
+           native select is kept inside wrapper for form submission */
         nativeSel.parentNode.insertBefore(wrapper, nativeSel);
         wrapper.appendChild(trigger);
         wrapper.appendChild(nativeSel);
-        // Panel goes to <body> so it is NEVER clipped by any
-        // overflow:hidden/scroll ancestor or CSS stacking context
-        document.body.appendChild(panel);
+        /* NOTE: panel is NOT appended here — it is created fresh on each open */
     }
 
-    /* ── Init on DOM ready ── */
+    /* ── Global close listeners ─────────────────────────────── */
+
+    /* Click outside the portal or the active trigger → close */
+    document.addEventListener('click', function (e) {
+        if (!_portal) return;
+        if (_activeTrigger && _activeTrigger.contains(e.target)) return;
+        if (_portal.contains(e.target)) return;
+        destroyPortal();
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') destroyPortal();
+    });
+
+    /* Scroll or resize → reposition is not worth the complexity;
+       simply close to avoid a stale/misaligned panel */
+    window.addEventListener('scroll', destroyPortal, true);
+    window.addEventListener('resize', destroyPortal);
+
+    /* ── Init on DOM ready ──────────────────────────────────── */
     function initAll() {
         document.querySelectorAll('select.form-input').forEach(initSelect);
     }
@@ -366,14 +376,17 @@
         initAll();
     }
 
-    /* ── Global close on outside click / Escape ── */
-    document.addEventListener('click', function () { closeAll(null); });
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') closeAll(null);
-    });
+    /* ── Public API used by VIN decoder (scripts.blade.php) ─── */
+    window.cmSelRefreshTrigger = function (nativeSel) {
+        var wrapper = nativeSel.parentNode;
+        if (!wrapper || !wrapper.classList.contains('cm-sel')) return;
+        var trigger = wrapper.querySelector('.cm-sel__trigger');
+        if (!trigger) return;
+        var selOpt = nativeSel.options[nativeSel.selectedIndex];
+        if (!selOpt || !selOpt.value) return;
+        var isColor = nativeSel.name === 'color' || nativeSel.name === 'interior_color';
+        updateTriggerDisplay(trigger, isColor, selOpt.value, selOpt.text);
+    };
 
-    /* ── Close on scroll or resize (panel is fixed; trigger moves, panel won't) ── */
-    window.addEventListener('scroll', function () { closeAll(null); }, true);
-    window.addEventListener('resize', function () { closeAll(null); });
 })();
 </script>
