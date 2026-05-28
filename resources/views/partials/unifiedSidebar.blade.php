@@ -8,19 +8,25 @@
 
     if ($role === 'admin') {
         $menuItems = [
-            ['route' => 'admin.dashboard', 'icon' => 'dashboard', 'label' => 'Dashboard', 'match_routes' => ['admin.dashboard.analytics'], 'prefix_match' => false],
-            ['route' => 'admin.users', 'icon' => 'people', 'label' => 'User Management', 'match_routes' => ['admin.users.view', 'admin.users.update', 'admin.users.reset-password', 'admin.users.toggle-status'], 'prefix_match' => false],
+            // ── OVERVIEW ──────────────────────────────────────────────────────
+            ['section' => 'OVERVIEW', 'route' => 'admin.dashboard', 'icon' => 'dashboard', 'label' => 'Dashboard', 'match_routes' => ['admin.dashboard.analytics'], 'prefix_match' => false],
+            // ── USERS ─────────────────────────────────────────────────────────
+            ['section' => 'USERS', 'route' => 'admin.users', 'icon' => 'people', 'label' => 'User Management', 'match_routes' => ['admin.users.view', 'admin.users.update', 'admin.users.reset-password', 'admin.users.toggle-status'], 'prefix_match' => false],
             ['route' => 'admin.memberships', 'icon' => 'card_membership', 'label' => 'Memberships'],
-            ['route' => 'admin.listing-review', 'icon' => 'fact_check', 'label' => 'Listing Review', 'match_routes' => ['admin.listings.approval-detail'], 'prefix_match' => false],
+            // ── LISTINGS & AUCTIONS ───────────────────────────────────────────
+            ['section' => 'LISTINGS & AUCTIONS', 'route' => 'admin.listing-review', 'icon' => 'fact_check', 'label' => 'Listing Review', 'match_routes' => ['admin.listings.approval-detail'], 'prefix_match' => false],
             ['route' => 'admin.active-listings', 'icon' => 'directions_car', 'label' => 'Active Auctions'],
             ['route' => 'admin.boosts-addons', 'icon' => 'rocket_launch', 'label' => 'Boosts & Add-ons'],
-            ['route' => 'admin.payments', 'icon' => 'account_balance_wallet', 'label' => 'Sales / Payouts', 'match_routes' => ['admin.pending-payments', 'admin.payouts', 'admin.payment-payout-logs', 'admin.invoice-log', 'admin.unpaid-auctions', 'admin.buyer-defaults', 'admin.second-chance-purchases'], 'prefix_match' => false],
+            // ── FINANCE ───────────────────────────────────────────────────────
+            ['section' => 'FINANCE', 'route' => 'admin.payments', 'icon' => 'account_balance_wallet', 'label' => 'Sales / Payouts', 'match_routes' => ['admin.pending-payments', 'admin.payouts', 'admin.payment-payout-logs', 'admin.invoice-log', 'admin.unpaid-auctions', 'admin.buyer-defaults', 'admin.second-chance-purchases'], 'prefix_match' => false],
             ['route' => 'admin.security-deposits', 'icon' => 'security', 'label' => 'Security Deposits', 'prefix_match' => false],
             ['route' => 'admin.pending-payments', 'icon' => 'schedule', 'label' => 'Pending Payments'],
-            ['route' => 'admin.disputes', 'icon' => 'gavel', 'label' => 'Disputes Center', 'match_routes' => ['admin.disputes.view', 'admin.disputes.update-status'], 'prefix_match' => false],
+            // ── OPERATIONS ────────────────────────────────────────────────────
+            ['section' => 'OPERATIONS', 'route' => 'admin.disputes', 'icon' => 'gavel', 'label' => 'Disputes Center', 'match_routes' => ['admin.disputes.view', 'admin.disputes.update-status'], 'prefix_match' => false],
             ['route' => 'admin.messaging.flags.index', 'icon' => 'flag', 'label' => 'Messaging Flags', 'match_routes' => ['admin.messaging.flags.show', 'admin.messaging.flags.unflag'], 'prefix_match' => false],
             ['route' => 'admin.support-tickets', 'icon' => 'support_agent', 'label' => 'Support Tickets'],
-            ['route' => 'admin.notifications', 'icon' => 'notifications', 'label' => 'Notifications'],
+            // ── SYSTEM ────────────────────────────────────────────────────────
+            ['section' => 'SYSTEM', 'route' => 'admin.notifications', 'icon' => 'notifications', 'label' => 'Notifications'],
             ['route' => 'admin.email-templates', 'icon' => 'mail', 'label' => 'Email Templates', 'match_routes' => ['admin.email-templates.edit', 'admin.email-templates.preview', 'admin.email-templates.update', 'admin.email-templates.restore'], 'prefix_match' => false],
             ['route' => 'admin.reports-analytics', 'icon' => 'bar_chart', 'label' => 'Reports & Analytics', 'match_routes' => ['admin.user-activity-insights', 'admin.revenue-tracking', 'admin.revenue-tracking.export'], 'prefix_match' => false],
         ];
@@ -425,6 +431,43 @@
     body.sidebar-collapsed .unified-sidebar nav a { justify-content: center; padding: 0.7rem 0.3rem; gap: 0; }
     body.sidebar-collapsed .unified-sidebar nav .nav-label { display: none; }
 
+    /* Section group labels ------------------------------------------------- */
+    .unified-sidebar .sidebar-section-label {
+        margin: 20px 0 6px;
+        padding: 0 0.85rem;
+        list-style: none;
+        pointer-events: none;
+        user-select: none;
+    }
+    .unified-sidebar .sidebar-section-label:first-child {
+        margin-top: 4px; /* first label sits flush with nav top padding */
+    }
+    .unified-sidebar .sidebar-section-label span {
+        display: block;
+        font-size: 10px;
+        font-weight: 700;
+        color: #9aa0a8;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        line-height: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: clip;
+    }
+
+    /* Collapsed: hide label text, show a thin divider line instead */
+    body.sidebar-collapsed .unified-sidebar .sidebar-section-label {
+        margin: 10px 0.5rem 6px;
+        padding: 0;
+        border-top: 1px solid var(--cm-border-soft);
+    }
+    body.sidebar-collapsed .unified-sidebar .sidebar-section-label:first-child {
+        display: none; /* no divider needed above the very first item */
+    }
+    body.sidebar-collapsed .unified-sidebar .sidebar-section-label span {
+        display: none;
+    }
+
     /* Notification badge --------------------------------------------------- */
     .unified-sidebar .sidebar-notification-badge {
         position: absolute;
@@ -673,6 +716,11 @@
         <div class="sidebar-nav-scroll">
         <ul>
             @foreach($menuItems as $item)
+                @if(isset($item['section']))
+                    <li class="sidebar-section-label" aria-hidden="true">
+                        <span>{{ $item['section'] }}</span>
+                    </li>
+                @endif
                 @php
                     $isActive = false;
                     if ($item['route'] !== '#') {
