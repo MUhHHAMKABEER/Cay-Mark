@@ -95,27 +95,44 @@ class AuctionBidOrchestrator
                 ]);
             }
 
-            $requiresDeposit = !config('services.payment.sandbox', true);
-            $requiredDeposit = $requiresDeposit
-                ? $depositService->calculateRequiredDeposit($amount)
-                : 0.00;
+            // ── DEPOSIT CHECK ────────────────────────────────────────────────────
+            // Runs on EVERY bid, server-side, BEFORE anything is saved.
+            // calculateRequiredDeposit() returns 0 for bids below the $2,000
+            // threshold, so sub-$2k bids pass through automatically.
+            //
+            // NOTE: This check is intentionally NOT gated behind any sandbox or
+            // feature-flag config.  Payment sandbox settings only affect the
+            // payment-gateway integration — deposit validation is a hard business
+            // rule that must fire in every environment, including local dev.
+            $depositCheck    = $depositService->checkDepositForBid($user, $amount);
+            $requiredDeposit = $depositCheck['required'];   // 0.00 when bid < $2,000
 
-            if ($requiresDeposit) {
-                $depositCheck = $depositService->checkDepositForBid($user, $amount);
-                if (!$depositCheck['has_deposit']) {
-                    // Return a structured JSON error so the frontend can show the
-                    // styled deposit-required popup (not a generic validation banner).
-                    return response()->json([
-                        'success'           => false,
-                        'deposit_required'  => true,
-                        'required'          => $depositCheck['required'],
-                        'available'         => $depositCheck['available'],
-                        'shortfall'         => $depositCheck['shortfall'],
-                        'deposit_url'       => route('buyer.deposit-withdrawal'),
-                        'message'           => 'A deposit of $' . number_format($depositCheck['required'], 2) . ' is required to place this bid.',
-                    ], 422);
-                }
+            if ($requiredDeposit > 0 && !$depositCheck['has_deposit']) {
+                \Illuminate\Support\Facades\Log::warning('[BidBlocked] Insufficient deposit — bid rejected before save', [
+                    'user_id'    => $user->id,
+                    'user_name'  => $user->name,
+                    'listing_id' => $listing->id,
+                    'bid_amount' => $amount,
+                    'required'   => $depositCheck['required'],
+                    'available'  => $depositCheck['available'],
+                    'shortfall'  => $depositCheck['shortfall'],
+                ]);
+
+                return response()->json([
+                    // Spec-required keys
+                    'blocked'          => true,
+                    'reason'           => 'insufficient_deposit',
+                    // Frontend modal keys (AuctionDetail.blade.php line ~1052)
+                    'success'          => false,
+                    'deposit_required' => true,
+                    'required'         => $depositCheck['required'],
+                    'available'        => $depositCheck['available'],
+                    'shortfall'        => $depositCheck['shortfall'],
+                    'deposit_url'      => route('buyer.deposit-withdrawal'),
+                    'message'          => 'A deposit of $' . number_format($depositCheck['required'], 2) . ' is required to place this bid.',
+                ], 422);
             }
+            // ─────────────────────────────────────────────────────────────────────
 
             $secondsRemaining = now()->diffInSeconds($auctionEndDate, false);
             $timerReset = false;
