@@ -139,15 +139,16 @@
     </div>
 
     {{-- ══ RIGHT · form area ════════════════════════════════════════════ --}}
-    <div class="flex-1 bg-white flex flex-col justify-center px-6 py-10 sm:px-10 lg:px-16 overflow-y-auto">
+    {{-- my-auto centres short pages but lets tall pages (uploads/payment) scroll --}}
+    <div class="flex-1 bg-white flex flex-col px-6 py-10 sm:px-10 lg:px-16 overflow-y-auto">
+        <div class="w-full mx-auto my-auto" style="max-width:{{ $maxw }}">
 
-        {{-- mobile brand (left panel hidden < lg) --}}
-        <div class="lg:hidden mb-8 text-center">
-            <span class="text-xl font-extrabold tracking-tight" style="color:#1B3A6B">CayMark</span>
-            <p class="text-[#C8A84B] font-semibold text-xs tracking-wide mt-0.5">Island Exchange &amp; Auction House</p>
-        </div>
+            {{-- mobile brand (left panel hidden < lg) --}}
+            <div class="lg:hidden mb-8 text-center">
+                <span class="text-xl font-extrabold tracking-tight" style="color:#1B3A6B">CayMark</span>
+                <p class="text-[#C8A84B] font-semibold text-xs tracking-wide mt-0.5">Island Exchange &amp; Auction House</p>
+            </div>
 
-        <div class="w-full mx-auto" style="max-width:{{ $maxw }}">
             {{ $slot }}
         </div>
     </div>
