@@ -1504,33 +1504,11 @@ class AdminController extends Controller
 
     /**
      * Finance/Admin: View payout management page.
+     * Redirects to the existing Sales/Payouts page (admin.payments).
      */
     public function payoutManagement(Request $request)
     {
-        $query = \App\Models\Payout::with(['seller', 'listing', 'invoice.buyer']);
-
-        // Filter by status
-        if ($request->has('status') && in_array($request->status, ['pending', 'processing', 'sent', 'on_hold', 'paid_successfully'])) {
-            $query->where('status', $request->status);
-        }
-
-        // Filter by seller
-        if ($request->has('seller_id')) {
-            $query->where('seller_id', $request->seller_id);
-        }
-
-        // Filter by date range
-        if ($request->has('date_from')) {
-            $query->where('sale_date', '>=', $request->date_from);
-        }
-        if ($request->has('date_to')) {
-            $query->where('sale_date', '<=', $request->date_to);
-        }
-
-        $payouts = $query->orderByDesc('created_at')->paginate(20);
-        $sellers = \App\Models\User::where('role', 'seller')->get();
-
-        return view('admin.payout-management', compact('payouts', 'sellers'));
+        return redirect()->route('admin.payments', $request->query());
     }
 
     /**

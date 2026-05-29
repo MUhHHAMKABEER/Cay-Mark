@@ -482,7 +482,10 @@ class SellerDashboardService
 
                 $sales[] = Invoice::where('seller_id', $user->id)
                     ->where('payment_status', 'paid')
-                    ->whereBetween('paid_at', [$start, $end])
+                    ->whereBetween(
+                        DB::raw('COALESCE(paid_at, updated_at)'),
+                        [$start, $end]
+                    )
                     ->count();
             }
 
