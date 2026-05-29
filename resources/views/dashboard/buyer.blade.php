@@ -123,7 +123,10 @@
                                                 $imgUrl = $img ? (str_contains($img->image_path, '/') ? asset($img->image_path) : asset('uploads/listings/' . $img->image_path)) : null;
                                                 $isLeading = (bool) ($listing->is_winning ?? false);
                                             @endphp
-                                            <div class="flex gap-4 rounded-xl border border-gray-200 p-4 hover:border-blue-200 hover:shadow-sm transition-all">
+                                            <div class="flex gap-4 rounded-xl border-2 p-4 transition-all
+                                                {{ $isLeading
+                                                    ? 'border-emerald-500 shadow-[0_0_0_1px_#10b981] bg-emerald-50/30'
+                                                    : 'border-gray-200 hover:border-blue-200 hover:shadow-sm' }}">
                                                 <div class="w-24 h-20 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
                                                     @if($imgUrl)
                                                         <img src="{{ $imgUrl }}" alt="{{ $listing->make }} {{ $listing->model }}" class="w-full h-full object-cover">
@@ -140,8 +143,8 @@
                                                             <p class="text-xs text-gray-400 font-mono">Auction ID: {{ $listing->item_number ?? 'CM' . str_pad($listing->id, 6, '0', STR_PAD_LEFT) }}</p>
                                                         </div>
                                                         @if($isLeading)
-                                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[11px] font-bold flex-shrink-0">
-                                                                <span class="material-icons-round" style="font-size:10px">trending_up</span>
+                                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500 text-white text-[11px] font-bold flex-shrink-0 shadow-sm">
+                                                                <span class="material-icons-round" style="font-size:11px">trending_up</span>
                                                                 Leading
                                                             </span>
                                                         @else

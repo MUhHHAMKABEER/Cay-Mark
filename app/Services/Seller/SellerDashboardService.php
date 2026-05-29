@@ -294,7 +294,12 @@ class SellerDashboardService
         return $user->subscriptions()
             ->with('package')
             ->where('status', 'active')
-            ->where('ends_at', '>=', now())
+            ->where(function ($q) {
+                // Include subscriptions with no end date (unlimited)
+                // and those that haven't expired yet
+                $q->whereNull('ends_at')
+                  ->orWhere('ends_at', '>=', now());
+            })
             ->latest('ends_at')
             ->first();
     }

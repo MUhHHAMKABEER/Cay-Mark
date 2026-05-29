@@ -4,6 +4,48 @@
 
 @section('content')
 <style>
+/* ── Finances info tooltip ───────────────────────────────── */
+.fin-tip-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    cursor: help;
+}
+.fin-tip {
+    visibility: hidden;
+    opacity: 0;
+    position: absolute;
+    left: calc(100% + 8px);
+    top: 50%;
+    transform: translateY(-50%);
+    width: 220px;
+    background: #1e293b;
+    color: #f8fafc;
+    font-size: 11.5px;
+    line-height: 1.55;
+    border-radius: 8px;
+    padding: 8px 11px;
+    z-index: 9999;
+    pointer-events: none;
+    white-space: normal;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.22);
+    transition: opacity 0.15s, visibility 0.15s;
+}
+/* Arrow pointing left toward the icon */
+.fin-tip::before {
+    content: '';
+    position: absolute;
+    right: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 5px solid transparent;
+    border-right-color: #1e293b;
+}
+.fin-tip-wrap:hover .fin-tip {
+    visibility: visible;
+    opacity: 1;
+}
+
 .notifications-scrollbar { max-height: 65vh; overflow-y: scroll !important; overflow-x: hidden; }
 .notifications-scrollbar::-webkit-scrollbar { width: 6px; }
 .notifications-scrollbar::-webkit-scrollbar-track { background: transparent; }
@@ -498,11 +540,9 @@
                                 <div class="flex items-center justify-between py-2 border-b border-gray-100">
                                     <div class="flex items-center gap-1.5">
                                         <span class="text-sm font-semibold text-gray-700">Total Earnings</span>
-                                        <span class="relative group cursor-help">
+                                        <span class="fin-tip-wrap">
                                             <span class="material-icons-round text-gray-300 hover:text-gray-500 transition" style="font-size:15px">info_outline</span>
-                                            <span class="absolute left-6 -top-1 w-52 bg-gray-800 text-white text-xs rounded-lg px-3 py-2 hidden group-hover:block z-20 shadow-xl leading-relaxed">
-                                                Total amount successfully paid out to you by Caymark.
-                                            </span>
+                                            <span class="fin-tip">Total amount successfully paid out to you by CayMark.</span>
                                         </span>
                                     </div>
                                     <span class="text-base font-bold text-green-600">${{ number_format($totalEarnings ?? 0, 0) }}</span>
@@ -511,11 +551,9 @@
                                 <div class="flex items-center justify-between py-2 border-b border-gray-100">
                                     <div class="flex items-center gap-1.5">
                                         <span class="text-sm font-semibold text-gray-700">To Be Received</span>
-                                        <span class="relative group cursor-help">
+                                        <span class="fin-tip-wrap">
                                             <span class="material-icons-round text-gray-300 hover:text-gray-500 transition" style="font-size:15px">info_outline</span>
-                                            <span class="absolute left-6 -top-1 w-52 bg-gray-800 text-white text-xs rounded-lg px-3 py-2 hidden group-hover:block z-20 shadow-xl leading-relaxed">
-                                                Completed sales awaiting buyer confirmation or payout processing.
-                                            </span>
+                                            <span class="fin-tip">Completed sales awaiting pickup confirmation or payout processing.</span>
                                         </span>
                                     </div>
                                     <span class="text-base font-bold text-blue-600">${{ number_format($toBeReceived ?? 0, 0) }}</span>
@@ -524,11 +562,9 @@
                                 <div class="flex items-center justify-between py-2">
                                     <div class="flex items-center gap-1.5">
                                         <span class="text-sm font-semibold text-gray-700">Pending Payout</span>
-                                        <span class="relative group cursor-help">
+                                        <span class="fin-tip-wrap">
                                             <span class="material-icons-round text-gray-300 hover:text-gray-500 transition" style="font-size:15px">info_outline</span>
-                                            <span class="absolute left-6 -top-1 w-52 bg-gray-800 text-white text-xs rounded-lg px-3 py-2 hidden group-hover:block z-20 shadow-xl leading-relaxed">
-                                                Funds being processed for payout.
-                                            </span>
+                                            <span class="fin-tip">Funds currently being processed for payout.</span>
                                         </span>
                                     </div>
                                     <span class="text-base font-bold text-amber-600">${{ number_format(collect($pendingPayouts ?? [])->sum('net_payout'), 0) }}</span>
