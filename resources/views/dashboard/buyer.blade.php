@@ -236,6 +236,17 @@
                                                             <p class="font-semibold {{ $statusColor }}">{{ $statusText }}</p>
                                                         </div>
                                                     </div>
+                                                    @php $dashWonCode = ($ps === 'paid' && !$listing->pickup_confirmed) ? $listing->pickupCodeDisplay() : null; @endphp
+                                                    @if($dashWonCode)
+                                                        <div class="flex items-center gap-2 bg-amber-50 border border-amber-300 rounded-lg px-3 py-2 mb-2.5">
+                                                            <span class="material-icons-round text-amber-500 flex-shrink-0" style="font-size:16px">warning</span>
+                                                            <div class="min-w-0">
+                                                                <p class="text-[10px] font-semibold text-amber-700 uppercase tracking-wide leading-none mb-0.5">Your Pickup Code</p>
+                                                                <p class="font-extrabold text-blue-800 font-mono text-sm leading-none">{{ $dashWonCode }}</p>
+                                                                <p class="text-[10px] text-amber-800 mt-0.5">Present to seller at pickup.</p>
+                                                            </div>
+                                                        </div>
+                                                    @endif
                                                     <div class="flex gap-2 flex-wrap">
                                                         @if(($listing->primary_invoice_id ?? null) && $ps === 'paid')
                                                             <a href="{{ route('messaging.thread.show', $listing->primary_invoice_id) }}"
@@ -919,10 +930,25 @@
                                                 <span class="text-lg font-bold text-gray-900">${{ number_format($listing->total_amount_due, 2) }}</span>
                                             </div>
                                         @endif
-                                        <div class="flex items-center gap-2 text-xs text-emerald-600 font-semibold mb-4">
+                                        <div class="flex items-center gap-2 text-xs text-emerald-600 font-semibold mb-3">
                                             <span class="material-icons-round text-sm">check_circle</span>
                                             <span>{{ $statusText }}</span>
                                         </div>
+                                        @php
+                                            $auctionWonCode = (($listing->payment_status ?? '') === 'paid' && !$listing->pickup_confirmed)
+                                                ? $listing->pickupCodeDisplay()
+                                                : null;
+                                        @endphp
+                                        @if($auctionWonCode)
+                                            <div class="rounded-xl border-2 border-amber-300 bg-amber-50 px-4 py-3 mb-3">
+                                                <div class="flex items-center gap-2 mb-1">
+                                                    <span class="material-icons-round text-amber-500" style="font-size:16px">warning</span>
+                                                    <span class="text-xs font-bold text-amber-800 uppercase tracking-wide">Your Pickup Code</span>
+                                                </div>
+                                                <p class="font-extrabold text-blue-800 font-mono text-xl tracking-wider leading-none mb-1">{{ $auctionWonCode }}</p>
+                                                <p class="text-xs text-amber-900 leading-snug">Present this code to the seller at pickup to complete the transaction.</p>
+                                            </div>
+                                        @endif
                                         @php
                                             $checkoutInvoiceId = $listing->pending_invoice_id;
                                             $primaryInvoiceId = $listing->primary_invoice_id ?? null;
