@@ -67,7 +67,7 @@
             ['route' => 'buyer.saved-items', 'icon' => 'bookmark', 'label' => 'Saved Items', 'match_routes' => ['buyer.watchlist', 'watchlist.index']],
             ['route' => 'buyer.notifications', 'icon' => 'notifications', 'label' => 'Notifications'],
             ['route' => 'messaging.index', 'icon' => 'mail', 'label' => 'Messaging Center', 'match_routes' => ['messaging.thread.show', 'buyer.messaging-center', 'buyer.messages']],
-            ['route' => 'buyer.customer-support', 'icon' => 'support_agent', 'label' => 'Customer Support'],
+            ['route' => 'buyer.customer-support', 'icon' => 'support_agent', 'label' => 'Support Center'],
         ];
         $roleLabel = 'Buyer';
         $roleBadge = 'BUYER';

@@ -33,11 +33,11 @@ class SupportTicket extends Model
     const STATUS_CLOSED = 'closed';
 
     public const CATEGORY_OPTIONS_BUYER = [
-        'Account',
+        'Payment',
         'Auctions',
-        'Payments & Deposits',
-        'Disputes',
-        'General Inquiry',
+        'Account',
+        'Vehicle',
+        'Pick Up',
         'Other',
     ];
 
