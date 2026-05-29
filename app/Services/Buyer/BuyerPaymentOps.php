@@ -139,17 +139,24 @@ class BuyerPaymentOps
 
         try {
             \Mail::send('emails.caymark.payment-successful', [
-                'invoice' => $invoice,
-                'buyer' => $buyer,
-                'payment' => $payment,
-                'pickup_code' => $pickupCode,
+                'invoice'              => $invoice,
+                'buyer'                => $buyer,
+                'payment'              => $payment,
+                'pickup_code'          => $pickupCode,
                 'messaging_center_url' => $messagingCenterUrl,
             ], function ($message) use ($buyer, $invoice) {
+                $vehicleName = $invoice->item_name ?? '[Vehicle]';
                 $message->to($buyer->email, $buyer->name)
-                    ->subject('Payment Successful – ' . ($invoice->item_name ?? '[VEHICLE_NAME]'));
+                    ->subject('Payment Confirmed — Your Pickup Code for ' . $vehicleName);
             });
         } catch (\Exception $e) {
-            \Log::error('Failed to send payment success email: ' . $e->getMessage());
+            \Log::error('[PaymentEmail] Failed to send buyer payment confirmation email', [
+                'invoice_id' => $invoice->id,
+                'buyer_id'   => $buyer->id ?? null,
+                'buyer_email'=> $buyer->email ?? null,
+                'error'      => $e->getMessage(),
+                'trace'      => $e->getTraceAsString(),
+            ]);
         }
 
         try {
