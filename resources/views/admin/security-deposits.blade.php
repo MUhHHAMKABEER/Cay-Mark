@@ -3,7 +3,7 @@
 @section('title', 'Security Deposits – Admin')
 
 @section('content')
-<div class="max-w-7xl mx-auto pb-10">
+<div class="pb-10">
 
     <div class="mb-6">
         <h1 class="text-2xl font-bold text-gray-900">Security Deposits</h1>

@@ -610,7 +610,7 @@ header { position: relative !important; box-shadow: none !important; }
             </div>
             @else
             {{-- Stepper + bid form --}}
-            <form action="{{ route('auction.bid.store', $listing->getSlugOrGenerate()) }}" method="POST" id="bidForm" data-cm-validate="off">
+            <form action="{{ route('auction.bid.store', $listing->getSlugOrGenerate()) }}" method="POST" id="bidForm" data-cm-validate="off" novalidate>
                 @csrf
                 <div class="bid-input-row">
                     <button type="button" class="bid-stepper" onclick="adjustBid(-{{ $incrementAmount }})" aria-label="Decrease">−</button>
@@ -1071,13 +1071,42 @@ document.addEventListener('DOMContentLoaded', function(){
     if (!form) return;
     form.addEventListener('submit', function(e){
         e.preventDefault();
-        var amount  = parseFloat(document.getElementById('bidAmount').value);
-        var minBid  = {{ $nextValidBid }};
-        var vehicle = @json(trim(($listing->year??'').' '.($listing->make??'').' '.($listing->model??'')));
-        if (amount < minBid){
-            if(window.CaymarkUI) CaymarkUI.showError('Bid too low','Minimum bid is $'+minBid.toLocaleString());
-            else showBidModal('Minimum bid is $'+minBid.toLocaleString(),false);
+        var amount    = parseFloat(document.getElementById('bidAmount').value);
+        var minBid    = {{ $nextValidBid }};
+        var increment = {{ $incrementAmount }};
+        var vehicle   = @json(trim(($listing->year??'').' '.($listing->make??'').' '.($listing->model??'')));
+
+        // Missing or non-numeric value
+        if (isNaN(amount) || amount === '') {
+            if(window.CaymarkUI) CaymarkUI.showError('Invalid bid', 'Please enter a bid amount.');
+            else showBidModal('Please enter a bid amount.', false);
             return;
+        }
+
+        // Below minimum
+        if (amount < minBid) {
+            if(window.CaymarkUI) CaymarkUI.showError('Bid too low', 'Minimum bid is $' + minBid.toLocaleString());
+            else showBidModal('Minimum bid is $' + minBid.toLocaleString(), false);
+            return;
+        }
+
+        // Step mismatch — value doesn't land on a valid increment
+        if (increment > 0) {
+            var remainder = Math.round((amount - minBid) * 1e9) % Math.round(increment * 1e9);
+            if (remainder !== 0) {
+                var lower = Math.floor((amount - minBid) / increment) * increment + minBid;
+                var upper = lower + increment;
+                if(window.CaymarkUI) CaymarkUI.showError(
+                    'Invalid bid amount',
+                    'Please enter a valid bid. The two nearest valid amounts are $' +
+                    lower.toLocaleString() + ' and $' + upper.toLocaleString() + '.'
+                );
+                else showBidModal(
+                    'Please enter a valid bid. The two nearest valid amounts are $' +
+                    lower.toLocaleString() + ' and $' + upper.toLocaleString() + '.', false
+                );
+                return;
+            }
         }
         var submitBtn = document.getElementById('bidSubmitBtn');
         function placeBid(){
