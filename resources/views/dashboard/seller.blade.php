@@ -345,15 +345,26 @@
                             Welcome back, {{ $user->name }}!
                         </h2>
                         <p class="text-sm text-gray-500 mt-0.5">Here's what's happening with your account today.</p>
+                        @php
+                            // Compute plan expiry: prefer ends_at, fall back to starts_at + package duration_days
+                            $planExpiry = null;
+                            if (isset($activeSubscription) && $activeSubscription) {
+                                if ($activeSubscription->ends_at) {
+                                    $planExpiry = $activeSubscription->ends_at;
+                                } elseif ($activeSubscription->starts_at && optional($activeSubscription->package)->duration_days) {
+                                    $planExpiry = $activeSubscription->starts_at->copy()->addDays($activeSubscription->package->duration_days);
+                                }
+                            }
+                        @endphp
                         <div class="flex flex-col gap-1 mt-3">
                             <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 border border-blue-200 rounded-full text-sm font-semibold text-blue-800 self-start">
                                 <span class="material-icons-round" style="font-size:14px">workspace_premium</span>
                                 Business Seller Plan
                             </span>
-                            @if(isset($activeSubscription) && $activeSubscription && $activeSubscription->ends_at)
+                            @if($planExpiry)
                                 <span class="inline-flex items-center gap-1 text-xs text-gray-500 font-medium pl-1">
                                     <span class="material-icons-round" style="font-size:13px;color:#9ca3af">event</span>
-                                    Expires: {{ $activeSubscription->ends_at->format('M d, Y') }}
+                                    Plan expires: {{ $planExpiry->format('M d, Y') }}
                                 </span>
                             @endif
                         </div>
@@ -968,8 +979,8 @@
                             <div class="flex flex-wrap items-start justify-between gap-4">
                                 <div>
                                     <p class="font-bold text-gray-900 text-base mb-1">Business Seller Plan</p>
-                                    @if(isset($activeSubscription) && $activeSubscription && $activeSubscription->ends_at)
-                                        <p class="text-sm text-gray-500">Plan Expires: <span class="font-semibold text-gray-700">{{ $activeSubscription->ends_at->format('M d, Y') }}</span></p>
+                                    @if($planExpiry ?? null)
+                                        <p class="text-sm text-gray-500">Plan expires: <span class="font-semibold text-gray-700">{{ $planExpiry->format('M d, Y') }}</span></p>
                                     @endif
                                 </div>
                                 <div class="flex flex-col items-end gap-2">

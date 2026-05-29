@@ -287,13 +287,17 @@ class SellerDashboardService
     }
 
     /**
-     * Get the seller's active subscription with package info.
+     * Get the seller's active (or pending) subscription with package info.
+     *
+     * Business Seller subscriptions are created with status='pending' until
+     * the payment is confirmed, so we include 'pending' here for display
+     * purposes (showing plan name + expiry on the dashboard).
      */
     public function getActiveSubscription(User $user): ?object
     {
         return $user->subscriptions()
             ->with('package')
-            ->where('status', 'active')
+            ->whereIn('status', ['active', 'pending'])
             ->where(function ($q) {
                 // Include subscriptions with no end date (unlimited)
                 // and those that haven't expired yet
