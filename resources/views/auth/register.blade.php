@@ -59,7 +59,7 @@
 
         {{-- First + Last name --}}
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
+            <div class="cm-field-wrap">
                 <label for="first_name" class="cm-auth-label">First Name</label>
                 <div class="cm-auth-fieldwrap">
                     <span class="material-symbols-outlined cm-auth-licon">person</span>
@@ -70,7 +70,7 @@
                 </div>
                 @error('first_name')<p class="cm-auth-error"><span class="material-symbols-outlined">error</span>{{ $message }}</p>@enderror
             </div>
-            <div>
+            <div class="cm-field-wrap">
                 <label for="last_name" class="cm-auth-label">Last Name</label>
                 <div class="cm-auth-fieldwrap">
                     <span class="material-symbols-outlined cm-auth-licon">person</span>
@@ -84,7 +84,7 @@
         </div>
 
         {{-- Email --}}
-        <div>
+        <div class="cm-field-wrap">
             <label for="email" class="cm-auth-label">Email Address</label>
             <div class="cm-auth-fieldwrap">
                 <span class="material-symbols-outlined cm-auth-licon">mail</span>
@@ -180,7 +180,7 @@
 
         {{-- Password + Confirm --}}
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
+            <div class="cm-field-wrap">
                 <label for="password" class="cm-auth-label">Password</label>
                 <div class="cm-auth-fieldwrap">
                     <span class="material-symbols-outlined cm-auth-licon">lock</span>
@@ -196,7 +196,7 @@
                 <p class="text-xs mt-1.5" style="color:#9CA3AF">8–15 chars · uppercase · number · special char</p>
                 @error('password')<p class="cm-auth-error"><span class="material-symbols-outlined">error</span>{{ $message }}</p>@enderror
             </div>
-            <div>
+            <div class="cm-field-wrap">
                 <label for="password_confirmation" class="cm-auth-label">Confirm Password</label>
                 <div class="cm-auth-fieldwrap">
                     <span class="material-symbols-outlined cm-auth-licon">lock_reset</span>

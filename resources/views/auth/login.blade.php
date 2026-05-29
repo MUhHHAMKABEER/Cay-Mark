@@ -40,7 +40,7 @@
         @csrf
 
         {{-- Email --}}
-        <div>
+        <div class="cm-field-wrap">
             <label for="email" class="cm-auth-label">Email Address</label>
             <div class="cm-auth-fieldwrap">
                 <span class="material-symbols-outlined cm-auth-licon">mail</span>
@@ -54,7 +54,7 @@
         </div>
 
         {{-- Password --}}
-        <div>
+        <div class="cm-field-wrap">
             <label for="password" class="cm-auth-label">Password</label>
             <div class="cm-auth-fieldwrap">
                 <span class="material-symbols-outlined cm-auth-licon">lock</span>

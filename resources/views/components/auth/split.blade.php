@@ -47,19 +47,28 @@
 .cm-auth-input.is-valid     { border-color:#16A34A; }
 .cm-auth-select             { appearance:none; -webkit-appearance:none; background-image:none; }
 
+/* Icons anchor to the 52px input's centre (top:26px), NOT the wrap centre,
+   so they never shift when the form kit appends a strength meter / error
+   message inside the field wrapper. */
 .cm-auth-licon {
-    position:absolute; left:14px; top:50%; transform:translateY(-50%);
-    color:#9CA3AF; font-size:20px; pointer-events:none;
+    position:absolute; left:14px; top:26px; transform:translateY(-50%);
+    color:#9CA3AF; font-size:20px; pointer-events:none; line-height:1;
 }
 .cm-auth-eye {
-    position:absolute; right:12px; top:50%; transform:translateY(-50%);
+    position:absolute; right:12px; top:26px; transform:translateY(-50%);
     color:#9CA3AF; cursor:pointer; background:none; border:none; padding:4px;
-    display:flex; align-items:center;
+    display:flex; align-items:center; line-height:0;
 }
 .cm-auth-eye:hover { color:#6B7280; }
 .cm-auth-chevron {
-    position:absolute; right:12px; top:50%; transform:translateY(-50%);
-    color:#9CA3AF; font-size:20px; pointer-events:none;
+    position:absolute; right:12px; top:26px; transform:translateY(-50%);
+    color:#9CA3AF; font-size:20px; pointer-events:none; line-height:1;
+}
+/* Material Symbols glyphs must keep their 1:1 box (prevents stretched icons) */
+.cm-auth-licon.material-symbols-outlined,
+.cm-auth-chevron.material-symbols-outlined,
+.cm-auth-eye .material-symbols-outlined {
+    width:20px; text-align:center; font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;
 }
 .cm-auth-error {
     display:flex; align-items:center; gap:4px;
