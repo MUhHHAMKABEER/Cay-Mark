@@ -4,24 +4,9 @@
 
 <x-auth.split maxw="540px">
 
-    {{-- ══ Step indicator (1 Create Account · 2 Select Membership · 3 Verify & Pay) ══ --}}
+    {{-- ══ Step indicator ══ --}}
     <div class="mb-8">
-        <div class="cm-step-row">
-            <div class="cm-step">
-                <div class="cm-step-dot is-active">1</div>
-                <span class="cm-step-label is-active">Create Account</span>
-            </div>
-            <div class="cm-step-line"></div>
-            <div class="cm-step">
-                <div class="cm-step-dot is-upcoming">2</div>
-                <span class="cm-step-label is-upcoming">Select Membership</span>
-            </div>
-            <div class="cm-step-line"></div>
-            <div class="cm-step">
-                <div class="cm-step-dot is-upcoming">3</div>
-                <span class="cm-step-label is-upcoming">Verify &amp; Pay</span>
-            </div>
-        </div>
+        <x-auth.stepper :current="1" />
     </div>
 
     {{-- Heading --}}

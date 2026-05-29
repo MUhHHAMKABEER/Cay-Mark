@@ -96,20 +96,6 @@
 .cm-auth-divider   { display:flex; align-items:center; gap:12px; color:#9CA3AF; font-size:13px; }
 .cm-auth-divider::before, .cm-auth-divider::after { content:''; flex:1; height:1px; background:#E2E5E9; }
 
-/* ----- step indicator ----- */
-.cm-step-row     { display:flex; align-items:flex-start; }
-.cm-step         { display:flex; flex-direction:column; align-items:center; gap:6px; flex-shrink:0; width:84px; text-align:center; }
-.cm-step-dot     { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; transition:all .2s ease; }
-.cm-step-dot.is-upcoming  { background:#fff; border:2px solid #E2E5E9; color:#9CA3AF; }
-.cm-step-dot.is-active    { background:#1B3A6B; border:2px solid #1B3A6B; color:#fff; }
-.cm-step-dot.is-done      { background:#C8A84B; border:2px solid #C8A84B; color:#fff; }
-.cm-step-label   { font-size:11.5px; font-weight:600; line-height:1.2; }
-.cm-step-label.is-upcoming{ color:#9CA3AF; }
-.cm-step-label.is-active  { color:#1B3A6B; }
-.cm-step-label.is-done    { color:#C8A84B; }
-.cm-step-line    { flex:1; height:2px; background:#E2E5E9; margin-top:17px; }
-.cm-step-line.is-done { background:#C8A84B; }
-
 /* ----- animations ----- */
 @keyframes cmShake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)} 40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} }
 .cm-shake { animation:cmShake .4s ease; }

@@ -12,38 +12,8 @@
     <div class="max-w-3xl mx-auto">
 
         {{-- ── Step progress ─────────────────────────────────────── --}}
-        <div class="mb-10">
-            <div class="flex items-center gap-0 max-w-lg mx-auto">
-                @php
-                $stepsC = [
-                    ['n'=>'1','label'=>'Account','done'=>true,'active'=>false],
-                    ['n'=>'2','label'=>'Role & Plan','done'=>true,'active'=>false],
-                    ['n'=>'3','label'=>'Verify & Complete','done'=>false,'active'=>true],
-                ];
-                @endphp
-                @foreach($stepsC as $i => $st)
-                <div class="flex items-center {{ $i < count($stepsC)-1 ? 'flex-1' : '' }}">
-                    <div class="flex items-center gap-2 flex-shrink-0">
-                        <div class="w-8 h-8 flex items-center justify-center text-xs font-bold
-                                    {{ $st['done'] ? 'bg-secondary-fixed-dim text-primary' : ($st['active'] ? 'bg-primary text-white' : 'bg-gray-200 text-gray-400') }}"
-                             style="border-radius:0">
-                            @if($st['done'])
-                                <span class="material-symbols-outlined text-[14px]">check</span>
-                            @else
-                                {{ $st['n'] }}
-                            @endif
-                        </div>
-                        <span class="text-xs font-bold uppercase tracking-widest hidden sm:block
-                                     {{ $st['active'] ? 'text-primary' : ($st['done'] ? 'text-secondary-fixed-dim' : 'text-gray-400') }}">
-                            {{ $st['label'] }}
-                        </span>
-                    </div>
-                    @if($i < count($stepsC)-1)
-                        <div class="flex-1 h-px mx-3 {{ $st['done'] ? 'bg-secondary-fixed-dim' : 'bg-gray-200' }}"></div>
-                    @endif
-                </div>
-                @endforeach
-            </div>
+        <div class="mb-10 flex justify-center">
+            <x-auth.stepper :current="3" />
         </div>
 
         <div class="text-center mb-10">
