@@ -336,8 +336,12 @@
         if (e.key === 'Escape') killPortal();
     });
 
-    /* Scroll or resize → close (stale position would misalign panel) */
-    window.addEventListener('scroll', killPortal, true);
+    /* Scroll → close ONLY when the scroll happens outside the portal.
+       Scrolling inside the portal list must NOT close it. */
+    window.addEventListener('scroll', function (e) {
+        if (_portal && _portal.contains(e.target)) return; // internal scroll — ignore
+        killPortal();
+    }, true);
     window.addEventListener('resize', killPortal);
 
     /* ── Init ──────────────────────────────────────────────────── */

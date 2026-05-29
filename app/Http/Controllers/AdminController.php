@@ -801,6 +801,18 @@ class AdminController extends Controller
                             $p->whereNotIn('status', ['sent', 'paid_successfully']);
                         });
                 });
+        } elseif ($tab === 'ready_for_payout') {
+            // Payment received + pickup confirmed + payout not yet sent
+            $query->where('payment_status', 'paid')
+                ->whereHas('listing', function ($l) {
+                    $l->where('pickup_confirmed', true);
+                })
+                ->where(function ($q) {
+                    $q->whereDoesntHave('payout')
+                        ->orWhereHas('payout', function ($p) {
+                            $p->whereNotIn('status', ['sent', 'paid_successfully']);
+                        });
+                });
         } elseif ($tab === 'closed') {
             $query->whereHas('payout', function ($p) {
                 $p->whereIn('status', ['sent', 'paid_successfully']);

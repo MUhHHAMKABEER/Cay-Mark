@@ -230,11 +230,15 @@ class Invoice extends Model
             }
 
             if ($payout && in_array($payout->status, ['sent', 'paid_successfully'], true)) {
+                // All date fields are parsed through Carbon::parse() to handle both
+                // string and Carbon instances (completed_at may not be cast in the model).
                 $dateForLabel = $payout->completed_at
-                    ? $payout->completed_at->format('M j, Y')
+                    ? \Carbon\Carbon::parse($payout->completed_at)->format('M j, Y')
                     : ($payout->date_sent
                         ? \Carbon\Carbon::parse($payout->date_sent)->format('M j, Y')
-                        : ($payout->payout_processed_at?->format('M j, Y') ?? now()->format('M j, Y')));
+                        : ($payout->payout_processed_at
+                            ? \Carbon\Carbon::parse($payout->payout_processed_at)->format('M j, Y')
+                            : now()->format('M j, Y')));
 
                 return [
                     'key' => 'closed',
