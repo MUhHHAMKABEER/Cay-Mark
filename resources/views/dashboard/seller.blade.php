@@ -968,7 +968,7 @@
                             <div class="flex flex-wrap items-start justify-between gap-4">
                                 <div>
                                     <p class="font-bold text-gray-900 text-base mb-1">Business Seller Plan</p>
-                                    @if(isset($activeSubscription) && $activeSubscription)
+                                    @if(isset($activeSubscription) && $activeSubscription && $activeSubscription->ends_at)
                                         <p class="text-sm text-gray-500">Plan Expires: <span class="font-semibold text-gray-700">{{ $activeSubscription->ends_at->format('M d, Y') }}</span></p>
                                     @endif
                                 </div>
