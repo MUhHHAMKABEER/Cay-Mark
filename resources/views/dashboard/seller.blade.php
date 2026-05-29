@@ -802,7 +802,9 @@
                     $emailPending    = session('email_change_pending') || $emailSvc->hasPendingChange($user);
                     $emailPendingNew = session('email_change_new') ?? $emailSvc->getPendingNewEmail($user);
                     // Show Renew button only within 30 days of expiry or already expired
+                    // ends_at may be null (no-expiry subscription) — skip the date check in that case
                     $showRenew = isset($activeSubscription) && $activeSubscription &&
+                                 $activeSubscription->ends_at &&
                                  $activeSubscription->ends_at->diffInDays(now(), false) >= -30;
                 @endphp
 
