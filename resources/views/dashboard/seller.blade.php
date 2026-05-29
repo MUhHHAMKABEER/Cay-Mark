@@ -303,14 +303,14 @@
                             Welcome back, {{ $user->name }}!
                         </h2>
                         <p class="text-sm text-gray-500 mt-0.5">Here's what's happening with your account today.</p>
-                        <div class="flex flex-wrap items-center gap-3 mt-3">
-                            <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 border border-blue-200 rounded-full text-sm font-semibold text-blue-800">
+                        <div class="flex flex-col gap-1 mt-3">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 border border-blue-200 rounded-full text-sm font-semibold text-blue-800 self-start">
                                 <span class="material-icons-round" style="font-size:14px">workspace_premium</span>
                                 Business Seller Plan
                             </span>
-                            @if(isset($activeSubscription) && $activeSubscription)
-                                <span class="inline-flex items-center gap-1.5 text-sm text-gray-600 font-medium">
-                                    <span class="material-icons-round text-gray-400" style="font-size:14px">event</span>
+                            @if(isset($activeSubscription) && $activeSubscription && $activeSubscription->ends_at)
+                                <span class="inline-flex items-center gap-1 text-xs text-gray-500 font-medium pl-1">
+                                    <span class="material-icons-round" style="font-size:13px;color:#9ca3af">event</span>
                                     Expires: {{ $activeSubscription->ends_at->format('M d, Y') }}
                                 </span>
                             @endif
