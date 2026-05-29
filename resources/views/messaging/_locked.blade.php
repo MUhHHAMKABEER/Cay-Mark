@@ -60,14 +60,29 @@
         </div>
     </div>
 
-    <div style="background:#fef3c7; border:1px solid #fbbf24; border-radius: 14px; padding: 1.5rem; text-align:center; color:#92400e;">
-        <span class="material-icons-round" style="font-size: 2.5rem; color:#d97706;">lock_clock</span>
-        <h3 style="font-weight: 700; margin: 0.5rem 0; font-size: 1.05rem;">Awaiting payment from buyer</h3>
-        <p style="font-size: 0.875rem; max-width: 480px; margin: 0 auto;">Messaging will unlock once payment is completed. The buyer's identity and pickup coordination will then be available here.</p>
-        @if (! $isSeller && $invoice && $invoice->payment_status !== 'paid')
-            <a href="{{ route('buyer.payment.checkout-single', $invoice->id) }}" style="display:inline-block; margin-top: 1rem; background:#2563eb; color:#fff; padding: 0.625rem 1.25rem; border-radius: 10px; text-decoration: none; font-weight:600; font-size: 0.875rem;">
-                Complete Payment to Unlock
+    @if ($isSeller)
+    {{-- SELLER: waiting for buyer to pay --}}
+    <div style="background:#fef3c7; border:1px solid #fbbf24; border-radius:14px; padding:1.5rem; text-align:center; color:#92400e;">
+        <span class="material-icons-round" style="font-size:2.5rem; color:#d97706;">lock_clock</span>
+        <h3 style="font-weight:700; margin:0.5rem 0; font-size:1.05rem;">Awaiting payment from buyer</h3>
+        <p style="font-size:0.875rem; max-width:480px; margin:0 auto;">
+            Messaging will unlock once payment is completed.
+        </p>
+    </div>
+    @else
+    {{-- BUYER: prompt to complete payment --}}
+    <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:14px; padding:1.5rem; text-align:center; color:#1e40af;">
+        <span class="material-icons-round" style="font-size:2.5rem; color:#2563eb;">payment</span>
+        <h3 style="font-weight:700; margin:0.5rem 0; font-size:1.05rem;">Please complete your payment</h3>
+        <p style="font-size:0.875rem; max-width:480px; margin:0 auto; color:#1e40af;">
+            Complete your payment to unlock communication with the seller and coordinate vehicle pickup.
+        </p>
+        @if ($invoice && $invoice->payment_status !== 'paid')
+            <a href="{{ route('buyer.payment.checkout-single', $invoice->id) }}"
+               style="display:inline-block; margin-top:1rem; background:#2563eb; color:#fff; padding:0.625rem 1.5rem; border-radius:10px; text-decoration:none; font-weight:600; font-size:0.875rem;">
+                Complete Payment
             </a>
         @endif
     </div>
+    @endif
 </div>

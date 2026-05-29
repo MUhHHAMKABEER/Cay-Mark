@@ -126,6 +126,21 @@ class InvoiceService
                 ]);
             }
 
+            // Create locked messaging thread immediately so both parties see it
+            // in the Messaging Center before payment is confirmed.
+            // is_unlocked = false keeps it in the "awaiting payment" locked state.
+            // BuyerPaymentOps::unlockPostAuctionThread() will flip it to true on payment.
+            \App\Models\PostAuctionThread::firstOrCreate(
+                ['invoice_id' => $invoice->id],
+                [
+                    'listing_id'  => $listing->id,
+                    'buyer_id'    => $buyer->id,
+                    'seller_id'   => $seller->id,
+                    'is_unlocked' => false,
+                    'unlocked_at' => null,
+                ]
+            );
+
             // NOTE: Payout is NOT created here anymore
             // Payout is created AFTER seller confirms pickup with PIN (per PDF requirements)
 

@@ -423,12 +423,12 @@
                             </div>
                             <div class="divide-y divide-gray-100">
                                 @foreach([
-                                    ['icon' => 'help_outline',   'label' => 'View FAQ'],
-                                    ['icon' => 'gavel',          'label' => 'Auction Guide'],
-                                    ['icon' => 'person_outline', 'label' => 'Buyer Guide'],
-                                    ['icon' => 'info_outline',   'label' => 'How Auctions Work'],
+                                    ['icon' => 'help_outline',   'label' => 'View FAQ',           'url' => route('help-center')],
+                                    ['icon' => 'gavel',          'label' => 'Auction Guide',       'url' => '#'],
+                                    ['icon' => 'person_outline', 'label' => 'Buyer Guide',         'url' => route('buyer-guide')],
+                                    ['icon' => 'info_outline',   'label' => 'How Auctions Work',   'url' => route('video-guide')],
                                 ] as $help)
-                                    <a href="#" class="flex items-center justify-between px-5 py-3 hover:bg-gray-50 transition group">
+                                    <a href="{{ $help['url'] }}" class="flex items-center justify-between px-5 py-3 hover:bg-gray-50 transition group {{ $help['url'] === '#' ? 'opacity-50 cursor-not-allowed pointer-events-none' : '' }}">
                                         <div class="flex items-center gap-3">
                                             <span class="material-icons-round text-gray-400 group-hover:text-blue-600 transition" style="font-size:18px">{{ $help['icon'] }}</span>
                                             <span class="text-sm text-gray-700 font-medium group-hover:text-blue-600 transition">{{ $help['label'] }}</span>
@@ -1409,12 +1409,12 @@
                             </div>
                             <div class="divide-y divide-gray-100">
                                 @foreach([
-                                    ['icon' => 'help_outline',   'label' => 'View FAQ'],
-                                    ['icon' => 'gavel',          'label' => 'Auction Guide'],
-                                    ['icon' => 'person_outline', 'label' => 'Buyer Guide'],
-                                    ['icon' => 'info_outline',   'label' => 'How Auctions Work'],
+                                    ['icon' => 'help_outline',   'label' => 'View FAQ',           'url' => route('help-center')],
+                                    ['icon' => 'gavel',          'label' => 'Auction Guide',       'url' => '#'],
+                                    ['icon' => 'person_outline', 'label' => 'Buyer Guide',         'url' => route('buyer-guide')],
+                                    ['icon' => 'info_outline',   'label' => 'How Auctions Work',   'url' => route('video-guide')],
                                 ] as $help)
-                                    <a href="#" class="flex items-center justify-between px-5 py-3 hover:bg-gray-50 transition group">
+                                    <a href="{{ $help['url'] }}" class="flex items-center justify-between px-5 py-3 hover:bg-gray-50 transition group {{ $help['url'] === '#' ? 'opacity-50 cursor-not-allowed pointer-events-none' : '' }}">
                                         <div class="flex items-center gap-3">
                                             <span class="material-icons-round text-gray-400 group-hover:text-blue-600 transition" style="font-size:18px">{{ $help['icon'] }}</span>
                                             <span class="text-sm text-gray-700 font-medium group-hover:text-blue-600 transition">{{ $help['label'] }}</span>
