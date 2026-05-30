@@ -155,6 +155,36 @@ class InvoiceService
     }
 
     /**
+     * Stamp a no-winner ended auction so it:
+     * 1. Stops being re-queued by processEndedAuctions on every run.
+     * 2. Immediately leaves the seller's Current/Active tab (listing_state=expired).
+     * 3. Has an explicit auction_end_time so SQL range queries work correctly.
+     */
+    private function stampNoSaleOutcome(Listing $listing): void
+    {
+        try {
+            $computedEnd = $listing->getAuctionEndDate();
+            $listing->listing_state    = 'expired';
+            // Set explicit end time if not already stored, so scope SQL comparisons work
+            if (! $listing->auction_end_time && $computedEnd) {
+                $listing->auction_end_time = $computedEnd;
+            }
+            $listing->save();
+
+            Log::info('[processEndedAuctions] No-sale outcome stamped', [
+                'listing_id' => $listing->id,
+                'listing_state' => 'expired',
+                'auction_end_time' => $listing->auction_end_time?->toDateTimeString(),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('[processEndedAuctions] Failed to stamp no-sale outcome', [
+                'listing_id' => $listing->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
      * Generate PDF invoice file (per PDF requirements).
      * File naming: CAYMARK_INVOICE_[ITEMID]_[DATE].PDF
      * 
@@ -301,11 +331,27 @@ class InvoiceService
                 ->first();
 
             if (!$winningBid) {
-                Log::warning('[processEndedAuctions] No winning bid (no active bids)', [
+                Log::warning('[processEndedAuctions] No winning bid (no active bids) – marking as no-sale', [
                     'listing_id' => $listing->id,
                     'item_number' => $listing->item_number,
                     'total_bids' => $listing->bids()->count(),
                 ]);
+                // Stamp end time + mark expired so this listing exits Current tab
+                $this->stampNoSaleOutcome($listing);
+
+                // Notify seller
+                try {
+                    if ($listing->seller) {
+                        (new \App\Services\NotificationService())->auctionEndedReserveNotMet(
+                            $listing->seller, $listing, 0, 0
+                        );
+                    }
+                } catch (\Exception $e) {
+                    Log::error('[processEndedAuctions] Failed to send no-bids notification', [
+                        'listing_id' => $listing->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
                 continue;
             }
 
@@ -313,13 +359,16 @@ class InvoiceService
             $winningAmount = (float) $winningBid->amount;
 
             if ($reservePrice && $winningAmount < $reservePrice) {
-                Log::warning('[processEndedAuctions] Reserve price not met – skipping invoice', [
+                Log::warning('[processEndedAuctions] Reserve price not met – marking as no-sale', [
                     'listing_id' => $listing->id,
                     'item_number' => $listing->item_number,
                     'winning_amount' => $winningAmount,
                     'reserve_price' => $reservePrice,
                     'buyer_id' => $winningBid->user_id,
                 ]);
+                // Stamp the computed end time so SQL comparisons work going forward,
+                // and mark listing_state=expired so it leaves the Current tab immediately.
+                $this->stampNoSaleOutcome($listing);
                 try {
                     $notificationService = new \App\Services\NotificationService();
                     $notificationService->auctionEndedReserveNotMet($listing->seller, $listing, $winningAmount, $reservePrice);

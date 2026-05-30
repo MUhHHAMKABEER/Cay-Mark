@@ -70,6 +70,9 @@ Route::prefix('seller')->name('seller.')->middleware(['auth', 'seller'])->group(
     
     // VIN/HIN Decoder endpoint
     Route::post('decode-vin-hin', [ListingController::class, 'decodeVinHin'])->name('listings.decode-vin-hin');
+
+    // A22 — Business Seller free relist within 48 hours
+    Route::post('listings/{id}/relist', [ListingController::class, 'relistListing'])->name('listings.relist');
     
     // Support
     Route::post('support/submit', [SupportController::class, 'store'])->name('support.submit');

@@ -434,6 +434,10 @@ header { box-shadow: none !important; }
             <table class="spec-table">
                 <tbody>
                     <tr>
+                        <td class="spec-key">Item ID</td>
+                        <td class="spec-val" style="font-family:monospace">{{ $listing->item_number ?? ('CM' . str_pad($listing->id, 6, '0', STR_PAD_LEFT)) }}</td>
+                    </tr>
+                    <tr>
                         <td class="spec-key">Title code</td>
                         <td class="spec-val">
                             <span class="spec-pill">{{ $listing->title_status_display ?? 'Clean Title' }}</span>
@@ -494,8 +498,20 @@ header { box-shadow: none !important; }
                         <td class="spec-val">{{ strtoupper($listing->fuel_type ?? 'N/A') }}</td>
                     </tr>
                     <tr>
-                        <td class="spec-key">Color</td>
+                        <td class="spec-key">Ext. Color</td>
                         <td class="spec-val">{{ $listing->color ? strtoupper($listing->color) : 'N/A' }}</td>
+                    </tr>
+                    <tr>
+                        <td class="spec-key">Int. Color</td>
+                        <td class="spec-val">{{ $listing->interior_color ? strtoupper($listing->interior_color) : 'N/A' }}</td>
+                    </tr>
+                    <tr>
+                        <td class="spec-key">Body style</td>
+                        <td class="spec-val">{{ $listing->body_style ?? $listing->subcategory ?? 'N/A' }}</td>
+                    </tr>
+                    <tr>
+                        <td class="spec-key">Cylinders</td>
+                        <td class="spec-val">{{ $listing->cylinders ?? 'N/A' }}</td>
                     </tr>
                     <tr>
                         <td class="spec-key">Sale date</td>

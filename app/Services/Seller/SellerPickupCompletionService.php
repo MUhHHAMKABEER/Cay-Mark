@@ -150,7 +150,7 @@ class SellerPickupCompletionService
                     'listing' => $listing,
                 ], function ($message) use ($seller) {
                     $message->to($seller->email, $seller->name)
-                        ->subject('Payout Processing Started');
+                        ->subject('Your Payout Is Processing — CayMark');
                 });
             } catch (\Throwable $e) {
                 Log::error('Payout-processing email failed: '.$e->getMessage(), [

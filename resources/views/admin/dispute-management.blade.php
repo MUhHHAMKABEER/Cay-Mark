@@ -1,224 +1,200 @@
 @extends('layouts.admin')
-
-@section('title', 'Dispute Management - Admin')
-
+@section('title', 'Dispute Management — Admin')
 @section('content')
-<div class="bg-gray-50 min-h-screen">
-    <!-- Header -->
-    <div class="bg-white shadow-sm mb-6 rounded-lg p-6">
-        <h1 class="text-3xl font-bold text-gray-900">Dispute Management</h1>
-        <p class="text-gray-600 mt-2">Manage all platform disputes</p>
-    </div>
+<style>
+    :root{--navy:#063466;--navy-light:#e8eef6;}
+    .dm-header{background:#fff;border-radius:12px;padding:1.5rem 1.75rem;margin-bottom:1.5rem;border-left:4px solid var(--navy);box-shadow:0 1px 4px rgba(6,52,102,.07);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem}
+    .dm-header h1{font-size:1.35rem;font-weight:700;color:var(--navy);margin:0 0 .2rem;display:flex;align-items:center;gap:8px}
+    .dm-header h1 .material-icons-round{font-size:1.3rem}
+    .dm-header p{margin:0;color:#64748b;font-size:.875rem}
+    .dm-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin-bottom:1.5rem}
+    .dm-stat{background:#fff;border-radius:12px;padding:1.25rem 1.5rem;box-shadow:0 1px 4px rgba(6,52,102,.07);display:flex;align-items:center;gap:1rem}
+    .dm-stat-ico{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .dm-stat-ico .material-icons-round{font-size:22px}
+    .dm-stat-lbl{font-size:.72rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.05em}
+    .dm-stat-val{font-size:1.75rem;font-weight:700;color:#0f172a;line-height:1.1;margin-top:2px}
+    .dm-filter-bar{background:#fff;border-radius:12px;padding:1rem 1.25rem;margin-bottom:1.25rem;box-shadow:0 1px 4px rgba(6,52,102,.07);display:flex;flex-wrap:wrap;gap:.75rem;align-items:center}
+    .dm-filter-bar input,.dm-filter-bar select{height:38px;padding:0 .85rem;border:1px solid #d1d5db;border-radius:8px;font-size:.875rem;color:#374151;background:#f9fafb;outline:none}
+    .dm-filter-bar input:focus,.dm-filter-bar select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(6,52,102,.1);background:#fff}
+    .dm-filter-bar input{min-width:220px;flex:1}
+    .dm-btn{height:38px;padding:0 1.1rem;background:var(--navy);color:#fff;border:none;border-radius:8px;font-size:.875rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+    .dm-btn:hover{background:#074585}
+    .dm-btn-light{background:#f1f5f9;color:#475569;border:1.5px solid #e2e8f0;text-decoration:none}
+    .dm-btn-light:hover{background:#e2e8f0}
+    .dm-card{background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(6,52,102,.07);overflow:hidden}
+    .dm-card-hdr{padding:1rem 1.5rem;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between}
+    .dm-card-hdr h2{font-size:.9375rem;font-weight:700;color:#0f172a;margin:0;display:flex;align-items:center;gap:6px}
+    .dm-card-hdr h2 .material-icons-round{font-size:18px;color:var(--navy)}
+    .dm-count{font-size:.75rem;font-weight:600;color:var(--navy);background:var(--navy-light);padding:2px 10px;border-radius:999px}
+    .dm-table{width:100%;border-collapse:collapse}
+    .dm-table thead th{padding:.75rem 1.25rem;text-align:left;font-size:.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#64748b;background:#f8fafc;border-bottom:1px solid #f1f5f9;white-space:nowrap}
+    .dm-table tbody tr{border-bottom:1px solid #f8fafc;transition:background .1s}
+    .dm-table tbody tr:last-child{border-bottom:none}
+    .dm-table tbody tr:hover{background:#fafbfc}
+    .dm-table tbody td{padding:.875rem 1.25rem;font-size:.875rem;color:#374151;vertical-align:middle}
+    .dm-badge{display:inline-flex;align-items:center;gap:4px;font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:999px}
+    .dm-badge--open{background:#fee2e2;color:#dc2626}
+    .dm-badge--resolved{background:#dcfce7;color:#15803d}
+    .dm-badge--flagged{background:#fef9c3;color:#a16207}
+    .dm-avatar{width:30px;height:30px;border-radius:50%;background:var(--navy-light);color:var(--navy);font-weight:700;font-size:.8rem;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .dm-empty{text-align:center;padding:3.5rem 1rem;color:#94a3b8}
+    .dm-empty .material-icons-round{font-size:48px;display:block;margin-bottom:.75rem;opacity:.4}
+    .dm-empty p{margin:0;font-size:.9375rem}
+    .dm-pagination{padding:1rem 1.25rem;border-top:1px solid #f1f5f9}
+    .dm-flag-reason{font-size:.75rem;color:#a16207;background:#fef9c3;border-radius:5px;padding:2px 7px;font-weight:600;max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+</style>
 
-    <!-- Dispute Stats -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600">Total Disputes</p>
-                    <p class="text-2xl font-bold text-gray-900 mt-1">{{ $disputeStats['total'] ?? 0 }}</p>
-                </div>
-                <div class="p-3 bg-blue-100 rounded-full">
-                    <i class="fas fa-gavel text-blue-600 text-xl"></i>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600">Open</p>
-                    <p class="text-2xl font-bold text-red-600 mt-1">{{ $disputeStats['open'] ?? 0 }}</p>
-                </div>
-                <div class="p-3 bg-red-100 rounded-full">
-                    <i class="fas fa-exclamation-circle text-red-600 text-xl"></i>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600">In Progress</p>
-                    <p class="text-2xl font-bold text-yellow-600 mt-1">{{ $disputeStats['in_progress'] ?? 0 }}</p>
-                </div>
-                <div class="p-3 bg-yellow-100 rounded-full">
-                    <i class="fas fa-clock text-yellow-600 text-xl"></i>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600">Resolved</p>
-                    <p class="text-2xl font-bold text-green-600 mt-1">{{ $disputeStats['resolved'] ?? 0 }}</p>
-                </div>
-                <div class="p-3 bg-green-100 rounded-full">
-                    <i class="fas fa-check-circle text-green-600 text-xl"></i>
-                </div>
-            </div>
+<div>
+    <div class="dm-header">
+        <div>
+            <h1><span class="material-icons-round">gavel</span> Dispute Management</h1>
+            <p>Flagged post-auction threads requiring admin review</p>
         </div>
     </div>
 
-    <!-- Filters and Search (JS client-side) -->
-    <div class="bg-white rounded-lg shadow mb-6 p-6">
-        <form class="js-admin-filter-form flex flex-wrap gap-4" data-admin-filter-target="#disputes-tbody">
-            <div class="flex-1 min-w-[200px]">
-                <input type="text" name="search" placeholder="Search by ID, buyer, or seller..." 
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-            </div>
-            <div>
-                <select name="status" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                    <option value="">All Status</option>
-                    <option value="open">Open</option>
-                    <option value="in_progress">In Progress</option>
-                    <option value="resolved">Resolved</option>
-                    <option value="escalated">Escalated</option>
-                </select>
-            </div>
-            <div>
-                <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-                    <i class="fas fa-search mr-2"></i>Filter
-                </button>
-            </div>
-            <div>
-                <a href="{{ route('admin.disputes') }}" data-admin-filter-clear class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">Clear</a>
-            </div>
-        </form>
+    {{-- Stats --}}
+    <div class="dm-stats">
+        <div class="dm-stat">
+            <div class="dm-stat-ico" style="background:#e8eef6;color:#063466"><span class="material-icons-round">flag</span></div>
+            <div><div class="dm-stat-lbl">Total Flagged</div><div class="dm-stat-val">{{ $disputeStats['total'] }}</div></div>
+        </div>
+        <div class="dm-stat">
+            <div class="dm-stat-ico" style="background:#fee2e2;color:#dc2626"><span class="material-icons-round">error</span></div>
+            <div><div class="dm-stat-lbl">Open</div><div class="dm-stat-val">{{ $disputeStats['open'] }}</div></div>
+        </div>
+        <div class="dm-stat">
+            <div class="dm-stat-ico" style="background:#fef9c3;color:#a16207"><span class="material-icons-round">pending</span></div>
+            <div><div class="dm-stat-lbl">In Progress</div><div class="dm-stat-val">{{ $disputeStats['in_progress'] }}</div></div>
+        </div>
+        <div class="dm-stat">
+            <div class="dm-stat-ico" style="background:#dcfce7;color:#16a34a"><span class="material-icons-round">check_circle</span></div>
+            <div><div class="dm-stat-lbl">Resolved</div><div class="dm-stat-val">{{ $disputeStats['resolved'] }}</div></div>
+        </div>
     </div>
 
-    <!-- Disputes Table -->
-    <div class="bg-white rounded-lg shadow overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-200">
-            <h2 class="text-xl font-semibold text-gray-900">All Disputes</h2>
+    {{-- Filter bar --}}
+    <form method="GET" action="{{ route('admin.disputes') }}" class="dm-filter-bar">
+        <input type="search" name="search" placeholder="Search buyer, seller, or item…" value="{{ request('search') }}">
+        <select name="status" onchange="this.form.submit()">
+            <option value="">All Flagged</option>
+            <option value="open"     @selected(request('status')==='open')>Open / Unresolved</option>
+            <option value="resolved" @selected(request('status')==='resolved')>Resolved</option>
+        </select>
+        <button type="submit" class="dm-btn"><span class="material-icons-round" style="font-size:16px">search</span> Filter</button>
+        @if(request()->hasAny(['search','status']))
+            <a href="{{ route('admin.disputes') }}" class="dm-btn dm-btn-light" style="display:inline-flex;align-items:center">
+                <span class="material-icons-round" style="font-size:15px">close</span> Clear
+            </a>
+        @endif
+    </form>
+
+    {{-- Table --}}
+    <div class="dm-card">
+        <div class="dm-card-hdr">
+            <h2><span class="material-icons-round">flag</span> Flagged Transactions</h2>
+            <span class="dm-count">{{ $disputes->total() }} total</span>
         </div>
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
+        <div style="overflow-x:auto">
+            <table class="dm-table">
+                <thead><tr>
+                    <th>ID</th>
+                    <th>Item</th>
+                    <th>Buyer</th>
+                    <th>Seller</th>
+                    <th>Reason</th>
+                    <th>Exchanges</th>
+                    <th>Flagged</th>
+                    <th>Status</th>
+                    <th style="text-align:right">Action</th>
+                </tr></thead>
+                <tbody>
+                    @forelse($disputes as $d)
+                    @php
+                        $vehicle = $d->listing
+                            ? trim(($d->listing->year ?? '').' '.($d->listing->make ?? '').' '.($d->listing->model ?? ''))
+                            : 'Listing #'.($d->listing_id ?? '—');
+                        $itemId  = $d->listing?->item_number ?? ('CM'.str_pad($d->listing_id ?? 0,6,'0',STR_PAD_LEFT));
+                        $isResolved = $d->pickup_confirmed;
+                    @endphp
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Buyer</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Seller</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="disputes-tbody" class="bg-white divide-y divide-gray-200">
-                    @forelse($disputes as $dispute)
-                    <tr class="hover:bg-gray-50" data-filter-search="{{ strtolower(($dispute->id ?? '') . ' ' . ($dispute->buyer->name ?? '') . ' ' . ($dispute->buyer->email ?? '') . ' ' . ($dispute->seller->name ?? '') . ' ' . ($dispute->seller->email ?? '')) }}" data-filter-status="{{ strtolower($dispute->status ?? '') }}">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            #{{ $dispute->id ?? 'N/A' }}
+                        <td style="font-family:monospace;font-size:.8rem;color:var(--navy)">{{ $itemId }}</td>
+                        <td>
+                            <div style="font-weight:600;color:#0f172a;font-size:.875rem">{{ $vehicle }}</div>
+                            @if($d->listing?->images?->first())
+                                <div style="font-size:.72rem;color:#94a3b8;margin-top:2px">Has photos</div>
+                            @endif
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900">{{ $dispute->buyer->name ?? 'N/A' }}</div>
-                            <div class="text-xs text-gray-500">{{ $dispute->buyer->email ?? 'N/A' }}</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900">{{ $dispute->seller->name ?? 'N/A' }}</div>
-                            <div class="text-xs text-gray-500">{{ $dispute->seller->email ?? 'N/A' }}</div>
-                        </td>
-                        <td class="px-6 py-4">
-                            <div class="text-sm font-medium text-gray-900">{{ $dispute->listing->item_number ?? 'Listing #' . ($dispute->listing_id ?? 'N/A') }}</div>
-                            <div class="text-xs text-gray-500">{{ $dispute->listing->make ?? '' }} {{ $dispute->listing->model ?? '' }}</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
-                                {{ ucfirst($dispute->type ?? 'N/A') }}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full
-                                {{ ($dispute->status ?? '') === 'open' ? 'bg-red-100 text-red-800' : '' }}
-                                {{ ($dispute->status ?? '') === 'in_progress' ? 'bg-yellow-100 text-yellow-800' : '' }}
-                                {{ ($dispute->status ?? '') === 'resolved' ? 'bg-green-100 text-green-800' : '' }}
-                                {{ ($dispute->status ?? '') === 'escalated' ? 'bg-purple-100 text-purple-800' : '' }}
-                                {{ !in_array($dispute->status ?? '', ['open', 'in_progress', 'resolved', 'escalated']) ? 'bg-gray-100 text-gray-800' : '' }}">
-                                {{ ucfirst(str_replace('_', ' ', $dispute->status ?? 'N/A')) }}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {{ $dispute->created_at->format('M j, Y') ?? 'N/A' }}<br>
-                            <span class="text-xs">{{ $dispute->created_at->format('g:i A') ?? '' }}</span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <div class="flex space-x-2">
-                                <a href="{{ route('admin.disputes.view', $dispute->id ?? 0) }}" 
-                                    class="text-blue-600 hover:text-blue-900" title="View Details">
-                                    <i class="fas fa-eye"></i>
-                                </a>
+                        <td>
+                            <div style="display:flex;align-items:center;gap:7px">
+                                <div class="dm-avatar">{{ strtoupper(substr($d->buyer?->name ?? 'B',0,1)) }}</div>
+                                <div>
+                                    <div style="font-weight:600;font-size:.8125rem">{{ $d->buyer?->name ?? '—' }}</div>
+                                    <div style="font-size:.7rem;color:#94a3b8">{{ $d->buyer?->email ?? '' }}</div>
+                                </div>
                             </div>
+                        </td>
+                        <td>
+                            <div style="display:flex;align-items:center;gap:7px">
+                                <div class="dm-avatar">{{ strtoupper(substr($d->seller?->name ?? 'S',0,1)) }}</div>
+                                <div>
+                                    <div style="font-weight:600;font-size:.8125rem">{{ $d->seller?->name ?? '—' }}</div>
+                                    <div style="font-size:.7rem;color:#94a3b8">{{ $d->seller?->email ?? '' }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            @if($d->flag_reason)
+                                <span class="dm-flag-reason" title="{{ $d->flag_reason }}">{{ $d->flag_reason }}</span>
+                            @else
+                                <span style="color:#94a3b8;font-size:.8rem">—</span>
+                            @endif
+                        </td>
+                        <td style="text-align:center">
+                            <span style="font-weight:700;color:{{ $d->exchanges_count >= 3 ? '#dc2626' : '#374151' }}">
+                                {{ $d->exchanges_count }}/{{ \App\Models\PostAuctionThread::MAX_EXCHANGES }}
+                            </span>
+                        </td>
+                        <td>
+                            {{ $d->flagged_at ? $d->flagged_at->format('M d, Y') : '—' }}
+                            @if($d->flagged_at)
+                                <div style="font-size:.72rem;color:#94a3b8">{{ $d->flagged_at->diffForHumans() }}</div>
+                            @endif
+                        </td>
+                        <td>
+                            @if($isResolved)
+                                <span class="dm-badge dm-badge--resolved">Resolved</span>
+                            @else
+                                <span class="dm-badge dm-badge--open">Open</span>
+                            @endif
+                        </td>
+                        <td style="text-align:right">
+                            <a href="{{ route('messaging.thread.show', $d->invoice_id ?? 0) }}"
+                               style="display:inline-flex;align-items:center;gap:5px;padding:.4rem .9rem;border-radius:7px;background:var(--navy);color:#fff;font-size:.8rem;font-weight:600;text-decoration:none">
+                                <span class="material-icons-round" style="font-size:14px">forum</span>
+                                View Thread
+                            </a>
                         </td>
                     </tr>
                     @empty
-                    <tr class="js-admin-empty-row">
-                        <td colspan="8" class="px-6 py-12 text-center text-gray-500">
-                            <div class="mb-4">
-                                <i class="fas fa-gavel text-4xl text-gray-300"></i>
-                            </div>
-                            <p class="text-lg font-medium mb-2">No disputes found</p>
-                            <p class="text-sm text-gray-400">Disputes will appear here when users file complaints or issues.</p>
-                        </td>
-                    </tr>
+                    <tr><td colspan="9">
+                        <div class="dm-empty">
+                            <span class="material-icons-round">gavel</span>
+                            <p>No flagged transactions found.</p>
+                        </div>
+                    </td></tr>
                     @endforelse
-                    @if(isset($disputes) && $disputes->isNotEmpty())
-                    <tr class="js-admin-empty-row" style="display: none;">
-                        <td colspan="8" class="px-6 py-12 text-center text-gray-500"><p>No matching disputes</p></td>
-                    </tr>
-                    @endif
                 </tbody>
             </table>
         </div>
-        
-        <!-- Pagination -->
-        @if(isset($disputes) && method_exists($disputes, 'hasPages') && $disputes->hasPages())
-        <div class="px-6 py-4 border-t border-gray-200">
-            {{ $disputes->links() }}
-        </div>
+        @if($disputes->hasPages())
+            <div class="dm-pagination">{{ $disputes->withQueryString()->links() }}</div>
         @endif
     </div>
 
-    <!-- Coming Soon Notice (if no disputes exist) -->
-    @if(!isset($disputes) || $disputes->isEmpty())
-    <div class="bg-white rounded-lg shadow p-12 text-center mt-6">
-        <div class="max-w-2xl mx-auto">
-            <div class="mb-6">
-                <i class="fas fa-gavel text-6xl text-gray-300 mb-4"></i>
-            </div>
-            <h2 class="text-2xl font-bold text-gray-900 mb-4">Dispute Management System</h2>
-            <p class="text-gray-600 mb-6">
-                The dispute management system is currently being developed. This page will allow you to manage disputes between buyers and sellers.
-            </p>
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 text-left">
-                <h3 class="font-semibold text-blue-900 mb-3">Planned Features:</h3>
-                <ul class="space-y-2 text-blue-800">
-                    <li class="flex items-start">
-                        <i class="fas fa-check-circle text-blue-600 mr-2 mt-1"></i>
-                        <span>View all open disputes between buyers and sellers</span>
-                    </li>
-                    <li class="flex items-start">
-                        <i class="fas fa-check-circle text-blue-600 mr-2 mt-1"></i>
-                        <span>Review evidence and messages from both parties</span>
-                    </li>
-                    <li class="flex items-start">
-                        <i class="fas fa-check-circle text-blue-600 mr-2 mt-1"></i>
-                        <span>Update dispute status and resolution</span>
-                    </li>
-                    <li class="flex items-start">
-                        <i class="fas fa-check-circle text-blue-600 mr-2 mt-1"></i>
-                        <span>Add admin notes and final resolution</span>
-                    </li>
-                    <li class="flex items-start">
-                        <i class="fas fa-check-circle text-blue-600 mr-2 mt-1"></i>
-                        <span>Track dispute timeline and history</span>
-                    </li>
-                </ul>
-            </div>
-        </div>
+    <div style="margin-top:1rem;padding:.75rem 1rem;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;font-size:.8125rem;color:#1e40af">
+        <span class="material-icons-round" style="font-size:16px;vertical-align:-3px">info</span>
+        Disputes are flagged automatically when messaging exchange limits are exceeded or flagged manually by admin.
+        Click <strong>View Thread</strong> to review the full conversation, evidence, and timeline before taking action.
     </div>
-    @endif
 </div>
 @endsection

@@ -91,6 +91,40 @@ class DefaultService
                 'penalty_amount' => $penaltyAmount,
             ]);
 
+            // Notify buyer of restriction (per P19 spec)
+            try {
+                $itemRef = $invoice->listing
+                    ? ($invoice->listing->item_number ?? ('CM' . str_pad($invoice->listing_id, 6, '0', STR_PAD_LEFT)))
+                    : $invoice->invoice_number;
+
+                $buyer->notify(new \App\Notifications\GenericNotification(
+                    'account_restricted_default',
+                    "Your account has been restricted for 14 days due to non-payment on listing #{$itemRef}." .
+                    ($penaltyAmount > 0 ? ' Your deposit has been forfeited.' : ''),
+                    [
+                        'listing_id'     => $invoice->listing_id,
+                        'invoice_id'     => $invoice->id,
+                        'restricted_until' => $restrictionEndsAt->toDateTimeString(),
+                        'link'           => route('buyer.dashboard'),
+                    ]
+                ));
+
+                // Also notify seller that buyer defaulted
+                if ($invoice->listing?->seller) {
+                    $invoice->listing->seller->notify(new \App\Notifications\GenericNotification(
+                        'buyer_defaulted',
+                        "The buyer for listing #{$itemRef} has defaulted on payment. Choose how to proceed from your dashboard.",
+                        [
+                            'listing_id' => $invoice->listing_id,
+                            'invoice_id' => $invoice->id,
+                            'link'       => route('seller.dashboard'),
+                        ]
+                    ));
+                }
+            } catch (\Throwable $e) {
+                Log::error('Default notification failed', ['error' => $e->getMessage(), 'invoice_id' => $invoice->id]);
+            }
+
             return $default;
         });
     }

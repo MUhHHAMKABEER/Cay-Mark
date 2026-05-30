@@ -166,7 +166,7 @@ return [
         ],
         'transaction_completed_payout_pending' => [
             'audience' => 'seller',
-            'body' => 'Transaction for {vehicle_name} is complete. Your payout is processing and will be issued according to CayMark payout timelines.',
+            'body' => 'Transaction for {vehicle_name} is complete. Your payout is now processing and will be completed within 2-5 business days.',
         ],
 
         'support_ticket_submitted' => [

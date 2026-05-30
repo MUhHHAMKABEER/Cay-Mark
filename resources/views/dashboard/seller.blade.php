@@ -1500,7 +1500,7 @@
                                                 <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 mb-3 flex items-center gap-2 text-sm text-emerald-800">
                                                     <span class="material-icons-round text-base">check_circle</span>
                                                     <span class="font-semibold">Pickup Confirmed</span>
-                                                    <span class="ml-auto text-xs text-emerald-600">{{ ($listing->payout_status ?? null) === 'completed' ? 'Payout Complete' : 'Payout Processing' }}</span>
+                                                    <span class="ml-auto text-xs text-emerald-600">{{ ($listing->payout_status ?? null) === 'completed' ? 'Payout Complete' : 'Payout processing · 2-5 business days' }}</span>
                                                 </div>
                                             @elseif($status === 'awaiting_payment')
                                                 <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-3">
@@ -1530,6 +1530,28 @@
                                            class="mt-auto inline-flex items-center justify-center gap-1.5 w-full px-3 py-2 rounded-xl border border-gray-200 bg-white hover:border-blue-300 hover:text-blue-600 text-gray-700 text-xs font-semibold transition">
                                             <span class="material-icons-round" style="font-size:14px">visibility</span> View Details
                                         </a>
+
+                                        {{-- A22: Relist button — Business Seller only, not-sold items, within 48 hrs --}}
+                                        @if(! $isSold && $user->business_license_path)
+                                            @php
+                                                $relistSvc = new \App\Services\RelistingService();
+                                                $relistElig = $relistSvc->checkRelistingEligibility($listing, $user);
+                                            @endphp
+                                            @if($relistElig['eligible'])
+                                                <form method="POST" action="{{ route('seller.listings.relist', $listing->id) }}" class="mt-2">
+                                                    @csrf
+                                                    <button type="button"
+                                                        onclick="if(confirm('Relist this item for free? It will go back through admin approval.')) this.closest('form').submit()"
+                                                        class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-amber-50 border border-amber-300 text-amber-800 text-xs font-semibold hover:bg-amber-100 transition">
+                                                        <span class="material-icons-round" style="font-size:14px">replay</span>
+                                                        Relist Free
+                                                        <span class="text-[10px] text-amber-600">({{ round($relistElig['hours_remaining'] ?? 0) }}h left)</span>
+                                                    </button>
+                                                </form>
+                                            @elseif(str_contains($relistElig['reason'] ?? '', 'expired'))
+                                                <p class="mt-2 text-center text-[10px] text-gray-400">Relist period expired</p>
+                                            @endif
+                                        @endif
                                     </div>
                                 </div>
                             @endforeach

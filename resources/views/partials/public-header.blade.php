@@ -78,14 +78,6 @@
                 <form method="GET" action="{{ route('Auction.index') }}" :action="auctionUrl" class="relative w-full max-w-[600px]" @submit.prevent="submit()">
                     {{-- Pill wrapper --}}
                     <div class="flex items-center rounded-full bg-white border border-[#E2E5E9] shadow-[0_2px_8px_rgba(0,0,0,0.08)] focus-within:border-[#1B3A6B] focus-within:shadow-[0_2px_12px_rgba(27,58,107,0.15)] transition-all duration-150 min-h-[48px] px-2">
-                        {{-- Left search icon --}}
-                        <span class="flex-shrink-0 flex items-center justify-center pl-2 pr-1 pointer-events-none">
-                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none"
-                                 stroke="#9AA0A8" stroke-width="2.2"
-                                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-                            </svg>
-                        </span>
                         <input
                             type="text"
                             name="search"
@@ -97,7 +89,7 @@
                             @keydown.enter.prevent="selectActive()"
                             placeholder="Search make, model, or category..."
                             autocomplete="off"
-                            class="ph-search-input flex-1 bg-transparent py-2.5 pl-2 pr-2 text-[13.5px] text-slate-800 focus:outline-none min-w-0"
+                            class="ph-search-input flex-1 bg-transparent py-2.5 pl-4 pr-2 text-[13.5px] text-slate-800 focus:outline-none min-w-0"
                         />
                         {{-- Clear button --}}
                         <button type="button" x-show="query" x-cloak

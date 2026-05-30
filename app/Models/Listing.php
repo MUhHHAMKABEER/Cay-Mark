@@ -539,28 +539,67 @@ public function invoices()
     }
 
     /**
-     * Scope: Get current auctions for seller (only admin-approved: active or approved).
-     * Sold listings (whether awaiting payment, awaiting PIN, or fully completed)
-     * live under the Completed tab via scopeCompletedForSeller, never here.
-     * Listings with status 'pending' (awaiting admin approval) are excluded.
+     * Scope: Get LIVE (not-yet-ended) auctions for seller.
+     *
+     * Handles both auction_end_time-explicit rows AND rows where end time is
+     * computed from auction_start_time + auction_duration. Also excludes any
+     * listing the command has already stamped as listing_state='expired'
+     * (no-winner auctions that ended).
+     *
+     * Sold listings live under scopeCompletedForSeller, never here.
      */
     public function scopeCurrentAuctionsForSeller($query, $sellerId)
     {
         return $query->where('seller_id', $sellerId)
             ->whereIn('status', ['approved', 'active'])
+            // Exclude listings the auction processor already marked as expired
+            ->where('listing_state', '!=', 'expired')
             ->where(function ($q) {
-                // Only listings whose auction has NOT yet ended
-                $q->whereNull('auction_end_time')
-                  ->orWhere('auction_end_time', '>=', now());
+                // Explicit end time: must be in the future
+                $q->where(function ($sub) {
+                    $sub->whereNotNull('auction_end_time')
+                        ->where('auction_end_time', '>=', now());
+                })
+                // Computed end time (start + duration): must be in the future
+                ->orWhere(function ($sub) {
+                    $sub->whereNull('auction_end_time')
+                        ->whereRaw(
+                            'DATE_ADD(COALESCE(auction_start_time, created_at), INTERVAL COALESCE(auction_duration, 7) DAY) >= ?',
+                            [now()]
+                        );
+                });
             });
     }
 
+    /**
+     * Scope: Auctions that have ended WITHOUT a sale (no winner / reserve not met).
+     *
+     * Two cases:
+     * 1. Explicit auction_end_time in the past
+     * 2. Computed end time (start + duration) in the past — previously invisible
+     *    because the query only checked auction_end_time IS NOT NULL.
+     *
+     * Also catches listings the command stamped listing_state='expired' for safety.
+     */
     public function scopeEndedNotSoldForSeller($query, $sellerId)
     {
         return $query->where('seller_id', $sellerId)
             ->whereIn('status', ['approved', 'active'])
-            ->whereNotNull('auction_end_time')
-            ->where('auction_end_time', '<', now());
+            ->where(function ($q) {
+                // Explicit end time in the past
+                $q->where(function ($sub) {
+                    $sub->whereNotNull('auction_end_time')
+                        ->where('auction_end_time', '<', now());
+                })
+                // Computed end time in the past (no explicit auction_end_time set)
+                ->orWhere(function ($sub) {
+                    $sub->whereNull('auction_end_time')
+                        ->whereRaw(
+                            'DATE_ADD(COALESCE(auction_start_time, created_at), INTERVAL COALESCE(auction_duration, 7) DAY) < ?',
+                            [now()]
+                        );
+                });
+            });
     }
 
     /**

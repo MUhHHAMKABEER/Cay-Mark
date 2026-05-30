@@ -13,9 +13,10 @@ Artisan::command('inspire', function () {
 // Schedule the ExpireListings command to run daily
 Schedule::command('listings:expire')->daily();
 
-// Schedule the ProcessEndedAuctions command to run every 5 minutes
-// This ensures invoices are generated quickly when auctions end
-Schedule::command('auctions:process-ended')->everyFiveMinutes();
+// Process ended auctions every minute so status updates are near-real-time.
+// This ensures: invoice generation, tab movement (Current → Not Sold/Sold),
+// and seller notifications all fire within 60 seconds of an auction ending.
+Schedule::command('auctions:process-ended')->everyMinute();
 
 // Schedule the CheckOverduePayments command to run hourly
 // This checks for invoices with overdue payments (48 hours) and processes buyer defaults

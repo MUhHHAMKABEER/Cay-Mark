@@ -312,6 +312,32 @@ class ListingController extends Controller
     }
 
     /**
+     * A22 — Business Seller free relist within 48 hours (goes to admin approval, no charge).
+     */
+    public function relistListing(\Illuminate\Http\Request $request, $id)
+    {
+        $user    = Auth::user();
+        $listing = Listing::where('seller_id', $user->id)->findOrFail($id);
+
+        $relistingService = new \App\Services\RelistingService();
+        $eligibility = $relistingService->checkRelistingEligibility($listing, $user);
+
+        if (! $eligibility['eligible']) {
+            return back()->with('error', $eligibility['reason']);
+        }
+
+        try {
+            $newListing = $relistingService->relistListing($listing, $user);
+            return redirect()
+                ->route('seller.listings.show', $newListing->id)
+                ->with('success', 'Listing resubmitted for approval. You will be notified once it goes live.');
+        } catch (\Exception $e) {
+            Log::error('Relist failed', ['listing_id' => $id, 'error' => $e->getMessage()]);
+            return back()->with('error', 'Relist failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Seller view: single listing preview with full vehicle details and analytics.
      */
     public function show($id)

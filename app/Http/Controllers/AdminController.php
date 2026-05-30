@@ -961,33 +961,37 @@ class AdminController extends Controller
      */
     public function disputes(Request $request)
     {
-        // Note: Dispute model doesn't exist yet, using placeholder structure
-        // When Dispute model is created, uncomment and use:
-        /*
-        $query = Dispute::with(['buyer', 'seller', 'listing', 'messages']);
+        // AD12: Use flagged PostAuctionThreads as disputes until a dedicated Dispute model exists.
+        $query = \App\Models\PostAuctionThread::with(['buyer', 'seller', 'listing.images', 'invoice'])
+            ->where('flagged_for_admin', true);
 
-        if ($request->has('status')) {
-            $query->where('status', $request->status);
+        if ($request->filled('status')) {
+            // Map 'open' → flagged and unresolved, 'resolved' → pickup_confirmed
+            if ($request->status === 'open') {
+                $query->where('pickup_confirmed', false);
+            } elseif ($request->status === 'resolved') {
+                $query->where('pickup_confirmed', true);
+            }
         }
 
-        $disputes = $query->orderBy('created_at', 'desc')->paginate(15);
-                            
-        $disputeStats = [
-            'open' => Dispute::where('status', 'open')->count(),
-            'resolved' => Dispute::where('status', 'resolved')->count(),
-            'in_progress' => Dispute::where('status', 'in_progress')->count(),
-            'escalated' => Dispute::where('status', 'escalated')->count(),
-        ];
-        */
+        if ($request->filled('search')) {
+            $s = $request->get('search');
+            $query->where(function ($q) use ($s) {
+                $q->whereHas('buyer', fn ($u) => $u->where('name','like',"%$s%")->orWhere('email','like',"%$s%"))
+                  ->orWhereHas('seller', fn ($u) => $u->where('name','like',"%$s%"))
+                  ->orWhereHas('listing', fn ($l) => $l->where('make','like',"%$s%")->orWhere('model','like',"%$s%")->orWhere('item_number','like',"%$s%"));
+            });
+        }
 
-        // Placeholder data until Dispute model exists
-        $disputes = collect([]);
+        $disputes = $query->orderByDesc('flagged_at')->paginate(20);
+
+        $base = \App\Models\PostAuctionThread::where('flagged_for_admin', true);
         $disputeStats = [
-            'total' => 0,
-            'open' => 0,
-            'resolved' => 0,
-            'in_progress' => 0,
-            'escalated' => 0,
+            'total'       => (clone $base)->count(),
+            'open'        => (clone $base)->where('pickup_confirmed', false)->count(),
+            'resolved'    => (clone $base)->where('pickup_confirmed', true)->count(),
+            'in_progress' => (clone $base)->where('pickup_confirmed', false)->whereNotNull('flagged_at')->count(),
+            'escalated'   => 0,
         ];
 
         return view('admin.dispute-management', compact('disputes', 'disputeStats'));
