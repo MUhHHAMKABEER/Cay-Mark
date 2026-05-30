@@ -315,23 +315,45 @@ class VinHinDecoderService
      */
     protected function parseRapidApiHinResponse(array $apiResponse): array
     {
-        // RapidAPI Hull ID response may nest data under 'data', 'result', or root level
-        $data = $apiResponse;
+        // Normalise all keys to lowercase so we match regardless of API capitalisation
+        // e.g. ManufacturerName → manufacturername, ModelYear → modelyear
+        $flat = array_change_key_case($apiResponse, CASE_LOWER);
 
-        if (isset($apiResponse['data']) && is_array($apiResponse['data'])) {
-            $data = array_merge($data, $apiResponse['data']);
+        // Merge nested data/result wrappers (also lowercased)
+        foreach (['data', 'result'] as $wrapper) {
+            if (isset($flat[$wrapper]) && is_array($flat[$wrapper])) {
+                $flat = array_merge($flat, array_change_key_case($flat[$wrapper], CASE_LOWER));
+            }
         }
-        if (isset($apiResponse['result']) && is_array($apiResponse['result'])) {
-            $data = array_merge($data, $apiResponse['result']);
-        }
+
+        Log::debug('[HIN-API] Normalised response keys', ['keys' => array_keys($flat)]);
 
         $mapped = [
-            'make'         => $data['manufacturer'] ?? $data['make'] ?? $data['brand'] ?? $data['manufacturerName'] ?? null,
-            'model'        => $data['model'] ?? $data['modelName'] ?? null,
-            'year'         => $data['modelYear'] ?? $data['year'] ?? $data['model_year'] ?? null,
-            'vehicle_type' => 'Boat',   // HIN is always marine
-            'fuel_type'    => $this->normalizeFuelType($data['fuelType'] ?? $data['fuel'] ?? null),
-            'engine_size'  => $data['engineSize'] ?? $data['engine'] ?? null,
+            'make'  => $flat['manufacturername'] // ManufacturerName (RapidAPI standard)
+                    ?? $flat['manufacturer']
+                    ?? $flat['make']
+                    ?? $flat['brand']
+                    ?? $flat['brandname']
+                    ?? null,
+
+            'model' => $flat['model']
+                    ?? $flat['modelname']
+                    ?? $flat['boatmodel']
+                    ?? null,
+
+            'year'  => $flat['modelyear']        // ModelYear (RapidAPI standard)
+                    ?? $flat['year']
+                    ?? $flat['model_year']
+                    ?? $flat['manufactureyear']
+                    ?? null,
+
+            'vehicle_type' => 'Boat',            // HIN is always marine
+
+            'fuel_type'    => $this->normalizeFuelType(
+                                $flat['fueltype'] ?? $flat['fuel'] ?? null
+                              ),
+
+            'engine_size'  => $flat['enginesize'] ?? $flat['engine'] ?? null,
         ];
 
         // Remove null/empty values
