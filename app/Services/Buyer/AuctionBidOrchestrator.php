@@ -205,6 +205,29 @@ class AuctionBidOrchestrator
             $notificationService = new \App\Services\NotificationService();
             $notificationService->bidPlaced($user, $listing);
 
+            // Notify seller the moment their reserve price is first met.
+            // Only fires once: when the new bid crosses the threshold AND
+            // the previous highest bid was still below it (or there was no previous bid).
+            $reservePrice = $listing->reserve_price ? (float) $listing->reserve_price : null;
+            if ($reservePrice !== null && $amount >= $reservePrice) {
+                $previousBidBelowReserve = ($current < $reservePrice);
+                if ($previousBidBelowReserve) {
+                    try {
+                        $listing->loadMissing('seller');
+                        if ($listing->seller) {
+                            $notificationService->reservePriceMet($listing->seller, $listing, $amount);
+                        }
+                    } catch (\Throwable $e) {
+                        \Illuminate\Support\Facades\Log::error('[BidOrchestrator] Reserve-price-met notification failed', [
+                            'listing_id' => $listing->id,
+                            'bid_amount' => $amount,
+                            'reserve'    => $reservePrice,
+                            'error'      => $e->getMessage(),
+                        ]);
+                    }
+                }
+            }
+
             // Outbid notification — sent after bid commits, $outbidUser set in Step 3
             if ($outbidUser !== null) {
                 $notificationService->outbid($outbidUser, $listing);
