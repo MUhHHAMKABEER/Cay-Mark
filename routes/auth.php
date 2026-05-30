@@ -56,4 +56,13 @@ Route::middleware('auth')->group(function () {
 
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
         ->name('logout');
+
+    // Graceful fallback: browser history / bookmarks / direct URL navigation sends GET.
+    // Log them out and redirect to login instead of showing a 405.
+    Route::get('logout', function (\Illuminate\Http\Request $request) {
+        \Illuminate\Support\Facades\Auth::guard('web')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        return redirect()->route('login');
+    });
 });

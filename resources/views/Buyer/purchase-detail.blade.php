@@ -16,15 +16,20 @@
     </div>
 
     @if($paid && $pickupCode && $listing && ! $listing->pickup_confirmed)
-        <div class="rounded-2xl border-2 border-amber-300 bg-gradient-to-br from-amber-50 to-yellow-50 p-5 sm:p-6 mb-6 shadow-sm">
-            <p class="text-xs font-bold text-amber-900 uppercase tracking-wider mb-1">Pickup Code</p>
-            <p class="text-2xl sm:text-3xl font-extrabold text-blue-800 tracking-wide font-mono mb-2">{{ $pickupCode }}</p>
-            <p class="text-sm text-amber-950 leading-relaxed">Please present this code to your seller after vehicle pickup.</p>
-            <button type="button" onclick="navigator.clipboard.writeText('{{ $pickupCode }}').then(() => { this.querySelector('span:last-child').textContent = 'Copied!'; setTimeout(() => { this.querySelector('span:last-child').textContent = 'Copy code'; }, 2000); })"
-                class="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl border-2 border-amber-400 bg-white text-amber-900 text-sm font-semibold hover:bg-amber-50 transition">
-                <span class="material-icons-round text-base">content_copy</span>
-                <span>Copy code</span>
-            </button>
+        {{-- Sticky pickup code banner — stays visible while buyer scrolls --}}
+        <div style="position:sticky;top:0;z-index:30;background:#FFFBEB;border:2px solid #C8A84B;border-radius:10px;padding:16px 20px;margin-bottom:20px;box-shadow:0 2px 8px rgba(200,168,75,.18);">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+                <div>
+                    <p style="font-size:10px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:.08em;margin:0 0 4px">Your Pickup Code</p>
+                    <p style="font-size:clamp(1.5rem,4vw,2rem);font-weight:800;color:#1e40af;font-family:'Courier New',monospace;letter-spacing:.06em;margin:0 0 4px;line-height:1.1">{{ $pickupCode }}</p>
+                    <p style="font-size:12px;color:#78350f;margin:0">⚠ Present this code to the seller at pickup to complete the transaction.</p>
+                </div>
+                <button type="button"
+                    onclick="navigator.clipboard.writeText('{{ $pickupCode }}').then(() => { this.innerHTML='<span class=\'material-icons-round\' style=\'font-size:16px\'>check</span> Copied!'; setTimeout(() => { this.innerHTML='<span class=\'material-icons-round\' style=\'font-size:16px\'>content_copy</span> Copy code'; }, 2000); })"
+                    style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;border:1.5px solid #C8A84B;background:#fff;color:#92400e;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">
+                    <span class="material-icons-round" style="font-size:16px">content_copy</span> Copy code
+                </button>
+            </div>
         </div>
     @elseif($paid && $listing && $listing->pickup_confirmed)
         <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 mb-6 text-emerald-900 text-sm">

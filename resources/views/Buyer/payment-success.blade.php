@@ -18,14 +18,14 @@
     </div>
 
     @if($pickupCode)
-        <div class="rounded-2xl border-2 border-amber-300 bg-gradient-to-br from-amber-50 to-yellow-50 p-6 mb-6 shadow-sm">
-            <p class="text-xs font-bold text-amber-900 uppercase tracking-wider mb-2">Your Pickup Code</p>
-            <p class="text-3xl sm:text-4xl font-extrabold text-blue-800 tracking-wide font-mono mb-3">{{ $pickupCode }}</p>
-            <p class="text-sm text-amber-950 leading-relaxed">Save this code to present to your seller after pickup.</p>
-            <button type="button" onclick="navigator.clipboard.writeText('{{ $pickupCode }}').then(() => { this.textContent = 'Copied!'; setTimeout(() => { this.textContent = 'Copy code'; }, 2000); })"
-                class="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl border-2 border-amber-400 bg-white text-amber-900 text-sm font-semibold hover:bg-amber-50 transition">
-                <span class="material-icons-round text-base">content_copy</span>
-                <span>Copy code</span>
+        <div style="background:#FFFBEB;border:2px solid #C8A84B;border-radius:12px;padding:24px;margin-bottom:24px;text-align:center;">
+            <p style="font-size:10px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:.08em;margin:0 0 6px">Your Pickup Code</p>
+            <p style="font-size:clamp(2rem,6vw,2.75rem);font-weight:800;color:#1e40af;font-family:'Courier New',monospace;letter-spacing:.06em;margin:0 0 10px;line-height:1.1">{{ $pickupCode }}</p>
+            <p style="font-size:13px;color:#78350f;margin:0 0 14px;line-height:1.5">Save this code to present to your seller after pickup.</p>
+            <button type="button"
+                onclick="navigator.clipboard.writeText('{{ $pickupCode }}').then(() => { this.innerHTML='<span class=\'material-icons-round\' style=\'font-size:16px\'>check</span> Copied!'; setTimeout(() => { this.innerHTML='<span class=\'material-icons-round\' style=\'font-size:16px\'>content_copy</span> Copy code'; }, 2000); })"
+                style="display:inline-flex;align-items:center;gap:6px;padding:8px 20px;border-radius:8px;border:1.5px solid #C8A84B;background:#fff;color:#92400e;font-size:13px;font-weight:600;cursor:pointer">
+                <span class="material-icons-round" style="font-size:16px">content_copy</span> Copy code
             </button>
         </div>
     @endif
@@ -35,15 +35,18 @@
         <p class="text-gray-700 text-sm leading-relaxed mb-4">
             Please proceed to the <strong>Messaging Center</strong> to arrange pickup details with your seller.
         </p>
-        <a href="{{ route('messaging.thread.show', $invoice->id) }}"
-           class="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold shadow-md hover:shadow-lg transition">
-            <span class="material-icons-round text-lg">forum</span>
-            Open Messaging Center
-        </a>
-        <a href="{{ route('buyer.purchase.show', $invoice) }}"
-           class="mt-3 block text-center sm:inline-block sm:ml-3 text-sm font-semibold text-blue-600 hover:text-blue-800">
-            View purchase details
-        </a>
+        <div class="flex flex-col sm:flex-row gap-3">
+            <a href="{{ route('messaging.thread.show', $invoice->id) }}"
+               class="inline-flex flex-1 items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold shadow-md hover:shadow-lg transition text-center">
+                <span class="material-icons-round text-lg">forum</span>
+                Go to Messaging Center
+            </a>
+            <a href="{{ route('buyer.purchase.show', $invoice) }}"
+               class="inline-flex flex-1 items-center justify-center gap-2 px-5 py-3 rounded-xl border-2 border-gray-300 text-gray-800 font-semibold hover:border-blue-500 hover:text-blue-700 transition text-center">
+                <span class="material-icons-round text-lg">description</span>
+                View Invoice
+            </a>
+        </div>
     </div>
 
     <p class="text-center text-sm text-gray-500">

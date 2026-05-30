@@ -169,24 +169,65 @@ class AdminActionHub
 
         AdminActivityLog::log('payment.status_updated', 'payment', (int) $payment->id, ['status' => $oldStatus], ['status' => $request->status]);
 
-        if ($request->status === 'completed' && $payment->invoice) {
-            $inv = $payment->invoice->loadMissing('listing');
-            $pickupCode = $inv->listing?->pickupCodeDisplay();
-            $messagingCenterUrl = route('messaging.thread.show', $inv->id);
+        // When admin marks an auction payment as completed:
+        // 1. Mark the linked invoice as paid (so the buyer's Won tab shows the code)
+        // 2. Generate the pickup PIN if one doesn't exist yet
+        // 3. Unlock the post-auction messaging thread
+        // 4. Send the payment-confirmed email with the pickup code
+        if ($request->status === 'completed' && $payment->invoice_id) {
+            $inv = $payment->invoice()->with('listing')->first();
 
-            try {
-                \Mail::send('emails.caymark.payment-successful', [
-                    'invoice' => $inv,
-                    'buyer' => $payment->user,
-                    'payment' => $payment,
-                    'pickup_code' => $pickupCode,
-                    'messaging_center_url' => $messagingCenterUrl,
-                ], function ($message) use ($payment) {
-                    $message->to($payment->user->email, $payment->user->name)
-                        ->subject('Payment Successful – ' . ($payment->invoice->item_name ?? '[VEHICLE_NAME]'));
-                });
-            } catch (\Exception $e) {
-                \Log::error('Failed to resend payment confirmation email: ' . $e->getMessage());
+            if ($inv) {
+                // Mark invoice paid
+                if ($inv->payment_status !== 'paid') {
+                    $inv->payment_status = 'paid';
+                    $inv->paid_at        = $inv->paid_at ?? now();
+                    $inv->save();
+                }
+
+                // Generate pickup PIN if not already set
+                if ($inv->listing && ! $inv->listing->pickup_pin) {
+                    $inv->listing->generatePickupPin();
+                }
+
+                // Unlock messaging thread (idempotent — finds or creates then unlocks)
+                try {
+                    $thread = \App\Models\PostAuctionThread::firstOrCreate(
+                        ['invoice_id' => $inv->id],
+                        [
+                            'listing_id'  => $inv->listing_id,
+                            'buyer_id'    => $inv->buyer_id,
+                            'seller_id'   => $inv->seller_id,
+                            'is_unlocked' => false,
+                        ]
+                    );
+                    $thread->unlock();
+                } catch (\Throwable $e) {
+                    \Log::error('[AdminPayment] Thread unlock failed', ['invoice_id' => $inv->id, 'error' => $e->getMessage()]);
+                }
+
+                // Send payment-confirmed email with pickup code
+                $pickupCode         = $inv->listing?->pickupCodeDisplay();
+                $messagingCenterUrl = route('messaging.thread.show', $inv->id);
+                $vehicleName        = $inv->item_name ?? '[VEHICLE]';
+
+                try {
+                    \Mail::send('emails.caymark.payment-successful', [
+                        'invoice'              => $inv,
+                        'buyer'                => $payment->user,
+                        'payment'              => $payment,
+                        'pickup_code'          => $pickupCode,
+                        'messaging_center_url' => $messagingCenterUrl,
+                    ], function ($message) use ($payment, $vehicleName) {
+                        $message->to($payment->user->email, $payment->user->name)
+                            ->subject('Payment Confirmed — Your Pickup Code for ' . $vehicleName);
+                    });
+                } catch (\Exception $e) {
+                    \Log::error('[AdminPayment] Confirmation email failed', [
+                        'invoice_id' => $inv->id,
+                        'error'      => $e->getMessage(),
+                    ]);
+                }
             }
         }
 

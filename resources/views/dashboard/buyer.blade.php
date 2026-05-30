@@ -238,13 +238,10 @@
                                                     </div>
                                                     @php $dashWonCode = ($ps === 'paid' && !$listing->pickup_confirmed) ? $listing->pickupCodeDisplay() : null; @endphp
                                                     @if($dashWonCode)
-                                                        <div class="flex items-center gap-2 bg-amber-50 border border-amber-300 rounded-lg px-3 py-2 mb-2.5">
-                                                            <span class="material-icons-round text-amber-500 flex-shrink-0" style="font-size:16px">warning</span>
-                                                            <div class="min-w-0">
-                                                                <p class="text-[10px] font-semibold text-amber-700 uppercase tracking-wide leading-none mb-0.5">Your Pickup Code</p>
-                                                                <p class="font-extrabold text-blue-800 font-mono text-sm leading-none">{{ $dashWonCode }}</p>
-                                                                <p class="text-[10px] text-amber-800 mt-0.5">Present to seller at pickup.</p>
-                                                            </div>
+                                                        <div style="background:#FFFBEB;border:1px solid #C8A84B;border-radius:8px;padding:10px 12px;margin-bottom:10px">
+                                                            <p style="font-size:9px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:.08em;margin:0 0 2px">Your Pickup Code</p>
+                                                            <p style="font-weight:800;color:#1e40af;font-family:'Courier New',monospace;font-size:14px;margin:0 0 2px;letter-spacing:.04em">{{ $dashWonCode }}</p>
+                                                            <p style="font-size:10px;color:#78350f;margin:0">⚠ Present to seller at pickup.</p>
                                                         </div>
                                                     @endif
                                                     <div class="flex gap-2 flex-wrap">
@@ -940,13 +937,10 @@
                                                 : null;
                                         @endphp
                                         @if($auctionWonCode)
-                                            <div class="rounded-xl border-2 border-amber-300 bg-amber-50 px-4 py-3 mb-3">
-                                                <div class="flex items-center gap-2 mb-1">
-                                                    <span class="material-icons-round text-amber-500" style="font-size:16px">warning</span>
-                                                    <span class="text-xs font-bold text-amber-800 uppercase tracking-wide">Your Pickup Code</span>
-                                                </div>
-                                                <p class="font-extrabold text-blue-800 font-mono text-xl tracking-wider leading-none mb-1">{{ $auctionWonCode }}</p>
-                                                <p class="text-xs text-amber-900 leading-snug">Present this code to the seller at pickup to complete the transaction.</p>
+                                            <div style="background:#FFFBEB;border:1px solid #C8A84B;border-radius:8px;padding:12px 14px;margin-bottom:12px">
+                                                <p style="font-size:9px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:.08em;margin:0 0 4px">Your Pickup Code</p>
+                                                <p style="font-size:1.4rem;font-weight:800;color:#1e40af;font-family:'Courier New',monospace;letter-spacing:.06em;margin:0 0 4px;line-height:1.1">{{ $auctionWonCode }}</p>
+                                                <p style="font-size:11px;color:#78350f;margin:0">⚠ Present this code to the seller at pickup to complete the transaction.</p>
                                             </div>
                                         @endif
                                         @php
