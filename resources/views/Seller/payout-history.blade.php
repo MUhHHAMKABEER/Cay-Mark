@@ -64,10 +64,13 @@
         border-radius:999px; white-space:nowrap;
     }
     .ph-badge::before { content:''; display:inline-block; width:6px; height:6px; border-radius:50%; background:currentColor; opacity:0.8; }
-    .ph-badge--completed { background:#dcfce7; color:#16a34a; }
-    .ph-badge--pending   { background:#fef9c3; color:#a16207; }
-    .ph-badge--processing{ background:#dbeafe; color:#2563eb; }
-    .ph-badge--cancelled { background:#f1f5f9; color:#64748b; }
+    .ph-badge--pending          { background:#f1f5f9; color:#64748b; }
+    .ph-badge--processing       { background:#dbeafe; color:#2563eb; }
+    .ph-badge--sent             { background:#fef3c7; color:#d97706; }
+    .ph-badge--on_hold          { background:#ffedd5; color:#ea580c; }
+    .ph-badge--paid_successfully{ background:#dcfce7; color:#16a34a; }
+    .ph-badge--completed        { background:#dcfce7; color:#16a34a; }
+    .ph-badge--cancelled        { background:#fee2e2; color:#dc2626; }
 
     .ph-date { color:#374151; }
     .ph-date-rel { font-size:0.72rem; color:#94a3b8; margin-top:2px; }
@@ -98,14 +101,13 @@
             <table class="ph-table">
                 <thead>
                     <tr>
-                        <th>Payout #</th>
-                        <th>Vehicle</th>
-                        <th>Buyer</th>
-                        <th>Sale Price</th>
-                        <th>Commission</th>
+                        <th>Item</th>
+                        <th>Sale Amount</th>
+                        <th>Seller Fee</th>
                         <th>Net Payout</th>
                         <th>Status</th>
-                        <th>Date</th>
+                        <th>Date Initiated</th>
+                        <th>Date Paid</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -118,42 +120,46 @@
                             ? trim(($listing->year ?? '') . ' ' . ($listing->make ?? '') . ' ' . ($listing->model ?? ''))
                             : ($payout->item_title ?? '—');
                     @endphp
+                    @php
+                        $itemId    = $listing?->item_number ?? ($payout->item_title ? null : null);
+                        $itemLabel = $vehicle
+                            ? ($vehicle . ($itemId ? ' — ' . $itemId : ''))
+                            : ($payout->item_title ?? '—');
+                        $statusLabel = match($status) {
+                            'paid_successfully' => 'Paid Successfully',
+                            'on_hold'           => 'On Hold',
+                            default             => ucfirst($status),
+                        };
+                        $datePaid = $payout->date_sent ?? $payout->payout_processed_at ?? $payout->completed_at ?? null;
+                    @endphp
                     <tr>
+                        {{-- Item (vehicle title + CM ID) --}}
                         <td>
-                            <span class="ph-ref">{{ $payout->payout_number ?? '#' . $payout->id }}</span>
+                            <div class="ph-vehicle">{{ $itemLabel }}</div>
+                            <div class="ph-ref" style="margin-top:2px">{{ $payout->payout_number ?? ('PAY-'.$payout->id) }}</div>
                         </td>
-                        <td>
-                            <div class="ph-vehicle">{{ $vehicle ?: '—' }}</div>
-                        </td>
-                        <td>
-                            @if($buyer)
-                                <div style="font-size:0.875rem;color:#374151">{{ $buyer->name }}</div>
-                                <div class="ph-buyer">{{ $buyer->email }}</div>
-                            @elseif($payout->buyer_name)
-                                <div style="font-size:0.875rem;color:#374151">{{ $payout->buyer_name }}</div>
-                            @else
-                                <span style="color:#cbd5e1">—</span>
-                            @endif
-                        </td>
+                        {{-- Sale Amount --}}
                         <td>
                             <div class="ph-amount">${{ number_format($payout->sale_price ?? 0, 2) }}</div>
                         </td>
+                        {{-- Seller Fee (4%, min $150) --}}
                         <td>
-                            <div style="color:#dc2626;font-weight:600">-${{ number_format($payout->seller_commission ?? 0, 2) }}</div>
+                            <div style="color:#dc2626;font-weight:600">−${{ number_format($payout->seller_commission ?? 0, 2) }}</div>
+                            <div style="font-size:0.7rem;color:#94a3b8;margin-top:2px">4% · min $150</div>
                         </td>
+                        {{-- Net Payout --}}
                         <td>
                             <div class="ph-net">${{ number_format($payout->net_payout ?? 0, 2) }}</div>
                         </td>
+                        {{-- Status --}}
                         <td>
-                            <span class="ph-badge ph-badge--{{ $status }}">{{ ucfirst($status) }}</span>
-                            @if($payout->payment_method)
-                                <div style="font-size:0.7rem;color:#94a3b8;margin-top:3px">{{ ucfirst($payout->payment_method) }}</div>
-                            @endif
+                            <span class="ph-badge ph-badge--{{ $status }}">{{ $statusLabel }}</span>
                         </td>
+                        {{-- Date Initiated (PIN confirmed = payout_generated_at) --}}
                         <td>
-                            @if($payout->payout_processed_at)
-                                <div class="ph-date">{{ \Carbon\Carbon::parse($payout->payout_processed_at)->format('M j, Y') }}</div>
-                                <div class="ph-date-rel">{{ \Carbon\Carbon::parse($payout->payout_processed_at)->diffForHumans() }}</div>
+                            @if($payout->payout_generated_at)
+                                <div class="ph-date">{{ $payout->payout_generated_at->format('M j, Y') }}</div>
+                                <div class="ph-date-rel">{{ $payout->payout_generated_at->diffForHumans() }}</div>
                             @elseif($payout->created_at)
                                 <div class="ph-date">{{ $payout->created_at->format('M j, Y') }}</div>
                                 <div class="ph-date-rel">{{ $payout->created_at->diffForHumans() }}</div>
@@ -161,13 +167,22 @@
                                 <span style="color:#cbd5e1">—</span>
                             @endif
                         </td>
+                        {{-- Date Paid (admin confirms wire sent) --}}
+                        <td>
+                            @if($datePaid)
+                                <div class="ph-date">{{ \Carbon\Carbon::parse($datePaid)->format('M j, Y') }}</div>
+                                <div class="ph-date-rel">{{ \Carbon\Carbon::parse($datePaid)->diffForHumans() }}</div>
+                            @else
+                                <span style="color:#cbd5e1;font-size:0.875rem">—</span>
+                            @endif
+                        </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="8">
+                        <td colspan="7">
                             <div class="ph-empty">
                                 <span class="material-icons-round">account_balance_wallet</span>
-                                <p>No payouts yet — they appear here once an auction is completed and funds are released</p>
+                                <p>No payouts yet. Complete a sale to see your payout history here.</p>
                             </div>
                         </td>
                     </tr>

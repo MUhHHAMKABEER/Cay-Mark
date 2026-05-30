@@ -889,6 +889,29 @@
                 </div>
 
                 <div id="auction-section-won" class="auction-section hidden">
+                    {{-- ── P04: Multi-item checkout bar ── --}}
+                    @php $pendingWon = $wonAuctions->filter(fn($l) => ($l->payment_status ?? '') === 'pending'); @endphp
+                    @if($pendingWon->count() > 1)
+                    <div id="multi-pay-bar"
+                         class="hidden mb-4 rounded-2xl border-2 border-blue-600 bg-blue-50 px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+                        <div class="flex items-center gap-2 text-blue-800 font-semibold text-sm">
+                            <span class="material-icons-round text-base">check_circle</span>
+                            <span id="multi-pay-count">0 items selected</span>
+                            <span class="mx-1 text-blue-300">·</span>
+                            <span class="font-bold text-base">Total: <span id="multi-pay-total">$0.00</span></span>
+                        </div>
+                        <form id="multi-pay-form" method="POST" action="{{ route('buyer.payment.checkout-multiple') }}">
+                            @csrf
+                            <div id="multi-pay-inputs"></div>
+                            <button type="submit"
+                                class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 text-white font-semibold text-sm hover:bg-blue-700 transition-all">
+                                <span class="material-icons-round text-base">payment</span>
+                                <span id="multi-pay-btn-label">Pay Now</span>
+                            </button>
+                        </form>
+                    </div>
+                    @endif
+
                     @if($wonAuctions->count() > 0)
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             @foreach($wonAuctions as $listing)
@@ -901,7 +924,20 @@
                                         $statusText = 'Payment Pending';
                                     }
                                 @endphp
-                                <div class="group bg-white rounded-2xl border-2 border-emerald-200 overflow-hidden shadow-sm hover:shadow-xl hover:border-emerald-300 transition-all duration-300">
+                                <div class="group bg-white rounded-2xl border-2 border-emerald-200 overflow-hidden shadow-sm hover:shadow-xl hover:border-emerald-300 transition-all duration-300 won-card"
+                                     data-invoice-id="{{ $listing->pending_invoice_id ?? '' }}"
+                                     data-amount="{{ $listing->total_amount_due ?? 0 }}"
+                                     data-pending="{{ ($listing->payment_status ?? '') === 'pending' ? '1' : '0' }}">
+                                    {{-- P04 Checkbox for multi-select (pending items only) --}}
+                                    @if(($listing->payment_status ?? '') === 'pending' && $listing->pending_invoice_id)
+                                    <label class="absolute top-3 left-3 z-10 flex items-center cursor-pointer"
+                                           onclick="event.stopPropagation()">
+                                        <input type="checkbox"
+                                               class="won-checkbox w-5 h-5 rounded accent-blue-600 cursor-pointer shadow"
+                                               data-invoice-id="{{ $listing->pending_invoice_id }}"
+                                               data-amount="{{ $listing->total_amount_due ?? 0 }}">
+                                    </label>
+                                    @endif
                                     <div class="relative h-52 bg-gradient-to-br from-emerald-50 to-green-100 overflow-hidden">
                                         @if($listing->images->first())
                                             <img src="{{ str_contains($listing->images->first()->image_path, '/') ? asset($listing->images->first()->image_path) : asset('uploads/listings/' . $listing->images->first()->image_path) }}" alt="" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
@@ -1647,6 +1683,51 @@ function showTab(tabName) {
     if (el) el.style.display = 'block';
     if (tabName === 'dashboard') setTimeout(initializeCharts, 50);
 }
+/* ── P04: Multi-item checkout logic ── */
+(function() {
+    function initMultiPay() {
+        var bar      = document.getElementById('multi-pay-bar');
+        var countEl  = document.getElementById('multi-pay-count');
+        var totalEl  = document.getElementById('multi-pay-total');
+        var btnLabel = document.getElementById('multi-pay-btn-label');
+        var inputs   = document.getElementById('multi-pay-inputs');
+        if (!bar) return;
+
+        function refresh() {
+            var checked = document.querySelectorAll('.won-checkbox:checked');
+            var count   = checked.length;
+            var total   = 0;
+            if (inputs) inputs.innerHTML = '';
+            checked.forEach(function(cb) {
+                total += parseFloat(cb.dataset.amount || 0);
+                if (inputs) {
+                    var inp = document.createElement('input');
+                    inp.type = 'hidden'; inp.name = 'invoice_ids[]';
+                    inp.value = cb.dataset.invoiceId;
+                    inputs.appendChild(inp);
+                }
+            });
+            if (count >= 1) {
+                bar.classList.remove('hidden');
+                if (countEl) countEl.textContent = count + ' item' + (count !== 1 ? 's' : '') + ' selected';
+                if (totalEl) totalEl.textContent = '$' + total.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+                if (btnLabel) btnLabel.textContent = 'Pay $' + total.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' Now';
+            } else {
+                bar.classList.add('hidden');
+            }
+        }
+
+        document.querySelectorAll('.won-checkbox').forEach(function(cb) {
+            cb.addEventListener('change', refresh);
+        });
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initMultiPay);
+    } else {
+        initMultiPay();
+    }
+})();
+
 function showAuctionSection(section) {
     document.querySelectorAll('.auction-section').forEach(s => s.classList.add('hidden'));
     document.querySelectorAll('.auction-tab-button').forEach(b => {
