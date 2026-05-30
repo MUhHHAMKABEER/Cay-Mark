@@ -1,218 +1,313 @@
 @extends('layouts.admin')
-
-@section('title', 'Admin Dashboard - CayMark')
+@section('title', 'Dashboard — Admin')
 
 @section('content')
-<div class="bg-gray-50 min-h-screen">
-    <!-- Header -->
-    <div class="bg-white shadow-sm mb-6 rounded-lg p-6">
-        <h1 class="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-        <p class="text-gray-600 mt-2">Welcome back, {{ auth()->user()->name }}</p>
+<style>
+    :root { --navy:#063466; --navy-light:#e8eef6; --navy-mid:#0d4d8c; }
+
+    /* ── Page header ── */
+    .adm-header {
+        background:#fff; border-radius:12px; padding:1.5rem 1.75rem; margin-bottom:1.5rem;
+        border-left:4px solid var(--navy); box-shadow:0 1px 4px rgba(6,52,102,.07);
+        display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:.75rem;
+    }
+    .adm-header h1 { font-size:1.35rem; font-weight:700; color:var(--navy); margin:0 0 .2rem; display:flex; align-items:center; gap:8px; }
+    .adm-header h1 .material-icons-round { font-size:1.3rem; }
+    .adm-header p  { margin:0; color:#64748b; font-size:.875rem; }
+
+    /* ── Stat cards ── */
+    .adm-stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:1rem; margin-bottom:1.5rem; }
+    .adm-stat {
+        background:#fff; border-radius:12px; padding:1.25rem 1.25rem 1.1rem;
+        box-shadow:0 1px 4px rgba(6,52,102,.07); display:flex; align-items:center; gap:1rem;
+        text-decoration:none; transition:box-shadow .15s,transform .15s;
+    }
+    .adm-stat:hover { box-shadow:0 4px 12px rgba(6,52,102,.12); transform:translateY(-1px); text-decoration:none; }
+    .adm-stat-ico { width:44px; height:44px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .adm-stat-ico .material-icons-round { font-size:22px; }
+    .ico-navy   { background:var(--navy-light); color:var(--navy); }
+    .ico-blue   { background:#dbeafe; color:#2563eb; }
+    .ico-green  { background:#dcfce7; color:#16a34a; }
+    .ico-amber  { background:#fef3c7; color:#d97706; }
+    .ico-red    { background:#fee2e2; color:#dc2626; }
+    .ico-purple { background:#ede9fe; color:#7c3aed; }
+    .adm-stat-lbl { font-size:.72rem; font-weight:600; color:#64748b; text-transform:uppercase; letter-spacing:.05em; }
+    .adm-stat-val { font-size:1.75rem; font-weight:700; color:#0f172a; line-height:1.1; margin-top:2px; }
+    .adm-stat-sub { font-size:.72rem; color:#94a3b8; margin-top:2px; }
+
+    /* ── Section cards ── */
+    .adm-card { background:#fff; border-radius:12px; box-shadow:0 1px 4px rgba(6,52,102,.07); overflow:hidden; margin-bottom:1.25rem; }
+    .adm-card-hdr {
+        padding:1rem 1.5rem; border-bottom:1px solid #f1f5f9;
+        display:flex; align-items:center; justify-content:space-between; gap:.75rem;
+    }
+    .adm-card-hdr h2 { font-size:.9375rem; font-weight:700; color:#0f172a; margin:0; display:flex; align-items:center; gap:6px; }
+    .adm-card-hdr h2 .material-icons-round { font-size:18px; color:var(--navy); }
+    .adm-card-hdr a { font-size:.8rem; font-weight:600; color:var(--navy); text-decoration:none; }
+    .adm-card-hdr a:hover { text-decoration:underline; }
+    .adm-card-body { padding:1.25rem 1.5rem; }
+
+    /* ── Alert strip ── */
+    .adm-alert { display:flex; align-items:flex-start; gap:10px; padding:.75rem 1rem; border-radius:8px; font-size:.875rem; margin-bottom:.625rem; border-left:3px solid transparent; }
+    .adm-alert:last-child { margin-bottom:0; }
+    .adm-alert.danger  { background:#fef2f2; border-color:#dc2626; color:#991b1b; }
+    .adm-alert.warning { background:#fffbeb; border-color:#d97706; color:#92400e; }
+    .adm-alert.info    { background:#eff6ff; border-color:#2563eb; color:#1e40af; }
+    .adm-alert .material-icons-round { font-size:18px; flex-shrink:0; margin-top:1px; }
+
+    /* ── Activity list ── */
+    .adm-activity { display:flex; align-items:flex-start; gap:12px; padding:.75rem 0; border-bottom:1px solid #f8fafc; }
+    .adm-activity:last-child { border-bottom:none; padding-bottom:0; }
+    .adm-activity-ico { width:36px; height:36px; border-radius:10px; background:var(--navy-light); color:var(--navy); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .adm-activity-ico .material-icons-round { font-size:17px; }
+    .adm-activity-msg { font-size:.875rem; color:#1e293b; }
+    .adm-activity-time { font-size:.72rem; color:#94a3b8; margin-top:2px; }
+
+    /* ── User signup row ── */
+    .adm-user-row { display:flex; align-items:center; justify-content:space-between; padding:.625rem 0; border-bottom:1px solid #f8fafc; }
+    .adm-user-row:last-child { border-bottom:none; }
+    .adm-avatar { width:38px; height:38px; border-radius:50%; background:var(--navy-light); color:var(--navy); font-weight:700; font-size:.95rem; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .adm-role-badge { font-size:.68rem; font-weight:700; padding:2px 8px; border-radius:999px; text-transform:uppercase; letter-spacing:.04em; }
+    .role-buyer  { background:#dbeafe; color:#1d4ed8; }
+    .role-seller { background:#dcfce7; color:#15803d; }
+    .role-admin  { background:#ede9fe; color:#6d28d9; }
+    .role-guest  { background:#f1f5f9; color:#64748b; }
+
+    /* ── Quick-action chips ── */
+    .adm-actions { display:flex; flex-wrap:wrap; gap:.625rem; }
+    .adm-action-chip {
+        display:inline-flex; align-items:center; gap:6px; padding:.5rem 1rem;
+        background:var(--navy-light); color:var(--navy); border-radius:8px;
+        font-size:.8125rem; font-weight:600; text-decoration:none;
+        transition:background .15s,color .15s;
+    }
+    .adm-action-chip:hover { background:var(--navy); color:#fff; text-decoration:none; }
+    .adm-action-chip .material-icons-round { font-size:16px; }
+
+    /* ── Empty state ── */
+    .adm-empty { text-align:center; padding:2.5rem 1rem; color:#94a3b8; }
+    .adm-empty .material-icons-round { font-size:40px; display:block; margin-bottom:.5rem; opacity:.35; }
+
+    /* ── Responsive ── */
+    @media (max-width:768px) {
+        .adm-two-col { grid-template-columns:1fr !important; }
+    }
+</style>
+
+<div>
+
+    {{-- ── Header ── --}}
+    <div class="adm-header">
+        <div>
+            <h1>
+                <span class="material-icons-round">dashboard</span>
+                Admin Dashboard
+            </h1>
+            <p>Welcome back, <strong>{{ auth()->user()->name }}</strong> — here's what's happening today.</p>
+        </div>
+        <div style="display:flex;gap:.625rem;flex-wrap:wrap">
+            <a href="{{ route('admin.listing-review') }}" class="adm-action-chip">
+                <span class="material-icons-round">rule</span> Review Listings
+            </a>
+            <a href="{{ route('admin.payments') }}" class="adm-action-chip">
+                <span class="material-icons-round">payments</span> Sales / Payouts
+            </a>
+        </div>
     </div>
 
-    <!-- Stats Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-        <!-- Active Auctions -->
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600">Active Auctions</p>
-                    <p class="text-2xl font-bold text-gray-900 mt-1">{{ $stats['active_auctions'] ?? 0 }}</p>
-                </div>
-                <div class="p-3 bg-purple-100 rounded-full">
-                    <i class="fas fa-gavel text-purple-600 text-xl"></i>
-                </div>
+    {{-- ── Stats ── --}}
+    <div class="adm-stats">
+        <a href="{{ route('admin.auctions') }}" class="adm-stat">
+            <div class="adm-stat-ico ico-navy">
+                <span class="material-icons-round">gavel</span>
             </div>
-        </div>
-
-        <!-- Listings Awaiting Approval -->
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600">Pending Approval</p>
-                    <p class="text-2xl font-bold text-gray-900 mt-1">{{ $stats['listings_awaiting_approval'] ?? 0 }}</p>
-                </div>
-                <div class="p-3 bg-yellow-100 rounded-full">
-                    <i class="fas fa-clock text-yellow-600 text-xl"></i>
-                </div>
-            </div>
-        </div>
-
-        <!-- Total Users -->
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600">Total Users</p>
-                    <p class="text-2xl font-bold text-gray-900 mt-1">{{ $stats['total_users'] ?? 0 }}</p>
-                    <p class="text-xs text-gray-500 mt-1">
-                        {{ $stats['total_buyers'] ?? 0 }} buyers, {{ $stats['total_sellers'] ?? 0 }} sellers
-                    </p>
-                </div>
-                <div class="p-3 bg-green-100 rounded-full">
-                    <i class="fas fa-users text-green-600 text-xl"></i>
-                </div>
-            </div>
-        </div>
-
-        <!-- Pending Payments (buyer auction debts only) -->
-        <a href="{{ route('admin.pending-payments') }}" class="bg-white rounded-lg shadow p-6 hover:shadow-md transition block">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600">Pending Payments</p>
-                    <p class="text-2xl font-bold text-gray-900 mt-1">{{ $stats['payments_pending'] ?? 0 }}</p>
-                    <p class="text-xs text-gray-500 mt-1">Buyer auction debts</p>
-                </div>
-                <div class="p-3 bg-orange-100 rounded-full">
-                    <i class="fas fa-credit-card text-orange-600 text-xl"></i>
-                </div>
+            <div>
+                <div class="adm-stat-lbl">Active Auctions</div>
+                <div class="adm-stat-val">{{ $stats['active_auctions'] ?? 0 }}</div>
             </div>
         </a>
 
-        <!-- Payouts Pending -->
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600">Payouts Pending</p>
-                    <p class="text-2xl font-bold text-gray-900 mt-1">{{ $stats['payouts_pending'] ?? 0 }}</p>
-                </div>
-                <div class="p-3 bg-indigo-100 rounded-full">
-                    <i class="fas fa-money-bill-wave text-indigo-600 text-xl"></i>
-                </div>
+        <a href="{{ route('admin.listing-review') }}" class="adm-stat">
+            <div class="adm-stat-ico ico-amber">
+                <span class="material-icons-round">pending_actions</span>
             </div>
-        </div>
+            <div>
+                <div class="adm-stat-lbl">Pending Approval</div>
+                <div class="adm-stat-val">{{ $stats['listings_awaiting_approval'] ?? 0 }}</div>
+            </div>
+        </a>
 
-        <!-- Open Disputes -->
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600">Open Disputes</p>
-                    <p class="text-2xl font-bold text-gray-900 mt-1">{{ $stats['open_disputes'] ?? 0 }}</p>
-                </div>
-                <div class="p-3 bg-red-100 rounded-full">
-                    <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
-                </div>
+        <a href="{{ route('admin.users') }}" class="adm-stat">
+            <div class="adm-stat-ico ico-blue">
+                <span class="material-icons-round">group</span>
             </div>
-        </div>
+            <div>
+                <div class="adm-stat-lbl">Total Users</div>
+                <div class="adm-stat-val">{{ $stats['total_users'] ?? 0 }}</div>
+                <div class="adm-stat-sub">{{ $stats['total_buyers'] ?? 0 }} buyers · {{ $stats['total_sellers'] ?? 0 }} sellers</div>
+            </div>
+        </a>
 
-        <!-- Quick Actions -->
-        <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow p-6 text-white">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-blue-100">Quick Actions</p>
-                    <p class="text-lg font-semibold mt-2">Manage Platform</p>
-                </div>
-                <div class="p-3 bg-white bg-opacity-20 rounded-full">
-                    <i class="fas fa-cog text-white text-xl"></i>
-                </div>
+        <a href="{{ route('admin.pending-payments') }}" class="adm-stat">
+            <div class="adm-stat-ico ico-red">
+                <span class="material-icons-round">credit_card_off</span>
             </div>
-            <div class="mt-4 space-y-2">
-                <a href="{{ route('admin.listing-review') }}" class="block text-sm hover:underline">Review Listings</a>
-                <a href="{{ route('admin.users') }}" class="block text-sm hover:underline">Manage Users</a>
-                <a href="{{ route('admin.payments') }}" class="block text-sm hover:underline">Sales / Payouts</a>
+            <div>
+                <div class="adm-stat-lbl">Pending Payments</div>
+                <div class="adm-stat-val">{{ $stats['payments_pending'] ?? 0 }}</div>
+                <div class="adm-stat-sub">Buyer auction debts</div>
+            </div>
+        </a>
+
+        <a href="{{ route('admin.payouts') }}" class="adm-stat">
+            <div class="adm-stat-ico ico-green">
+                <span class="material-icons-round">account_balance_wallet</span>
+            </div>
+            <div>
+                <div class="adm-stat-lbl">Payouts Pending</div>
+                <div class="adm-stat-val">{{ $stats['payouts_pending'] ?? 0 }}</div>
+            </div>
+        </a>
+
+        <div class="adm-stat" style="cursor:default">
+            <div class="adm-stat-ico ico-purple">
+                <span class="material-icons-round">report_problem</span>
+            </div>
+            <div>
+                <div class="adm-stat-lbl">Open Disputes</div>
+                <div class="adm-stat-val">{{ $stats['open_disputes'] ?? 0 }}</div>
             </div>
         </div>
     </div>
 
-    <!-- Alerts Section -->
+    {{-- ── Alerts ── --}}
     @if(isset($alerts) && count($alerts) > 0)
-    <div class="bg-white rounded-lg shadow mb-6">
-        <div class="p-6 border-b">
-            <h2 class="text-xl font-semibold text-gray-900">System Alerts</h2>
+    <div class="adm-card">
+        <div class="adm-card-hdr">
+            <h2><span class="material-icons-round">notifications_active</span> System Alerts</h2>
+            <span style="font-size:.72rem;font-weight:600;background:#fee2e2;color:#dc2626;padding:2px 10px;border-radius:999px;">{{ count($alerts) }}</span>
         </div>
-        <div class="p-6 space-y-3">
+        <div class="adm-card-body" style="padding-top:.875rem;padding-bottom:.875rem">
             @foreach($alerts as $alert)
-            <div class="flex items-center p-4 rounded-lg border-l-4 
-                {{ $alert['type'] == 'danger' ? 'bg-red-50 border-red-500 text-red-700' : '' }}
-                {{ $alert['type'] == 'warning' ? 'bg-yellow-50 border-yellow-500 text-yellow-700' : '' }}
-                {{ $alert['type'] == 'info' ? 'bg-blue-50 border-blue-500 text-blue-700' : '' }}">
-                <i class="fas fa-exclamation-circle mr-3"></i>
-                <span class="flex-1">{{ $alert['message'] }}</span>
-                @if(isset($alert['link']))
-                <a href="{{ $alert['link'] }}" class="ml-4 text-sm font-medium underline">View</a>
-                @endif
-            </div>
+                <div class="adm-alert {{ $alert['type'] ?? 'info' }}">
+                    <span class="material-icons-round">
+                        {{ $alert['type'] === 'danger' ? 'error' : ($alert['type'] === 'warning' ? 'warning' : 'info') }}
+                    </span>
+                    <span class="flex-1">{{ $alert['message'] }}</span>
+                    @if(isset($alert['link']))
+                        <a href="{{ $alert['link'] }}" style="font-size:.8rem;font-weight:600;color:inherit;text-decoration:underline;white-space:nowrap">View →</a>
+                    @endif
+                </div>
             @endforeach
         </div>
     </div>
     @endif
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Recent Activity -->
-        <div class="bg-white rounded-lg shadow">
-            <div class="p-6 border-b">
-                <h2 class="text-xl font-semibold text-gray-900">Recent Activity</h2>
+    {{-- ── Two-column lower grid ── --}}
+    <div class="adm-two-col" style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem">
+
+        {{-- Recent Activity --}}
+        <div class="adm-card">
+            <div class="adm-card-hdr">
+                <h2><span class="material-icons-round">timeline</span> Recent Activity</h2>
             </div>
-            <div class="p-6">
+            <div class="adm-card-body">
                 @if(isset($recentActivities) && count($recentActivities) > 0)
-                <div class="space-y-4">
                     @foreach($recentActivities as $activity)
-                    <div class="flex items-start">
-                        <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center mr-4 flex-shrink-0">
-                            <i class="fas fa-{{ $activity['icon'] ?? 'circle' }} text-gray-600"></i>
+                        <div class="adm-activity">
+                            <div class="adm-activity-ico">
+                                <span class="material-icons-round">{{ $activity['icon'] ?? 'circle' }}</span>
+                            </div>
+                            <div>
+                                <div class="adm-activity-msg">{{ $activity['message'] }}</div>
+                                <div class="adm-activity-time">
+                                    @if(isset($activity['time']))
+                                        {{ $activity['time']->diffForHumans() }}
+                                    @else
+                                        {{ $activity['timestamp'] ?? 'Recently' }}
+                                    @endif
+                                </div>
+                            </div>
                         </div>
-                        <div class="flex-1">
-                            <p class="text-gray-800">{{ $activity['message'] }}</p>
-                            <p class="text-sm text-gray-500 mt-1">
-                                @if(isset($activity['time']))
-                                    {{ $activity['time']->diffForHumans() }}
-                                @else
-                                    {{ $activity['timestamp'] ?? 'Recently' }}
-                                @endif
-                            </p>
-                        </div>
-                    </div>
                     @endforeach
-                </div>
                 @else
-                <div class="text-center py-8 text-gray-500">
-                    <i class="fas fa-inbox text-4xl mb-3"></i>
-                    <p>No recent activity</p>
-                </div>
+                    <div class="adm-empty">
+                        <span class="material-icons-round">inbox</span>
+                        <p style="margin:0;font-size:.875rem">No recent activity</p>
+                    </div>
                 @endif
             </div>
         </div>
 
-        <!-- Recent Signups -->
-        <div class="bg-white rounded-lg shadow">
-            <div class="p-6 border-b">
-                <h2 class="text-xl font-semibold text-gray-900">Recent User Signups</h2>
+        {{-- Recent Signups --}}
+        <div class="adm-card">
+            <div class="adm-card-hdr">
+                <h2><span class="material-icons-round">person_add</span> Recent Signups</h2>
+                <a href="{{ route('admin.users') }}">View all →</a>
             </div>
-            <div class="p-6">
+            <div class="adm-card-body">
                 @if(isset($recentSignups) && $recentSignups->count() > 0)
-                <div class="space-y-4">
-                    @foreach($recentSignups as $user)
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center">
-                            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-4">
-                                <span class="text-blue-600 font-semibold">
-                                    {{ strtoupper(substr($user->name, 0, 1)) }}
-                                </span>
+                    @foreach($recentSignups->take(8) as $user)
+                        <div class="adm-user-row">
+                            <div style="display:flex;align-items:center;gap:10px;min-width:0">
+                                <div class="adm-avatar">{{ strtoupper(substr($user->name, 0, 1)) }}</div>
+                                <div style="min-width:0">
+                                    <div style="font-size:.875rem;font-weight:600;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px">{{ $user->name }}</div>
+                                    <div style="font-size:.72rem;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px">{{ $user->email }}</div>
+                                </div>
                             </div>
-                            <div>
-                                <p class="font-medium text-gray-900">{{ $user->name }}</p>
-                                <p class="text-sm text-gray-500">{{ $user->email }}</p>
+                            <div style="text-align:right;flex-shrink:0">
+                                <span class="adm-role-badge role-{{ $user->role ?? 'guest' }}">{{ ucfirst($user->role ?? 'guest') }}</span>
+                                <div style="font-size:.72rem;color:#94a3b8;margin-top:3px">{{ $user->created_at->diffForHumans() }}</div>
                             </div>
                         </div>
-                        <div class="text-right">
-                            <span class="inline-block px-2 py-1 text-xs font-medium rounded
-                                {{ $user->role == 'buyer' ? 'bg-blue-100 text-blue-800' : '' }}
-                                {{ $user->role == 'seller' ? 'bg-green-100 text-green-800' : '' }}
-                                {{ $user->role == 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800' }}">
-                                {{ ucfirst($user->role ?? 'guest') }}
-                            </span>
-                            <p class="text-xs text-gray-500 mt-1">{{ $user->created_at->diffForHumans() }}</p>
-                        </div>
-                    </div>
                     @endforeach
-                </div>
                 @else
-                <div class="text-center py-8 text-gray-500">
-                    <i class="fas fa-users text-4xl mb-3"></i>
-                    <p>No recent signups</p>
-                </div>
+                    <div class="adm-empty">
+                        <span class="material-icons-round">group</span>
+                        <p style="margin:0;font-size:.875rem">No recent signups</p>
+                    </div>
                 @endif
             </div>
         </div>
+
     </div>
+
+    {{-- ── Quick Actions ── --}}
+    <div class="adm-card" style="margin-top:1.25rem">
+        <div class="adm-card-hdr">
+            <h2><span class="material-icons-round">bolt</span> Quick Actions</h2>
+        </div>
+        <div class="adm-card-body">
+            <div class="adm-actions">
+                <a href="{{ route('admin.listing-review') }}" class="adm-action-chip">
+                    <span class="material-icons-round">rule</span> Review Listings
+                </a>
+                <a href="{{ route('admin.users') }}" class="adm-action-chip">
+                    <span class="material-icons-round">manage_accounts</span> Manage Users
+                </a>
+                <a href="{{ route('admin.payments') }}" class="adm-action-chip">
+                    <span class="material-icons-round">payments</span> Sales / Payouts
+                </a>
+                <a href="{{ route('admin.auctions') }}" class="adm-action-chip">
+                    <span class="material-icons-round">gavel</span> Auction Management
+                </a>
+                <a href="{{ route('admin.security-deposits') }}" class="adm-action-chip">
+                    <span class="material-icons-round">security</span> Security Deposits
+                </a>
+                <a href="{{ route('admin.support-tickets') }}" class="adm-action-chip">
+                    <span class="material-icons-round">support_agent</span> Support Tickets
+                </a>
+                <a href="{{ route('admin.pending-payments') }}" class="adm-action-chip">
+                    <span class="material-icons-round">credit_card_off</span> Pending Payments
+                </a>
+                <a href="{{ route('admin.buyer-defaults') }}" class="adm-action-chip">
+                    <span class="material-icons-round">block</span> Buyer Defaults
+                </a>
+            </div>
+        </div>
+    </div>
+
 </div>
+
 @endsection
