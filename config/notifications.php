@@ -43,7 +43,8 @@ return [
         ],
         'payment_reminder_24h' => [
             'audience' => 'buyer',
-            'body' => 'Reminder: please complete payment for {vehicle_name} within your payment window. Open your invoice in CayMark to pay now.',
+            // N10 — inject {listing_number}
+            'body' => 'This is a reminder that payment for listing #{listing_number} is still pending. To avoid any issues with your purchase, please complete payment as soon as possible. Thank you.',
         ],
         'payment_final_warning_48h' => [
             'audience' => 'buyer',
@@ -84,11 +85,13 @@ return [
         ],
         'auction_ending_soon_bidder' => [
             'audience' => 'buyer',
-            'body' => 'An auction you are bidding on — {vehicle_name} (listing #{listing_number}) — ends within about {end_window}. Stay signed in to defend your bid.',
+            // N07
+            'body' => 'The auction for listing #{listing_number} ({vehicle_name}) is ending soon. Place your bid now if you\'d like to secure your position before it closes.',
         ],
         'auction_ending_soon_watchlist' => [
             'audience' => 'buyer',
-            'body' => 'A vehicle on your watchlist — {vehicle_name} (listing #{listing_number}) — ends within about {end_window}. Review the listing before it closes.',
+            // N06
+            'body' => 'Item #{listing_number} ({vehicle_name}) in your watchlist is ending soon. Place a bid now before this auction closes to win.',
         ],
 
         'deposit_wire_request_received' => [
@@ -107,13 +110,21 @@ return [
             'audience' => 'buyer',
             'body' => 'CayMark received your deposit of ${amount}. Funds are available in your deposit wallet according to your account balance.',
         ],
+        // N15 — Admin-issued item refund
+        'refund_issued_item' => [
+            'audience' => 'buyer',
+            'body' => 'A refund has been issued for your transaction related to listing #{listing_number}. Please allow a few business days for the funds to reflect in your account.',
+        ],
+
         'deposit_refund_request_submitted' => [
             'audience' => 'buyer',
-            'body' => 'Your deposit withdrawal request of ${amount} has been submitted and is pending admin review.',
+            // N14
+            'body' => "We've received your request to refund your deposit. Your request is currently being reviewed by our team.\n\nPlease note that a deposit is required to bid on all items over \$2,000 on CayMark.\n\nIf you would like to cancel this request, or if you did not make this request, please contact our team immediately at {support_email}.",
         ],
         'deposit_withdrawal_approved' => [
             'audience' => 'buyer',
-            'body' => 'Your deposit withdrawal of ${amount} has been approved and marked processed in CayMark. Allow time for your bank to post the transfer.',
+            // N16
+            'body' => 'A refund has been issued for your deposit in the amount of ${amount}. Please allow a few business days for the funds to reflect in your account.',
         ],
         'deposit_withdrawal_rejected' => [
             'audience' => 'buyer',
@@ -142,11 +153,13 @@ return [
         ],
         'awaiting_buyer_payment' => [
             'audience' => 'seller',
-            'body' => 'Your vehicle {vehicle_name} (listing #{listing_number}) sold at auction. The buyer has an open invoice — CayMark is awaiting their payment.',
+            // N21
+            'body' => "We're currently awaiting payment for listing #{listing_number}. We'll notify you as soon as payment is completed. Thank you for your patience.",
         ],
         'reserve_price_met' => [
             'audience' => 'seller',
-            'body' => 'Reserve was met for {vehicle_name} (listing #{listing_number}) at auction end. The winning bid of ${winning_bid_amount} will proceed to invoicing.',
+            // N22
+            'body' => 'Congratulations! Your reserve price for item (#{listing_number}) has been met. Keep up to date with this listing in the Auctions tab of your dashboard.',
         ],
         'auction_sold' => [
             'audience' => 'seller',
@@ -197,11 +210,13 @@ return [
         ],
         'subscription_ending_soon' => [
             'audience' => 'both',
-            'body' => 'Your CayMark subscription ({package_name}) ends on {date}. Renew before then to avoid interruption.',
+            // N24
+            'body' => 'Your subscription is set to expire on {date}. To continue using CayMark without interruption, please renew your subscription before this date. We\'d hate to see you go.',
         ],
         'subscription_ended' => [
             'audience' => 'both',
-            'body' => 'Your CayMark subscription ({package_name}) has ended. Renew in your account to restore full seller or buyer features.',
+            // N25
+            'body' => 'Your subscription has expired. To regain access to all features, you can reactivate your current plan or choose a new one at any time. We\'d love to have you back on CayMark.',
         ],
 
         'login_new_device' => [

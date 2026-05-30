@@ -120,7 +120,7 @@
                                 <p class="px-4 pt-3 pb-1 text-[11px] font-bold text-gray-400 uppercase tracking-widest">Suggested</p>
                                 <template x-for="(item, i) in suggested" :key="i">
                                     <button type="button"
-                                        @click="pick(item.label)"
+                                        @click="pickSuggested(item)"
                                         :class="activeIdx === i ? 'bg-[#f0f4fb]' : 'hover:bg-gray-50'"
                                         class="w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors">
                                         <span class="material-symbols-outlined text-primary flex-shrink-0" style="font-size:17px">search</span>
@@ -136,7 +136,7 @@
                                 <p class="px-4 pt-3 pb-1 text-[11px] font-bold text-gray-400 uppercase tracking-widest">Popular Searches</p>
                                 <template x-for="(make, j) in popular" :key="j">
                                     <button type="button"
-                                        @click="pick(make)"
+                                        @click="pickMake(make)"
                                         :class="activeIdx === suggested.length + j ? 'bg-[#f0f4fb]' : 'hover:bg-gray-50'"
                                         class="w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors">
                                         <span class="material-symbols-outlined text-gray-400 flex-shrink-0" style="font-size:17px">trending_up</span>
@@ -619,13 +619,31 @@ function cmSearch(suggestUrl, auctionUrl) {
                 this.submit();
             }
         },
+        // Free-text pick (keyboard enter / fallback)
         pick(label) {
             this.query = label;
             this.close();
             this.$nextTick(() => this.submit());
         },
+        // Click on a structured suggestion (has .make and .model fields)
+        pickSuggested(item) {
+            this.close();
+            const p = new URLSearchParams();
+            if (item.make)  p.append('makes[]',  item.make);
+            if (item.model) p.append('models[]', item.model);
+            window.location.href = this.auctionUrl + '?' + p.toString();
+        },
+        // Click on a popular make (just a string like "Toyota")
+        pickMake(make) {
+            this.close();
+            const p = new URLSearchParams();
+            p.append('makes[]', make);
+            window.location.href = this.auctionUrl + '?' + p.toString();
+        },
         submit() {
-            window.location.href = this.auctionUrl + '?search=' + encodeURIComponent(this.query);
+            const q = this.query.trim();
+            if (!q) { window.location.href = this.auctionUrl; return; }
+            window.location.href = this.auctionUrl + '?search=' + encodeURIComponent(q);
         },
         fetch() {
             this.isOpen = true;

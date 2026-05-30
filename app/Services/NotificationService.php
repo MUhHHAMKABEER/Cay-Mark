@@ -142,13 +142,20 @@ class NotificationService
 
     public function paymentReminder24Hours(User $buyer, Invoice $invoice): void
     {
-        $vehicleName = $invoice->item_name ?? '[VEHICLE_NAME]';
+        $vehicleName   = $invoice->item_name ?? '[VEHICLE_NAME]';
+        $listing       = $invoice->listing ?? $invoice->loadMissing('listing')->listing;
+        $listingNumber = $listing
+            ? (string) ($listing->item_number ?? $listing->id)
+            : (string) ($invoice->item_id ?? $invoice->id);
+
         $this->sendNotification($buyer, 'payment_reminder_24h', $this->message('payment_reminder_24h', [
-            'vehicle_name' => $vehicleName,
+            'vehicle_name'   => $vehicleName,
+            'listing_number' => $listingNumber,
         ]), [
-            'invoice_id' => $invoice->id,
-            'item_name' => $vehicleName,
-            'link' => route('buyer.payment.checkout-single', $invoice->id),
+            'invoice_id'     => $invoice->id,
+            'item_name'      => $vehicleName,
+            'listing_number' => $listingNumber,
+            'link'           => route('buyer.payment.checkout-single', $invoice->id),
         ]);
     }
 
@@ -323,6 +330,20 @@ class NotificationService
             'amount' => $amount,
             'link' => route('buyer.deposit-withdrawal'),
         ]);
+    }
+
+    /**
+     * N15 — Admin issued a refund related to a specific auction/listing transaction.
+     * Call from admin refund action, passing the affected listing.
+     */
+    public function refundIssuedForItem(User $buyer, Listing $listing): void
+    {
+        $core = $this->listingCore($listing);
+        $this->sendNotification($buyer, 'refund_issued_item', $this->message('refund_issued_item', $core), array_merge($core, [
+            'listing_id' => $listing->id,
+            'item_name'  => $core['vehicle_name'],
+            'link'       => route('buyer.auctions'),
+        ]));
     }
 
     public function depositRefundRequestSubmitted(User $buyer, float $amount): void

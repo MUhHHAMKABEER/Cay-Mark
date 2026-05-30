@@ -22,11 +22,11 @@
             [$now]
         );
 
-    // 4 featured auctions (most viewed / most recent) — bids eager-loaded to avoid N+1
+    // 8 most popular active auctions (ranked by view_count = clicks) — bids eager-loaded
     $featuredAuctions = (clone $activeAuctionBase)
         ->orderByDesc('view_count')
         ->orderByDesc('created_at')
-        ->take(4)
+        ->take(8)
         ->get();
 
     /* ── Auction Finder dropdowns (auction listings only) ─────── */
