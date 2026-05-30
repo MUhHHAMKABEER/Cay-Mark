@@ -326,6 +326,9 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/user-activity-insights', [AdminController::class, 'userActivityInsights'])->name('admin.user-activity-insights');
     Route::get('/revenue-tracking', [AdminController::class, 'revenueTracking'])->name('admin.revenue-tracking');
     Route::get('/revenue-tracking/export', [AdminController::class, 'exportRevenue'])->name('admin.revenue-tracking.export');
+    // AD20 — Membership Payments (separate from memberships overview)
+    Route::get('/membership-payments', [AdminController::class, 'membershipPayments'])->name('admin.membership-payments');
+    Route::get('/membership-payments/export', [AdminController::class, 'exportMembershipPayments'])->name('admin.membership-payments.export');
 
     // Action routes
     Route::post('/users/{user}/suspend', [AdminController::class, 'suspendUser'])->name('admin.users.suspend');
@@ -369,6 +372,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/listings/{id}/approval', [AdminController::class, 'viewListingForApproval'])->name('admin.listings.approval-detail');
     Route::post('/listings/{id}/edit', [AdminController::class, 'editListing'])->name('admin.listings.edit');
     Route::post('/listings/{id}/extend-auction', [AdminController::class, 'extendAuctionTime'])->name('admin.listings.extend-auction');
+    Route::get('/listings/{id}/extend-auction', fn () => redirect()->route('admin.listings'))->name('admin.listings.extend-auction.redirect');
     Route::post('/listings/{id}/toggle-status', [AdminController::class, 'toggleListingStatus'])->name('admin.listings.toggle-status');
     Route::delete('/listings/{id}', [AdminController::class, 'deleteListing'])->name('admin.listings.delete');
 

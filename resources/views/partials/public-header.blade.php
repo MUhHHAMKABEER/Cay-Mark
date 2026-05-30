@@ -428,16 +428,6 @@
 
         </nav>
 
-        {{-- Language / Region — absolutely pinned to the right --}}
-        <div class="absolute right-4 md:right-10 flex items-center gap-1.5 cursor-pointer px-2.5 py-1 rounded-full bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-colors">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-500">
-                <circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-            </svg>
-            <span class="text-[11px] font-bold text-slate-600 uppercase tracking-wider">EN</span>
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400">
-                <polyline points="6 9 12 15 18 9"/>
-            </svg>
-        </div>
     </div>
 </div>
 

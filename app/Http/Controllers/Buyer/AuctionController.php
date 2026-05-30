@@ -236,12 +236,8 @@ class AuctionController extends Controller
         'vehicle_types' => $baseQuery->select('major_category')->distinct()->pluck('major_category')->filter()->sort()->values(),
         'makes' => $baseQuery->select('make')->distinct()->pluck('make')->filter()->sort()->values(),
         'models' => $baseQuery->select('model')->distinct()->pluck('model')->filter()->sort()->values(),
-        'damage_types' => collect([
-            'All Over', 'Front End', 'Rear End', 'Side', 'Mechanical',
-            'Minor Dents/Scratches', 'Flood', 'Fire', 'Vandalism',
-            'Interior', 'Undercarriage', 'Normal Wear', 'Engine',
-            'Transmission', 'None (No Reported Damage)'
-        ]),
+        // key => label from config — same source as the submit-listing form
+        'damage_types' => config('listing_damage_types.allowed', []),
         'body_styles' => collect([
             'Sedan', 'SUV', 'Truck', 'Coupe', 'Hatchback',
             'Van', 'Crossover', 'Convertible', 'Wagon', 'Other'
@@ -250,7 +246,8 @@ class AuctionController extends Controller
         'cylinders' => collect(['2', '3', '4', '6', '8', '10', '12']),
         'transmissions' => $baseQuery->select('transmission')->distinct()->pluck('transmission')->filter()->sort()->values(),
         'drive_trains' => collect(['FWD', 'RWD', 'AWD', '4WD']),
-        'fuel_types' => $baseQuery->select('fuel_type')->distinct()->pluck('fuel_type')->filter()->sort()->values(),
+        // Use config — same source as submit-listing form
+        'fuel_types' => collect(config('listing_fuel_types.allowed', [])),
         'colors' => collect(config('listing_colors.allowed', []))->sort()->values(),
         'title_options' => [
             'CLEAN' => 'Has Title',

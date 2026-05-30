@@ -144,15 +144,16 @@
 @endif
 
 {{-- Damage Type (checkboxes) --}}
+{{-- value = DB key (e.g. ALL_OVER), display = label (e.g. "All Over") --}}
 @if(!empty($filterOptions['damage_types']))
 <div class="vf-row">
     <span class="vf-label">Damage Type</span>
     <div class="vf-checkbox-list">
-        @foreach ($filterOptions['damage_types'] as $damage)
+        @foreach ($filterOptions['damage_types'] as $damageKey => $damageLabel)
         <label class="vf-check-item">
-            <input type="checkbox" value="{{ $damage }}" x-model="damageTypeMulti" @change="applyFilters()"
+            <input type="checkbox" value="{{ $damageKey }}" x-model="damageTypeMulti" @change="applyFilters()"
                 class="vf-checkbox">
-            <span>{{ $damage }}</span>
+            <span>{{ $damageLabel }}</span>
         </label>
         @endforeach
     </div>

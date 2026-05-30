@@ -129,22 +129,31 @@ class AdminController extends Controller
     }
 
     /**
-     * Get date range based on filter
+     * Get date range based on filter. Supports: today, 7_days, 30_days, 90_days,
+     * this_year, all_time, custom (requires date_from / date_to request params).
      */
-    private function getDateRange($filter)
+    private function getDateRange($filter, ?string $from = null, ?string $to = null): array
     {
         switch ($filter) {
-            case 'today':
-                return [now()->startOfDay(), now()->endOfDay()];
-            case '7_days':
-                return [now()->subDays(7)->startOfDay(), now()->endOfDay()];
-            case '30_days':
-                return [now()->subDays(30)->startOfDay(), now()->endOfDay()];
-            case 'this_year':
-                return [now()->startOfYear(), now()->endOfDay()];
-            default:
-                return [now()->subDays(30)->startOfDay(), now()->endOfDay()];
+            case 'today':     return [now()->startOfDay(),     now()->endOfDay()];
+            case '7_days':    return [now()->subDays(7)->startOfDay(),  now()->endOfDay()];
+            case '30_days':   return [now()->subDays(30)->startOfDay(), now()->endOfDay()];
+            case '90_days':   return [now()->subDays(90)->startOfDay(), now()->endOfDay()];
+            case 'this_year': return [now()->startOfYear(),    now()->endOfDay()];
+            case 'all_time':  return [Carbon::createFromDate(2000, 1, 1)->startOfDay(), now()->endOfDay()];
+            case 'custom':
+                $start = $from ? Carbon::parse($from)->startOfDay() : now()->subDays(30)->startOfDay();
+                $end   = $to   ? Carbon::parse($to)->endOfDay()     : now()->endOfDay();
+                return [$start, $end];
+            default:          return [now()->subDays(30)->startOfDay(), now()->endOfDay()];
         }
+    }
+
+    /** Resolve date range from the current request. */
+    private function dateRangeFromRequest(Request $request): array
+    {
+        $filter = $request->get('date_filter', '30_days');
+        return $this->getDateRange($filter, $request->get('date_from'), $request->get('date_to'));
     }
 
     /**
@@ -1066,41 +1075,125 @@ class AdminController extends Controller
     /**
      * Reports & Analytics Page
      */
-    public function reportsAnalytics()
+    // ── AD20: Membership Payments ─────────────────────────────────────────────
+    public function membershipPayments(Request $request)
     {
-        // User growth data (last 30 days)
-        $userGrowth = User::selectRaw('DATE(created_at) as date, COUNT(*) as count')
-                            ->where('created_at', '>=', Carbon::now()->subDays(30))
-                            ->groupBy('date')
-                            ->orderBy('date')
-                            ->get();
-                            
-        // Sales data
-        $salesData = Payment::selectRaw('DATE(created_at) as date, SUM(amount) as total, COUNT(*) as count')
-                            ->where('status', 'completed')
-                            ->where('created_at', '>=', Carbon::now()->subDays(30))
-                            ->groupBy('date')
-                            ->orderBy('date')
-                            ->get();
-                            
-        // Subscription analytics
-        $subscriptionData = \App\Models\Subscription::selectRaw('package_id, status, COUNT(*) as count')
-                                    ->groupBy('package_id', 'status')
-                                    ->get();
-                                    
-        // Dispute analytics (placeholder until Dispute model exists)
-        $disputeData = collect([]);
-        // $disputeData = Dispute::selectRaw('DATE(created_at) as date, status, COUNT(*) as count')
-        //                     ->where('created_at', '>=', Carbon::now()->subDays(30))
-        //                     ->groupBy('date', 'status')
-        //                     ->orderBy('date')
-        //                     ->get();
+        $filter     = $request->get('date_filter', '30_days');
+        $dateRanges = $this->getDateRange($filter, $request->get('date_from'), $request->get('date_to'));
+
+        $query = \App\Models\Payment::with(['user', 'subscription.package'])
+            ->whereNotNull('subscription_id')
+            ->whereBetween('created_at', $dateRanges);
+
+        if ($request->filled('search')) {
+            $s = $request->get('search');
+            $query->whereHas('user', fn ($q) => $q->where('name','like',"%$s%")->orWhere('email','like',"%$s%"));
+        }
+        if ($request->filled('status')) {
+            $query->where('status', $request->get('status'));
+        }
+
+        $payments = $query->orderByDesc('created_at')->paginate(25);
+
+        $stats = [
+            'total'     => \App\Models\Payment::whereNotNull('subscription_id')->whereBetween('created_at', $dateRanges)->count(),
+            'completed' => \App\Models\Payment::whereNotNull('subscription_id')->whereBetween('created_at', $dateRanges)->where('status','completed')->count(),
+            'pending'   => \App\Models\Payment::whereNotNull('subscription_id')->whereBetween('created_at', $dateRanges)->where('status','pending')->count(),
+            'revenue'   => \App\Models\Payment::whereNotNull('subscription_id')->whereBetween('created_at', $dateRanges)->where('status','completed')->sum('amount'),
+        ];
+
+        return view('admin.membership-payments', compact('payments','stats','filter','dateRanges'));
+    }
+
+    public function exportMembershipPayments(Request $request)
+    {
+        $filter     = $request->get('date_filter', '30_days');
+        $dateRanges = $this->getDateRange($filter, $request->get('date_from'), $request->get('date_to'));
+
+        $payments = \App\Models\Payment::with(['user','subscription.package'])
+            ->whereNotNull('subscription_id')
+            ->whereBetween('created_at', $dateRanges)
+            ->orderByDesc('created_at')->get();
+
+        $filename = 'membership_payments_' . date('Y-m-d') . '.csv';
+        return response()->streamDownload(function () use ($payments) {
+            $f = fopen('php://output', 'w');
+            fputcsv($f, ['Date','User','Email','Plan','Amount','Status','Renewal']);
+            foreach ($payments as $p) {
+                fputcsv($f, [
+                    $p->created_at->format('Y-m-d'),
+                    $p->user?->name ?? '—',
+                    $p->user?->email ?? '—',
+                    $p->subscription?->package?->title ?? '—',
+                    '$' . number_format($p->amount, 2),
+                    ucfirst($p->status),
+                    $p->subscription?->ends_at?->format('Y-m-d') ?? '—',
+                ]);
+            }
+            fclose($f);
+        }, $filename, ['Content-Type' => 'text/csv']);
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
+    public function reportsAnalytics(Request $request)
+    {
+        $dateFilter = $request->get('date_filter', '30_days');
+        $dateRanges = $this->getDateRange($dateFilter, $request->get('date_from'), $request->get('date_to'));
+        [$from, $to] = $dateRanges;
+
+        $listingMetrics = [
+            'submitted' => Listing::whereBetween('created_at', $dateRanges)->count(),
+            'approved'  => Listing::where('status','approved')->whereBetween('created_at', $dateRanges)->count(),
+            'rejected'  => Listing::where('status','rejected')->whereBetween('created_at', $dateRanges)->count(),
+            'sold'      => Listing::where('status','sold')->whereBetween('updated_at', $dateRanges)->count(),
+        ];
+
+        $paidInvoices = \App\Models\Invoice::where('payment_status','paid')->whereBetween('paid_at', $dateRanges)->get();
+        $auctionMetrics = [
+            'completed'     => $paidInvoices->count(),
+            'avg_sale'      => round((float)($paidInvoices->avg('winning_bid_amount') ?? 0), 2),
+            'total_revenue' => round((float)($paidInvoices->sum('winning_bid_amount') ?? 0), 2),
+        ];
+
+        $userMetrics = [
+            'total_active'  => User::whereIn('role',['buyer','seller'])->count(),
+            'new_in_period' => User::whereBetween('created_at', $dateRanges)->count(),
+            'buyers'        => User::where('role','buyer')->count(),
+            'sellers'       => User::where('role','seller')->count(),
+        ];
+
+        $revenueTotal = round(
+            (float)($paidInvoices->sum('buyer_commission') ?? 0) +
+            (float)(\App\Models\Payout::whereIn('status',['sent','paid_successfully'])->whereBetween('payout_generated_at', $dateRanges)->sum('seller_commission') ?? 0),
+            2
+        );
+
+        $listingsTrend = Listing::selectRaw('DATE(created_at) as date, COUNT(*) as count')
+            ->whereBetween('created_at', $dateRanges)->groupBy('date')->orderBy('date')->get();
+
+        $revenueTrend = \App\Models\Invoice::selectRaw('DATE(paid_at) as date, SUM(winning_bid_amount) as total')
+            ->where('payment_status','paid')->whereBetween('paid_at', $dateRanges)
+            ->groupBy('date')->orderBy('date')->get();
+
+        $usersTrend = User::selectRaw('DATE(created_at) as date, COUNT(*) as count')
+            ->whereBetween('created_at', $dateRanges)->groupBy('date')->orderBy('date')->get();
+
+        if ($request->get('export') === 'csv') {
+            return response()->streamDownload(function () use ($listingMetrics,$auctionMetrics,$userMetrics,$revenueTotal) {
+                $f = fopen('php://output', 'w');
+                fputcsv($f, ['Metric','Value']);
+                foreach (array_merge(
+                    [['Listings Submitted',$listingMetrics['submitted']],['Listings Approved',$listingMetrics['approved']],['Listings Rejected',$listingMetrics['rejected']],['Listings Sold',$listingMetrics['sold']]],
+                    [['Auctions Completed',$auctionMetrics['completed']],['Avg Sale Price','$'.number_format($auctionMetrics['avg_sale'],2)],['Total Auction Revenue','$'.number_format($auctionMetrics['total_revenue'],2)]],
+                    [['Total Active Users',$userMetrics['total_active']],['New Registrations',$userMetrics['new_in_period']],['Total Revenue (commissions)','$'.number_format($revenueTotal,2)]]
+                ) as $row) { fputcsv($f, $row); }
+                fclose($f);
+            }, "caymark_analytics_{$from->format('Y-m-d')}_to_{$to->format('Y-m-d')}.csv", ['Content-Type'=>'text/csv']);
+        }
 
         return view('admin.reports-analytics', compact(
-            'userGrowth', 
-            'salesData', 
-            'subscriptionData', 
-            'disputeData'
+            'listingMetrics','auctionMetrics','userMetrics','revenueTotal',
+            'listingsTrend','revenueTrend','usersTrend','dateFilter','dateRanges'
         ));
     }
 
@@ -1735,7 +1828,7 @@ class AdminController extends Controller
     public function userActivityInsights(Request $request)
     {
         $dateFilter = $request->get('date_filter', '7_days');
-        $dateRanges = $this->getDateRange($dateFilter);
+        $dateRanges = $this->getDateRange($dateFilter, $request->get('date_from'), $request->get('date_to'));
 
         // Daily/Weekly active buyers
         $activeBuyers = User::where('role', 'buyer')
@@ -1808,7 +1901,7 @@ class AdminController extends Controller
     public function revenueTracking(Request $request)
     {
         $dateFilter = $request->get('date_filter', '30_days');
-        $dateRanges = $this->getDateRange($dateFilter);
+        $dateRanges = $this->getDateRange($dateFilter, $request->get('date_from'), $request->get('date_to'));
 
         // Total revenue from listing fees (Individual sellers: $25 per listing)
         $listingFees = Payment::whereHas('user', function ($q) {

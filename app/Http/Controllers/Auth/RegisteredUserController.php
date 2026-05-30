@@ -1126,31 +1126,60 @@ public function step3(Request $request)
 
             // Process payment if required
             if ($finishData['role'] === 'buyer' || $isBusinessSeller) {
-                Log::info('Step 10a: Creating subscription for paid package');
+                Log::info('Step 10a: Processing card payment through gateway');
+
+                // ── Run card through payment gateway ────────────────────────
+                $amountCents    = (int) round($package->price * 100);
+                $cardNumber     = $validated['card_number']  ?? '';
+                $expiry         = str_pad((int) ($validated['expiry_month'] ?? 1), 2, '0', STR_PAD_LEFT)
+                                . '/' . substr((string) ($validated['expiry_year'] ?? date('Y')), -2);
+                $cvv            = $validated['cvc']          ?? '';
+                $cardholderName = $request->input('cardholder_name', $user->name);
+
+                $gateway = new \App\Services\DemoPaymentGateway();
+                $chargeResult = $gateway->charge($amountCents, $cardNumber, $expiry, $cvv, $cardholderName);
+
+                if (! $chargeResult['success']) {
+                    Log::warning('Step 10a: Card charge failed', [
+                        'user_id' => $user->id,
+                        'message' => $chargeResult['message'],
+                    ]);
+                    // Roll back user creation and throw so the outer catch returns the error
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'card_number' => $chargeResult['message'],
+                    ]);
+                }
+
+                $gatewayTxId = $chargeResult['transaction_id'] ?? ('TXN-REG-' . strtoupper(uniqid()));
+                Log::info('Step 10a: Card charge successful', ['transaction_id' => $gatewayTxId]);
+                // ────────────────────────────────────────────────────────────
+
                 try {
                     $subscription = Subscription::create([
-                        'user_id' => $user->id,
+                        'user_id'    => $user->id,
                         'package_id' => $package->id,
-                        'starts_at' => now(),
-                        'ends_at' => $package->duration_days ? now()->addDays($package->duration_days) : null,
-                        'status' => 'pending',
+                        'starts_at'  => now(),
+                        'ends_at'    => $package->duration_days ? now()->addDays($package->duration_days) : null,
+                        'status'     => 'active',   // payment confirmed — activate immediately
                     ]);
 
-                    Log::info('Step 10b: Subscription created', ['subscription_id' => $subscription->id ?? 'null']);
+                    Log::info('Step 10b: Subscription created (active)', ['subscription_id' => $subscription->id ?? 'null']);
 
                     Log::info('Step 10c: Creating payment record');
                     $payment = Payment::create([
-                        'user_id' => $user->id,
-                        'subscription_id' => $subscription->id,
-                        'amount' => $package->price,
-                        'method' => 'credit_card',
-                        'status' => 'pending', // Will be updated after payment gateway confirmation
-                        'metadata' => [
-                            'card_last4' => substr($validated['card_number'], -4),
+                        'user_id'                => $user->id,
+                        'subscription_id'        => $subscription->id,
+                        'amount'                 => $package->price,
+                        'method'                 => 'credit_card',
+                        'status'                 => 'completed',
+                        'gateway_transaction_id' => $gatewayTxId,
+                        'metadata'               => [
+                            'card_last4'      => substr(preg_replace('/\D/', '', $cardNumber), -4),
+                            'cardholder_name' => $cardholderName,
                         ],
                     ]);
 
-                    Log::info('Step 10d: Payment created', ['payment_id' => $payment->id ?? 'null']);
+                    Log::info('Step 10d: Payment created (completed)', ['payment_id' => $payment->id ?? 'null']);
                 } catch (\Exception $paymentEx) {
                     Log::error('Payment/Subscription creation failed', [
                         'error' => $paymentEx->getMessage(),
