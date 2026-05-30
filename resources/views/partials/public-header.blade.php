@@ -89,7 +89,7 @@
                             @keydown.enter.prevent="selectActive()"
                             placeholder="Search make, model, or category..."
                             autocomplete="off"
-                            class="ph-search-input flex-1 bg-transparent py-2.5 pl-4 pr-2 text-[13.5px] text-slate-800 focus:outline-none min-w-0"
+                            class="ph-search-input flex-1 bg-transparent border-0 py-2.5 pl-4 pr-2 text-[13.5px] text-slate-800 focus:outline-none focus:ring-0 min-w-0"
                         />
                         {{-- Clear button --}}
                         <button type="button" x-show="query" x-cloak
