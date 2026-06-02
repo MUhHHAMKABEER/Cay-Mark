@@ -727,8 +727,31 @@
                     <div class="p-6 space-y-3">
                         @if(isset($documents) && $documents->count() > 0)
                             @foreach($documents as $doc)
+                            @php
+                                // Map the doc_type code to a human label + pull the specific
+                                // document type the user selected at registration from User model.
+                                $docLabel = match($doc->doc_type ?? '') {
+                                    'id'               => 'Government ID 1',
+                                    'id_2'             => 'Government ID 2',
+                                    'business_license' => 'Business License',
+                                    default            => ucfirst(str_replace('_', ' ', $doc->doc_type ?? 'Document')),
+                                };
+                                $docSpecific = match($doc->doc_type ?? '') {
+                                    'id'   => $user->id_type ?? null,
+                                    'id_2' => $user->id_type_2 ?? null,
+                                    default => null,
+                                };
+                            @endphp
                                 <div class="flex items-center justify-between gap-2 rounded-xl bg-gray-50 border border-gray-200 px-4 py-3">
-                                    <p class="text-sm font-medium text-gray-900">{{ ucfirst(str_replace('_', ' ', $doc->doc_type ?? 'Document')) }}</p>
+                                    <div class="min-w-0">
+                                        <p class="text-sm font-semibold text-gray-900">{{ $docLabel }}</p>
+                                        @if($docSpecific)
+                                            <p class="text-xs text-gray-500 mt-0.5">{{ $docSpecific }}</p>
+                                        @endif
+                                        @if($doc->filename)
+                                            <p class="text-xs text-gray-400 mt-0.5 truncate max-w-[180px]">{{ $doc->filename }}</p>
+                                        @endif
+                                    </div>
                                     @if($doc->path ?? null)
                                         <a href="{{ route('user.document.view', $doc->id) }}" target="_blank" rel="noopener"
                                            class="text-blue-600 hover:text-blue-800 text-sm font-semibold shrink-0">View</a>

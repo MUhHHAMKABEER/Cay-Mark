@@ -1022,15 +1022,30 @@
                     </div>
                     <div class="p-6 space-y-3">
                         @foreach($documents as $document)
+                        @php
+                            $docLabel = match($document->doc_type ?? '') {
+                                'id'               => 'Government ID 1',
+                                'id_2'             => 'Government ID 2',
+                                'business_license' => 'Business License',
+                                default            => ucfirst(str_replace('_', ' ', $document->doc_type ?? 'Document')),
+                            };
+                            $docSpecific = match($document->doc_type ?? '') {
+                                'id'   => $user->id_type ?? null,
+                                'id_2' => $user->id_type_2 ?? null,
+                                default => null,
+                            };
+                        @endphp
                             <div class="flex items-center justify-between gap-2 rounded-xl bg-gray-50 border border-gray-200 px-4 py-3">
-                                <div>
-                                    <p class="text-sm font-medium text-gray-900">
-                                        @if($document->doc_type === 'business_license') Business License
-                                        @else {{ ucfirst(str_replace('_', ' ', $document->doc_type ?? 'Document')) }}
-                                        @endif
-                                    </p>
-                                    @if($user->relationship_to_business && $document->doc_type === 'business_license')
+                                <div class="min-w-0">
+                                    <p class="text-sm font-semibold text-gray-900">{{ $docLabel }}</p>
+                                    @if($docSpecific)
+                                        <p class="text-xs text-gray-500 mt-0.5">{{ $docSpecific }}</p>
+                                    @endif
+                                    @if($document->doc_type === 'business_license' && $user->relationship_to_business)
                                         <p class="text-xs text-gray-500 mt-0.5">Relationship: {{ ucfirst(str_replace('_', ' ', $user->relationship_to_business)) }}</p>
+                                    @endif
+                                    @if($document->filename)
+                                        <p class="text-xs text-gray-400 mt-0.5 truncate max-w-[180px]">{{ $document->filename }}</p>
                                     @endif
                                 </div>
                                 @if($document->path ?? null)
