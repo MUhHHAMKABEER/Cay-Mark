@@ -143,12 +143,12 @@
                                                             <p class="text-xs text-gray-400 font-mono">Auction ID: {{ $listing->item_number ?? 'CM' . str_pad($listing->id, 6, '0', STR_PAD_LEFT) }}</p>
                                                         </div>
                                                         @if($isLeading)
-                                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500 text-white text-[11px] font-bold flex-shrink-0 shadow-sm">
+                                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold flex-shrink-0 shadow-sm" style="background:#16A34A;color:#fff">
                                                                 <span class="material-icons-round" style="font-size:11px">trending_up</span>
                                                                 Leading
                                                             </span>
                                                         @else
-                                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[11px] font-bold flex-shrink-0">Outbid</span>
+                                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold flex-shrink-0" style="background:#DC2626;color:#fff">Outbid</span>
                                                         @endif
                                                     </div>
                                                     @if($endTime && $endTime->isFuture())
@@ -632,10 +632,16 @@
                     </div>
                     <div class="p-6">
                         @if($emailChangePending)
+                            {{-- Step 2: Enter OTP sent to NEW email --}}
                             <form method="POST" action="{{ route('buyer.user.update-email') }}">
                                 @csrf
                                 <input type="hidden" name="email" value="{{ $pendingNewEmail }}">
-                                <p class="text-sm text-gray-600 mb-4">A verification code was sent to <strong>{{ $user->email }}</strong>. Enter it below to confirm the change to <strong>{{ $pendingNewEmail }}</strong>.</p>
+                                <div class="flex items-start gap-2 p-3 rounded-xl bg-blue-50 border border-blue-200 mb-4">
+                                    <span class="material-icons-round text-blue-500 flex-shrink-0 mt-0.5" style="font-size:18px">mark_email_unread</span>
+                                    <p class="text-sm text-blue-800">
+                                        A verification code was sent to <strong>{{ $pendingNewEmail }}</strong>. Enter it below to confirm the change.
+                                    </p>
+                                </div>
                                 <div class="flex flex-col sm:flex-row gap-3 items-start">
                                     <div>
                                         <input type="text" name="code" value="{{ old('code') }}" placeholder="000000" maxlength="6" pattern="[0-9]*" inputmode="numeric" required
@@ -652,9 +658,10 @@
                                         Cancel
                                     </a>
                                 </div>
-                                <p class="text-xs text-gray-400 mt-2">Code expires in 15 minutes.</p>
+                                <p class="text-xs text-gray-400 mt-2">Code expires in 10 minutes.</p>
                             </form>
                         @else
+                            {{-- Step 1: Enter new email + confirm password → OTP sent to NEW email --}}
                             <div class="mb-3">
                                 <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Current Email</label>
                                 <div class="flex items-center gap-3 rounded-xl bg-gray-50 border border-gray-200 px-4 py-3">
@@ -662,23 +669,28 @@
                                     <span class="text-gray-900 font-medium text-sm">{{ $user->email }}</span>
                                 </div>
                             </div>
-                            <form method="POST" action="{{ route('buyer.user.update-email') }}">
+                            <form method="POST" action="{{ route('buyer.user.request-email-change') }}" class="space-y-3">
                                 @csrf
-                                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Change Email</label>
-                                <div class="flex flex-col sm:flex-row gap-3">
-                                    <div class="flex-1">
-                                        <input type="email" name="email" value="{{ old('email') }}" required
-                                            placeholder="Enter new email address"
-                                            class="w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50 text-gray-900 font-medium placeholder-gray-400 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all text-sm">
-                                        @error('email')<p class="text-xs text-red-600 mt-1">{{ $message }}</p>@enderror
-                                    </div>
-                                    <button type="submit"
-                                        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition whitespace-nowrap">
-                                        <span class="material-icons-round" style="font-size:17px">send</span>
-                                        Send verification code
-                                    </button>
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">New Email Address</label>
+                                    <input type="email" name="new_email" value="{{ old('new_email') }}" required
+                                        placeholder="Enter new email address"
+                                        class="w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50 text-gray-900 font-medium placeholder-gray-400 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all text-sm">
+                                    @error('new_email')<p class="text-xs text-red-600 mt-1">{{ $message }}</p>@enderror
                                 </div>
-                                <p class="text-xs text-gray-400 mt-2">A code will be sent to your current email to approve the change.</p>
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Confirm with Your Password</label>
+                                    <input type="password" name="password" required
+                                        placeholder="Enter your current password"
+                                        class="w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all text-sm">
+                                    @error('password')<p class="text-xs text-red-600 mt-1">{{ $message }}</p>@enderror
+                                </div>
+                                <button type="submit"
+                                    class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition whitespace-nowrap">
+                                    <span class="material-icons-round" style="font-size:17px">send</span>
+                                    Send Verification Code
+                                </button>
+                                <p class="text-xs text-gray-400">A 6-digit code will be sent to your <strong>new</strong> email address to confirm the change.</p>
                             </form>
                         @endif
                     </div>
@@ -834,12 +846,12 @@
                                                 <p class="text-xs text-gray-400 font-mono">Auction ID: {{ $listing->item_number ?? 'CM' . str_pad($listing->id, 6, '0', STR_PAD_LEFT) }}</p>
                                             </div>
                                             @if($isLeading)
-                                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold flex-shrink-0">
+                                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold flex-shrink-0" style="background:#16A34A;color:#fff">
                                                     <span class="material-icons-round" style="font-size:12px">trending_up</span>
                                                     Leading
                                                 </span>
                                             @else
-                                                <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-bold flex-shrink-0">Outbid</span>
+                                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold flex-shrink-0" style="background:#DC2626;color:#fff">Outbid</span>
                                             @endif
                                         </div>
                                         @if($endTime && $endTime->isFuture())

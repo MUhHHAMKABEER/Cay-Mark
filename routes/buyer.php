@@ -32,6 +32,9 @@ Route::prefix('buyer')->name('buyer.')->middleware(['auth', 'buyer'])->group(fun
     Route::get('/notifications', [BuyerDashboardController::class, 'notifications'])->name('notifications');
 
     // Update email and password (used in user tab)
+    // Step 1: validate password + send OTP to NEW email
+    Route::post('/user/request-email-change', [BuyerDashboardController::class, 'requestEmailChange'])->name('user.request-email-change');
+    // Step 2: verify OTP and save new email
     Route::post('/user/update-email', [BuyerDashboardController::class, 'updateEmail'])->name('user.update-email');
     Route::post('/user/change-password', [BuyerDashboardController::class, 'changePassword'])->name('user.change-password');
 

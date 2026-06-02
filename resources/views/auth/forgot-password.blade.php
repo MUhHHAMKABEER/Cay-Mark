@@ -10,7 +10,7 @@
             <span class="material-symbols-outlined text-white" style="font-size:22px">key</span>
         </div>
         <h1 class="text-[28px] font-bold leading-tight" style="color:#1A1A1A">Reset Your Password</h1>
-        <p class="text-sm mt-1" style="color:#6B7280">Enter your email and we'll send you a secure link to reset your password.</p>
+        <p class="text-sm mt-1" style="color:#6B7280">Enter your registered email and we'll send you a 6-digit reset code.</p>
     </div>
 
     {{-- Status / errors --}}
@@ -47,7 +47,7 @@
 
         <button type="submit" class="cm-auth-btn">
             <span class="material-symbols-outlined" style="font-size:18px">send</span>
-            Send Reset Link
+            Send Reset Code
         </button>
 
         <a href="{{ route('login') }}" class="flex items-center justify-center gap-1.5 text-sm" style="color:#6B7280">

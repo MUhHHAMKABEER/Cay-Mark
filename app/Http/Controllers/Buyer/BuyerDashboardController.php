@@ -107,7 +107,32 @@ class BuyerDashboardController extends Controller
 
 
     /**
-     * Update email address
+     * D15 — Step 1: validate password, then send OTP to the NEW email address.
+     */
+    public function requestEmailChange(\Illuminate\Http\Request $request)
+    {
+        $request->validate([
+            'new_email' => 'required|email|max:255',
+            'password'  => 'required|string',
+        ]);
+
+        $user    = $request->user();
+        $service = new \App\Services\EmailChangeVerificationService();
+
+        try {
+            $service->sendCodeToNewEmail($user, $request->input('new_email'), $request->input('password'));
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return back()->withErrors($e->errors())->withInput();
+        }
+
+        return back()
+            ->with('success', 'A verification code has been sent to ' . $request->input('new_email') . '. Please check your inbox.')
+            ->with('email_change_pending', true)
+            ->with('email_change_new', $request->input('new_email'));
+    }
+
+    /**
+     * Update email address (Step 2 — verify OTP)
      */
     public function updateEmail(BuyerDashboardUpdateEmailRequest $request)
     {

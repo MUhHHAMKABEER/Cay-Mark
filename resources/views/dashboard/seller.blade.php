@@ -1615,7 +1615,7 @@
                                             @endif
                                             <button type="button"
                                                     onclick="openRejectionModal('{{ $listing->id }}', '{{ $listingName }}', '{{ $reasonJs }}', '{{ $notesJs }}', '{{ route('seller.listings.edit', $listing->id) }}')"
-                                                    class="mt-auto w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition">
+                                                    class="mt-auto w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-white text-xs font-semibold transition" style="background:#1B3A6B">
                                                 <span class="material-icons-round" style="font-size:14px">edit</span>
                                                 Edit Submission
                                             </button>
